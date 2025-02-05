@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://astronaut.github.io/sitemap-index.xml
