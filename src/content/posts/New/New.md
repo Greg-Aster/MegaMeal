@@ -1,7 +1,7 @@
 ---
-title: New Website Who Dis?
+title: New Website Starts Today.
 published: 2025-02-05
-description: 'A new website, a central location for my content.'
+description: 'A new website, and a central location for my content.'
 image: './cover.jpg'
 tags: []
 category: 'Blog'
