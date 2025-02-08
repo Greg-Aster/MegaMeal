@@ -1,10 +1,10 @@
 ---
 title: How Does AI Affect Creative Expression and the Value of Art?
 published: 2025-02-07
-description: ''
-image: ''
+description: 'Exploring the Divide: Art, Isolation, and the Digital Future'
+image: './pic2.jpg'
 tags: []
-category: ''
+category: 'Blog'
 draft: false 
 lang: ''
 ---
