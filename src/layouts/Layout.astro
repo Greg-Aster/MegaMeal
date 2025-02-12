@@ -5,6 +5,7 @@ import '@fontsource/roboto/700.css'
 
 import { profileConfig, siteConfig } from '@/config'
 import ConfigCarrier from '@components/ConfigCarrier.astro'
+import { dynamicConfig } from '../configs/dynamic-config';
 import {
   AUTO_MODE,
   BANNER_HEIGHT,
@@ -73,17 +74,17 @@ const bannerOffset =
 ---
 
 <!DOCTYPE html>
-<html lang={siteLang} class="bg-[var(--page-bg)] transition text-[14px] md:text-[16px]"
+<html lang={dynamicConfig.lang} class="bg-[var(--page-bg)] transition text-[14px] md:text-[16px]"
 	  data-overlayscrollbars-initialize
 >
 	<head>
 
-		<title>{pageTitle}</title>
+		<title>{dynamicConfig.title}</title>
 
 		<meta charset="UTF-8" />
-		<meta name="description" content={description || pageTitle}>
+		<meta name="description" content={dynamicConfig.subtitle}>
 		<meta name="author" content={profileConfig.name}>
-
+		<!-- Add other meta tags as needed -->
 		<meta property="og:site_name" content={siteConfig.title}>
 		<meta property="og:url" content={Astro.url}>
 		<meta property="og:title" content={pageTitle}>
@@ -152,6 +153,7 @@ const bannerOffset =
 		  data-overlayscrollbars-initialize
 	>
 		<ConfigCarrier></ConfigCarrier>
+
 		<slot />
 
 		<!-- increase the page height during page transition to prevent the scrolling animation from jumping -->

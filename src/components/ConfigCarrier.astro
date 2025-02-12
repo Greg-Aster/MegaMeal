@@ -1,7 +1,45 @@
 ---
-
-import { siteConfig } from '../config'
+import { dynamicConfig } from '../configs/dynamic-config';
+import { siteConfig } from '../config';
 ---
 
-<div id="config-carrier" data-hue={siteConfig.themeColor.hue}>
+<div id="config-carrier" data-hue={siteConfig.themeColor.hue} data-avatar={dynamicConfig.dynamicAvatars['home']}>
+
 </div>
+
+<script type="module">
+  import { dynamicConfig } from '../configs/dynamic-config';
+
+  // Function to get the current page/section based on the URL
+  function getCurrentPageSlug() {
+    const path = window.location.pathname;
+    const slug = path.split('/').filter(Boolean).pop() || 'home';  // Default to 'home' if path is empty
+    return slug;
+  }
+
+  // Function to update the avatar based on the page slug
+  function updateAvatar() {
+    const pageSlug = getCurrentPageSlug();
+    const avatar = dynamicConfig[pageSlug] || dynamicConfig['home'];  // Default to 'home' avatar if no match
+
+    // Update the `src` of the avatar image
+    const avatarImg = document.getElementById('dynamic-avatar');
+    if (avatarImg) {
+      avatarImg.setAttribute('src', avatar);
+    }
+
+    // Update the `data-avatar` attribute as well (optional)
+    const configCarrier = document.getElementById('config-carrier');
+    if (configCarrier) {
+      configCarrier.setAttribute('data-avatar', avatar);
+    }
+  }
+
+  // Update the avatar when the page is loaded
+  window.addEventListener('load', updateAvatar);
+
+  // Update the avatar when navigating using browser history (e.g., back/forward buttons)
+  window.addEventListener('popstate', updateAvatar);
+
+  // If using client-side navigation, trigger `updateAvatar` on custom navigation events (optional)
+</script>
