@@ -113,8 +113,8 @@ const mainPanelTop = siteConfig.banner.enable ? `calc(${BANNER_HEIGHT}vh - ${MAI
 
 <script>
   const bannerList = [
-    'assets/images/banner.png',
-    'assets/images/demo-banner.png',
+    '/assets/images/banner.png',
+    '/assets/images/demo-banner.png',
   ];
 
   let bannerIndex = 0;
@@ -144,5 +144,5 @@ const mainPanelTop = siteConfig.banner.enable ? `calc(${BANNER_HEIGHT}vh - ${MAI
   }
 
   // Rotate banner every 10 seconds
-  setInterval(updateBanner, 10000);
+  setInterval(updateBanner, 30000);
 </script>

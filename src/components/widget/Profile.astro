@@ -6,6 +6,7 @@ import { url } from '../../utils/url-utils'
 
 const config = profileConfig
 ---
+
 <div class="card-base p-3">
     <a aria-label="Go to About Page" href={url('/about/')}
        class="group block relative mx-auto mt-1 lg:mx-0 lg:mt-0 mb-3
@@ -41,15 +42,16 @@ const config = profileConfig
 
 <img
   id="avatar-img"
-  src="assets/images/avatar.png"
+  src="/assets/images/avatar.png"
   alt="Profile Image of the Author"
   class="mx-auto lg:w-full h-full lg:mt-0 opacity-100 transition-opacity duration-1000"
 />
 
 <script>
   const avatarList = [
-    'assets/images/avatar.png',
-    'assets/images/demo-avatar.png',
+    '/assets/images/demo-avatar.png',
+    '/assets/images/avatar.png',
+    '/assets/images/demo-avatar.png',
   ];
 
   let avatarIndex = 0;

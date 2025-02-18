@@ -1,5 +1,5 @@
 ---
-title: How Does AI Affect Creative Expression and the Value of Art?
+
 published: 2025-02-07
 description: 'Exploring the Divide: Art, Isolation, and the Digital Future'
 image: './pic2.jpg'
@@ -11,7 +11,7 @@ lang: ''
 
 # How Does AI Affect Creative Expression and the Value of Art?
 
-[The world is drowning in noise](/posts/how/dark/)—
+The world is drowning in noise—
 Soapbox articles, endless ads, clickbait. And now, with the advent of AI, the internet is overflowing with junk art and auto-generated articles.
 
 How do we stand out in this impossibly vast ocean of content? How do we reconcile the seemingly pointless nature of creative expression? What is our value in a world where machines can generate art at the push of a button?
