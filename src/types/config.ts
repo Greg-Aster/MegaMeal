@@ -51,7 +51,7 @@ export type NavBarConfig = {
 }
 
 export type ProfileConfig = {
-  avatar?: string
+  avatar?: string // | string[]; // Allow single string or array of strings
   name: string
   bio?: string
   links: {

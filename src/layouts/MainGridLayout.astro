@@ -40,7 +40,7 @@ const mainPanelTop = siteConfig.banner.enable ? `calc(${BANNER_HEIGHT}vh - ${MAI
 
 <!-- Banner -->
 {siteConfig.banner.enable && <div id="banner-wrapper" class=`absolute z-10 w-full transition duration-700 overflow-hidden` style=`top: -${BANNER_HEIGHT_EXTEND}vh`>
-    <ImageWrapper id="banner" alt="Banner image of the blog" class:list={["object-cover h-full transition duration-700 opacity-0 scale-105"]}
+    <ImageWrapper id="banner" alt="Banner image of the blog" class:list={["object-cover h-full transition duration-700 opacity-100 scale-105"]}
                   src={siteConfig.banner.src} position={siteConfig.banner.position}
     >
     </ImageWrapper>
@@ -110,3 +110,39 @@ const mainPanelTop = siteConfig.banner.enable ? `calc(${BANNER_HEIGHT}vh - ${MAI
     </div>
 </div>
 </Layout>
+
+<script>
+  const bannerList = [
+    '/src/assets/images/banner.png',
+    '/src/assets/images/demo-banner.png',
+  ];
+
+  let bannerIndex = 0;
+
+  // Cast the element to an HTMLImageElement
+  const bannerElement = document.querySelector('#banner img') as HTMLImageElement;
+
+  // Ensure the banner image has a transition for opacity
+  if (bannerElement) {
+    bannerElement.style.transition = 'opacity 1s ease';
+  }
+
+  function updateBanner() {
+    if (bannerElement) {
+      // Fade out the image
+      bannerElement.style.opacity = '0';
+
+      // Wait for the fade-out to complete before changing the src
+      setTimeout(() => {
+        bannerIndex = (bannerIndex + 1) % bannerList.length;
+        bannerElement.src = bannerList[bannerIndex];
+
+        // Fade back in
+        bannerElement.style.opacity = '1';
+      }, 1000); // Match this timeout with the transition duration
+    }
+  }
+
+  // Rotate banner every 10 seconds
+  setInterval(updateBanner, 10000);
+</script>

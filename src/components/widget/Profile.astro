@@ -2,11 +2,9 @@
 import ImageWrapper from '../misc/ImageWrapper.astro'
 import { Icon } from 'astro-icon/components'
 import { profileConfig } from '../../config'
-import { dynamicConfig } from '../../configs/dynamic-config';
 import { url } from '../../utils/url-utils'
 
 const config = profileConfig
-const homeavatar = dynamicConfig.avatar
 ---
 <div class="card-base p-3">
     <a aria-label="Go to About Page" href={url('/about/')}
@@ -18,7 +16,8 @@ const homeavatar = dynamicConfig.avatar
                   class="transition opacity-0 scale-90 group-hover:scale-100 group-hover:opacity-100 text-white text-5xl">
             </Icon>
         </div>
-        <ImageWrapper src={homeavatar || ""} alt="Profile Image of the Author" class="mx-auto lg:w-full h-full lg:mt-0 "></ImageWrapper>
+        <!-- Use ImageWrapper for the avatar image -->
+        <ImageWrapper id="avatar-img" src={config.avatar || ""} alt="Profile Image of the Author" class="mx-auto lg:w-full h-full lg:mt-0 opacity-100 transition-opacity duration-1000"></ImageWrapper>
     </a>
     <div class="px-2">
         <div class="font-bold text-xl text-center mb-1 dark:text-neutral-50 transition">{config.name}</div>
@@ -39,3 +38,41 @@ const homeavatar = dynamicConfig.avatar
     </div>
 </div>
 
+
+<img
+  id="avatar-img"
+  src="/src/assets/images/avatar.png"
+  alt="Profile Image of the Author"
+  class="mx-auto lg:w-full h-full lg:mt-0 opacity-100 transition-opacity duration-1000"
+/>
+
+<script>
+  const avatarList = [
+    '/src/assets/images/avatar.png',
+    '/src/assets/images/demo-avatar.png',
+  ];
+
+  let avatarIndex = 0;
+  
+  // Cast the element to an HTMLImageElement
+  const avatarElement = document.getElementById('avatar-img') as HTMLImageElement;
+
+  function updateAvatar() {
+    if (avatarElement) {
+      // Fade out the image
+      avatarElement.style.opacity = '0';
+
+      // Wait for the fade-out to complete before changing the src
+      setTimeout(() => {
+        avatarIndex = (avatarIndex + 1) % avatarList.length;
+        avatarElement.src = avatarList[avatarIndex];
+
+        // Fade back in
+        avatarElement.style.opacity = '1';
+      }, 1000); // Match this timeout with the transition duration in CSS
+    }
+  }
+
+  // Rotate avatar every 10 seconds
+  setInterval(updateAvatar, 10000);
+</script>

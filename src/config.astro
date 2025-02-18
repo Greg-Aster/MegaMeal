@@ -1,3 +1,6 @@
+---
+// src/config.astro
+
 import type {
   LicenseConfig,
   NavBarConfig,
@@ -39,7 +42,7 @@ export const siteConfig: SiteConfig = {
 
 export const navBarConfig: NavBarConfig = {
   links: [
-    LinkPreset.Home,
+    LinkPreset.Home, 
     LinkPreset.Archive,
     LinkPreset.About,
     {
@@ -49,13 +52,10 @@ export const navBarConfig: NavBarConfig = {
     },
   ],
 }
+
+
 export const profileConfig: ProfileConfig = {
-  avatar: ''
-  //[
-   // '/src/assets/images/avatar.png',
-   // '/src/assets/images/avatar2.jpg',
-   //]
-   ,
+  avatar: 'assets/images/demo-avatar-config.png',
   name: 'Greg Aster',
   bio: 'Filmmaker, Animator, and Creator of Strange Worlds',
   links: [
@@ -82,4 +82,4 @@ export const licenseConfig: LicenseConfig = {
   name: 'CC BY-NC-SA 4.0',
   url: 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
 }
-
+---
