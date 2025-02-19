@@ -70,5 +70,5 @@ This website is where all of that comes together - a home for projects, ideas, a
 
 ...and thanks for being awesome!
 
-— Greg Aster
+- Greg Aster
 

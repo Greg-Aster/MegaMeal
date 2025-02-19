@@ -29,6 +29,7 @@
 ### **Inventory**
 
 - **Legendary Blender of Creation:** Tool of ultimate animation and storytelling finesse. Capable of rendering surreal timelines with cinematic intensity.  
+- **Zeiss Flektogon** Vintage Prime lens 35mm f2.4 M42 mount with speedbooster - *Mint Condition*
 - **Lav Mic of Clarity:** Ensures crisp sound, even in the noisiest multiverse crossovers.  
 - **Zoom H4n Pro (Broken Relic):** The once-mighty artifact now awaiting resurrection.  
 - **Infinite Dip Sauce Vial:** A nod to Greg’s *Mega Meal* universe—possibly sentient, probably cursed.  
@@ -38,11 +39,11 @@
 
 ### **Abilities & Skills**
 
-**Filmmaking Mastery:** Directs and produces surreal films that blur reality. From public-access TV to YouTube, his creations echo across timelines.  
+**Filmmaking Mastery:** Directs and produces surreal films that blur reality. From public-access TV to YouTube, his creations echo across different realities.  
 
 **Cosmic Horror Architect:** Builds worlds drenched in mystery, where processed food becomes the harbinger of interdimensional terror.  
 
-**AI Animation Sorcerer:** Channels AI-powered effects into projects without sacrificing creative freedom.  
+**AI Animation Sorcerer:** Channels AI-powered effects into projects, being the ultimate architect of his own desires without sacrificing creative freedom.  
 
 **Mechanical Insight:** Years of technical problem-solving provide Greg with unparalleled durability and adaptability.  
 
@@ -52,8 +53,8 @@
 
 ### **Notable Quests**
 
-- **Mega Meal:** Chronicles a dystopian future where sentient fast-food mascots guard dark secrets. Will the protagonist, Aurora, uncover the truth?  
-- **Untitled:** A poetic blend of timelines, sirens, and symbolic visuals exploring loss and destiny.  
+- **Mega Meal:** Chronicles a dystopian future where sentient fast-food mascots guard dark secrets. Will the protagonist, *(redacted)*, uncover the truth?  
+- **Untitled:** A Cosmic Horror  blend of timelines, sirens, and symbolic visuals exploring loss and destiny.  
 - **Merkin’s Alternate Universe:** Experimental website theme inspired by a cosmic entity—unlock dark realities with a mere mode switch.  
 - **Dystopian Furniture Building:** The ongoing battle against decay and existential dread.
 
@@ -86,7 +87,7 @@
 
 ### **Future Objectives**  
 
-- **Launch Newsletter:** Provide sneak peeks, musings, and cosmic insights.  
+- **Post more:** Provide sneak peeks, musings, and cosmic insights.  
 - **Collaborative Ventures:** Always seeking new adventurers to join the storytelling party.  
 - **Expand the Multiverse:** From dark-themed universes to surreal narrative spaces, the journey continues.  
 
