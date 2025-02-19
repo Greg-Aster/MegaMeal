@@ -18,7 +18,7 @@
   Years of engine repair and tech innovation forged an ability to troubleshoot anything—from leaky engines to interdimensional plot holes.
 
 - **Endurance:** 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 (10/10)  
-  Endless hours of filmmaking, running, and French-learning have earned Greg indomitable physical and mental stamina. No project too long; no reality too warped.
+  Endless hours of filmmaking, physical torture, and reading the Mahabharata have earned Greg indomitable physical and mental stamina. No project too long; no reality too warped.
 
 - **Storytelling Aura:** 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ (9/10)  
   Radiates mystique, melancholy, and intrigue. Conversations feel like lore drops in an open-world RPG.
@@ -31,14 +31,14 @@
 - **Zeiss Flektogon** Vintage Prime lens 35mm f2.4 M42 mount with speedbooster - *Mint Condition*
 - **Lav Mic of Clarity:** Ensures crisp sound, even in the noisiest multiverse crossovers.  
 - **Zoom H4n Pro (Broken Relic):** The once-mighty artifact now awaiting resurrection.  
-- **Infinite Dip Sauce Vial:** A nod to Greg’s *Mega Meal* universe—possibly sentient, probably cursed.  
-- **Toolkit of Mechanical Mastery:** A collection of wrenches, memories, and metaphors from Greg’s 23-year tenure in the mechanical realm.
+- **Infinite Dip Sauce Vial:** A nod to Greg’s *Mega Meal* universe - possibly sentient, probably cursed.  
+- **Toolkit of Mechanical Mastery:** A collection of wrenches, diagnostic trouble guides, and metaphors from Greg’s 23-year tenure in the mechanical realm.
 
 ---
 
 ### **Abilities & Skills**
 
-**Filmmaking Mastery:** Directs and produces surreal films that blur reality. From public-access TV to YouTube, his creations echo across different realities.  
+**Filmmaking Mastery:** Directs and produces surreal films that blur reality. From Cable TV to YouTube, his creations echo across different realities.  
 
 **Cosmic Horror Architect:** Builds worlds drenched in mystery, where processed food becomes the harbinger of interdimensional terror.  
 
@@ -54,8 +54,9 @@
 
 - **Mega Meal:** Chronicles a dystopian future where sentient fast-food mascots guard dark secrets. Will the protagonist, *(redacted)*, uncover the truth?  
 - **Untitled:** A Cosmic Horror  blend of timelines, sirens, and symbolic visuals exploring loss and destiny.  
-- **Merkin’s Alternate Universe:** Experimental website theme inspired by a cosmic entity—unlock dark realities with a mere mode switch.  
-- **Dystopian Furniture Building:** The ongoing battle against decay and existential dread.
+- **DNDIY:** Short for do-not-do-it-yourself, its the original vintage series Greg held the mantle for. The proving ground. 
+- **Merkin’s Alternate Universe:** Experimental website theme inspired by a cosmic entity - unlock dark realities with a mere mode switch.  
+- **Dystopian IRL Building:** The ongoing battle against decay and existential dread.
 
 ---
 
@@ -63,7 +64,7 @@
 
 **The Film Enthusiasts’ Guild:** Revered. Greg’s blend of cyberpunk, westerns, and horror attracts fans seeking storytelling beyond the stars.  
 
-**The Order of Cosmic Nostalgia:** Respected. His work resonates with those yearning for bygone eras and alternate realities.  
+**The Order of the Open Signal:** Respected. His work resonates with those yearning for bygone eras and alternate realities.  
 
 **ComfyUI Developers:** Allies. Greg’s experiments with stabilization and AI animation contribute to the ever-evolving tech.
 
@@ -73,14 +74,14 @@
 
 - **Melancholy Visionary:** Finds beauty in the dark and eerie, creating narratives that evoke profound nostalgia.  
 - **Builder of Lore:** Lives in a multiverse of interconnected timelines, cosmic gods, and cursed hamburgers.  
-- **Persistent Idealist:** Believes in lifting others—especially those navigating difficult circumstances—with empathy and creativity.  
+- **Persistent Idealist:** Believes in lifting others - especially those navigating difficult circumstances - with empathy and creativity.  
 
 ---
 
 ### **Personal Life**  
-**Marital Bond:** Partnered to April Aster, a guiding force and light in my life. Their relationship is the anchor in Greg’s multiversal explorations.  
+**Marital Bond:** Partnered to April Aster, a guiding force and shinning light in a dark void. Their relationship is the anchor in Greg’s multiversal explorations.  
 
-**Hobbies:** Running through dimensions (or real-life), beating machines, petting cats, and contemplating trucking as a side quest.  
+**Hobbies:** Reading folk tales and mythology, building furniture, Running through dimensions (or real-life), beating machines, petting cats, and contemplating trucking as a side quest.  
 
 ---
 
@@ -89,5 +90,13 @@
 - **Post more:** Provide sneak peeks, musings, and cosmic insights.  
 - **Collaborative Ventures:** Always seeking new adventurers to join the storytelling party.  
 - **Expand the Multiverse:** From dark-themed universes to surreal narrative spaces, the journey continues.  
+
+---
+
+### **Join My Party**
+
+Looking to collaborate on storytelling ventures or explore the multiverse together?
+
+Contact: greg@dndiy.org
 
 ---

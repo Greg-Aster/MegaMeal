@@ -6,7 +6,7 @@ published: 2025-02-05
 
 description: 'A new website and a central location for my content.'
 
-image: ''
+image: './cover3.png'
 
 tags: [New, Website, Updates]
 
@@ -18,7 +18,6 @@ lang: ''
 
 ---
 
-![uwantsumart.gif](./uwantsumart.gif)
 
 # Hello!
 
@@ -26,7 +25,7 @@ With the general hellscape of the internet, social media, and the world at large
 
 ## Who is this weirdo? What is this place?
 
-Don't worry this is a safe space! I will never ask for your home adress and social security number!
+Don't worry this is a safe space! I will never ask for your home adress and social security number.
 Gregory Aster is a filmmaker, animator, and storyteller with a penchant for the bizarre, the experimental, and the deeply nostalgic. He spent 23 years as a mechanic - 10 as a certified technician and manager, then 13 as a business owner. Having retired from the trade, he now devotes all his time to creative media.
 
 His creative work blends cyberpunk, cosmic horror, and absurdist humor - drawing inspiration from old-school sci-fi, westerns, and the strange corners of pop culture. From dystopian fast-food conspiracies to interdimensional smugglers, his projects thrive on mystery, aesthetic weirdness, and an undercurrent of melancholy.
@@ -62,3 +61,4 @@ I’m actively working on several projects, including:
 Greg
 
 
+![uwantsumart.gif](./uwantsumart.gif)

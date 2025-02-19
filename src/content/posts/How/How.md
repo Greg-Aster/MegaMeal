@@ -4,7 +4,7 @@ published: 2025-02-07
 description: 'Exploring the Divide: Art, Isolation, and the Digital Future'
 image: './pic2.jpg'
 tags: []
-category: 'Blog'
+category: ''
 draft: true 
 lang: ''
 ---
