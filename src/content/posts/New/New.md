@@ -21,7 +21,7 @@ lang: ''
 
 # Hello!
 
-With the general hellscape of the internet, social media, and the world at large, I figured it was wise to teach myselft html coding, make a time machine, travel to 1996 and bang out a sweet website im my mothers basement. The purpose is to create a central repository for my content, and own my data. There will be more features, updates, and posts to come.
+With the general hellscape of the internet, social media, and the world at large, I figured it was wise to teach myselft html coding, make a time machine, travel to 1996 and bang out a sweet website in my mothers basement. The purpose is to create a central repository for my content, and own my data. There will be more features, updates, and posts to come.
 
 ## Who is this Weirdo? What is this Place?
 
