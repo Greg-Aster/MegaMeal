@@ -1,9 +1,8 @@
-# **Gregory Aster: Legendary Storysmith**
-
+# **Gregory Aster**
 ---
 
-**Class:** Experimental Videographer & Cosmic Storyteller  
-**Race:** Humanoid
+- **Class:** Experimental Videographer & Cosmic Storyteller  
+- **Race:** Humanoid
 
 ---
 
@@ -79,7 +78,7 @@
 ---
 
 ### **Personal Life**  
-**Marital Bond:** Married to April Aster, a guiding force and managing attorney at PSU. Their relationship is the anchor in Greg’s multiversal explorations.  
+**Marital Bond:** Partnered to April Aster, a guiding force and light in my life. Their relationship is the anchor in Greg’s multiversal explorations.  
 
 **Hobbies:** Running through dimensions (or real-life), beating machines, petting cats, and contemplating trucking as a side quest.  
 

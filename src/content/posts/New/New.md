@@ -6,7 +6,7 @@ published: 2025-02-05
 
 description: 'A new website and a central location for my content.'
 
-image: './cover.jpg'
+image: './cover2.png'
 
 tags: [New, Website, Updates]
 
