@@ -7,8 +7,9 @@ export async function getSortedPosts(): Promise<
   { body: string, data: BlogPostData; slug: string }[]
 > {
   const allBlogPosts = (await getCollection('posts', ({ data }) => {
-    return import.meta.env.PROD ? data.draft !== true : true
-  })) as unknown as { body: string, data: BlogPostData; slug: string }[]
+  //  return import.meta.env.PROD ? data.draft !== true : true;  developer mode show droft posts
+  return data.draft !== true; // Always exclude drafts
+  })) as unknown as { body: string, data: BlogPostData; slug: string }[];
 
   const sorted = allBlogPosts.sort(
     (a: { data: BlogPostData }, b: { data: BlogPostData }) => {

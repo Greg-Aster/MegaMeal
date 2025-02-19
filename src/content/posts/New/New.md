@@ -6,7 +6,7 @@ published: 2025-02-05
 
 description: 'A new website and a central location for my content.'
 
-image: './cover2.png'
+image: './cover3.png'
 
 tags: [New, Website, Updates]
 
@@ -68,7 +68,7 @@ I’d love to hear your thoughts on my work! Feel free to reach out with feedbac
 
 This website is where all of that comes together - a home for projects, ideas, and whatever else comes next. Stay tuned.
 
-...and thanks for being awesome!
+and thanks for being awesome!...
 
-- Greg Aster
+
 
