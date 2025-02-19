@@ -111,38 +111,78 @@ const mainPanelTop = siteConfig.banner.enable ? `calc(${BANNER_HEIGHT}vh - ${MAI
 </div>
 </Layout>
 
+<!-- Banner -->
+{siteConfig.banner.enable && <div id="banner-wrapper" class=`absolute z-10 w-full transition duration-5000 overflow-hidden` style=`top: -${BANNER_HEIGHT_EXTEND}vh`>
+    <div class="relative w-full h-full">
+        <img
+            id="banner-img-1"
+            src="/assets/banner/0001.png"
+            alt="Banner image of the blog"
+            class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-100 scale-105"
+        />
+        <img
+            id="banner-img-2"
+            src="/assets/banner/0007.png"
+            alt="Banner image of the blog"
+            class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-0 scale-105"
+        />
+    </div>
+</div>}
+
 <script>
-  const bannerList = [
-    '/assets/images/banner.png',
-    '/assets/images/demo-banner.png',
-  ];
+const bannerList = [
+    '/assets/banner/0001.png',
+    '/assets/banner/0007.png',
+    '/assets/banner/0014.png',
+    '/assets/banner/0021.png',
+    '/assets/banner/0028.png',
+    '/assets/banner/0035.png',
+    '/assets/banner/0042.png',
+    '/assets/banner/0049.png', 
+    '/assets/banner/0042.png', 
+    '/assets/banner/0035.png',
+    '/assets/banner/0028.png',
+    '/assets/banner/0021.png',
+    '/assets/banner/0014.png',
+    '/assets/banner/0007.png',
+    '/assets/banner/0001.png'
+];
 
-  let bannerIndex = 0;
+let bannerIndex = 0;
+let currentBanner = 1;
 
-  // Cast the element to an HTMLImageElement
-  const bannerElement = document.querySelector('#banner img') as HTMLImageElement;
+document.addEventListener('DOMContentLoaded', () => {
+    const bannerElement1 = document.getElementById('banner-img-1') as HTMLImageElement;
+    const bannerElement2 = document.getElementById('banner-img-2') as HTMLImageElement;
 
-  // Ensure the banner image has a transition for opacity
-  if (bannerElement) {
-    bannerElement.style.transition = 'opacity 1s ease';
-  }
-
-  function updateBanner() {
-    if (bannerElement) {
-      // Fade out the image
-      bannerElement.style.opacity = '0';
-
-      // Wait for the fade-out to complete before changing the src
-      setTimeout(() => {
-        bannerIndex = (bannerIndex + 1) % bannerList.length;
-        bannerElement.src = bannerList[bannerIndex];
-
-        // Fade back in
-        bannerElement.style.opacity = '1';
-      }, 1000); // Match this timeout with the transition duration
+    // Initialize both images with images from the bannerList
+    if (bannerElement1 && bannerElement2) {
+        bannerElement1.src = bannerList[0];
+        bannerElement2.src = bannerList[1];
     }
-  }
 
-  // Rotate banner every 10 seconds
-  setInterval(updateBanner, 30000);
+    function updateBanner() {
+        if (bannerElement1 && bannerElement2) {
+            // Get next image index
+            bannerIndex = (bannerIndex + 1) % bannerList.length;
+            const nextImageSrc = bannerList[bannerIndex];
+
+            // Swap visibility
+            if (currentBanner === 1) {
+                bannerElement1.style.opacity = '0';
+                bannerElement2.src = nextImageSrc;
+                bannerElement2.style.opacity = '1';
+                currentBanner = 2;
+            } else {
+                bannerElement2.style.opacity = '0';
+                bannerElement1.src = nextImageSrc;
+                bannerElement1.style.opacity = '1';
+                currentBanner = 1;
+            }
+        }
+    }
+
+    // Rotate banner every x seconds
+    setInterval(updateBanner, 7000);
+});
 </script>

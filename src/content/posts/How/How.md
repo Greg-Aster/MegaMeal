@@ -5,7 +5,7 @@ description: 'Exploring the Divide: Art, Isolation, and the Digital Future'
 image: './pic2.jpg'
 tags: []
 category: 'Blog'
-draft: false 
+draft: true 
 lang: ''
 ---
 
