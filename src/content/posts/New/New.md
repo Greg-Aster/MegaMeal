@@ -6,7 +6,7 @@ published: 2025-02-05
 
 description: 'A new website and a central location for my content.'
 
-image: './cover3.png'
+image: ''
 
 tags: [New, Website, Updates]
 
@@ -18,57 +18,47 @@ lang: ''
 
 ---
 
+![uwantsumart.gif](./uwantsumart.gif)
+
 # Hello!
 
-With the general hellscape of the internet, social media, and the world at large, I figured it was wise to create a central repository for my content. There will be more features, updates, and posts to come.
+With the general hellscape of the internet, social media, and the world at large, I figured it was wise to teach myselft html coding, make a time machine, travel to 1996 and bang out a sweet website im my mothers basement. The purpose is to create a central repository for my content, and own my data. There will be more features, updates, and posts to come.
 
-## Who is Gregory Aster? What is this place?
+## Who is this weirdo? What is this place?
 
-Gregory Aster is a filmmaker, animator, and storyteller with a penchant for the bizarre, the experimental, and the deeply nostalgic. He spent 23 years as a mechanic—10 as a certified technician and manager, then 13 as a business owner. After retiring from the trade, he dove headfirst into the world of creative media.
+Don't worry this is a safe space! I will never ask for your home adress and social security number!
+Gregory Aster is a filmmaker, animator, and storyteller with a penchant for the bizarre, the experimental, and the deeply nostalgic. He spent 23 years as a mechanic - 10 as a certified technician and manager, then 13 as a business owner. Having retired from the trade, he now devotes all his time to creative media.
 
-His work blends cyberpunk, cosmic horror, and absurdist humor, drawing inspiration from old-school sci-fi, westerns, and the strange corners of pop culture. From dystopian fast-food conspiracies to interdimensional smugglers, his projects thrive on mystery, aesthetic weirdness, and an undercurrent of melancholy.
+His creative work blends cyberpunk, cosmic horror, and absurdist humor - drawing inspiration from old-school sci-fi, westerns, and the strange corners of pop culture. From dystopian fast-food conspiracies to interdimensional smugglers, his projects thrive on mystery, aesthetic weirdness, and an undercurrent of melancholy.
 
-Greg has experience in local TV production, contract videography, and a lifetime of hands-on problem-solving. He is fluent in Blender 3d, Davinci Resolve, can code a bit, works with ComfyUI for AI-assisted animation, and experiments with cutting-edge video tools. When he's not crafting surreal narratives, he's either running, beating on a machine, or considering a side quest into trucking.
-
-I'm currently working on a newsletter section, more articles, art, a contact page, updating my resume, consolidating my content - and petting my cat. If you have any recommendations or spot any issues with this space, let me know!
+Greg has more than a decade of experience in local TV production, contract videography, and a lifetime of hands-on problem-solving. He is fluent in Blender3d, Davinci Resolve, can code a bit, works with ComfyUI, and experiments with cutting-edge video tools. When he's not crafting surreal narratives, he's either running around drinking too much coffee, beating on a machine with a hammer, or considering the deep philosophical and moral quandaries of science fiction, romance novels, and historical literature.
 
 ## Current and Upcoming Projects
 
 I’m actively working on several projects, including:
 
-- **Mega Meal** - A dystopian cyberpunk cosmic horror series exploring themes of mystery, nostalgia, and loss.
+- **Mega Meal** - A dystopian cyberpunk cosmic horror series exploring themes of food, mystery, nostalgia, and loss.
 
 - **This Damn Website** - Whew! What a headache!
 
 - **Housework and Furniture Building** - Life and duty calls.
 
-Stay tuned for more updates and sneak peeks as these projects evolve. If you want to collaborate, reach out! I never have enough time, but I can always make time for more - it’s a weird interdimensional nexus I exist in.
+## Future Website Plans
 
-## Behind the Scenes
+- **Alternate Universe Theme** - This website is to include an alternate universe theme tied to a cosmic horror entity named Merkin (*In Progress*). You may notice the absent dark/light mode switches that transport you to a parallel version of this space - a nod to my fascination with alternate realities and strange timelines.
 
-Curious about my creative process? I use tools like Blender and ComfyUI to push the boundaries of storytelling and animation. I’ll also share insights into how I incorporate AI-assisted (not AI-created) animation to bring surreal narratives to life.
+- **Newsletter Sign-Up** - Sign up for my upcoming newsletter *that does not exist yet* to stay updated on new projects, behind-the-scenes content - there is nothing exclusive about this - but if you want to stay in the know you now know you don't have that option.
 
-## Alternate Universe Theme
+- **Blog Philosophy** - Expect a mix of content here - project updates, reflections on creative life, inspiration behind stories, and occasional commentary on art and media. I would like to focus on community and listen to feedaback. so, I’d love to hear your thoughts on my work! Feel free to reach out with, ideas, or suggestions. This space is as much about community as it is about creativity. Speaking of community - if you want me to share and distribute your creative projects here - talk to me!
 
-This website includes an alternate universe theme tied to a cosmic horror entity named Merkin (*In Progress*). You’ll notice dark/light mode switches that transport you to a parallel version of this space - a nod to my fascination with alternate realities and strange timelines.
 
-## Newsletter Sign-Up
 
-Sign up for my upcoming newsletter *that does not exist yet* to stay updated on new projects, behind-the-scenes content - there is nothing exclusive about this - but if you want to stay in the know you now know you don't have that option.
+- **In the works**  A newsletter section, more articles, art, a contact page, a resume, consolidated content. If you have any recommendations on website direction, or spot any issues with this space, let me know!
 
-## Blog Philosophy
+**This website is where all of that comes together - a home for projects, ideas, and whatever else comes next. Stay tuned for more updates and sneak peeks as these projects evolve. If you want to collaborate, reach out! I never have enough time - but I can always make time for more - it’s a weird interdimensional nexus I exist in.**
 
-Expect a mix of content here—project updates, reflections on creative life, inspiration behind stories, and occasional commentary on art and media.
 
-## Community and Feedback
-
-I’d love to hear your thoughts on my work! Feel free to reach out with feedback, ideas, or suggestions. This space is as much about community as it is about creativity. Speaking of community—if you want me to share and distribute creative projects here, talk to me!
-
-## Future Plans
-
-This website is where all of that comes together - a home for projects, ideas, and whatever else comes next. Stay tuned.
-
-and thanks for being awesome!...
-
+...and thanks for being awesome!
+Greg
 
 
