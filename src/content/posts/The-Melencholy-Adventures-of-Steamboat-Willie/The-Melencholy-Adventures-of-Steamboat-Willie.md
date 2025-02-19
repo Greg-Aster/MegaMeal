@@ -3,7 +3,7 @@ title: The Melancholy adventures of Steamboat Willie
 published: 2025-02-08
 description: 'A Retrospective view on the Project.'
 image: './thumb.png'
-tags: []
+tags: [Projects, Animation]
 category: 'Projects'
 draft: false 
 lang: ''

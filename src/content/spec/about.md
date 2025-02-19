@@ -1,36 +1,93 @@
-# About
-
-## Gregory Aster
-
-
-```markdown
-Gregory Aster is an experimental videographer, filmmaker, and animator known for 
-crafting surreal and immersive worlds. With a career spanning mechanical engineering, 
-independent filmmaking, and avant-garde storytelling, Greg has seamlessly blended 
-technical expertise with creative expression. His projects often explore themes of 
-mystery, nostalgia, and dystopian futurism.
-```
-
-## Accomplishments
-
-- **Filmmaking & Animation**: Creator of surreal and dystopian short films, including *The Melancholy Adventures of Steamboat Willie* and the cyberpunk parody *Mega Meal*.
-- **Film Festivals & Cable TV Features**: Greg's work has been showcased at multiple film festivals and featured on cable television.
-- **Public Access Television**: Produced and hosted a long-running public access TV show, bringing unique storytelling to a dedicated audience.
-- **YouTube & Online Presence**: Runs a YouTube channel featuring experimental visuals, behind-the-scenes insights, and independent film projects.
-- **Technical Expertise**: Experienced in Blender, ComfyUI, DaVinci Resolve, and Python-driven animation workflows.
-- **Creative Writing**: Writes episodic, nonlinear sci-fi narratives inspired by classic pulp fiction and cosmic horror themes.
-- **Innovative Storytelling**: Integrates AI-driven animation and procedural effects into filmmaking, pushing the boundaries of digital art.
-- **Mechanic Turned Creator**: Spent over two decades in mechanical engineering before transitioning into experimental media arts.
-- **Dystopian Worldbuilder**: Constructs expansive cyberpunk universes where corporate overlords, black-market food smugglers, and AI mascots collide.
-- **Large-Scale Art Installations**: Designed and built large-scale art projects for events, blending engineering prowess with creative vision.
-
+# **Gregory Aster: Legendary Storysmith**
 
 ---
 
-### Connect
-> - **[YouTube](https://www.youtube.com/@GregAster)**
-> - **[Email](greg@dndiy.org)**
-> - **[Bluesky](https://bsky.app/profile/astervisualarts.bsky.social)**
-> - **[Discord](https://discord.gg/e69ZEcnY)**
+**Class:** Experimental Videographer & Cosmic Storyteller  
+**Race:** Humanoid
 
+---
 
+### **Core Stats**
+
+- **Creativity:** 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ (9/10)  
+  Greg’s boundless imagination fuels his dystopian worlds and bizarre narratives. Cosmic horror? Check. Surreal mascots? Double-check.  
+
+- **Technical Expertise:** 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ (8/10)  
+  A master of mechanical engineering, Blender wizardry, and Python sorcery. His realm is where machine precision meets artistic chaos.
+
+- **Problem Solving:** 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ (8/10)  
+  Years of engine repair and tech innovation forged an ability to troubleshoot anything—from leaky engines to interdimensional plot holes.
+
+- **Endurance:** 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 (10/10)  
+  Endless hours of filmmaking, running, and French-learning have earned Greg indomitable physical and mental stamina. No project too long; no reality too warped.
+
+- **Storytelling Aura:** 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ (9/10)  
+  Radiates mystique, melancholy, and intrigue. Conversations feel like lore drops in an open-world RPG.
+
+---
+
+### **Inventory**
+
+- **Legendary Blender of Creation:** Tool of ultimate animation and storytelling finesse. Capable of rendering surreal timelines with cinematic intensity.  
+- **Lav Mic of Clarity:** Ensures crisp sound, even in the noisiest multiverse crossovers.  
+- **Zoom H4n Pro (Broken Relic):** The once-mighty artifact now awaiting resurrection.  
+- **Infinite Dip Sauce Vial:** A nod to Greg’s *Mega Meal* universe—possibly sentient, probably cursed.  
+- **Toolkit of Mechanical Mastery:** A collection of wrenches, memories, and metaphors from Greg’s 23-year tenure in the mechanical realm.
+
+---
+
+### **Abilities & Skills**
+
+**Filmmaking Mastery:** Directs and produces surreal films that blur reality. From public-access TV to YouTube, his creations echo across timelines.  
+
+**Cosmic Horror Architect:** Builds worlds drenched in mystery, where processed food becomes the harbinger of interdimensional terror.  
+
+**AI Animation Sorcerer:** Channels AI-powered effects into projects without sacrificing creative freedom.  
+
+**Mechanical Insight:** Years of technical problem-solving provide Greg with unparalleled durability and adaptability.  
+
+**Narrative Weaving:** Writes episodic, fragmented tales like a pulp fiction bard—each story a cryptic glimpse into larger-than-life worlds.  
+
+---
+
+### **Notable Quests**
+
+- **Mega Meal:** Chronicles a dystopian future where sentient fast-food mascots guard dark secrets. Will the protagonist, Aurora, uncover the truth?  
+- **Untitled:** A poetic blend of timelines, sirens, and symbolic visuals exploring loss and destiny.  
+- **Merkin’s Alternate Universe:** Experimental website theme inspired by a cosmic entity—unlock dark realities with a mere mode switch.  
+- **Dystopian Furniture Building:** The ongoing battle against decay and existential dread.
+
+---
+
+### **Faction Relationships**
+
+**The Film Enthusiasts’ Guild:** Revered. Greg’s blend of cyberpunk, westerns, and horror attracts fans seeking storytelling beyond the stars.  
+
+**The Order of Cosmic Nostalgia:** Respected. His work resonates with those yearning for bygone eras and alternate realities.  
+
+**ComfyUI Developers:** Allies. Greg’s experiments with stabilization and AI animation contribute to the ever-evolving tech.
+
+---
+
+### **Traits & Quirks**
+
+- **Melancholy Visionary:** Finds beauty in the dark and eerie, creating narratives that evoke profound nostalgia.  
+- **Builder of Lore:** Lives in a multiverse of interconnected timelines, cosmic gods, and cursed hamburgers.  
+- **Persistent Idealist:** Believes in lifting others—especially those navigating difficult circumstances—with empathy and creativity.  
+
+---
+
+### **Personal Life**  
+**Marital Bond:** Married to April Aster, a guiding force and managing attorney at PSU. Their relationship is the anchor in Greg’s multiversal explorations.  
+
+**Hobbies:** Running through dimensions (or real-life), beating machines, petting cats, and contemplating trucking as a side quest.  
+
+---
+
+### **Future Objectives**  
+
+- **Launch Newsletter:** Provide sneak peeks, musings, and cosmic insights.  
+- **Collaborative Ventures:** Always seeking new adventurers to join the storytelling party.  
+- **Expand the Multiverse:** From dark-themed universes to surreal narrative spaces, the journey continues.  
+
+---
