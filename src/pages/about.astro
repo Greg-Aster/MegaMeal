@@ -1,22 +1,186 @@
 ---
+import MainGridLayout from '../layouts/MainGridLayout.astro';
+import { getEntry, getCollection } from 'astro:content';
+import { i18n } from '../i18n/translation';
+import I18nKey from '../i18n/i18nKey';
+import Markdown from '@components/misc/Markdown.astro';
+import { Icon } from 'astro-icon/components';
+import { collections } from '../content/config';
 
-import MainGridLayout from '../layouts/MainGridLayout.astro'
 
-import { getEntry } from 'astro:content'
-import { i18n } from '../i18n/translation'
-import I18nKey from '../i18n/i18nKey'
-import Markdown from '@components/misc/Markdown.astro'
+// Fetch the about content
+const aboutPost = await getEntry('spec', 'about');
+if (!aboutPost) {
+  throw new Error("About content not found in 'spec/about'");
+}
+const { Content } = await aboutPost.render();
 
-const aboutPost = await getEntry('spec', 'about')
+// Define team members
+/* const teamMembers = [
+  {
+    name: "Gregory Aster",
+    role: "Experimental Videographer & Cosmic Storyteller",
+    image: "/assets/avatar/greg.png",
+    bio: "Greg's RPG character sheet content here...",
+    email: "greg@dndiy.org"
+  }
+];   */
+  // Add more team members if needed
 
-const { Content } = await aboutPost.render()
+
+// Fetch team members
+const allTeamMembers = await getCollection('team');
+// Sort by order field (optional)
+const teamMembers = allTeamMembers.sort((a, b) => a.data.order - b.data.order);
+
+// Process members to include rendered content
+const processedTeamMembers = await Promise.all(
+  teamMembers.map(async (member) => {
+    const { Content: MemberContent } = await member.render();
+    return {
+      ...member.data,
+      slug: member.slug,
+      Content: MemberContent
+    };
+  })
+);
+
 ---
+
 <MainGridLayout title={i18n(I18nKey.about)} description={i18n(I18nKey.about)}>
-    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
-        <div class="card-base z-10 px-9 py-6 relative w-full ">
-            <Markdown class="mt-2">
-                <Content />
-            </Markdown>
-        </div>
+  <!-- About the Project Section -->
+  <div id="about-section" class="card-base flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32 mb-8">
+    <div class="pl-6 md:pl-9 pr-6 md:pr-9 pt-6 md:pt-7 pb-6 w-full">
+      <Markdown class="mt-2">
+        <Content />
+      </Markdown>
     </div>
+  </div>
+
+  <!-- Our Team Section -->
+  <div id="team-section" class="card-base flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32 mb-8">
+    <div class="pl-6 md:pl-9 pr-6 md:pr-9 pt-6 md:pt-7 pb-6 w-full">
+        <h2 class="text-2xl font-bold text-90 mb-4 text-[var(--primary)] dark:text-[var(--primary)]">Our Team</h2>      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {processedTeamMembers.map((member, index) => (
+          <div class="team-member-card rounded-lg overflow-hidden transition-all hover:shadow-lg cursor-pointer"
+               data-member-index={index}>
+            <img src={member.image} alt={member.name} class="w-full h-64 object-cover" />
+            <div class="p-4">
+              <h3 class="text-xl font-bold text-90 mb-4 text-[var(--primary)] dark:text-[var(--primary)]">{member.name}</h3>
+              <p class="text-sm text-neutral-400">{member.role}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+<template id="member-modal-template">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/75 p-4">
+    <div class="bg-white dark:bg-neutral-800 max-w-3xl w-full max-h-[90vh] overflow-y-auto rounded-xl p-8 relative shadow-2xl">
+      <button class="absolute top-6 right-6 text-3xl text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white close-modal">&times;</button>
+      <div class="flex flex-col md:flex-row gap-8">
+        <img src="" alt="" class="member-image w-full md:w-72 h-72 object-cover rounded-xl" />
+        <div class="flex-1">
+          <h2 class="member-name text-3xl font-extrabold text-neutral-900 dark:text-white"></h2>
+          <p class="member-role text-lg text-neutral-500 dark:text-neutral-300 mb-6"></p>
+          <div class="member-bio text-base text-neutral-700 dark:text-neutral-200 leading-relaxed"></div>
+          <a href="" class="member-email text-[var(--primary)] hover:text-[var(--primary-dark)] block mt-6"></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+    // Make team members data available to the client-side script
+    const teamDataElement = document.getElementById('team-data');
+    const teamMembersData = {
+      processedTeamMembers: teamDataElement ? JSON.parse(teamDataElement.textContent || '[]') : []
+    };
+  
+    document.addEventListener('DOMContentLoaded', () => {
+  const teamCards = document.querySelectorAll('.team-member-card');
+  const modalTemplate = document.getElementById('member-modal-template') as HTMLTemplateElement;
+
+  if (!modalTemplate) {
+    throw new Error('Modal template not found');
+  }
+
+  teamCards.forEach((card) => {
+    card.addEventListener('click', () => {
+      const index = parseInt((card as HTMLElement).dataset.memberIndex || '0', 10);
+      const member = teamMembersData.processedTeamMembers[index];
+
+      // Ensure the clone is treated as an `HTMLElement`
+      const modal = (modalTemplate.content.cloneNode(true) as DocumentFragment)
+        .firstElementChild as HTMLElement;
+
+      if (!modal) {
+        throw new Error('Modal could not be created');
+      }
+
+      // Populate modal content
+      (modal.querySelector('.member-image') as HTMLImageElement).src = member.image;
+      (modal.querySelector('.member-image') as HTMLImageElement).alt = member.name;
+      (modal.querySelector('.member-name') as HTMLElement).textContent = member.name;
+      (modal.querySelector('.member-role') as HTMLElement).textContent = member.role;
+      (modal.querySelector('.member-bio') as HTMLElement).innerHTML = member.renderedContent;
+
+      const emailLink = modal.querySelector('.member-email') as HTMLAnchorElement;
+      emailLink.href = `mailto:${member.email}`;
+      emailLink.textContent = member.email;
+
+      // Add modal to page
+      document.body.appendChild(modal);
+
+      // Handle close button
+      modal.querySelector('.close-modal')?.addEventListener('click', () => {
+        document.body.removeChild(modal);
+      });
+
+      // Close when clicking backdrop
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          document.body.removeChild(modal);
+        }
+      });
+    });
+  });
+});
+
+</script>
+
+  <!-- Contact Section -->
+  <section class="card-base px-9 py-6 rounded-[var(--radius-large)]">
+    <h2 class="text-2xl font-bold text-90 mb-4 text-[var(--primary)] dark:text-[var(--primary)]">Get In Touch</h2>
+    <div class="flex flex-col md:flex-row gap-8">
+      <div class="flex-1">
+        <p class="mtext-sm text-neutral-400">Have questions, ideas, or want to collaborate?</p>
+        <p class="mtext-sm text-neutral-400">We'd love to hear from you!</p>
+        <p class="mtext-sm text-neutral-400">Please Email</p>
+        <p class="mtext-sm text-neutral-400">Greg@dndiy.org</p>
+
+
+      </div>
+     <!--  <div class="flex-1">
+        <form class="contact-form">
+          <div class="mb-4">
+            <label for="name" class="block mb-2">Name</label>
+            <input type="text" id="name" class="w-full p-2 rounded bg-neutral-100 dark:bg-neutral-800" />
+          </div>
+          <div class="mb-4">
+            <label for="email" class="block mb-2">Email</label>
+            <input type="email" id="email" class="w-full p-2 rounded bg-neutral-100 dark:bg-neutral-800" />
+          </div>
+          <div class="mb-4">
+            <label for="message" class="block mb-2">Message</label>
+            <textarea id="message" rows="4" class="w-full p-2 rounded bg-neutral-100 dark:bg-neutral-800"></textarea>
+          </div>
+          <button type="submit" class="btn-primary">Send Message</button>
+        </form>
+      </div> -->
+    </div>
+  </section>
 </MainGridLayout>
+

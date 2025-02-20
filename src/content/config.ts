@@ -1,5 +1,6 @@
-import { defineCollection, z } from 'astro:content'
+import { defineCollection, z } from 'astro:content';
 
+// Define the 'posts' collection
 const postsCollection = defineCollection({
   schema: z.object({
     title: z.string(),
@@ -18,7 +19,31 @@ const postsCollection = defineCollection({
     nextTitle: z.string().default(''),
     nextSlug: z.string().default(''),
   }),
-})
+});
+
+// Define the 'spec' collection
+const specCollection = defineCollection({
+  schema: z.object({
+    title: z.string(),
+    description: z.string().optional(),
+  }),
+});
+
+// Define the 'team' collection
+const teamCollection = defineCollection({
+  schema: z.object({
+    name: z.string(),
+    role: z.string(),
+    image: z.string(),
+    email: z.string(),
+    featured: z.boolean().optional(),
+    order: z.number().default(0),
+  }),
+});
+
+// Export the collections
 export const collections = {
   posts: postsCollection,
-}
+  spec: specCollection,
+  team: teamCollection,
+};

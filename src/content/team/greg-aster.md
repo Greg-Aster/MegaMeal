@@ -1,6 +1,10 @@
 ---
-title: "About DNDIY"
-description: "Learn more about our project and team."
+name: "Gregory Aster"
+role: "Experimental Videographer & Cosmic Storyteller"
+image: "/assets/avatar/avatar.png" 
+email: "greg@dndiy.org"
+featured: true
+order: 1
 ---
 
 # **Gregory Aster**

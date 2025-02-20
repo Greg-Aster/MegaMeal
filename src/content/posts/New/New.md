@@ -21,11 +21,11 @@ lang: ''
 
 # Hello!
 
-With the general hellscape of the internet, social media, and the world at large, I figured it was wise to teach myselft html coding, make a time machine, travel to 1996 and bang out a sweet website in my mothers basement. The purpose is to create a central repository for my content, and own my data. There will be more features, updates, and posts to come.
+With the general hellscape of the internet, social media, and the world at large, I figured it was wise to teach myself html coding, make a time machine, travel to 1996 and bang out a sweet website in my mother's basement. The purpose is to create a central repository for my content, and own my data. There will be more features, updates, and posts to come.
 
 ## Who is this Weirdo? What is this Place?
 
-Don't worry this is a safe space! I will never ask for your home adress and social security number.
+Don't worry this is a safe space! I will never ask for your home address and social security number.
 Gregory Aster is a filmmaker, animator, and storyteller with a penchant for the bizarre, the experimental, and the deeply nostalgic. He spent 23 years as a mechanic - 10 as a certified technician and manager, then 13 as a business owner. Having retired from the trade, he now devotes all his time to creative media.
 
 His creative work blends cyberpunk, cosmic horror, and absurdist humor - drawing inspiration from old-school sci-fi, westerns, and the strange corners of pop culture. From dystopian fast-food conspiracies to interdimensional smugglers, his projects thrive on mystery, aesthetic weirdness, and an undercurrent of melancholy.
