@@ -10,7 +10,7 @@ image: './cover3.png'
 
 tags: [New, Website, Updates]
 
-category: 'Blog'
+category: 'News'
 
 draft: false
 

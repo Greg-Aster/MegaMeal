@@ -59,9 +59,9 @@ description: "Learn more about our project and team."
 
 - **Mega Meal:** Chronicles a dystopian future where sentient fast-food mascots guard dark secrets. Will the protagonist, *(redacted)*, uncover the truth?  
 - **Untitled:** A Cosmic Horror  blend of timelines, sirens, and symbolic visuals exploring loss and destiny.  
-- **DNDIY:** Short for do-not-do-it-yourself, its the original vintage series Greg held the mantle for. The proving ground. 
+- **DNDIY:** Short for do-not-do-it-yourself, its the original vintage series Greg held the mantle for, and the proving ground of his skills today. 
 - **Merkin’s Alternate Universe:** Experimental website theme inspired by a cosmic entity - unlock dark realities with a mere mode switch.  
-- **Dystopian IRL Building:** The ongoing battle against decay and existential dread.
+- **Dystopian IRL Building of Things:** The ongoing battle against decay and existential dread.
 
 ---
 

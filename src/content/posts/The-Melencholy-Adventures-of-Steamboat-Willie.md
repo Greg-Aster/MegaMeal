@@ -1,8 +1,8 @@
 ---
 title: The Melancholy adventures of Steamboat Willie
 published: 2025-02-08
-description: 'A Retrospective view on the Project.'
-image: './thumb.png'
+description: 'A retrospective view on the project.'
+image: './The-Melencholy-Adventures-of-Steamboat-Willie/thumb.png'
 tags: [Projects, Animation]
 category: 'Projects'
 draft: false 
@@ -50,7 +50,7 @@ title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; cli
 6. **Sound Design**:  
   Squeaky toys, radio static, and a parakeet were used. Whale noises for the mermaid. Boat horn for the cow, The music was original, created using an MIDI keyboard and LMMS music studio.
 
-![View of boat n blender compositing](./Blender.png)
+![View of boat n blender compositing](./The-Melencholy-Adventures-of-Steamboat-Willie/Blender.png)
 
 ---
 
@@ -82,7 +82,7 @@ For those interested in the technical aspects of the project, here’s a breakdo
 ---
 
 #### **Conclusion**
-Looking back I’m appreciative of how much it taught me. It was a project born out of curiosity, frustration, and a desire to create something meaningful. It reminded me why I create: not for the views or the likes, but for the joy of bringing something into the world that didn’t exist - but needs to exist. Despite its flaws, has a place in the world.
+Looking back I’m appreciative of how much it taught me. It was a project born out of curiosity, frustration, and a desire to create something meaningful. It reminded me why I create: not for the views or the likes, but for the joy of bringing something into the world that didn’t exist - but needs to exist. Despite its flaws, it has a place in the world.
 
 
 A poignant sentiment, one that captures the essence of *The Melancholy adventures of Steamboat Willie* - fleeting, imperfect, exploration of life, art, and memory. 

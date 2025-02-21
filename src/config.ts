@@ -41,6 +41,7 @@ export const navBarConfig: NavBarConfig = {
   links: [
     LinkPreset.Home,
     LinkPreset.Archive,
+    LinkPreset.Discussion,
     LinkPreset.About,
     {
       name: 'YouTube',
