@@ -2,133 +2,189 @@
 import MainGridLayout from '../layouts/MainGridLayout.astro';
 import { i18n } from '../i18n/translation';
 import I18nKey from '../i18n/i18nKey';
-import Markdown from '@components/misc/Markdown.astro';
 import { Icon } from 'astro-icon/components';
-
-// You can fetch any configuration content if needed
-// const discordConfig = await getEntry('spec', 'discord');
 ---
 
-<MainGridLayout title={i18n(I18nKey.discussion) || "Discord Community"}  description={i18n(I18nKey.discussion)  || "Join our Discord community"}>
-  <!-- Discord Interactive Embed Section -->
-  <div id="discord-section" class="card-base flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-[650px] mb-8">
-    <div class="pl-6 md:pl-9 pr-6 md:pr-9 pt-6 md:pt-7 pb-6 w-full">
-      <h2 class="text-2xl font-bold text-90 mb-4 text-[var(--primary)] dark:text-[var(--primary)]">Join Our Community</h2>
-      <p class="mb-6 text-sm text-neutral-400">Chat directly with our community without leaving the site!</p>
+<MainGridLayout title={i18n(I18nKey.community) || "Discord Community"} description={i18n(I18nKey.community) || "Join our Discord community"}>
+  <!-- Discord Community Hero Section -->
+  <div id="discord-hero" class="card-base flex flex-col md:flex-row w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-[300px] mb-8">
+    <div class="pl-6 md:pl-9 pr-6 md:pr-9 pt-6 md:pt-7 pb-6 md:w-2/3">
+      <h2 class="text-3xl font-bold text-90 mb-4 text-[var(--primary)] dark:text-[var(--primary)]">Join Our Discord Community</h2>
+      <p class="text-neutral-600 dark:text-neutral-300 mb-8 leading-relaxed">
+        Connect with other members, share ideas, get help, and stay updated on the latest developments. Our Discord server is the heart of our community.
+      </p>
       
-      <!-- Discord Interactive Embed -->
-      <div class="discord-embed-container w-full h-[600px] rounded-lg overflow-hidden">
-        <iframe 
-          src="https://discord.com/channels/1302765160284295168/1302765160284295171/embed"
-          width="100%" 
-          height="100%" 
-          allowtransparency="true" 
-          frameborder="0" 
-          sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-storage-access-by-user-activation"
-          loading="lazy"
-          class="rounded-lg"
-        ></iframe>
-      </div>
-    </div>
-  </div>
-
-  <!-- Information About Discord Embed -->
-  <div id="embed-info" class="card-base flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32 mb-8">
-    <div class="pl-6 md:pl-9 pr-6 md:pr-9 pt-6 md:pt-7 pb-6 w-full">
-      <h2 class="text-2xl font-bold text-90 mb-4 text-[var(--primary)] dark:text-[var(--primary)]">About Our Discord Embed</h2>
-      
-      <div class="space-y-4">
-        <div class="info-item">
-          <h3 class="text-lg font-medium mb-2">Interactive Chat</h3>
-          <p class="text-sm text-neutral-400">You can chat directly with our community through this embedded Discord widget. New users will need to log in to their Discord account when prompted.</p>
+      <div class="space-y-6">
+        <div class="flex items-start space-x-4">
+          <div class="bg-[var(--primary)] bg-opacity-10 p-2 rounded-full">
+            <Icon name="mdi:chat-processing-outline" class="w-6 h-6 text-[var(--primary)]" />
+          </div>
+          <div>
+            <h3 class="font-medium text-90 text-lg mb-1">Active Discussions</h3>
+            <p class="text-sm text-neutral-500 dark:text-neutral-400">Engage in conversations about projects, ideas, and techniques</p>
+          </div>
         </div>
         
-        <div class="info-item">
-          <h3 class="text-lg font-medium mb-2">Limited Functionality</h3>
-          <p class="text-sm text-neutral-400">The embedded chat provides basic functionality. For full features like voice chat and file sharing, you'll need to join our server on the Discord app.</p>
+        <div class="flex items-start space-x-4">
+          <div class="bg-[var(--primary)] bg-opacity-10 p-2 rounded-full">
+            <Icon name="mdi:help-circle-outline" class="w-6 h-6 text-[var(--primary)]" />
+          </div>
+          <div>
+            <h3 class="font-medium text-90 text-lg mb-1">Community Support</h3>
+            <p class="text-sm text-neutral-500 dark:text-neutral-400">Get help from experienced members and contribute your knowledge</p>
+          </div>
         </div>
         
-        <div class="info-item">
-          <h3 class="text-lg font-medium mb-2">Discord Account Required</h3>
-          <p class="text-sm text-neutral-400">You'll need a Discord account to participate in the chat. If you don't have one, you'll be prompted to create one when you try to send a message.</p>
+        <div class="flex items-start space-x-4">
+          <div class="bg-[var(--primary)] bg-opacity-10 p-2 rounded-full">
+            <Icon name="mdi:bell-outline" class="w-6 h-6 text-[var(--primary)]" />
+          </div>
+          <div>
+            <h3 class="font-medium text-90 text-lg mb-1">Stay Updated</h3>
+            <p class="text-sm text-neutral-500 dark:text-neutral-400">Receive announcements and updates about new developments</p>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Join Full Discord Section -->
-  <section class="card-base px-9 py-6 rounded-[var(--radius-large)]">
-    <h2 class="text-2xl font-bold text-90 mb-4 text-[var(--primary)] dark:text-[var(--primary)]">Get the Full Experience</h2>
-    <div class="flex flex-col md:flex-row gap-8 items-center">
-      <div class="flex-1">
-        <p class="text-sm text-neutral-400 mb-4">Want access to all features including voice channels, file sharing, and more?</p>
-        <p class="text-sm text-neutral-400 mb-6">Join our full Discord server for the complete community experience.</p>
-        
+      
+      <div class="mt-10">
         <a 
           href="https://discord.gg/je7Vyw75tR" 
           target="_blank" 
           rel="noopener noreferrer" 
-          class="btn-primary inline-flex items-center gap-2 py-2 px-4 rounded-md"
+          class="discord-join-button"
         >
-          <Icon name="mdi:discord" class="w-5 h-5" />
-          Join Full Discord Server
+          <Icon name="mdi:discord" class="w-6 h-6" />
+          Join Our Discord Server
         </a>
       </div>
-      <div class="flex-1 flex justify-center">
-        <img 
-          src="/assets/discord-illustration.svg" 
-          alt="Discord Community Illustration" 
-          class="max-w-xs w-full h-auto"
-          onerror="this.src='/assets/placeholder.png'; this.onerror=null;"
-        />
+    </div>
+    
+    <div class="discord-graphic md:w-1/3 min-h-[200px] md:min-h-0 relative overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-indigo-700 flex items-center justify-center">
+        <Icon name="mdi:discord" class="w-32 h-32 text-white opacity-30" />
       </div>
+    </div>
+  </div>
+
+  <!-- What to Expect Section -->
+  <div id="discord-features" class="card-base flex w-full rounded-[var(--radius-large)] overflow-hidden relative mb-8">
+    <div class="pl-6 md:pl-9 pr-6 md:pr-9 pt-6 md:pt-7 pb-6 w-full">
+      <h2 class="text-2xl font-bold text-90 mb-6 text-[var(--primary)] dark:text-[var(--primary)]">What to Expect</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="feature-card p-5 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-md transition-all">
+          <h3 class="font-medium text-90 text-lg mb-3 flex items-center">
+            <Icon name="mdi:forum-outline" class="w-5 h-5 mr-2 text-[var(--primary)]" />
+            Dedicated Channels
+          </h3>
+          <p class="text-sm text-neutral-500 dark:text-neutral-400">
+            Our server is organized with topic-specific channels for focused discussions on different aspects of our community.
+          </p>
+        </div>
+        
+        <div class="feature-card p-5 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-md transition-all">
+          <h3 class="font-medium text-90 text-lg mb-3 flex items-center">
+            <Icon name="mdi:account-group-outline" class="w-5 h-5 mr-2 text-[var(--primary)]" />
+            Community Events
+          </h3>
+          <p class="text-sm text-neutral-500 dark:text-neutral-400">
+            Join regular community calls, workshops, and collaborative sessions to connect with other members.
+          </p>
+        </div>
+        
+        <div class="feature-card p-5 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-md transition-all">
+          <h3 class="font-medium text-90 text-lg mb-3 flex items-center">
+            <Icon name="mdi:shield-check-outline" class="w-5 h-5 mr-2 text-[var(--primary)]" />
+            Welcoming Environment
+          </h3>
+          <p class="text-sm text-neutral-500 dark:text-neutral-400">
+            Our moderation team ensures a friendly, respectful space where everyone can participate comfortably.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Community Guidelines Section -->
+  <section class="card-base px-9 py-6 rounded-[var(--radius-large)]">
+    <h2 class="text-2xl font-bold text-90 mb-4 text-[var(--primary)] dark:text-[var(--primary)]">Community Guidelines</h2>
+    <div class="space-y-4 mb-6">
+      <p class="text-sm text-neutral-500 dark:text-neutral-400">
+        To ensure our Discord server remains a positive and productive space, we ask all members to follow these basic guidelines:
+      </p>
+      
+      <ul class="list-disc pl-5 space-y-2 text-sm text-neutral-500 dark:text-neutral-400">
+        <li>Be respectful and kind to other community members</li>
+        <li>Keep discussions relevant to the appropriate channels</li>
+        <li>Share knowledge freely and help others when you can</li>
+        <li>No spam, excessive self-promotion, or disruptive behavior</li>
+        <li>Follow Discord's Terms of Service and Community Guidelines</li>
+      </ul>
+    </div>
+    
+    <div class="flex justify-center mt-8">
+      <a 
+        href="https://discord.gg/je7Vyw75tR" 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        class="discord-join-button-secondary"
+      >
+        <Icon name="mdi:discord" class="w-5 h-5" />
+        Join the Conversation
+      </a>
     </div>
   </section>
 </MainGridLayout>
 
 <style>
-  .btn-primary {
-    background-color: var(--primary);
+  .discord-join-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #5865F2;
     color: white;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 4px 6px -1px rgba(88, 101, 242, 0.2);
+  }
+  
+  .discord-join-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px -2px rgba(88, 101, 242, 0.3);
+    background-color: #4752C4;
+  }
+  
+  .discord-join-button-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: transparent;
+    color: #5865F2;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid #5865F2;
     transition: all 0.2s ease-in-out;
   }
   
-  .btn-primary:hover {
-    background-color: var(--primary-dark);
+  .discord-join-button-secondary:hover {
+    background-color: rgba(88, 101, 242, 0.1);
     transform: translateY(-2px);
   }
   
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .discord-embed-container {
-      height: 500px;
-    }
+  .feature-card {
+    transition: transform 0.2s ease-in-out;
   }
   
-  @media (max-width: 640px) {
-    .discord-embed-container {
-      height: 400px;
+  .feature-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  @media (max-width: 768px) {
+    .discord-graphic {
+      order: -1;
     }
   }
 </style>
-
-<script>
-  // Optional: Add a loading indicator for the iframe
-  document.addEventListener('DOMContentLoaded', () => {
-    const discordContainer = document.querySelector('.discord-embed-container');
-    const iframe = discordContainer?.querySelector('iframe');
-    
-    if (iframe) {
-      // Create loading indicator
-      const loader = document.createElement('div');
-      loader.classList.add('loading-indicator');
-      loader.innerHTML = '<span>Loading Discord...</span>';
-      discordContainer?.appendChild(loader);
-      
-      // Remove loader when iframe loads
-      iframe.addEventListener('load', () => {
-        loader.remove();
-      });
-    }
-  });
-</script>
