@@ -33,14 +33,15 @@ const allTeamMembers = await getCollection('team');
 // Sort by order field (optional)
 const teamMembers = allTeamMembers.sort((a, b) => a.data.order - b.data.order);
 
-// Process members to include rendered content
 const processedTeamMembers = await Promise.all(
   teamMembers.map(async (member) => {
     const { Content: MemberContent } = await member.render();
+    // Convert the content to a serializable format
     return {
       ...member.data,
       slug: member.slug,
-      Content: MemberContent
+      // We'll use a placeholder and fill it in with actual HTML later
+      contentId: `member-content-${member.slug}`
     };
   })
 );
@@ -75,6 +76,19 @@ const processedTeamMembers = await Promise.all(
     </div>
   </div>
 
+  <!-- After your team section -->
+<div id="team-data" style="display: none;">{JSON.stringify(processedTeamMembers)}</div>
+
+<!-- Add hidden divs for each member's content -->
+{teamMembers.map(async (member) => {
+  const { Content } = await member.render();
+  return (
+    <div id={`member-content-${member.slug}`} style="display: none;">
+      <Content />
+    </div>
+  );
+})}
+
 <template id="member-modal-template">
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/75 p-4">
     <div class="bg-white dark:bg-neutral-800 max-w-3xl w-full max-h-[90vh] overflow-y-auto rounded-xl p-8 relative shadow-2xl">
@@ -93,15 +107,11 @@ const processedTeamMembers = await Promise.all(
 </template>
 
 <script>
-    // Make team members data available to the client-side script
-    const teamDataElement = document.getElementById('team-data');
-    const teamMembersData = {
-      processedTeamMembers: teamDataElement ? JSON.parse(teamDataElement.textContent || '[]') : []
-    };
-  
-    document.addEventListener('DOMContentLoaded', () => {
+ document.addEventListener('DOMContentLoaded', () => {
   const teamCards = document.querySelectorAll('.team-member-card');
   const modalTemplate = document.getElementById('member-modal-template') as HTMLTemplateElement;
+  const teamDataElement = document.getElementById('team-data');
+  const teamMembersData = teamDataElement ? JSON.parse(teamDataElement.textContent || '[]') : [];
 
   if (!modalTemplate) {
     throw new Error('Modal template not found');
@@ -110,7 +120,7 @@ const processedTeamMembers = await Promise.all(
   teamCards.forEach((card) => {
     card.addEventListener('click', () => {
       const index = parseInt((card as HTMLElement).dataset.memberIndex || '0', 10);
-      const member = teamMembersData.processedTeamMembers[index];
+      const member = teamMembersData[index];
 
       // Ensure the clone is treated as an `HTMLElement`
       const modal = (modalTemplate.content.cloneNode(true) as DocumentFragment)
@@ -125,7 +135,12 @@ const processedTeamMembers = await Promise.all(
       (modal.querySelector('.member-image') as HTMLImageElement).alt = member.name;
       (modal.querySelector('.member-name') as HTMLElement).textContent = member.name;
       (modal.querySelector('.member-role') as HTMLElement).textContent = member.role;
-      (modal.querySelector('.member-bio') as HTMLElement).innerHTML = member.renderedContent;
+      
+      // Get content from the hidden div
+      const contentElement = document.getElementById(member.contentId);
+      if (contentElement) {
+        (modal.querySelector('.member-bio') as HTMLElement).innerHTML = contentElement.innerHTML;
+      }
 
       const emailLink = modal.querySelector('.member-email') as HTMLAnchorElement;
       emailLink.href = `mailto:${member.email}`;
