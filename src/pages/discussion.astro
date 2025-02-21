@@ -18,6 +18,18 @@ import { Icon } from 'astro-icon/components';
       
       <!-- Discord Interactive Embed -->
       <div class="discord-embed-container w-full h-[600px] rounded-lg overflow-hidden">
+        <!-- For development: -->
+        <iframe 
+          src="https://discord.com/widget?id=1302765160284295168&theme=dark" 
+          width="100%" 
+          height="100%" 
+          allowtransparency="true" 
+          frameborder="0" 
+          sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+          class="rounded-lg"
+        ></iframe>
+        
+        <!-- For production (uncomment after deployment):
         <iframe 
           src="https://discord.com/channels/1302765160284295168/1302765160284295171/embed"
           width="100%" 
@@ -28,9 +40,8 @@ import { Icon } from 'astro-icon/components';
           loading="lazy"
           class="rounded-lg"
         ></iframe>
+        -->
       </div>
-    </div>
-  </div>
 
   <!-- Information About Discord Embed -->
   <div id="embed-info" class="card-base flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32 mb-8">
@@ -65,7 +76,7 @@ import { Icon } from 'astro-icon/components';
         <p class="text-sm text-neutral-400 mb-6">Join our full Discord server for the complete community experience.</p>
         
         <a 
-          href="https://discord.gg/https://discord.gg/je7Vyw75tR" 
+          href="https://discord.gg/je7Vyw75tR" 
           target="_blank" 
           rel="noopener noreferrer" 
           class="btn-primary inline-flex items-center gap-2 py-2 px-4 rounded-md"
