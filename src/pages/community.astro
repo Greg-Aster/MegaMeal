@@ -5,112 +5,446 @@ import I18nKey from '../i18n/i18nKey';
 import { Icon } from 'astro-icon/components';
 ---
 
-<MainGridLayout title={i18n(I18nKey.community) || "Discord Community"} description={i18n(I18nKey.community) || "Join our Discord community"}>
-  <!-- Discord Community Hero Section -->
-  <div id="discord-hero" class="card-base flex flex-col md:flex-row w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-[300px] mb-8">
+<MainGridLayout title={i18n(I18nKey.community) || "Our Community"} description={i18n(I18nKey.community) || "Join our community through multiple channels"}>
+  <!-- Community Hero Section -->
+  <div id="community-hero" class="card-base flex flex-col md:flex-row w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-[300px] mb-8">
     <div class="pl-6 md:pl-9 pr-6 md:pr-9 pt-6 md:pt-7 pb-6 md:w-2/3">
-      <h2 class="text-3xl font-bold text-90 mb-4 text-[var(--primary)] dark:text-[var(--primary)]">Join Our Discord Community</h2>
-      <p class="text-neutral-600 dark:text-neutral-300 mb-8 leading-relaxed">
-        Connect with other members, share ideas, get help, and stay updated on the latest developments. Our Discord server is the heart of our community.
+      <h2 class="text-3xl font-bold text-90 mb-4 text-[var(--primary)] dark:text-[var(--primary)]">Join Our Community</h2>
+      <p class="text-neutral-600 dark:text-neutral-300 mb-6 leading-relaxed">
+        Connect with other members, share ideas, get help, and stay updated on the latest developments. Choose how you'd like to engage with our growing community.
       </p>
       
-      <div class="space-y-6">
-        <div class="flex items-start space-x-4">
-          <div class="bg-[var(--primary)] bg-opacity-10 p-2 rounded-full">
-            <Icon name="mdi:chat-processing-outline" class="w-6 h-6 text-[var(--primary)]" />
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+        <a href="#discord-section" class="engagement-option flex items-center p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all">
+          <div class="bg-[#5865F2] bg-opacity-20 p-2 rounded-full mr-3">
+            <Icon name="mdi:discord" class="w-5 h-5 text-[#5865F2]" />
           </div>
           <div>
-            <h3 class="font-medium text-90 text-lg mb-1">Active Discussions</h3>
-            <p class="text-sm text-neutral-500 dark:text-neutral-400">Engage in conversations about projects, ideas, and techniques</p>
+            <h3 class="font-medium text-90">Discord Community</h3>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">Real-time chat & discussions</p>
           </div>
-        </div>
+        </a>
         
-        <div class="flex items-start space-x-4">
-          <div class="bg-[var(--primary)] bg-opacity-10 p-2 rounded-full">
-            <Icon name="mdi:help-circle-outline" class="w-6 h-6 text-[var(--primary)]" />
+<!--         <a href="#newsletter-section" class="engagement-option flex items-center p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all">
+          <div class="bg-[#5865F2] bg-opacity-20 p-2 rounded-full mr-3">
+            <Icon name="famicons:mail" class="w-5 h-5 text-[#5865F2]" />
           </div>
           <div>
-            <h3 class="font-medium text-90 text-lg mb-1">Community Support</h3>
-            <p class="text-sm text-neutral-500 dark:text-neutral-400">Get help from experienced members and contribute your knowledge</p>
+            <h3 class="font-medium text-90">Email Newsletter</h3>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">Regular updates & announcements</p>
           </div>
-        </div>
+        </a> -->
         
-        <div class="flex items-start space-x-4">
-          <div class="bg-[var(--primary)] bg-opacity-10 p-2 rounded-full">
-            <Icon name="mdi:bell-outline" class="w-6 h-6 text-[var(--primary)]" />
+<!--         <a href="#events-section" class="engagement-option flex items-center p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all">
+          <div class="bg-[#5865F2] bg-opacity-20 p-2 rounded-full mr-3">
+            <Icon name="mdi:calendar-outline" class="w-5 h-5 text-[#5865F2]" />
           </div>
           <div>
-            <h3 class="font-medium text-90 text-lg mb-1">Stay Updated</h3>
-            <p class="text-sm text-neutral-500 dark:text-neutral-400">Receive announcements and updates about new developments</p>
+            <h3 class="font-medium text-90">Community Events</h3>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">Workshops, calls & meetups</p>
           </div>
-        </div>
-      </div>
-      
-      <div class="mt-10">
-        <a 
-          href="https://discord.gg/je7Vyw75tR" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          class="discord-join-button"
-        >
-          <Icon name="mdi:discord" class="w-6 h-6" />
-          Join Our Discord Server
+        </a> -->
+        
+        <a href="#contact-section" class="engagement-option flex items-center p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all">
+          <div class="bg-[#5865F2] bg-opacity-20 p-2 rounded-full mr-3">
+            <Icon name="mdi:message-outline" class="w-5 h-5 text-[#5865F2]" />
+          </div>
+          <div>
+            <h3 class="font-medium text-90">Direct Contact</h3>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">Send private messages & feedback</p>
+          </div>
         </a>
       </div>
     </div>
     
-    <div class="discord-graphic md:w-1/3 min-h-[200px] md:min-h-0 relative overflow-hidden">
-      <div class="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-indigo-700 flex items-center justify-center">
-        <Icon name="mdi:discord" class="w-32 h-32 text-white opacity-30" />
+<!--     <div class="community-graphic md:w-1/3 min-h-[200px] md:min-h-0 relative overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-tr from-[var(--primary)] to-[color:var(--primary-light,#667eea)] flex items-center justify-center">
+        <Icon name="mdi:account-group" class="w-32 h-32 text-white opacity-30" />
+      </div>
+    </div> -->
+  </div>
+
+  <!-- Discord Section -->
+  <div id="discord-section" class="card-base w-full rounded-[var(--radius-large)] overflow-hidden relative mb-8">
+    <div class="pl-6 md:pl-9 pr-6 md:pr-9 pt-6 md:pt-7 pb-6 w-full">
+      <div class="flex items-center mb-6">
+        <Icon name="mdi:discord" class="w-8 h-8 text-[#5865F2] mr-3" />
+        <h2 class="text-2xl font-bold text-90 text-[var(--primary)] dark:text-[var(--primary)]">Discord Community</h2>
+      </div>
+      
+      <div class="flex flex-col md:flex-row gap-8">
+        <div class="md:w-2/3">
+          <p class="text-neutral-600 dark:text-neutral-300 mb-6 leading-relaxed">
+            Our Discord server is the heart of our real-time community. Connect with other members, share ideas, get help, and stay updated on the latest developments.
+          </p>
+          
+          <div class="space-y-4 mb-6">
+            <div class="flex items-start space-x-4">
+              <div class="bg-[#5865F2] bg-opacity-10 p-2 rounded-full">
+                <Icon name="mdi:chat-processing-outline" class="w-5 h-5 text-[#5865F2]" />
+              </div>
+              <div>
+                <h3 class="font-medium text-90 text-base mb-1">Active Discussions</h3>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">Engage in conversations about projects, ideas, and techniques</p>
+              </div>
+            </div>
+            
+            <div class="flex items-start space-x-4">
+              <div class="bg-[#5865F2] bg-opacity-10 p-2 rounded-full">
+                <Icon name="mdi:help-circle-outline" class="w-5 h-5 text-[#5865F2]" />
+              </div>
+              <div>
+                <h3 class="font-medium text-90 text-base mb-1">Community Support</h3>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">Get help from experienced members and contribute your knowledge</p>
+              </div>
+            </div>
+            
+            <div class="flex items-start space-x-4">
+              <div class="bg-[#5865F2] bg-opacity-10 p-2 rounded-full">
+                <Icon name="mdi:bell-outline" class="w-5 h-5 text-[#5865F2]" />
+              </div>
+              <div>
+                <h3 class="font-medium text-90 text-base mb-1">Stay Updated</h3>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">Receive announcements and updates about new developments</p>
+              </div>
+            </div>
+          </div>
+          
+          <a 
+            href="https://discord.gg/je7Vyw75tR" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            class="discord-join-button"
+          >
+            <Icon name="mdi:discord" class="w-6 h-6" />
+            Join Our Discord Server
+          </a>
+        </div>
+        
+        <div class="md:w-1/3 bg-neutral-100 dark:bg-neutral-800 rounded-lg p-5">
+          <h3 class="font-medium text-neutral-200 text-lg mb-3">Channel Overview</h3>
+<!--           <ul class="space-y-3">
+            <li class="flex items-center text-sm">
+              <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+              <span class="font-medium text-neutral-700 dark:text-neutral-200 mr-2">#announcements</span>
+              <span class="text-neutral-500 dark:text-neutral-400">Latest updates</span>
+            </li> -->
+            <li class="flex items-center text-sm">
+              <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+              <span class="font-medium text-neutral-700 dark:text-neutral-200 mr-2">#general</span>
+              <span class="text-neutral-500 dark:text-neutral-400">Main discussions</span>
+            </li>
+<!--             <li class="flex items-center text-sm">
+              <span class="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+              <span class="font-medium text-neutral-700 dark:text-neutral-200 mr-2">#help</span>
+              <span class="text-neutral-500 dark:text-neutral-400">Support channel</span>
+            </li> -->
+<!--             <li class="flex items-center text-sm">
+              <span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+              <span class="font-medium text-neutral-700 dark:text-neutral-200 mr-2">#showcase</span>
+              <span class="text-neutral-500 dark:text-neutral-400">Share your work</span>
+            </li> -->
+<!--             <li class="flex items-center text-sm">
+              <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+              <span class="font-medium text-neutral-700 dark:text-neutral-200 mr-2">#episode progress</span>
+              <span class="text-neutral-500 dark:text-neutral-400">Work in progress material and assets</span>
+            </li> -->
+          </ul>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- What to Expect Section -->
-  <div id="discord-features" class="card-base flex w-full rounded-[var(--radius-large)] overflow-hidden relative mb-8">
-    <div class="pl-6 md:pl-9 pr-6 md:pr-9 pt-6 md:pt-7 pb-6 w-full">
-      <h2 class="text-2xl font-bold text-90 mb-6 text-[var(--primary)] dark:text-[var(--primary)]">What to Expect</h2>
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="feature-card p-5 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-md transition-all">
-          <h3 class="font-medium text-90 text-lg mb-3 flex items-center">
-            <Icon name="mdi:forum-outline" class="w-5 h-5 mr-2 text-[var(--primary)]" />
-            Dedicated Channels
-          </h3>
-          <p class="text-sm text-neutral-500 dark:text-neutral-400">
-            Our server is organized with topic-specific channels for focused discussions on different aspects of our community.
-          </p>
+    <!-- Contact Section -->
+    <div id="contact-section" class="card-base w-full rounded-[var(--radius-large)] overflow-hidden relative mb-8">
+      <div class="pl-6 md:pl-9 pr-6 md:pr-9 pt-6 md:pt-7 pb-6 w-full">
+        <div class="flex items-center mb-6">
+          <Icon name="mdi:message-text-outline" class="w-8 h-8 text-[var(--primary)] mr-3" />
+          <h2 class="text-2xl font-bold text-90 text-[var(--primary)] dark:text-[var(--primary)]">Get in Touch</h2>
         </div>
         
-        <div class="feature-card p-5 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-md transition-all">
-          <h3 class="font-medium text-90 text-lg mb-3 flex items-center">
-            <Icon name="mdi:account-group-outline" class="w-5 h-5 mr-2 text-[var(--primary)]" />
-            Community Events
-          </h3>
-          <p class="text-sm text-neutral-500 dark:text-neutral-400">
-            Join regular community calls, workshops, and collaborative sessions to connect with other members.
-          </p>
-        </div>
-        
-        <div class="feature-card p-5 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-md transition-all">
-          <h3 class="font-medium text-90 text-lg mb-3 flex items-center">
-            <Icon name="mdi:shield-check-outline" class="w-5 h-5 mr-2 text-[var(--primary)]" />
-            Welcoming Environment
-          </h3>
-          <p class="text-sm text-neutral-500 dark:text-neutral-400">
-            Our moderation team ensures a friendly, respectful space where everyone can participate comfortably.
-          </p>
+        <div class="flex flex-col md:flex-row gap-8">
+          <div class="md:w-1/2">
+            <p class="text-neutral-600 dark:text-neutral-300 mb-6 leading-relaxed">
+              Have a question, suggestion, or feedback? Reach out directly to our team. We're here to help and would love to hear from you.
+            </p>
+            
+            <div class="space-y-4 mb-6">
+              <div class="flex items-start space-x-4">
+                <div class="bg-[var(--primary)] bg-opacity-10 p-2 rounded-full">
+                  <Icon name="mdi:frequently-asked-questions" class="w-5 h-5 text-[var(--primary)]" />
+                </div>
+                <div>
+                  <h3 class="font-medium text-90 text-base mb-1">Questions & Support</h3>
+                  <p class="text-sm text-neutral-500 dark:text-neutral-400">Get help with any issues or questions you might have</p>
+                </div>
+              </div>
+              
+              <div class="flex items-start space-x-4">
+                <div class="bg-[var(--primary)] bg-opacity-10 p-2 rounded-full">
+                  <Icon name="mdi:lightbulb-on-outline" class="w-5 h-5 text-[var(--primary)]" />
+                </div>
+                <div>
+                  <h3 class="font-medium text-90 text-base mb-1">Suggestions & Ideas</h3>
+                  <p class="text-sm text-neutral-500 dark:text-neutral-400">Share your thoughts on how we can improve</p>
+                </div>
+              </div>
+              
+              <div class="flex items-start space-x-4">
+                <div class="bg-[var(--primary)] bg-opacity-10 p-2 rounded-full">
+                  <Icon name="mdi:handshake-outline" class="w-5 h-5 text-[var(--primary)]" />
+                </div>
+                <div>
+                  <h3 class="font-medium text-90 text-base mb-1">Collaboration Opportunities</h3>
+                  <p class="text-sm text-neutral-500 dark:text-neutral-400">Discuss potential partnerships or collaborative projects</p>
+                </div>
+              </div>
+            </div>
+          </div>
+    
+          <!-- Form section in the correct position -->
+          <div class="md:w-1/2 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg p-6">
+            <h3 class="font-medium text-neutral-200 text-lg mb-4">Send Us a Message</h3>
+            <form 
+              action="https://formspree.io/f/xwpvzlgy" 
+              method="POST"
+              class="space-y-4"
+            >
+              <div>
+                <label for="name" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Your Name</label>
+                <input 
+                  type="text" 
+                  id="name" 
+                  name="name" 
+                  placeholder="John Doe" 
+                  class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label for="contact-email" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Email Address</label>
+                <input 
+                  type="email" 
+                  id="contact-email" 
+                  name="email" 
+                  placeholder="your@email.com" 
+                  class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label for="subject" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Subject</label>
+                <input 
+                  type="text" 
+                  id="subject" 
+                  name="subject" 
+                  placeholder="Question about..." 
+                  class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label for="message" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Your Message</label>
+                <textarea 
+                  id="message" 
+                  name="message" 
+                  rows="4" 
+                  placeholder="Type your message here..." 
+                  class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm"
+                  required
+                ></textarea>
+              </div>
+              
+              <div>
+                <button 
+                  type="submit" 
+                  class="contact-send-button"
+                >
+                  <Icon name="mdi:send" class="w-5 h-5" />
+                  Send Message
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+
+  <!-- Newsletter Section -->
+<!--   <div id="newsletter-section" class="card-base w-full rounded-[var(--radius-large)] overflow-hidden relative mb-8">
+    <div class="pl-6 md:pl-9 pr-6 md:pr-9 pt-6 md:pt-7 pb-6 w-full">
+      <div class="flex items-center mb-6">
+        <Icon name="mdi:email-newsletter" class="w-8 h-8 text-[var(--primary)] mr-3" />
+        <h2 class="text-2xl font-bold text-90 text-[var(--primary)] dark:text-[var(--primary)]">Email Newsletter</h2>
+      </div>
+      
+      <div class="flex flex-col md:flex-row gap-8">
+        <div class="md:w-1/2">
+          <p class="text-neutral-600 dark:text-neutral-300 mb-6 leading-relaxed">
+            Subscribe to our newsletter to receive regular updates, tutorials, and announcements directly to your inbox. Stay informed without the noise.
+          </p>
+          
+          <div class="space-y-4 mb-6">
+            <div class="flex items-start space-x-4">
+              <div class="bg-[var(--primary)] bg-opacity-10 p-2 rounded-full">
+                <Icon name="mdi:newspaper-variant-outline" class="w-5 h-5 text-[var(--primary)]" />
+              </div>
+              <div>
+                <h3 class="font-medium text-90 text-base mb-1">Weekly Digest</h3>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">Summary of important updates and community highlights</p>
+              </div>
+            </div>
+            
+            <div class="flex items-start space-x-4">
+              <div class="bg-[var(--primary)] bg-opacity-10 p-2 rounded-full">
+                <Icon name="mdi:calendar-check-outline" class="w-5 h-5 text-[var(--primary)]" />
+              </div>
+              <div>
+                <h3 class="font-medium text-90 text-base mb-1">Event Notifications</h3>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">Early announcements about upcoming workshops and meetups</p>
+              </div>
+            </div>
+            
+            <div class="flex items-start space-x-4">
+              <div class="bg-[var(--primary)] bg-opacity-10 p-2 rounded-full">
+                <Icon name="mdi:star-outline" class="w-5 h-5 text-[var(--primary)]" />
+              </div>
+              <div>
+                <h3 class="font-medium text-90 text-base mb-1">Exclusive Content</h3>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">Special guides and resources available only to subscribers</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="md:w-1/2 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg p-6">
+          <h3 class="font-medium text-neutral-200 text-lg mb-4">Subscribe to Our Newsletter</h3>
+          <form class="space-y-4">
+            <div>
+              <label for="email" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Email Address</label>
+              <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                placeholder="your@email.com" 
+                class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm"
+                required
+              />
+            </div>
+            
+            <div class="flex items-start">
+              <div class="flex items-center h-5">
+                <input
+                  id="newsletter-consent"
+                  name="newsletter-consent"
+                  type="checkbox"
+                  class="h-4 w-4 text-[var(--primary)] border-neutral-300 rounded"
+                  required
+                />
+              </div>
+              <div class="ml-3 text-sm">
+                <label for="newsletter-consent" class="text-neutral-500 dark:text-neutral-400">
+                  I agree to receive email newsletters and understand I can unsubscribe at any time.
+                </label>
+              </div>
+            </div>
+            
+            <div>
+              <button 
+                type="submit" 
+                class="newsletter-subscribe-button"
+              >
+                <Icon name="mdi:email-check-outline" class="w-5 h-5" />
+                Subscribe Now
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div> -->
+
+  <!-- Events Section -->
+<!--   <div id="events-section" class="card-base w-full rounded-[var(--radius-large)] overflow-hidden relative mb-8">
+    <div class="pl-6 md:pl-9 pr-6 md:pr-9 pt-6 md:pt-7 pb-6 w-full">
+      <div class="flex items-center mb-6">
+        <Icon name="mdi:calendar-month-outline" class="w-8 h-8 text-[var(--primary)] mr-3" />
+        <h2 class="text-2xl font-bold text-90 text-[var(--primary)] dark:text-[var(--primary)]">Community Events</h2>
+      </div>
+      
+      <p class="text-neutral-600 dark:text-neutral-300 mb-6 leading-relaxed">
+        Join our regular community events to learn, share, and connect with other members. From workshops to casual meetups, there's something for everyone.
+      </p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="event-card p-5 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-md transition-all">
+          <div class="flex justify-between items-start mb-4">
+            <div class="flex-1">
+              <span class="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 rounded mb-2">Workshop</span>
+              <h3 class="font-medium text-lg">Getting Started Workshop</h3>
+              <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">Introduction for newcomers to our community</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm font-medium">Feb 28, 2025</p>
+              <p class="text-xs text-neutral-500 dark:text-neutral-400">2:00 PM - 3:30 PM UTC</p>
+            </div>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-xs text-neutral-500 dark:text-neutral-400 flex items-center">
+              <Icon name="mdi:account-group-outline" class="w-4 h-4 mr-1" />
+              42 Attending
+            </span>
+            <button class="px-3 py-1 text-xs font-medium text-[var(--primary)] border border-[var(--primary)] rounded hover:bg-[var(--primary)] hover:bg-opacity-10 transition-colors">
+              Add to Calendar
+            </button>
+          </div>
+        </div>
+        
+        <div class="event-card p-5 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-md transition-all">
+          <div class="flex justify-between items-start mb-4">
+            <div class="flex-1">
+              <span class="inline-block px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100 rounded mb-2">Q&A Session</span>
+              <h3 class="font-medium text-lg">Monthly Community Call</h3>
+              <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">Open discussion and project showcase</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm font-medium">Mar 15, 2025</p>
+              <p class="text-xs text-neutral-500 dark:text-neutral-400">4:00 PM - 5:00 PM UTC</p>
+            </div>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-xs text-neutral-500 dark:text-neutral-400 flex items-center">
+              <Icon name="mdi:account-group-outline" class="w-4 h-4 mr-1" />
+              78 Attending
+            </span>
+            <button class="px-3 py-1 text-xs font-medium text-[var(--primary)] border border-[var(--primary)] rounded hover:bg-[var(--primary)] hover:bg-opacity-10 transition-colors">
+              Add to Calendar
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="text-center">
+        <a 
+          href="#" 
+          class="event-calendar-button"
+        >
+          <Icon name="mdi:calendar-month" class="w-5 h-5" />
+          View Full Event Calendar
+        </a>
+      </div>
+    </div>
+  </div> -->
 
   <!-- Community Guidelines Section -->
   <section class="card-base px-9 py-6 rounded-[var(--radius-large)]">
     <h2 class="text-2xl font-bold text-90 mb-4 text-[var(--primary)] dark:text-[var(--primary)]">Community Guidelines</h2>
     <div class="space-y-4 mb-6">
       <p class="text-sm text-neutral-500 dark:text-neutral-400">
-        To ensure our Discord server remains a positive and productive space, we ask all members to follow these basic guidelines:
+        To ensure our community remains a positive and productive space, we ask all members to follow these basic guidelines:
       </p>
       
       <ul class="list-disc pl-5 space-y-2 text-sm text-neutral-500 dark:text-neutral-400">
@@ -118,26 +452,14 @@ import { Icon } from 'astro-icon/components';
         <li>Keep discussions relevant to the appropriate channels</li>
         <li>Share knowledge freely and help others when you can</li>
         <li>No spam, excessive self-promotion, or disruptive behavior</li>
-        <li>Follow Discord's Terms of Service and Community Guidelines</li>
+        <li>Respect privacy and confidentiality of others</li>
       </ul>
-    </div>
-    
-    <div class="flex justify-center mt-8">
-      <a 
-        href="https://discord.gg/je7Vyw75tR" 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        class="discord-join-button-secondary"
-      >
-        <Icon name="mdi:discord" class="w-5 h-5" />
-        Join the Conversation
-      </a>
     </div>
   </section>
 </MainGridLayout>
 
 <style>
-  .discord-join-button {
+.discord-join-button {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -156,34 +478,82 @@ import { Icon } from 'astro-icon/components';
     background-color: #4752C4;
   }
   
-  .discord-join-button-secondary {
+  .newsletter-subscribe-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--primary);
+    color: white;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease-in-out;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .newsletter-subscribe-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(var(--primary-rgb), 0.3);
+    filter: brightness(110%);
+  }
+  
+  .contact-send-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--primary);
+    color: white;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease-in-out;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .contact-send-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(var(--primary-rgb), 0.3);
+    filter: brightness(110%);
+  }
+  
+  .event-calendar-button {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     background-color: transparent;
-    color: #5865F2;
+    color: var(--primary);
     font-weight: 500;
     padding: 0.75rem 1.5rem;
     border-radius: 0.5rem;
-    border: 1px solid #5865F2;
+    border: 1px solid var(--primary);
     transition: all 0.2s ease-in-out;
   }
   
-  .discord-join-button-secondary:hover {
-    background-color: rgba(88, 101, 242, 0.1);
+  .event-calendar-button:hover {
+    background-color: rgba(var(--primary-rgb), 0.1);
     transform: translateY(-2px);
   }
   
-  .feature-card {
-    transition: transform 0.2s ease-in-out;
+  .engagement-option {
+    transition: all 0.2s ease-in-out;
   }
   
-  .feature-card:hover {
-    transform: translateY(-5px);
+  .engagement-option:hover {
+    transform: translateY(-2px);
+  }
+  
+  .event-card {
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .event-card:hover {
+    transform: translateY(-3px);
   }
   
   @media (max-width: 768px) {
-    .discord-graphic {
+    .community-graphic {
       order: -1;
     }
   }

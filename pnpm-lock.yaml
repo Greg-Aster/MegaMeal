@@ -141,6 +141,9 @@ importers:
       '@biomejs/biome':
         specifier: 1.8.3
         version: 1.8.3
+      '@iconify-json/famicons':
+        specifier: ^1.2.0
+        version: 1.2.0
       '@rollup/plugin-yaml':
         specifier: ^4.1.2
         version: 4.1.2(rollup@2.79.2)
@@ -1181,6 +1184,9 @@ packages:
 
   '@iconify-json/fa6-solid@1.2.3':
     resolution: {integrity: sha512-C5o8YJF+ekrS4wRb/6/0SE2KjRyJlCg++IOVC/fineiRinITivsmzFRNW1MQX2xfDZ1T7bxeKxLN6lcaTG3jGA==}
+
+  '@iconify-json/famicons@1.2.0':
+    resolution: {integrity: sha512-2L67IwXVSejgkYiWWveLAdXE52nw+po+gqGdSngvC5xekWn/IERhpYsdaYGHTIi0uGtTsl5MR8A0VwaLzz1w8g==}
 
   '@iconify-json/material-symbols@1.2.14':
     resolution: {integrity: sha512-S0AAFFQPVr8Dkrprspz/otNjxdD3rJRXDGZjbO8a8zn8ZR5mO8jAF81lVoTfUWxPH6SCtH2lK1JQGXHGPxld7g==}
@@ -6158,6 +6164,10 @@ snapshots:
       '@iconify/types': 2.0.0
 
   '@iconify-json/fa6-solid@1.2.3':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/famicons@1.2.0':
     dependencies:
       '@iconify/types': 2.0.0
 
