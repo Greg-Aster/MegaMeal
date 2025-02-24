@@ -43,7 +43,7 @@ lang: ""
 <div class="card-base p-0 pl-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8">
   <!-- Button Styling -->
 <button class="collapsible-header w-auto mx-auto px-4 py-1.5 bg-[oklch(0.35_0.1_var(--hue))] hover:bg-[oklch(0.3_0.1_var(--hue))] text-white rounded-lg transition-colors" style="--hue: 120;">
-  <span class="text-xl font-bold">Kiddie</span>
+  <span class="text-xl font-bold">Kiddie Meal</span>
 </button>
   <!-- Content -->
   <div class="collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-4 mt-4">
@@ -66,46 +66,103 @@ lang: ""
 <!-- Medium Size -->
 <div class="card-base p-0 pl-4 pr-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8">
   <button class="collapsible-header w-auto mx-auto px-4 py-1.5 bg-[oklch(0.35_0.1_var(--hue))] hover:bg-[oklch(0.30_0.1_var(--hue))] text-white rounded-lg transition-colors" style="--hue: 240;">
-    <span class="text-2xl font-bold">Medium</span>
+    <span class="text-2xl font-bold">Medium Meal</span>
   </button>
   <!-- Content -->
   <div class="collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-4 mt-4">
-      <div class="flex flex-col md:flex-row items-center justify-center gap-16">
-      <!-- Text content -->
-      <div class=""> <!-- Center text here -->
-    <p>It's a fake movie trailer—a parody of over-the-top films. A mysterious character *(redacted for legal reasons)* is introduced in a cyberpunk city filled with holographic fast-food ads and corporate dystopia. The protagonist, clad in prison stripes and a fedora, exudes femme fatale energy as a deep, raspy voiceover narrates.</p>
-     <img src="../posts/Mega-Meal-Explained/med_wide1.png" alt="View of boat n blender compositing" class="w-full max-w-md rounded-lg shadow-md">
-    <p>The trailer teases a world of intrigue, rebellion, and fast-food capitalism. It's cheesy, self-aware, and exactly what you'd expect if your favorite fast-food mascots became sentient horrors in a future dystopian world.</p>
-    <p>The world these characters inhabit is dense and layered—like a delicious Froozie Shake. Don't expect to catch every reference. It's meal-messy, questionable, but oddly satisfying if you're in the right mood.</p>
+    <!-- Image inside the collapsible content -->
+    <div class="flex justify-center">
+      <img src="/posts/Mega-Meal-Explained/med-wide1.png" alt="wide shot of dystopian city" class="w-full rounded-lg shadow-md">
     </div>
-      <div>
-        <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="View of boat n blender compositing" class="w-full max-w-md rounded-lg shadow-md">
+    <!-- Text content -->
+    <div class="flex flex-col md:flex-row items-center justify-center gap-16">
+      <div class="">
+        <p>It's a fake movie trailer—a parody of over-the-top films. A mysterious character *(redacted for legal reasons)* is introduced in a cyberpunk city filled with holographic fast-food ads and corporate dystopia. The protagonist, clad in prison stripes and a fedora, exudes femme fatale energy as a deep, raspy voiceover narrates.</p>
+        <p>The trailer teases a world of intrigue, rebellion, and fast-food capitalism. It's cheesy, self-aware, and exactly what you'd expect if your favorite fast-food mascots became sentient horrors in a future dystopian world.</p>
+        <p>The world these characters inhabit is dense and layered—like a delicious Froozie Shake. Don't expect to catch every reference. It's meal-messy, questionable, but oddly satisfying if you're in the right mood.</p>
       </div>
     </div>
+     <div class="flex justify-center">
+      <img src="/posts/Mega-Meal-Explained/med-wide2.png" alt="wide shot of dystopian city" class="w-full rounded-lg shadow-md">
+     </div>
   </div>
 </div>
 
 <div class="card-base p-0 pl-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8">
 <button class="collapsible-header w-auto mx-auto px-4 py-1.5 bg-[oklch(0.35_0.1_var(--hue))] hover:bg-[oklch(0.30_0.1_var(--hue))] text-white rounded-lg transition-colors" style="--hue: 360;">
-  <span class="text-3xl font-bold">ULTRA</span>
+  <span class="text-3xl font-bold">ULTRA Meal</span>
 </button>
-  <div class="collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-4 mt-4">
-   
-<p>An ominous drone noise hits, and sinister music rushes in. Fast-food parody characters from different franchises arrive in a shock-and-awe tactic, pulling back the curtains to reveal a much bigger world—a futuristic floating fortress shaped like a king’s crown. The king’s army of supersoldiers, clad in gold with energized baton scepters and red capes, marches forward in formation. A low-angle shot suggests dominance and power.  </p>
+  <div class="collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-4 mt-4 pr-4">
 
-A high view of the (**redacted for legal reasons**) overlooking the city symbolizes a hero’s journey: conflict, understanding, responsibility, hope, inspiration, adversity, perseverance, and sacrifice. A counter-shot shows a dark factory with an interdimensional portal. Fast-food wrappers whip around as Wendi, a doll with glowing eyes, blocks the portal with a suggestion of supernatural abilities.  
+  The introduction sets the tone with an ominous siren blaring over a maximum-security prison. Searchlights sweep the scene, suggesting an escape. Text zooms in, setting expectations: this is a parody trailer. The view transitions to a bustling futuristic dystopian megalopolis, seen from above. Holographic fast-food ads flash from skyscrapers as the music builds.
 
-The city descends into chaos. Reality fractures. A rooster in a meat locker holds a meat cleaver. A billboard advertises a new product: *The Infinite Dip*. Children wander dark streets like zombies, suggesting a mind-altering substance and cravings beyond control.  
+  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
 
-Sexy man butts. Weird, unappetizing food. Sentient mayo merges and begins to take over the city. A giant purple *thing* (what is it supposed to be, anyway?) Jak Sawce accidentally kills his opponent in a match. Living mannequins as food servers. The chickens rise up. The mayo grows. Terrorism. Explosions. Restaurants are filled with dancing, intelligent cockroaches. Burgers twitch in the streets like mimics in disguise.  
+  A shot of legs walking slowly down a rainy alleyway teases a mysterious femme fatale. A deep, raspy voiceover kicks in, expressing hunger and desire. The camera pans over grimy streets and rundown restaurants. The backside of a provocatively dressed stranger—prison stripes, fedora, yellow gloves—walks among the crowds. A dramatic title slams onto the screen, punctuated by an explosion.
 
-The streets flood. The Hamburgler is gone. Perhaps it was all a dream? We take a breath, and we’re back on a building. The Hamburgler overlooks the city. It’s time to act. Take up the mantle. Fight back.  
+  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
 
-She dives into the action, falling and falling, and falling and falling, and falling. as reality shifts around her. She begins running faster and faster, no more feme fetale saunter - this time with purpose. A final shot reveals the CEO of W Corporation in his office—a clown. Storm clouds gather, and his face turns sinister. Then, the *Mega Meal* logo hits, punctuated by an explosion. A teaser says it will be released in 2066—an indication it may never happen. 
+  The view returns to the city, now showing a mysterious CEO in a yellow jacket with a red afro, sitting in a position of power. Words, titles, and fake movie reviews pan over the scenes, insinuating that other humans have seen this, so you should too.
 
-A Surprise final outro at a fast-food drive-through features a demonic voice saying, *No pickles*. Then, black.  
+  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+
+
+  Next, we see the mysterious character again, standing next to a well-lit billboard with her face on it: Wanted. From the shadows, a male figure watches—a subtle nod to the character’s origins and her bold, audacious nature.
+
+  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md"> 
+
+  Next Scenes
+  An establishing shot of the giant corporate headquarters of the W Corporation leads into an empty, closed-down restaurant with a playplace. A sign pulls focus: No Adults in the Ball Pit. A low, wide shot of the restaurant from the ball pit’s perspective reveals a head with a hat slowly rising out of the balls. The music cues mystery and humor.
+
+  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+
+  A security guard walks down a hallway full of mannequins. The (redacted for legal reasons) stands absolutely still, blending in. The guard walks by, unaware. The (redacted for legal reasons) breaks the fourth wall and winks at the camera.
+
+  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+
+
+  Next, a lab with a vault door labeled Secret Recipe. Tension builds as we approach the door. A hamburger is sealed in a container, and a yellow-gloved hand reaches in, slowly pulling it out. The music shifts to a joyous victory song, then fades out.
+
+  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+
+
+  The next scene is tropical, colorful, and vibrant. Fat men in shorts do celebratory dances. The (redacted for legal reasons) reveals her face for the first time, no longer in disguise. She’s dancing too, happy—until the camera zooms in on the Secret Recipe hamburger. It has a face and is screaming. A surprise twist: things aren’t always as they seem.
+    
+  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+
+  <p>An ominous drone noise hits, and sinister music rushes in. Fast-food parody characters from different franchises arrive in a shock-and-awe tactic, pulling back the curtains to reveal a much bigger world—a futuristic floating fortress shaped like a king’s crown. The king’s army of supersoldiers, clad in gold with energized baton scepters and red capes, marches forward in formation. A low-angle shot suggests dominance and power.  </p>
+
+  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+
+
+  A high view of the (**redacted for legal reasons**) overlooking the city symbolizes a hero’s journey: conflict, understanding, responsibility, hope, inspiration, adversity, perseverance, and sacrifice. A counter-shot shows a dark factory with an interdimensional portal. Fast-food wrappers whip around as Wendi, a doll with glowing eyes, blocks the portal with a suggestion of supernatural abilities.  
+
+  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+
+
+  The city descends into chaos. Reality fractures. A rooster in a meat locker holds a meat cleaver. A billboard advertises a new product: *The Infinite Dip*. Children wander dark streets like zombies, suggesting a mind-altering substance and cravings beyond control.  
+
+  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+
+
+  Sexy man butts. Weird, unappetizing food. Sentient mayo merges and begins to take over the city. A giant purple *thing* (what is it supposed to be, anyway?) Jak Sawce accidentally kills his opponent in a match. Living mannequins as food servers. The chickens rise up. The mayo grows. Terrorism. Explosions. Restaurants are filled with dancing, intelligent cockroaches. Burgers twitch in the streets like mimics in disguise.  
+
+  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+
+  The streets flood. The Hamburgler is gone. Perhaps it was all a dream? We take a breath, and we’re back on a building. The Hamburgler overlooks the city. It’s time to act. Take up the mantle. Fight back.  
+
+  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+
+  She dives into the action, falling and falling, and falling and falling, and falling. as reality shifts around her. She begins running faster and faster, no more feme fetale saunter - this time with purpose. A final shot reveals the CEO of W Corporation in his office—a clown. Storm clouds gather, and his face turns sinister. Then, the *Mega Meal* logo hits, punctuated by an explosion. A teaser says it will be released in 2066—an indication it may never happen. 
+
+ <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+
+  A Surprise final outro at a fast-food drive-through features a demonic voice saying, *No pickles*. Then, black.  
 
   <h4 class="text-xl font-bold mb-4 dark:text-neutral-50">Final Thoughts</h4>
+
+ <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+
   <div class="text-lg text-gray-700 dark:text-neutral-300 space-y-6">
     <p>The video takes the form of a movie trailer for a film that doesn't exist. This format allows the creator to move the plot forward at a breakneck pace, introducing a world and storyline that leave room for further episodes.</p>
     <p>In this world, the (**redacted for legal reasons**) character is clad in a bikini with prison stripes—a distinctive getup that's not intended to sexualize her but is a nod to other characters and numerous tropes in different series and films, but reimagined with a strong female protagonist.</p>
@@ -113,7 +170,7 @@ A Surprise final outro at a fast-food drive-through features a demonic voice say
     <p>Ultimately, the project suffers from the same issues as any indie production: **budget, labor, and audience**. Larger studios have entire teams—writers, directors, artists, marketers, and equipment at the ready. A single creator working at this scale is bound to hit limits.</p>
     <p>In that sense, what's been achieved so far is impressive, but will the series continue? Hopefully, but I've been down this road before. Overcoming the labor problem is like not having enough food to keep it alive—there's no support system here, and the project will likely die, emaciated and forgotten, in some dark alley. The world at large won't even notice its pathetic attempts to crawl. Friends will step over its mummified corpse, barely looking down, as the work of strangers is so much more sexy and mysterious, while people they know sit alone, slowly sinking into poverty, waiting for the last nail in the coffin to be hammered in.</p>
     <p>Onward into the dark, rainy night, we continue pushing forward.</p>
-      <h2 class="text-xl font-bold mb-4 dark:text-neutral-50">Would you like <span class="text-yellow-500">Fries</span> or <span class="text-yellow-700">Onion Rings</span>?</h2>
+      <h2 class="text-xl font-bold mb-4 pb-4 dark:text-neutral-50">Would you like <span class="text-yellow-500">Fries</span> or <span class="text-yellow-700">Onion Rings</span>?</h2>
     </div>
   </div>
 </div>
