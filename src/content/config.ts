@@ -12,6 +12,7 @@ const postsCollection = defineCollection({
     tags: z.array(z.string()).optional().default([]),
     category: z.string().optional().default(''),
     lang: z.string().optional().default(''),
+    showImageOnPost: z.boolean().optional(),
 
     /* For internal use */
     prevTitle: z.string().default(''),

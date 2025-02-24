@@ -20,6 +20,8 @@ interface Props {
   description: string
   draft: boolean
   style: string
+  isPostPage?: boolean  // New prop
+
 }
 const {
   entry,
@@ -32,10 +34,14 @@ const {
   image,
   description,
   style,
+  isPostPage = false  // Default to false (landing page behavior)
 } = Astro.props
+
 const className = Astro.props.class
 
-const hasCover = image !== undefined && image !== null && image !== ''
+// Modify the hasCover logic
+const hasCover = image !== undefined && image !== null && image !== '' && 
+  (!isPostPage || (isPostPage && entry.data.showImageOnPost !== false))
 
 const coverWidth = '28%'
 

@@ -91,10 +91,9 @@ const jsonLd = {
                 {!post.data.image && <div class="border-[var(--line-divider)] border-dashed border-b-[1px] mb-5"></div>}
             </div>
 
-            <!-- always show cover as long as it has one -->
-
-            {post.data.image &&
-                <ImageWrapper id="post-cover" src={post.data.image} basePath={path.join("content/posts/", getDir(post.id))} class="mb-8 rounded-xl banner-container onload-animation"/>
+            <!-- Only show cover if it exists and showImageOnPost isn't false -->
+            {post.data.image && post.data.showImageOnPost !== false &&
+             <ImageWrapper id="post-cover" src={post.data.image} basePath={path.join("content/posts/", getDir(post.id))} class="mb-8 rounded-xl banner-container onload-animation"/>
             }
 
 

@@ -41,6 +41,7 @@ title: ${args[0]}
 published: ${getDate()}
 description: ''
 image: ''
+showImageOnPost: false  # This image will only show on the landing page
 tags: []
 category: ''
 draft: false 
