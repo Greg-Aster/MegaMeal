@@ -33,8 +33,8 @@ lang: ""
   <div class="text-center text-lg text-gray-700 mb-8 dark:text-neutral-400">Choose your size below: </div>
   <div class="text-center text-xl font-semibold mb-12 dark:text-neutral-50">
     (<span class="text-[oklch(0.35_0.2_var(--hue))]" style="--hue: 120;">Kiddie</span>, 
-    <span class="text-[oklch(0.35_0.2_var(--hue))]" style="--hue: 240;">Medium</span>, 
-    <span class="text-[oklch(0.35_0.2_var(--hue))]" style="--hue: 360;">ULTRA</span>)*
+    <span class="text-[oklch(0.35_0.2_var(--hue))]" style="--hue: 240;">Large</span>, 
+    <span class="text-[oklch(0.35_0.2_var(--hue))]" style="--hue: 360;">Mega</span>)*
   </div>
 </div>
 
@@ -66,7 +66,7 @@ lang: ""
 <!-- Medium Size -->
 <div class="card-base p-0 pl-4 pr-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8">
   <button class="collapsible-header w-auto mx-auto px-4 py-1.5 bg-[oklch(0.35_0.1_var(--hue))] hover:bg-[oklch(0.30_0.1_var(--hue))] text-white rounded-lg transition-colors" style="--hue: 240;">
-    <span class="text-2xl font-bold">Medium Meal</span>
+    <span class="text-2xl font-bold">Large Meal</span>
   </button>
   <!-- Content -->
   <div class="collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-4 mt-4">
@@ -90,31 +90,38 @@ lang: ""
 
 <div class="card-base p-0 pl-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8">
 <button class="collapsible-header w-auto mx-auto px-4 py-1.5 bg-[oklch(0.35_0.1_var(--hue))] hover:bg-[oklch(0.30_0.1_var(--hue))] text-white rounded-lg transition-colors" style="--hue: 360;">
-  <span class="text-3xl font-bold">ULTRA Meal</span>
+  <span class="text-3xl font-bold">Mega Meal</span>
 </button>
   <div class="collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-4 mt-4 pr-4">
 
-  The introduction sets the tone with an ominous siren blaring over a maximum-security prison. Searchlights sweep the scene, suggesting an escape. Text zooms in, setting expectations: this is a parody trailer. The view transitions to a bustling futuristic dystopian megalopolis, seen from above. Holographic fast-food ads flash from skyscrapers as the music builds.
-
-  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+  The introduction sets the tone with an ominous siren blaring over a maximum-security prison. Searchlights sweep the scene, suggesting an escape. Text zooms in, setting expectations: this is a parody trailer. 
+  <div class="relative flex justify-center gap-4 my-8">
+    <img src="/posts/Mega-Meal-Explained/ultra1.png" alt="futuristic prison" class="w-full max-w-md rounded-lg shadow-md rotate-1 z-10">
+    <img src="/posts/Mega-Meal-Explained/ultra2.png" alt="Dystopian megacity" class="w-full max-w-md rounded-lg shadow-md -rotate-1 mt-4">
+  </div>
+   The view transitions to a bustling futuristic dystopian megalopolis, seen from above. Holographic fast-food ads flash from skyscrapers as the music builds.
+   
+  <img src="/posts/Mega-Meal-Explained/walking.png" alt="boots walking" class="float-center w-full mx-auto rounded-lg shadow-md">
 
   A shot of legs walking slowly down a rainy alleyway teases a mysterious femme fatale. A deep, raspy voiceover kicks in, expressing hunger and desire. The camera pans over grimy streets and rundown restaurants. The backside of a provocatively dressed stranger—prison stripes, fedora, yellow gloves—walks among the crowds. A dramatic title slams onto the screen, punctuated by an explosion.
 
-  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
-
   The view returns to the city, now showing a mysterious CEO in a yellow jacket with a red afro, sitting in a position of power. Words, titles, and fake movie reviews pan over the scenes, insinuating that other humans have seen this, so you should too.
 
-  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+  <img src="/posts/Mega-Meal-Explained/ultra-ceo.png" alt="a ceo" class="float-left w-full max-w-md mx-auto rounded-lg shadow-md">
 
 
   Next, we see the mysterious character again, standing next to a well-lit billboard with her face on it: Wanted. From the shadows, a male figure watches—a subtle nod to the character’s origins and her bold, audacious nature.
 
-  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md"> 
+  <img src="/posts/Mega-Meal-Explained/ultra-wanted.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md"> 
 
   Next Scenes
   An establishing shot of the giant corporate headquarters of the W Corporation leads into an empty, closed-down restaurant with a playplace. A sign pulls focus: No Adults in the Ball Pit. A low, wide shot of the restaurant from the ball pit’s perspective reveals a head with a hat slowly rising out of the balls. The music cues mystery and humor.
 
-  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+  <img src="/posts/Mega-Meal-Explained/ultra-headquarters.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+    <img src="/posts/Mega-Meal-Explained/ultra-balls.png" alt="A screaming cheeseburger." class="w-full max-w-md mx-auto rounded-lg shadow-md">
+      <img src="/posts/Mega-Meal-Explained/ultra-sign.png" alt="A screaming cheeseburger." class="w-full max-w-md ml-auto rounded-lg shadow-md">
+
+
 
   A security guard walks down a hallway full of mannequins. The (redacted for legal reasons) stands absolutely still, blending in. The guard walks by, unaware. The (redacted for legal reasons) breaks the fourth wall and winks at the camera.
 
