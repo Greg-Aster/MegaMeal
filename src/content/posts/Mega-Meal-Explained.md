@@ -29,7 +29,7 @@ lang: ""
 
 <div class="card-base p-8 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
   <h1 class="text-center text-4xl font-bold mb-4 dark:text-neutral-50">Thank you for choosing MEGA MEAL!</h1>
-  <h2 class="text-center text-2xl text-gray-600 mb-8 dark:text--300">Home of the Froozie!</h2>
+  <h2 class="text-center text-2xl text-gray-600 mb-8 dark:text--300">This article is under construction! It really shouldn't be up - but it is.</h2>
   <div class="text-center text-lg text-gray-700 mb-8 dark:text-neutral-400">Choose your size below: </div>
   <div class="text-center text-xl font-semibold mb-12 dark:text-neutral-50">
     (<span class="text-[oklch(0.35_0.2_var(--hue))]" style="--hue: 120;">Kiddie</span>, 
@@ -94,81 +94,98 @@ lang: ""
 </button>
   <div class="collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-4 mt-4 pr-4">
 
-  The introduction sets the tone with an ominous siren blaring over a maximum-security prison. Searchlights sweep the scene, suggesting an escape. Text zooms in, setting expectations: this is a parody trailer. 
-  <div class="relative flex justify-center gap-4 my-8">
-    <img src="/posts/Mega-Meal-Explained/ultra1.png" alt="futuristic prison" class="w-full max-w-md rounded-lg shadow-md rotate-1 z-10">
-    <img src="/posts/Mega-Meal-Explained/ultra2.png" alt="Dystopian megacity" class="w-full max-w-md rounded-lg shadow-md -rotate-1 mt-4">
-  </div>
-   The view transitions to a bustling futuristic dystopian megalopolis, seen from above. Holographic fast-food ads flash from skyscrapers as the music builds.
-   
-  <img src="/posts/Mega-Meal-Explained/walking.png" alt="boots walking" class="float-center w-full mx-auto rounded-lg shadow-md">
+  <!-- Introduction -->
+<p class="mb-4">The introduction sets the tone with an ominous siren blaring over a maximum-security prison. Searchlights sweep the scene, suggesting an escape. Text zooms in, setting expectations: this is a parody trailer.</p>
 
-  A shot of legs walking slowly down a rainy alleyway teases a mysterious femme fatale. A deep, raspy voiceover kicks in, expressing hunger and desire. The camera pans over grimy streets and rundown restaurants. The backside of a provocatively dressed stranger—prison stripes, fedora, yellow gloves—walks among the crowds. A dramatic title slams onto the screen, punctuated by an explosion.
+<!-- Image Group -->
+<div class="relative flex justify-center gap-4 my-8">
+  <img src="/posts/Mega-Meal-Explained/ultra1.png" alt="futuristic prison" class="w-full max-w-md rounded-lg shadow-md rotate-1 z-10">
+  <img src="/posts/Mega-Meal-Explained/ultra2.png" alt="Dystopian megacity" class="w-full max-w-md rounded-lg shadow-md -rotate-1 mt-4">
+</div>
 
-  The view returns to the city, now showing a mysterious CEO in a yellow jacket with a red afro, sitting in a position of power. Words, titles, and fake movie reviews pan over the scenes, insinuating that other humans have seen this, so you should too.
+<!-- Next Paragraph -->
+<p class="mb-4">The view transitions to a bustling futuristic dystopian megalopolis, seen from above. Holographic fast-food ads flash from skyscrapers as the music builds.</p>
 
-  <img src="/posts/Mega-Meal-Explained/ultra-ceo.png" alt="a ceo" class="float-left w-full max-w-md mx-auto rounded-lg shadow-md">
+<!-- Walking Image -->
+<img src="/posts/Mega-Meal-Explained/walking.png" alt="boots walking" class="float-right w-full max-w-md ml-4 mb-4 rounded-lg shadow-md">
 
+<!-- Next Paragraph -->
+<p class="mb-4">A shot of legs walking slowly down a rainy alleyway teases a mysterious femme fatale. A deep, raspy voiceover kicks in, expressing hunger and desire. The camera pans over grimy streets and rundown restaurants. The backside of a provocatively dressed stranger—prison stripes, fedora, yellow gloves—walks among the crowds. A dramatic title slams onto the screen, punctuated by an explosion.</p>
 
-  Next, we see the mysterious character again, standing next to a well-lit billboard with her face on it: Wanted. From the shadows, a male figure watches—a subtle nod to the character’s origins and her bold, audacious nature.
+<div class="relative flex justify-center gap-4 my-8">
+  <img src="/posts/Mega-Meal-Explained/Title.jpg" alt="futuristic prison" class="w-full max-w-md rounded-lg shadow-md rotate-1 z-10">
+  <img src="/posts/Mega-Meal-Explained/ultra-headquarters.png" alt="Dystopian megacity" class="w-full max-w-md rounded-lg shadow-md -rotate-1 mt-4">
+</div>
 
-  <img src="/posts/Mega-Meal-Explained/ultra-wanted.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md"> 
+<!-- CEO Image -->
+<img src="/posts/Mega-Meal-Explained/ultra-ceo.png" alt="a ceo" class="float-left w-full max-w-md mr-4 mb-4 rounded-lg shadow-md">
 
-  Next Scenes
-  An establishing shot of the giant corporate headquarters of the W Corporation leads into an empty, closed-down restaurant with a playplace. A sign pulls focus: No Adults in the Ball Pit. A low, wide shot of the restaurant from the ball pit’s perspective reveals a head with a hat slowly rising out of the balls. The music cues mystery and humor.
+<!-- Next Paragraph -->
+<p class="mb-4">The view returns to the city, now showing a mysterious CEO in a yellow jacket with a red afro, sitting in a position of power. Words, titles, and fake movie reviews pan over the scenes, insinuating that other humans have seen this, so you should too.</p>
 
-  <img src="/posts/Mega-Meal-Explained/ultra-headquarters.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
-    <img src="/posts/Mega-Meal-Explained/ultra-balls.png" alt="A screaming cheeseburger." class="w-full max-w-md mx-auto rounded-lg shadow-md">
-      <img src="/posts/Mega-Meal-Explained/ultra-sign.png" alt="A screaming cheeseburger." class="w-full max-w-md ml-auto rounded-lg shadow-md">
+<!-- Wanted Image -->
+<img src="/posts/Mega-Meal-Explained/ultra-wanted.png" alt="A screaming cheeseburger." class="float-right w-full max-w-md ml-4 mb-4 rounded-lg shadow-md">
 
+<!-- Next Paragraph -->
+<p class="mb-4">Next, we see the mysterious character again, standing next to a well-lit billboard with her face on it: Wanted. From the shadows, a male figure watches—a subtle nod to the character’s origins and her bold, audacious nature.</p>
 
+<!-- Next Scenes -->
+<p class="mb-4">Next Scenes: An establishing shot of the giant corporate headquarters of the W Corporation leads into an empty, closed-down restaurant with a playplace. A sign pulls focus: No Adults in the Ball Pit. A low, wide shot of the restaurant from the ball pit’s perspective reveals a head with a hat slowly rising out of the balls. The music cues mystery and humor.</p>
 
-  A security guard walks down a hallway full of mannequins. The (redacted for legal reasons) stands absolutely still, blending in. The guard walks by, unaware. The (redacted for legal reasons) breaks the fourth wall and winks at the camera.
+<!-- Image Group -->
+<div class="relative flex justify-center gap-4 my-8">
+  <img src="/posts/Mega-Meal-Explained/ultra-balls.png" alt="futuristic prison" class="w-full max-w-md rounded-lg shadow-md rotate-1 z-10">
+  <img src="/posts/Mega-Meal-Explained/ultra-sign.png" alt="Dystopian megacity" class="w-full max-w-md rounded-lg shadow-md -rotate-1 mt-4">
+</div>
 
-  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+<!-- Final Paragraph -->
+<p class="mb-4">A security guard walks down a hallway full of mannequins. The (redacted for legal reasons) stands absolutely still, blending in. The guard walks by, unaware. The (redacted for legal reasons) breaks the fourth wall and winks at the camera.</p>
 
+<!-- Kiddie Image -->
+<img src="/posts/Mega-Meal-Explained/Aurora.png" alt="boots walking" class="float-center w-full ml-4 mb-4 rounded-lg shadow-md">
 
   Next, a lab with a vault door labeled Secret Recipe. Tension builds as we approach the door. A hamburger is sealed in a container, and a yellow-gloved hand reaches in, slowly pulling it out. The music shifts to a joyous victory song, then fades out.
 
-  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
-
+ <!-- Image Group -->
+<div class="relative flex justify-center gap-4 my-8">
+  <img src="/posts/Mega-Meal-Explained/safe.png" alt="futuristic prison" class="w-full max-w-md rounded-lg shadow-md rotate-1 z-10">
+  <img src="/posts/Mega-Meal-Explained/burger-hole.png" alt="Dystopian megacity" class="w-full max-w-md rounded-lg shadow-md -rotate-1 mt-4">
+</div>
 
   The next scene is tropical, colorful, and vibrant. Fat men in shorts do celebratory dances. The (redacted for legal reasons) reveals her face for the first time, no longer in disguise. She’s dancing too, happy—until the camera zooms in on the Secret Recipe hamburger. It has a face and is screaming. A surprise twist: things aren’t always as they seem.
     
-  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+  <img src="/posts/Mega-Meal-Explained/dance.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
 
   <p>An ominous drone noise hits, and sinister music rushes in. Fast-food parody characters from different franchises arrive in a shock-and-awe tactic, pulling back the curtains to reveal a much bigger world—a futuristic floating fortress shaped like a king’s crown. The king’s army of supersoldiers, clad in gold with energized baton scepters and red capes, marches forward in formation. A low-angle shot suggests dominance and power.  </p>
 
-  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+  <img src="/posts/Mega-Meal-Explained/dance2.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
 
 
   A high view of the (**redacted for legal reasons**) overlooking the city symbolizes a hero’s journey: conflict, understanding, responsibility, hope, inspiration, adversity, perseverance, and sacrifice. A counter-shot shows a dark factory with an interdimensional portal. Fast-food wrappers whip around as Wendi, a doll with glowing eyes, blocks the portal with a suggestion of supernatural abilities.  
 
-  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+  <img src="/posts/Mega-Meal-Explained/castle.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
 
 
   The city descends into chaos. Reality fractures. A rooster in a meat locker holds a meat cleaver. A billboard advertises a new product: *The Infinite Dip*. Children wander dark streets like zombies, suggesting a mind-altering substance and cravings beyond control.  
 
-  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+  <img src="/posts/Mega-Meal-Explained/king.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
 
 
   Sexy man butts. Weird, unappetizing food. Sentient mayo merges and begins to take over the city. A giant purple *thing* (what is it supposed to be, anyway?) Jak Sawce accidentally kills his opponent in a match. Living mannequins as food servers. The chickens rise up. The mayo grows. Terrorism. Explosions. Restaurants are filled with dancing, intelligent cockroaches. Burgers twitch in the streets like mimics in disguise.  
 
-  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+  <img src="/posts/Mega-Meal-Explained/mayo.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
 
   The streets flood. The Hamburgler is gone. Perhaps it was all a dream? We take a breath, and we’re back on a building. The Hamburgler overlooks the city. It’s time to act. Take up the mantle. Fight back.  
 
-  <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+  <img src="/posts/Mega-Meal-Explained/roaches.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
 
   She dives into the action, falling and falling, and falling and falling, and falling. as reality shifts around her. She begins running faster and faster, no more feme fetale saunter - this time with purpose. A final shot reveals the CEO of W Corporation in his office—a clown. Storm clouds gather, and his face turns sinister. Then, the *Mega Meal* logo hits, punctuated by an explosion. A teaser says it will be released in 2066—an indication it may never happen. 
 
- <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
 
   A Surprise final outro at a fast-food drive-through features a demonic voice saying, *No pickles*. Then, black.  
 
   <h4 class="text-xl font-bold mb-4 dark:text-neutral-50">Final Thoughts</h4>
 
- <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
 
   <div class="text-lg text-gray-700 dark:text-neutral-300 space-y-6">
     <p>The video takes the form of a movie trailer for a film that doesn't exist. This format allows the creator to move the plot forward at a breakneck pace, introducing a world and storyline that leave room for further episodes.</p>
@@ -188,38 +205,49 @@ lang: ""
 </div> -->
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.collapsible-header').forEach(header => {
-      header.addEventListener('click', () => {
-        const content = header.nextElementSibling;
-        
-        // Toggle all other sections closed
-        document.querySelectorAll('.collapsible-content').forEach(otherContent => {
-          if (otherContent !== content && !otherContent.classList.contains('max-h-0')) {
-            otherContent.style.maxHeight = '0px';
-            otherContent.style.opacity = '0';
-          }
-        });
-        
-        // Handle the clicked section
-        if (content.style.maxHeight === '0px' || !content.style.maxHeight) {
-          // Get the scrollHeight to animate to
-          const height = content.scrollHeight;
-          content.style.maxHeight = '0px';
-          content.style.opacity = '0';
-          
-          // Force reflow
-          content.offsetHeight;
-          
-          // Animate to full height
-          content.style.maxHeight = height + 'px';
-          content.style.opacity = '1';
-        } else {
-          content.style.maxHeight = '0px';
-          content.style.opacity = '0';
-        }
-      });
+  function handleCollapsibleClick(event) {
+    const header = event.currentTarget;
+    const content = header.nextElementSibling;
+    
+    // Toggle all other sections closed
+    document.querySelectorAll('.collapsible-content').forEach(otherContent => {
+      if (otherContent !== content && !otherContent.classList.contains('max-h-0')) {
+        otherContent.style.maxHeight = '0px';
+        otherContent.style.opacity = '0';
+      }
     });
-  });
-</script>
+    
+    // Handle the clicked section
+    if (content.style.maxHeight === '0px' || !content.style.maxHeight) {
+      // Get the scrollHeight to animate to
+      const height = content.scrollHeight;
+      content.style.maxHeight = '0px';
+      content.style.opacity = '0';
+      
+      // Force reflow
+      content.offsetHeight;
+      
+      // Animate to full height
+      content.style.maxHeight = height + 'px';
+      content.style.opacity = '1';
+    } else {
+      content.style.maxHeight = '0px';
+      content.style.opacity = '0';
+    }
+  }
 
+  function initCollapsibles() {
+    // Remove any existing listeners using event delegation
+    document.querySelectorAll('.collapsible-header').forEach(header => {
+      header.removeEventListener('click', handleCollapsibleClick);
+      header.addEventListener('click', handleCollapsibleClick);
+    });
+  }
+
+  // Use event delegation for better performance
+  document.addEventListener('astro:page-load', initCollapsibles);
+  document.addEventListener('DOMContentLoaded', initCollapsibles);
+  
+  // Also initialize immediately
+  initCollapsibles();
+</script>
