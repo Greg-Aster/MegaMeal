@@ -29,6 +29,9 @@ importers:
       '@fontsource/roboto':
         specifier: ^5.1.0
         version: 5.1.1
+      '@fontsource/sriracha':
+        specifier: ^5.1.1
+        version: 5.1.1
       '@iconify-json/fa6-brands':
         specifier: ^1.2.3
         version: 1.2.5
@@ -1175,6 +1178,9 @@ packages:
 
   '@fontsource/roboto@5.1.1':
     resolution: {integrity: sha512-XwVVXtERDQIM7HPUIbyDe0FP4SRovpjF7zMI8M7pbqFp3ahLJsJTd18h+E6pkar6UbV3btbwkKjYARr5M+SQow==}
+
+  '@fontsource/sriracha@5.1.1':
+    resolution: {integrity: sha512-QZIYxBYPDcBb25VvwimMufo3a6lKAKjTp+Q+ahJdzPcm+lj8gRpBLKTWu4SVBGXiL6op1g0QI/XWr+MZGI21Zg==}
 
   '@iconify-json/fa6-brands@1.2.5':
     resolution: {integrity: sha512-U/iFfziz6jSN9zArOJZYTtoj2tQyh6MxPdI8M84DQ2kEulPaj8j+h9bqvjmzszNHmD7v+kmmKd/MLkMKk+3Zuw==}
@@ -6154,6 +6160,8 @@ snapshots:
   '@fontsource-variable/jetbrains-mono@5.1.2': {}
 
   '@fontsource/roboto@5.1.1': {}
+
+  '@fontsource/sriracha@5.1.1': {}
 
   '@iconify-json/fa6-brands@1.2.5':
     dependencies:

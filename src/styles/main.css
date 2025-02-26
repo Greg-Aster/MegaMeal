@@ -126,6 +126,37 @@
     .copy-btn.success .success-icon {
         @apply opacity-100
     }
+    /*   Neon text */
+    .neon-text {
+        text-shadow: 
+          0 0 5px #fff, 
+          0 0 10px #fff, 
+          0 0 20px oklch(0.65 0.5 var(--hue)), 
+          0 0 40px oklch(0.65 0.5 var(--hue));
+        animation: glow 1.5s infinite alternate;
+      }
+    
+      @keyframes glow {
+        from {
+          text-shadow: 
+            0 0 5px #fff, 
+            0 0 10px #fff, 
+            0 0 20px oklch(0.65 0.5 var(--hue)), 
+            0 0 40px oklch(0.65 0.5 var(--hue));
+        }
+        to {
+          text-shadow: 
+            0 0 10px #fff, 
+            0 0 20px #fff, 
+            0 0 40px oklch(0.65 0.5 var(--hue)), 
+            0 0 80px oklch(0.65 0.5 var(--hue));
+        }
+      }
+      /*   Gradient background */
+      .gradient-bg {
+        background: linear-gradient(to right, oklch(0.35 0.2 var(--hue)), oklch(0.45 0.3 var(--hue)));
+      }
+
 }
 
 .custom-md img, #post-cover img {

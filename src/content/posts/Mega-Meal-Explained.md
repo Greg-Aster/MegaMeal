@@ -1,5 +1,5 @@
 ---
-title: "Mega Meal Explained"
+title: "Mega Meal Finally Explained - Draft"
 published: 2025-02-19
 description: "Why? Just why."
 image: "./Mega-Meal-Explained/Title.jpg"
@@ -27,143 +27,249 @@ lang: ""
 
 <!-- Welcome Message -->
 
-<div class="card-base p-8 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
-  <h1 class="text-center text-4xl font-bold mb-4 dark:text-neutral-50">Thank you for choosing MEGA MEAL!</h1>
-  <h2 class="text-center text-2xl text-gray-600 mb-8 dark:text--300">This article is under construction! It really shouldn't be up - but it is.</h2>
+<!-- <div class="card-base p-8 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
+  <h2 class="text-center text-2xl font-bold mb-4 dark:text-neutral-50">Thank you for choosing </h2>
+    <div class="text-center text-8xl font-bold mb-4 dark:text-neutral-50">MEGA <br> MEAL</div>
+  <h2 class="text-center text-2xl text-gray-600 mb-8 dark:text--300">Home of the Froozie!</h2>
   <div class="text-center text-lg text-gray-700 mb-8 dark:text-neutral-400">Choose your size below: </div>
   <div class="text-center text-xl font-semibold mb-12 dark:text-neutral-50">
     (<span class="text-[oklch(0.35_0.2_var(--hue))]" style="--hue: 120;">Kiddie</span>, 
     <span class="text-[oklch(0.35_0.2_var(--hue))]" style="--hue: 240;">Large</span>, 
     <span class="text-[oklch(0.35_0.2_var(--hue))]" style="--hue: 360;">Mega</span>)*
   </div>
+</div> -->
+
+<div class="card-base p-10 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition shadow-lg mb-8 overflow-hidden relative">
+  <div class="relative w-full aspect-[/43] rounded-lg overflow-hidden">
+    <img 
+      src="/posts/Mega-Meal-Explained/gif/logo2.gif" 
+      alt="Mega Meal Neon Sign"
+      class="w-full h-full object-cover brightness-100 dark:brightness-75 transition"
+      style="filter: hue-rotate(var(--hue, 0deg));"
+    />
+      <div class="text-center font-sriracha text-xl font-bold text-gray-700 dark:text-neutral-400">Choose your size below: </div>
+  </div>
 </div>
 
-
 <!-- Kiddie Size -->
-<div class="card-base p-0 pl-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8">
-  <!-- Button Styling -->
-<button class="collapsible-header w-auto mx-auto px-4 py-1.5 bg-[oklch(0.35_0.1_var(--hue))] hover:bg-[oklch(0.3_0.1_var(--hue))] text-white rounded-lg transition-colors" style="--hue: 120;">
-  <span class="text-xl font-bold">Kiddie Meal</span>
+<div class="card-base p-0 pl-4 pr-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8">
+<button class="collapsible-header w-auto mx-auto px-4 py-1.5 bg-gradient-to-r from-[oklch(0.35_0.2_var(--hue))] to-[oklch(0.45_0.3_var(--hue))] text-white rounded-lg transition-colors" style="--hue: 120;">
+  <span class="font-sriracha text-xl font-bold neon-text">KIDDIE MEAL</span>
+  <span class="font-sans text-xs text-30 ml-2 transition">(no actual kids please)</span>
 </button>
+
   <!-- Content -->
-  <div class="collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-4 mt-4">
-      <!-- Flex container to center everything -->
-    <div class="flex flex-col md:flex-row items-center justify-center gap-16">
-      <!-- Text content -->
-      <div class="text-center"> <!-- Center text here -->
-        <p>It's a fake trailer.</p>
-        <p>Sexy Hamburgler.</p>
-        <p>It gets weird.</p>
-      </div>
-      <!-- Image -->
-      <div>
-        <img src="/posts/Mega-Meal-Explained/kiddie.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+  <div class="collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-6 mt-4">
+    <!-- Flex container for layout -->
+    <div class="flex flex-col md:flex-row items-center justify-between gap-12">
+      <!-- Neon Text Placeholder -->
+      <div class="w-full px-4"> <!-- Container for images -->
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+          <!-- First Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/fake-trailer.png" alt="neon sign" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+          <!-- Second Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/gif/Cheeseburger.gif" alt="a screaming cheeseburger" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
+
 <!-- Medium Size -->
 <div class="card-base p-0 pl-4 pr-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8">
-  <button class="collapsible-header w-auto mx-auto px-4 py-1.5 bg-[oklch(0.35_0.1_var(--hue))] hover:bg-[oklch(0.30_0.1_var(--hue))] text-white rounded-lg transition-colors" style="--hue: 240;">
-    <span class="text-2xl font-bold">Large Meal</span>
+<button class="collapsible-header w-auto mx-auto px-4 py-1.5 bg-gradient-to-r from-[oklch(0.35_0.2_var(--hue))] to-[oklch(0.45_0.3_var(--hue))] text-white rounded-lg transition-colors" style="--hue: 240;">
+    <!-- Neon Text -->
+    <span class="font-sriracha text-2xl font-bold neon-text">LARGE MEAL </span>
+    <span class="font-sans text-xs text-30 ml-2 transition">(not too much, not too little)</span>
   </button>
+
   <!-- Content -->
-  <div class="collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-4 mt-4">
+  <div class="collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-6 mt-4">
     <!-- Image inside the collapsible content -->
-    <div class="flex justify-center">
-      <img src="/posts/Mega-Meal-Explained/med-wide1.png" alt="wide shot of dystopian city" class="w-full rounded-lg shadow-md">
+    <div class="w-full px-4"> <!-- Container for images -->
+      <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+        <!-- First Image -->
+          <img src="/posts/Mega-Meal-Explained/med-wide1.png" alt="wide shot of dystopian city" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+      </div>
     </div>
     <!-- Text content -->
     <div class="flex flex-col md:flex-row items-center justify-center gap-16">
       <div class="">
-        <p>It's a fake movie trailer—a parody of over-the-top films. A mysterious character *(redacted for legal reasons)* is introduced in a cyberpunk city filled with holographic fast-food ads and corporate dystopia. The protagonist, clad in prison stripes and a fedora, exudes femme fatale energy as a deep, raspy voiceover narrates.</p>
+        <p>The video is a fake movie trailer—a parody of over-the-top films. A mysterious character *(redacted for legal reasons)* is introduced in a cyberpunk city filled with holographic fast-food ads and corporate dystopia. The protagonist, clad in prison stripes and a fedora, exudes femme fatale energy as a deep, raspy voiceover narrates.</p>
         <p>The trailer teases a world of intrigue, rebellion, and fast-food capitalism. It's cheesy, self-aware, and exactly what you'd expect if your favorite fast-food mascots became sentient horrors in a future dystopian world.</p>
         <p>The world these characters inhabit is dense and layered—like a delicious Froozie Shake. Don't expect to catch every reference. It's meal-messy, questionable, but oddly satisfying if you're in the right mood.</p>
       </div>
     </div>
-     <div class="flex justify-center">
-      <img src="/posts/Mega-Meal-Explained/med-wide2.png" alt="wide shot of dystopian city" class="w-full rounded-lg shadow-md">
-     </div>
+    <!-- Second Image -->
+    <div class="w-full px-4"> <!-- Container for images -->
+      <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+          <img src="/posts/Mega-Meal-Explained/butt2.png" alt="wide shot of dystopian city" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+      </div>
+    </div>
   </div>
 </div>
 
+<!-- Mega Size -->
+
 <div class="card-base p-0 pl-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8">
-<button class="collapsible-header w-auto mx-auto px-4 py-1.5 bg-[oklch(0.35_0.1_var(--hue))] hover:bg-[oklch(0.30_0.1_var(--hue))] text-white rounded-lg transition-colors" style="--hue: 360;">
-  <span class="text-3xl font-bold">Mega Meal</span>
+<button class="collapsible-header w-auto mx-auto px-4 py-1.5 bg-gradient-to-r from-[oklch(0.35_0.2_var(--hue))] to-[oklch(0.45_0.3_var(--hue))] text-white rounded-lg transition-colors" style="--hue: 360;">
+  <span class="font-sriracha text-3xl font-bold neon-text">MEGA MEAL</span>
+  <span class="font-sans text-xs text-30 ml-2 transition">(Go big, go home, regret it later)</span>
+
 </button>
   <div class="collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-4 mt-4 pr-4">
 
   <!-- Introduction -->
 <p class="mb-4">The introduction sets the tone with an ominous siren blaring over a maximum-security prison. Searchlights sweep the scene, suggesting an escape. Text zooms in, setting expectations: this is a parody trailer.</p>
-
-<!-- Image Group -->
-<div class="relative flex justify-center gap-4 my-8">
-  <img src="/posts/Mega-Meal-Explained/ultra1.png" alt="futuristic prison" class="w-full max-w-md rounded-lg shadow-md rotate-1 z-10">
-  <img src="/posts/Mega-Meal-Explained/ultra2.png" alt="Dystopian megacity" class="w-full max-w-md rounded-lg shadow-md -rotate-1 mt-4">
-</div>
+<!-- Container for images -->
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+          <!-- First Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/ultra1.png" alt="futuristic prison" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+          <!-- Second Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/ultra2.png" alt="Dystopian megacity"  class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+        </div>
 
 <!-- Next Paragraph -->
 <p class="mb-4">The view transitions to a bustling futuristic dystopian megalopolis, seen from above. Holographic fast-food ads flash from skyscrapers as the music builds.</p>
 
 <!-- Walking Image -->
-<img src="/posts/Mega-Meal-Explained/walking.png" alt="boots walking" class="float-right w-full max-w-md ml-4 mb-4 rounded-lg shadow-md">
+<img src="/posts/Mega-Meal-Explained/walking.png" alt="boots walking" class="float-center w-full h-auto ml-4 mb-4 rounded-lg shadow-md">
 
 <!-- Next Paragraph -->
 <p class="mb-4">A shot of legs walking slowly down a rainy alleyway teases a mysterious femme fatale. A deep, raspy voiceover kicks in, expressing hunger and desire. The camera pans over grimy streets and rundown restaurants. The backside of a provocatively dressed stranger—prison stripes, fedora, yellow gloves—walks among the crowds. A dramatic title slams onto the screen, punctuated by an explosion.</p>
+<!-- Container for images -->
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+          <!-- First Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/Title.jpg" alt="Title" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+          <!-- Second Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/ultra-headquarters.png" alt="Dystopian megacity"  class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+        </div>  
 
-<div class="relative flex justify-center gap-4 my-8">
-  <img src="/posts/Mega-Meal-Explained/Title.jpg" alt="futuristic prison" class="w-full max-w-md rounded-lg shadow-md rotate-1 z-10">
-  <img src="/posts/Mega-Meal-Explained/ultra-headquarters.png" alt="Dystopian megacity" class="w-full max-w-md rounded-lg shadow-md -rotate-1 mt-4">
+<!-- hybrid container -->
+<div class="flex flex-col md:flex-row items-center md:items-start justify-center gap-8">
+  <!-- Next Paragraph -->
+  <div class="md:w-1/2">
+    <p class="mb-4">The view returns to the city, now showing a mysterious CEO in a yellow jacket with a red afro, sitting in a position of power. Words, titles, and fake movie reviews pan over the scenes, insinuating that other humans have seen this - so to fit in - you should too.</p>
+  </div>
+  <!-- CEO Image -->
+  <div class="md:w-1/2">
+    <img src="/posts/Mega-Meal-Explained/ultra-ceo.png" alt="a ceo" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+  </div>
 </div>
 
-<!-- CEO Image -->
-<img src="/posts/Mega-Meal-Explained/ultra-ceo.png" alt="a ceo" class="float-left w-full max-w-md mr-4 mb-4 rounded-lg shadow-md">
-
-<!-- Next Paragraph -->
-<p class="mb-4">The view returns to the city, now showing a mysterious CEO in a yellow jacket with a red afro, sitting in a position of power. Words, titles, and fake movie reviews pan over the scenes, insinuating that other humans have seen this, so you should too.</p>
-
-<!-- Wanted Image -->
-<img src="/posts/Mega-Meal-Explained/ultra-wanted.png" alt="A screaming cheeseburger." class="float-right w-full max-w-md ml-4 mb-4 rounded-lg shadow-md">
-
-<!-- Next Paragraph -->
-<p class="mb-4">Next, we see the mysterious character again, standing next to a well-lit billboard with her face on it: Wanted. From the shadows, a male figure watches—a subtle nod to the character’s origins and her bold, audacious nature.</p>
+<!-- hybrid container -->
+<div class="flex flex-col md:flex-row items-center md:items-start justify-center gap-8">
+  <!-- Wanted Image -->
+  <div class="md:w-1/2">
+    <img src="/posts/Mega-Meal-Explained/ultra-wanted.png" alt="a ceo" class="float-left w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+  </div>
+ <!-- Next Paragraph -->
+  <div class="md:w-1/2">
+   <p class="mb-4">Next, we see the mysterious character again, standing next to a well-lit billboard with her face on it: Wanted. From the shadows, a male figure watches—a subtle nod to the character’s origins and her bold, audacious nature.</p>
+  </div>
+</div>
+<!-- Container for images -->
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+          <!-- First Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/ultra-headquarters.png" alt="Headquarters" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+          <!-- Second Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/ultra-sign.png" alt="No Adults"  class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+        </div>
 
 <!-- Next Scenes -->
-<p class="mb-4">Next Scenes: An establishing shot of the giant corporate headquarters of the W Corporation leads into an empty, closed-down restaurant with a playplace. A sign pulls focus: No Adults in the Ball Pit. A low, wide shot of the restaurant from the ball pit’s perspective reveals a head with a hat slowly rising out of the balls. The music cues mystery and humor.</p>
+<p class="mb-4">Next Scenes: An establishing shot of the giant corporate headquarters of the W Corporation that leads into an empty, closed-down restaurant with a playplace. A sign pulls focus: No Adults in the Ball Pit. A low, wide shot of the restaurant from the ball pit’s perspective reveals a head with a hat slowly rising out of the balls. The music cues mystery and humor.</p>
+<!-- Container for images -->
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+          <!-- First Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/ultra-balls.png" alt="Ball Pit" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+          <!-- Second Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/security.png" alt="Security Guard"  class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+        </div>
 
-<!-- Image Group -->
-<div class="relative flex justify-center gap-4 my-8">
-  <img src="/posts/Mega-Meal-Explained/ultra-balls.png" alt="futuristic prison" class="w-full max-w-md rounded-lg shadow-md rotate-1 z-10">
-  <img src="/posts/Mega-Meal-Explained/ultra-sign.png" alt="Dystopian megacity" class="w-full max-w-md rounded-lg shadow-md -rotate-1 mt-4">
-</div>
-
-<!-- Final Paragraph -->
+<!-- Next Paragraph -->
 <p class="mb-4">A security guard walks down a hallway full of mannequins. The (redacted for legal reasons) stands absolutely still, blending in. The guard walks by, unaware. The (redacted for legal reasons) breaks the fourth wall and winks at the camera.</p>
 
-<!-- Kiddie Image -->
-<img src="/posts/Mega-Meal-Explained/Aurora.png" alt="boots walking" class="float-center w-full ml-4 mb-4 rounded-lg shadow-md">
+<!-- Image -->
+<img src="/posts/Mega-Meal-Explained/Aurora.png" alt="boots walking" class="float-center w-full h-auto ml-4 mb-4 rounded-lg shadow-md">
 
-  Next, a lab with a vault door labeled Secret Recipe. Tension builds as we approach the door. A hamburger is sealed in a container, and a yellow-gloved hand reaches in, slowly pulling it out. The music shifts to a joyous victory song, then fades out.
+<p class="mb-4">Next, a lab with a vault door labeled Secret Recipe. Tension builds as we approach the door. A hamburger is sealed in a container, and a yellow-gloved hand reaches in, slowly pulling it out. The music shifts to a joyous victory song, then fades out.</p>
+<!-- Container for images -->
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+          <!-- First Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/safe.png" alt="Secret Recipe" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+          <!-- Second Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/burger-hole.png" alt="Burger Hole"  class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+        </div>
 
- <!-- Image Group -->
-<div class="relative flex justify-center gap-4 my-8">
-  <img src="/posts/Mega-Meal-Explained/safe.png" alt="futuristic prison" class="w-full max-w-md rounded-lg shadow-md rotate-1 z-10">
-  <img src="/posts/Mega-Meal-Explained/burger-hole.png" alt="Dystopian megacity" class="w-full max-w-md rounded-lg shadow-md -rotate-1 mt-4">
-</div>
+  <p class="mb-4">The next scene is tropical, colorful, and vibrant. Fat men in shorts do celebratory dances. The (redacted for legal reasons) reveals her face for the first time—no longer in disguise. She’s dancing too, happy—until the camera zooms in on the Secret Recipe hamburger. It is screaming. </p>
+    <!-- Container for images -->
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+          <!-- First Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/dance.png" alt="Dancers" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+          <!-- Second Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/dance2.png" alt="Aurora2"  class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+        </div>
 
-  The next scene is tropical, colorful, and vibrant. Fat men in shorts do celebratory dances. The (redacted for legal reasons) reveals her face for the first time, no longer in disguise. She’s dancing too, happy—until the camera zooms in on the Secret Recipe hamburger. It has a face and is screaming. A surprise twist: things aren’t always as they seem.
-    
-  <img src="/posts/Mega-Meal-Explained/dance.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+ <p class="mb-4">A surprise twist: things aren’t always as they seem.</p>
+     <!-- Container for images -->
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+          <!-- First Image -->
+          <div class="w-full h-auto transform ">
+            <img src="/posts/Mega-Meal-Explained/gif/Cheeseburger.gif" alt="A screaming cheeseburger" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+        </div>
 
-  <p>An ominous drone noise hits, and sinister music rushes in. Fast-food parody characters from different franchises arrive in a shock-and-awe tactic, pulling back the curtains to reveal a much bigger world—a futuristic floating fortress shaped like a king’s crown. The king’s army of supersoldiers, clad in gold with energized baton scepters and red capes, marches forward in formation. A low-angle shot suggests dominance and power.  </p>
+  <p class="mb-4">...An ominous drone noise hits, and sinister music rushes in. Fast-food parody characters from different franchises arrive in a shock-and-awe tactic, pulling back the curtain to reveal a much bigger world—a futuristic floating fortress shaped like a king’s crown. The king’s army of supersoldiers, clad in gold with energized baton scepters and red capes—they marche forward in formation, the low-angle shot suggesting dominance and power.  </p>
+    <!-- Container for images -->
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+          <!-- First Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/king.png" alt="King" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+          <!-- Second Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/castle.png" alt="Castle"  class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+        </div>
+  
+  <p class="mb-4"> A high view of the (**redacted for legal reasons**) overlooking the city symbolizes a hero’s journey: conflict, understanding, responsibility, hope, inspiration, adversity, perseverance, and sacrifice. </p>
 
-  <img src="/posts/Mega-Meal-Explained/dance2.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+  <img src="/posts/Mega-Meal-Explained/overlook.png" alt="Hero's Dilema" class="float-left w-full h-auto md:w-1/2 rounded-lg shadow-md">
 
 
-  A high view of the (**redacted for legal reasons**) overlooking the city symbolizes a hero’s journey: conflict, understanding, responsibility, hope, inspiration, adversity, perseverance, and sacrifice. A counter-shot shows a dark factory with an interdimensional portal. Fast-food wrappers whip around as Wendi, a doll with glowing eyes, blocks the portal with a suggestion of supernatural abilities.  
+  
+   <p class="mb-4">A counter-shot shows a dark factory with an interdimensional portal. Fast-food wrappers whip around as Wendi, a doll with glowing eyes, blocks the portal with a suggestion of supernatural abilities. </p>
 
-  <img src="/posts/Mega-Meal-Explained/castle.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+  <img src="/posts/Mega-Meal-Explained/wendi.png" alt="Hero's Dilema" class="float-right w-full h-auto md:w-1/2 rounded-lg shadow-md">
 
 
   The city descends into chaos. Reality fractures. A rooster in a meat locker holds a meat cleaver. A billboard advertises a new product: *The Infinite Dip*. Children wander dark streets like zombies, suggesting a mind-altering substance and cravings beyond control.  
