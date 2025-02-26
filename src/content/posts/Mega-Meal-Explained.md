@@ -69,10 +69,6 @@ lang: ""
           <div class="w-full md:w-1/2 transform ">
             <img src="/posts/Mega-Meal-Explained/fake-trailer.png" alt="neon sign" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
           </div>
-          <!-- Second Image -->
-          <div class="w-full md:w-1/2 transform ">
-            <img src="/posts/Mega-Meal-Explained/gif/Cheeseburger.gif" alt="a screaming cheeseburger" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
-          </div>
         </div>
       </div>
     </div>
@@ -114,12 +110,15 @@ lang: ""
   </div>
 </div>
 
-<!-- Mega Size -->
 
+<!-- Mega Size -->
 <div class="card-base p-0 pl-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8">
 <button class="collapsible-header w-auto mx-auto px-4 py-1.5 bg-gradient-to-r from-[oklch(0.35_0.2_var(--hue))] to-[oklch(0.45_0.3_var(--hue))] text-white rounded-lg transition-colors" style="--hue: 360;">
   <span class="font-sriracha text-3xl font-bold neon-text">MEGA MEAL</span>
   <span class="font-sans text-xs text-30 ml-2 transition">(Go big, go home, regret it later)</span>
+  <svg class="indicator-arrow inline-block ml-2 w-5 h-5 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <polyline points="6 9 12 15 18 9"></polyline>
+</svg>
 
 </button>
   <div class="collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-4 mt-4 pr-4">
@@ -241,7 +240,7 @@ lang: ""
 <p class="mb-4">It is screaming.</p>
 
 <p class="mb-4">A surprise twist: things aren’t always as they seem.</p>
-     <!-- Container for images -->
+     <!-- Container for gif -->
         <div class="flex flex-col md:flex-row items-center justify-center gap-4">
           <!-- First Image -->
           <div class="w-full h-auto transform ">
@@ -307,7 +306,7 @@ lang: ""
     <span class="absolute top-[50%] left-[45%] text-xs">Living mannequins as food servers</span>
     <span class="absolute top-[55%] left-[25%] text-sm italic">The chickens rise up</span>
     <span class="absolute top-[65%] left-[55%] text-base">The mayo grows</span>
-    <span class="absolute top-[70%] left-[10%] text-lg transform -rotate-2">Terrorism</span>
+    <span class="absolute top-[70%] left-[10%] text-lg transform -rotate-2">Bio-Terrorism</span>
     <span class="absolute top-[85%] left-[40%] text-xs">Explosions</span>
     <span class="absolute top-[85%] left-[70%] text-base font-bold">Restaurants are filled with dancing, intelligent cockroaches</span>
     <span class="absolute top-[80%] left-[20%] text-sm">Burgers twitch in the streets like mimics in disguise</span>
@@ -332,25 +331,36 @@ lang: ""
   </div>
 </div>
 
-  The streets flood. The Hamburgler is gone. Perhaps it was all a dream? We take a breath, and we’re back on a building. The Hamburgler overlooks the city. It’s time to act. Take up the mantle. Fight back.  
+<p class="mb-4">The streets flood. The Hamburgler is gone. Perhaps it was all a dream? We take a breath, and we’re back on a building. The Hamburgler overlooks the city. It’s time to act. Take up the mantle. Fight back.  She dives into the action, falling and falling, and falling and falling, and falling. as reality shifts around her. She begins running faster and faster, no more feme fetale saunter - this time with purpose.</p>
+     <!-- Container for images -->
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+          <!-- First Image -->
+          <div class="w-full h-auto transform ">
+            <img src="/posts/Mega-Meal-Explained/gif/running_720p.gif" alt="Final action shot" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+        </div>
+<p class="mb-4">A final shot reveals the CEO of W Corporation in his office—a clown. Storm clouds gather, and his face turns sinister. Then, the *Mega Meal* logo hits, punctuated by an explosion. A teaser says it will be released in 2066—an indication it may never happen. </p>
 
-  <img src="/posts/Mega-Meal-Explained/roaches.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
 
-  She dives into the action, falling and falling, and falling and falling, and falling. as reality shifts around her. She begins running faster and faster, no more feme fetale saunter - this time with purpose. A final shot reveals the CEO of W Corporation in his office—a clown. Storm clouds gather, and his face turns sinister. Then, the *Mega Meal* logo hits, punctuated by an explosion. A teaser says it will be released in 2066—an indication it may never happen. 
-
-
-  A Surprise final outro at a fast-food drive-through features a demonic voice saying, *No pickles*. Then, black.  
+  <p class="mb-4">A Surprise final outro at a fast-food drive-through features a demonic voice saying, *No pickles*. Then, black.  </p>
 
   <h4 class="text-xl font-bold mb-4 dark:text-neutral-50">Final Thoughts</h4>
 
 
   <div class="text-lg text-gray-700 dark:text-neutral-300 space-y-6">
-    <p>The video takes the form of a movie trailer for a film that doesn't exist. This format allows the creator to move the plot forward at a breakneck pace, introducing a world and storyline that leave room for further episodes.</p>
-    <p>In this world, the (**redacted for legal reasons**) character is clad in a bikini with prison stripes—a distinctive getup that's not intended to sexualize her but is a nod to other characters and numerous tropes in different series and films, but reimagined with a strong female protagonist.</p>
-    <p>The video's quality is "fair," with many glitches and imperfections. While it's possible to hyper-focus on quality and create a seamless product, the labor involved as a solo creator makes that nearly impossible. Compromises were made to keep the project moving forward.</p>
-    <p>Ultimately, the project suffers from the same issues as any indie production: **budget, labor, and audience**. Larger studios have entire teams—writers, directors, artists, marketers, and equipment at the ready. A single creator working at this scale is bound to hit limits.</p>
-    <p>In that sense, what's been achieved so far is impressive, but will the series continue? Hopefully, but I've been down this road before. Overcoming the labor problem is like not having enough food to keep it alive—there's no support system here, and the project will likely die, emaciated and forgotten, in some dark alley. The world at large won't even notice its pathetic attempts to crawl. Friends will step over its mummified corpse, barely looking down, as the work of strangers is so much more sexy and mysterious, while people they know sit alone, slowly sinking into poverty, waiting for the last nail in the coffin to be hammered in.</p>
-    <p>Onward into the dark, rainy night, we continue pushing forward.</p>
+    <p class="mb-4"> - The video takes the form of a movie trailer for a film that doesn't exist. This format allows the creator to move the plot forward at a breakneck pace, introducing a world and storyline that leave room for further episodes.</p>
+    <p class="mb-4"> - In this world, the (**redacted for legal reasons**) character is clad in a bikini with prison stripes—a distinctive getup that's not intended to sexualize her but is a nod to other characters and numerous tropes in different series and films, but reimagined with a strong female protagonist.</p>
+    <p class="mb-4"> - The video's quality is "fair," with many glitches and imperfections. While it's possible to hyper-focus on quality and create a seamless product, the labor involved as a solo creator makes that nearly impossible. Compromises were made to keep the project moving forward.</p>
+    <p class="mb-4">Ultimately, the project suffers from the same issues as any indie production: **budget, labor, and audience**. Larger studios have entire teams—writers, directors, artists, marketers, and equipment at the ready. A single creator working at this scale is bound to hit limits.</p>
+    <p class="mb-4">In that sense, what's been achieved so far is impressive—but will the series continue? Hopefully, but I've been down this road before. Overcoming the labor problem is like not having enough food to keep it alive—there's no support system here, and the project will likely die, emaciated and forgotten, in some dark alley. The world at large won't even notice its pathetic attempts to crawl. People will step over its mummified corpse, barely stopping to look down—as the work of strangers is so much more sexy and mysterious, while people they know sit alone, slowly sinking into poverty, waiting for the last nail in the coffin to be hammered in.</p>
+     <!-- Container for images -->
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+          <!-- First Image -->
+          <div class="w-full h-auto transform ">
+            <img src="/posts/Mega-Meal-Explained/watch.png" alt="Final action shot" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+        </div>
+    <p class="mb-4">Onward into the dark, rainy night, we continue pushing forward.</p>
       <h2 class="text-xl font-bold mb-4 pb-4 dark:text-neutral-50">Would you like <span class="text-yellow-500">Fries</span> or <span class="text-yellow-700">Onion Rings</span>?</h2>
     </div>
   </div>
@@ -365,17 +375,24 @@ lang: ""
   function handleCollapsibleClick(event) {
     const header = event.currentTarget;
     const content = header.nextElementSibling;
+    const parentCard = header.closest('.card-base');
+    const arrow = header.querySelector('.indicator-arrow');
     
     // Toggle all other sections closed
     document.querySelectorAll('.collapsible-content').forEach(otherContent => {
       if (otherContent !== content && !otherContent.classList.contains('max-h-0')) {
+        const otherHeader = otherContent.previousElementSibling;
         otherContent.style.maxHeight = '0px';
         otherContent.style.opacity = '0';
+        otherHeader.setAttribute('aria-expanded', 'false');
+        otherHeader.querySelector('.indicator-arrow')?.classList.remove('rotate-180');
       }
     });
     
     // Handle the clicked section
-    if (content.style.maxHeight === '0px' || !content.style.maxHeight) {
+    const isExpanding = content.style.maxHeight === '0px' || !content.style.maxHeight;
+    
+    if (isExpanding) {
       // Get the scrollHeight to animate to
       const height = content.scrollHeight;
       content.style.maxHeight = '0px';
@@ -387,9 +404,23 @@ lang: ""
       // Animate to full height
       content.style.maxHeight = height + 'px';
       content.style.opacity = '1';
+      
+      // Update accessibility attributes and rotate arrow
+      header.setAttribute('aria-expanded', 'true');
+      arrow.classList.add('rotate-180');
+      
+      // Scroll to the top of this section with a slight delay to allow animation to start
+      setTimeout(() => {
+        // Scroll to the top of the parent card with smooth behavior
+        parentCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
     } else {
       content.style.maxHeight = '0px';
       content.style.opacity = '0';
+      
+      // Update accessibility attributes and rotate arrow back
+      header.setAttribute('aria-expanded', 'false');
+      arrow.classList.remove('rotate-180');
     }
   }
 

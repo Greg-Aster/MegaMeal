@@ -52,10 +52,6 @@ style=&quot;filter: hue-rotate(var(--hue, 0deg));&quot;
 &amp;lt;div class=&quot;w-full md:w-1/2 transform &quot;&amp;gt;
 &amp;lt;img src=&quot;/posts/Mega-Meal-Explained/fake-trailer.png&quot; alt=&quot;neon sign&quot; class=&quot;w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition&quot;&amp;gt;
 &amp;lt;/div&amp;gt;
-&amp;lt;!-- Second Image --&amp;gt;
-&amp;lt;div class=&quot;w-full md:w-1/2 transform &quot;&amp;gt;
-&amp;lt;img src=&quot;/posts/Mega-Meal-Explained/gif/Cheeseburger.gif&quot; alt=&quot;a screaming cheeseburger&quot; class=&quot;w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition&quot;&amp;gt;
-&amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;
@@ -93,11 +89,14 @@ style=&quot;filter: hue-rotate(var(--hue, 0deg));&quot;
 &amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;&lt;/p&gt;
-&lt;p&gt;&amp;lt;!-- Mega Size --&amp;gt;&lt;/p&gt;
-&lt;p&gt;&amp;lt;div class=&quot;card-base p-0 pl-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8&quot;&amp;gt;
+&lt;p&gt;&amp;lt;!-- Mega Size --&amp;gt;
+&amp;lt;div class=&quot;card-base p-0 pl-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8&quot;&amp;gt;
 &amp;lt;button class=&quot;collapsible-header w-auto mx-auto px-4 py-1.5 bg-gradient-to-r from-[oklch(0.35_0.2_var(--hue))] to-[oklch(0.45_0.3_var(--hue))] text-white rounded-lg transition-colors&quot; style=&quot;--hue: 360;&quot;&amp;gt;
 &amp;lt;span class=&quot;font-sriracha text-3xl font-bold neon-text&quot;&amp;gt;MEGA MEAL&amp;lt;/span&amp;gt;
-&amp;lt;span class=&quot;font-sans text-xs text-30 ml-2 transition&quot;&amp;gt;(Go big, go home, regret it later)&amp;lt;/span&amp;gt;&lt;/p&gt;
+&amp;lt;span class=&quot;font-sans text-xs text-30 ml-2 transition&quot;&amp;gt;(Go big, go home, regret it later)&amp;lt;/span&amp;gt;
+&amp;lt;svg class=&quot;indicator-arrow inline-block ml-2 w-5 h-5 transition-transform duration-300&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&amp;gt;
+&amp;lt;polyline points=&quot;6 9 12 15 18 9&quot;&amp;gt;&amp;lt;/polyline&amp;gt;
+&amp;lt;/svg&amp;gt;&lt;/p&gt;
 &lt;p&gt;&amp;lt;/button&amp;gt;
 &amp;lt;div class=&quot;collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-4 mt-4 pr-4&quot;&amp;gt;&lt;/p&gt;
 &lt;p&gt;&amp;lt;!-- Introduction --&amp;gt;
@@ -192,7 +191,7 @@ style=&quot;filter: hue-rotate(var(--hue, 0deg));&quot;
 &amp;lt;img src=&quot;/posts/Mega-Meal-Explained/burger-hole.png&quot; alt=&quot;Burger Hole&quot;  class=&quot;w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition&quot;&amp;gt;
 &amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;&lt;/p&gt;
-&lt;p&gt;&amp;lt;p class=&quot;mb-4&quot;&amp;gt;The next scene is tropical, colorful, and vibrant. Fat men in shorts do celebratory dances. The (redacted for legal reasons) reveals her face for the first time—no longer in disguise. She’s dancing too, happy—until the camera zooms in on the Secret Recipe hamburger. It is screaming. &amp;lt;/p&amp;gt;
+&lt;p&gt;&amp;lt;p class=&quot;mb-4&quot;&amp;gt;The next scene is tropical, colorful, and vibrant. Fat men in shorts do celebratory dances. The (redacted for legal reasons) reveals her face for the first time—no longer in disguise. She’s dancing too, happy—until the camera zooms in on the Secret Recipe hamburger. &amp;lt;/p&amp;gt;
 &amp;lt;!-- Container for images --&amp;gt;
 &amp;lt;div class=&quot;flex flex-col md:flex-row items-center justify-center gap-4&quot;&amp;gt;
 &amp;lt;!-- First Image --&amp;gt;
@@ -203,16 +202,17 @@ style=&quot;filter: hue-rotate(var(--hue, 0deg));&quot;
 &amp;lt;div class=&quot;w-full md:w-1/2 transform &quot;&amp;gt;
 &amp;lt;img src=&quot;/posts/Mega-Meal-Explained/dance2.png&quot; alt=&quot;Aurora2&quot;  class=&quot;w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition&quot;&amp;gt;
 &amp;lt;/div&amp;gt;
-&amp;lt;/div&amp;gt;&lt;/p&gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;p class=&quot;mb-4&quot;&amp;gt;It is screaming.&amp;lt;/p&amp;gt;&lt;/p&gt;
 &lt;p&gt;&amp;lt;p class=&quot;mb-4&quot;&amp;gt;A surprise twist: things aren’t always as they seem.&amp;lt;/p&amp;gt;
-&amp;lt;!-- Container for images --&amp;gt;
+&amp;lt;!-- Container for gif --&amp;gt;
 &amp;lt;div class=&quot;flex flex-col md:flex-row items-center justify-center gap-4&quot;&amp;gt;
 &amp;lt;!-- First Image --&amp;gt;
 &amp;lt;div class=&quot;w-full h-auto transform &quot;&amp;gt;
 &amp;lt;img src=&quot;/posts/Mega-Meal-Explained/gif/Cheeseburger.gif&quot; alt=&quot;A screaming cheeseburger&quot; class=&quot;w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition&quot;&amp;gt;
 &amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;&lt;/p&gt;
-&lt;p&gt;&amp;lt;p class=&quot;mb-4&quot;&amp;gt;...An ominous drone noise hits, and sinister music rushes in. Fast-food parody characters from different franchises arrive in a shock-and-awe tactic, pulling back the curtain to reveal a much bigger world—a futuristic floating fortress shaped like a king’s crown. The king’s army of supersoldiers, clad in gold with energized baton scepters and red capes—they marche forward in formation, the low-angle shot suggesting dominance and power.  &amp;lt;/p&amp;gt;
+&lt;p&gt;&amp;lt;p class=&quot;mb-4&quot;&amp;gt;...An ominous drone noise hits, and sinister music rushes in. Fast-food parody characters from different franchises arrive in a shock-and-awe tactic, pulling back the curtain to reveal a much bigger world—a futuristic floating fortress shaped like a king’s crown. The king’s army of supersoldiers, clad in gold with energized baton scepters and red capes—they march forward in formation, the low-angle shot suggesting dominance and power.  &amp;lt;/p&amp;gt;
 &amp;lt;!-- Container for images --&amp;gt;
 &amp;lt;div class=&quot;flex flex-col md:flex-row items-center justify-center gap-4&quot;&amp;gt;
 &amp;lt;!-- First Image --&amp;gt;
@@ -223,24 +223,89 @@ style=&quot;filter: hue-rotate(var(--hue, 0deg));&quot;
 &amp;lt;div class=&quot;w-full md:w-1/2 transform &quot;&amp;gt;
 &amp;lt;img src=&quot;/posts/Mega-Meal-Explained/castle.png&quot; alt=&quot;Castle&quot;  class=&quot;w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition&quot;&amp;gt;
 &amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;!-- hybrid container --&amp;gt;
+&amp;lt;div class=&quot;flex flex-col md:flex-row items-center md:items-start justify-center gap-8&quot;&amp;gt;
+&amp;lt;!-- Next Paragraph --&amp;gt;
+&amp;lt;div class=&quot;md:w-1/2&quot;&amp;gt;
+&amp;lt;p class=&quot;mb-4&quot;&amp;gt; A high view of the (&lt;strong&gt;redacted for legal reasons&lt;/strong&gt;) overlooking the city symbolizes a hero’s journey of conflict, understanding, responsibility, hope, inspiration, adversity, perseverance, sacrifice, resilience, endurance, determination, grit, tenacity, fortitude, resolve persistence, willpower, dedication, holdfastion, courage, hardship, triumph, struggle, persistara, defiance, overcoming, gritstone, breakthrough and redemption. &amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;!-- CEO Image --&amp;gt;
+&amp;lt;div class=&quot;md:w-1/2&quot;&amp;gt;
+&amp;lt;img src=&quot;/posts/Mega-Meal-Explained/overlook.png&quot; alt=&quot;Hereos dilema&quot; class=&quot;w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition&quot;&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;!-- hybrid container --&amp;gt;
+&amp;lt;div class=&quot;flex flex-col md:flex-row items-center md:items-start justify-center gap-8&quot;&amp;gt;
+&amp;lt;!-- wendi Image --&amp;gt;
+&amp;lt;div class=&quot;md:w-1/2&quot;&amp;gt;
+&amp;lt;img src=&quot;/posts/Mega-Meal-Explained/wendi.png&quot; alt=&quot;Wendi&quot; class=&quot;float-left w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition&quot;&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;!-- Next Paragraph --&amp;gt;
+&amp;lt;div class=&quot;md:w-1/2&quot;&amp;gt;
+&amp;lt;p class=&quot;mb-4&quot;&amp;gt;A counter-shot shows a dark factory with an interdimensional portal. Fast-food wrappers whip around as Wendi, a doll with glowing eyes, blocks the portal with a suggestion of supernatural abilities. &amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;!-- Container for images --&amp;gt;
+&amp;lt;div class=&quot;flex flex-col md:flex-row items-center justify-center gap-4&quot;&amp;gt;
+&amp;lt;!-- First Image --&amp;gt;
+&amp;lt;div class=&quot;w-full md:w-1/2 transform &quot;&amp;gt;
+&amp;lt;img src=&quot;/posts/Mega-Meal-Explained/rooster.png&quot; alt=&quot;Rooster w cleaver&quot; class=&quot;w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition&quot;&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;!-- Second Image --&amp;gt;
+&amp;lt;div class=&quot;w-full md:w-1/2 transform &quot;&amp;gt;
+&amp;lt;img src=&quot;/posts/Mega-Meal-Explained/dip.png&quot; alt=&quot;The Dip&quot;  class=&quot;w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition&quot;&amp;gt;
+&amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;&lt;/p&gt;
-&lt;p&gt;&amp;lt;p class=&quot;mb-4&quot;&amp;gt; A high view of the (&lt;strong&gt;redacted for legal reasons&lt;/strong&gt;) overlooking the city symbolizes a hero’s journey: conflict, understanding, responsibility, hope, inspiration, adversity, perseverance, and sacrifice. &amp;lt;/p&amp;gt;&lt;/p&gt;
-&lt;p&gt;&amp;lt;img src=&quot;/posts/Mega-Meal-Explained/overlook.png&quot; alt=&quot;Hero&apos;s Dilema&quot; class=&quot;float-left w-full h-auto md:w-1/2 rounded-lg shadow-md&quot;&amp;gt;&lt;/p&gt;
-&lt;p&gt;&amp;lt;p class=&quot;mb-4&quot;&amp;gt;A counter-shot shows a dark factory with an interdimensional portal. Fast-food wrappers whip around as Wendi, a doll with glowing eyes, blocks the portal with a suggestion of supernatural abilities. &amp;lt;/p&amp;gt;&lt;/p&gt;
-&lt;p&gt;&amp;lt;img src=&quot;/posts/Mega-Meal-Explained/wendi.png&quot; alt=&quot;Hero&apos;s Dilema&quot; class=&quot;float-right w-full h-auto md:w-1/2 rounded-lg shadow-md&quot;&amp;gt;&lt;/p&gt;
-&lt;p&gt;The city descends into chaos. Reality fractures. A rooster in a meat locker holds a meat cleaver. A billboard advertises a new product: &lt;em&gt;The Infinite Dip&lt;/em&gt;. Children wander dark streets like zombies, suggesting a mind-altering substance and cravings beyond control.&lt;/p&gt;
-&lt;p&gt;&amp;lt;img src=&quot;/posts/Mega-Meal-Explained/king.png&quot; alt=&quot;A screaming cheeseburger.&quot; class=&quot;w-full max-w-md rounded-lg shadow-md&quot;&amp;gt;&lt;/p&gt;
-&lt;p&gt;Sexy man butts. Weird, unappetizing food. Sentient mayo merges and begins to take over the city. A giant purple &lt;em&gt;thing&lt;/em&gt; (what is it supposed to be, anyway?) Jak Sawce accidentally kills his opponent in a match. Living mannequins as food servers. The chickens rise up. The mayo grows. Terrorism. Explosions. Restaurants are filled with dancing, intelligent cockroaches. Burgers twitch in the streets like mimics in disguise.&lt;/p&gt;
-&lt;p&gt;&amp;lt;img src=&quot;/posts/Mega-Meal-Explained/mayo.png&quot; alt=&quot;A screaming cheeseburger.&quot; class=&quot;w-full max-w-md rounded-lg shadow-md&quot;&amp;gt;&lt;/p&gt;
-&lt;p&gt;The streets flood. The Hamburgler is gone. Perhaps it was all a dream? We take a breath, and we’re back on a building. The Hamburgler overlooks the city. It’s time to act. Take up the mantle. Fight back.&lt;/p&gt;
-&lt;p&gt;&amp;lt;img src=&quot;/posts/Mega-Meal-Explained/roaches.png&quot; alt=&quot;A screaming cheeseburger.&quot; class=&quot;w-full max-w-md rounded-lg shadow-md&quot;&amp;gt;&lt;/p&gt;
-&lt;p&gt;She dives into the action, falling and falling, and falling and falling, and falling. as reality shifts around her. She begins running faster and faster, no more feme fetale saunter - this time with purpose. A final shot reveals the CEO of W Corporation in his office—a clown. Storm clouds gather, and his face turns sinister. Then, the &lt;em&gt;Mega Meal&lt;/em&gt; logo hits, punctuated by an explosion. A teaser says it will be released in 2066—an indication it may never happen.&lt;/p&gt;
-&lt;p&gt;A Surprise final outro at a fast-food drive-through features a demonic voice saying, &lt;em&gt;No pickles&lt;/em&gt;. Then, black.&lt;/p&gt;
+&lt;p&gt;&amp;lt;p class=&quot;mb-4&quot;&amp;gt;The city descends into chaos. Reality fractures. A rooster in a meat locker holds a meat cleaver. A billboard advertises a new product: &lt;em&gt;The Infinite Dip&lt;/em&gt;. Children wander dark streets like zombies, suggesting a mind-altering substance and cravings beyond control.&amp;lt;/p&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div class=&quot;relative grid grid-cols-1 md:grid-cols-2 gap-8 py-16&quot;&amp;gt;
+&amp;lt;div class=&quot;relative min-h-[600px]&quot;&amp;gt;
+&amp;lt;span class=&quot;absolute top-[5%] left-[10%] text-xl font-bold transform rotate-1&quot;&amp;gt;Sexy man butts&amp;lt;/span&amp;gt;
+&amp;lt;span class=&quot;absolute top-[15%] left-[40%] text-sm transform -rotate-1&quot;&amp;gt;Weird, unappetizing food&amp;lt;/span&amp;gt;
+&amp;lt;span class=&quot;absolute top-[25%] left-[20%] text-lg&quot;&amp;gt;Sentient mayo merges and begins to take over the city&amp;lt;/span&amp;gt;
+&amp;lt;span class=&quot;absolute top-[30%] left-[60%] text-base font-light&quot;&amp;gt;A giant purple &lt;em&gt;thing&lt;/em&gt; (what is it supposed to be, anyway?)&amp;lt;/span&amp;gt;
+&amp;lt;span class=&quot;absolute top-[40%] left-[15%] text-2xl font-bold transform rotate-1&quot;&amp;gt;Jak Sawce accidentally kills his opponent in a match&amp;lt;/span&amp;gt;
+&amp;lt;span class=&quot;absolute top-[50%] left-[45%] text-xs&quot;&amp;gt;Living mannequins as food servers&amp;lt;/span&amp;gt;
+&amp;lt;span class=&quot;absolute top-[55%] left-[25%] text-sm italic&quot;&amp;gt;The chickens rise up&amp;lt;/span&amp;gt;
+&amp;lt;span class=&quot;absolute top-[65%] left-[55%] text-base&quot;&amp;gt;The mayo grows&amp;lt;/span&amp;gt;
+&amp;lt;span class=&quot;absolute top-[70%] left-[10%] text-lg transform -rotate-2&quot;&amp;gt;Bio-Terrorism&amp;lt;/span&amp;gt;
+&amp;lt;span class=&quot;absolute top-[85%] left-[40%] text-xs&quot;&amp;gt;Explosions&amp;lt;/span&amp;gt;
+&amp;lt;span class=&quot;absolute top-[85%] left-[70%] text-base font-bold&quot;&amp;gt;Restaurants are filled with dancing, intelligent cockroaches&amp;lt;/span&amp;gt;
+&amp;lt;span class=&quot;absolute top-[80%] left-[20%] text-sm&quot;&amp;gt;Burgers twitch in the streets like mimics in disguise&amp;lt;/span&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div class=&quot;flex flex-col space-y-4&quot;&amp;gt;
+&amp;lt;div&amp;gt;
+&amp;lt;img src=&quot;/posts/Mega-Meal-Explained/mayo.png&quot; alt=&quot;may&quot; class=&quot;w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition&quot;&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;div&amp;gt;
+&amp;lt;img src=&quot;/posts/Mega-Meal-Explained/jak.png&quot; alt=&quot;jak sawce&quot; class=&quot;w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition&quot;&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;div&amp;gt;
+&amp;lt;img src=&quot;/posts/Mega-Meal-Explained/bomb.png&quot; alt=&quot;an exploding restaurant&quot; class=&quot;w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition&quot;&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;div&amp;gt;
+&amp;lt;img src=&quot;/posts/Mega-Meal-Explained/burger.png&quot; alt=&quot;burger mimic&quot; class=&quot;w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition&quot;&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;div&amp;gt;
+&amp;lt;img src=&quot;/posts/Mega-Meal-Explained/roaches.png&quot; alt=&quot;lil buddies&quot; class=&quot;w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition&quot;&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;p class=&quot;mb-4&quot;&amp;gt;The streets flood. The Hamburgler is gone. Perhaps it was all a dream? We take a breath, and we’re back on a building. The Hamburgler overlooks the city. It’s time to act. Take up the mantle. Fight back.  She dives into the action, falling and falling, and falling and falling, and falling. as reality shifts around her. She begins running faster and faster, no more feme fetale saunter - this time with purpose.&amp;lt;/p&amp;gt;
+&amp;lt;!-- Container for images --&amp;gt;
+&amp;lt;div class=&quot;flex flex-col md:flex-row items-center justify-center gap-4&quot;&amp;gt;
+&amp;lt;!-- First Image --&amp;gt;
+&amp;lt;div class=&quot;w-full h-auto transform &quot;&amp;gt;
+&amp;lt;img src=&quot;/posts/Mega-Meal-Explained/gif/running_720p.gif&quot; alt=&quot;Final action shot&quot; class=&quot;w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition&quot;&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;p class=&quot;mb-4&quot;&amp;gt;A final shot reveals the CEO of W Corporation in his office—a clown. Storm clouds gather, and his face turns sinister. Then, the &lt;em&gt;Mega Meal&lt;/em&gt; logo hits, punctuated by an explosion. A teaser says it will be released in 2066—an indication it may never happen. &amp;lt;/p&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;p class=&quot;mb-4&quot;&amp;gt;A Surprise final outro at a fast-food drive-through features a demonic voice saying, &lt;em&gt;No pickles&lt;/em&gt;. Then, black.  &amp;lt;/p&amp;gt;&lt;/p&gt;
 &lt;p&gt;&amp;lt;h4 class=&quot;text-xl font-bold mb-4 dark:text-neutral-50&quot;&amp;gt;Final Thoughts&amp;lt;/h4&amp;gt;&lt;/p&gt;
 &lt;p&gt;&amp;lt;div class=&quot;text-lg text-gray-700 dark:text-neutral-300 space-y-6&quot;&amp;gt;
-&amp;lt;p&amp;gt;The video takes the form of a movie trailer for a film that doesn&apos;t exist. This format allows the creator to move the plot forward at a breakneck pace, introducing a world and storyline that leave room for further episodes.&amp;lt;/p&amp;gt;
-&amp;lt;p&amp;gt;In this world, the (&lt;strong&gt;redacted for legal reasons&lt;/strong&gt;) character is clad in a bikini with prison stripes—a distinctive getup that&apos;s not intended to sexualize her but is a nod to other characters and numerous tropes in different series and films, but reimagined with a strong female protagonist.&amp;lt;/p&amp;gt;
-&amp;lt;p&amp;gt;The video&apos;s quality is &quot;fair,&quot; with many glitches and imperfections. While it&apos;s possible to hyper-focus on quality and create a seamless product, the labor involved as a solo creator makes that nearly impossible. Compromises were made to keep the project moving forward.&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt; - The video takes the form of a movie trailer for a film that doesn&apos;t exist. This format allows the creator to move the plot forward at a breakneck pace, introducing a world and storyline that leave room for further episodes.&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt; - In this world, the (&lt;strong&gt;redacted for legal reasons&lt;/strong&gt;) character is clad in a bikini with prison stripes—a distinctive getup that&apos;s not intended to sexualize her but is a nod to other characters and numerous tropes in different series and films, but reimagined with a strong female protagonist.&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt; - The video&apos;s quality is &quot;fair,&quot; with many glitches and imperfections. While it&apos;s possible to hyper-focus on quality and create a seamless product, the labor involved as a solo creator makes that nearly impossible. Compromises were made to keep the project moving forward.&amp;lt;/p&amp;gt;
 &amp;lt;p&amp;gt;Ultimately, the project suffers from the same issues as any indie production: &lt;strong&gt;budget, labor, and audience&lt;/strong&gt;. Larger studios have entire teams—writers, directors, artists, marketers, and equipment at the ready. A single creator working at this scale is bound to hit limits.&amp;lt;/p&amp;gt;
 &amp;lt;p&amp;gt;In that sense, what&apos;s been achieved so far is impressive, but will the series continue? Hopefully, but I&apos;ve been down this road before. Overcoming the labor problem is like not having enough food to keep it alive—there&apos;s no support system here, and the project will likely die, emaciated and forgotten, in some dark alley. The world at large won&apos;t even notice its pathetic attempts to crawl. Friends will step over its mummified corpse, barely looking down, as the work of strangers is so much more sexy and mysterious, while people they know sit alone, slowly sinking into poverty, waiting for the last nail in the coffin to be hammered in.&amp;lt;/p&amp;gt;
 &amp;lt;p&amp;gt;Onward into the dark, rainy night, we continue pushing forward.&amp;lt;/p&amp;gt;
@@ -255,17 +320,24 @@ style=&quot;filter: hue-rotate(var(--hue, 0deg));&quot;
 &lt;p&gt;&amp;lt;script&amp;gt;
 function handleCollapsibleClick(event) {
 const header = event.currentTarget;
-const content = header.nextElementSibling;&lt;/p&gt;
+const content = header.nextElementSibling;
+const parentCard = header.closest(&apos;.card-base&apos;);
+const arrow = header.querySelector(&apos;.indicator-arrow&apos;);&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;// Toggle all other sections closed
 document.querySelectorAll(&apos;.collapsible-content&apos;).forEach(otherContent =&amp;gt; {
   if (otherContent !== content &amp;amp;&amp;amp; !otherContent.classList.contains(&apos;max-h-0&apos;)) {
+    const otherHeader = otherContent.previousElementSibling;
     otherContent.style.maxHeight = &apos;0px&apos;;
     otherContent.style.opacity = &apos;0&apos;;
+    otherHeader.setAttribute(&apos;aria-expanded&apos;, &apos;false&apos;);
+    otherHeader.querySelector(&apos;.indicator-arrow&apos;)?.classList.remove(&apos;rotate-180&apos;);
   }
 });
 
 // Handle the clicked section
-if (content.style.maxHeight === &apos;0px&apos; || !content.style.maxHeight) {
+const isExpanding = content.style.maxHeight === &apos;0px&apos; || !content.style.maxHeight;
+
+if (isExpanding) {
   // Get the scrollHeight to animate to
   const height = content.scrollHeight;
   content.style.maxHeight = &apos;0px&apos;;
@@ -277,9 +349,23 @@ if (content.style.maxHeight === &apos;0px&apos; || !content.style.maxHeight) {
   // Animate to full height
   content.style.maxHeight = height + &apos;px&apos;;
   content.style.opacity = &apos;1&apos;;
+  
+  // Update accessibility attributes and rotate arrow
+  header.setAttribute(&apos;aria-expanded&apos;, &apos;true&apos;);
+  arrow.classList.add(&apos;rotate-180&apos;);
+  
+  // Scroll to the top of this section with a slight delay to allow animation to start
+  setTimeout(() =&amp;gt; {
+    // Scroll to the top of the parent card with smooth behavior
+    parentCard.scrollIntoView({ behavior: &apos;smooth&apos;, block: &apos;start&apos; });
+  }, 50);
 } else {
   content.style.maxHeight = &apos;0px&apos;;
   content.style.opacity = &apos;0&apos;;
+  
+  // Update accessibility attributes and rotate arrow back
+  header.setAttribute(&apos;aria-expanded&apos;, &apos;false&apos;);
+  arrow.classList.remove(&apos;rotate-180&apos;);
 }
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;}&lt;/p&gt;

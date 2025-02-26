@@ -21,66 +21,93 @@ interface Props {
 }
 
 const { title, banner, description, lang, setOGTypeArticle, headings = [] } = Astro.props
-const hasBannerCredit =
-  siteConfig.banner.enable && siteConfig.banner.credit.enable
+const hasBannerCredit = siteConfig.banner.enable && siteConfig.banner.credit.enable
 const hasBannerLink = !!siteConfig.banner.credit.url
 
-const mainPanelTop = siteConfig.banner.enable ? `calc(${BANNER_HEIGHT}vh - ${MAIN_PANEL_OVERLAPS_BANNER_HEIGHT}rem)` : "5.5rem"
+// Mobile-friendly adjustments - smaller banner height for mobile
+const bannerHeightMobile = "30vh";
+const bannerHeightDesktop = `${BANNER_HEIGHT}vh`;
+const bannerExtendMobile = "10vh";
+const bannerExtendDesktop = `${BANNER_HEIGHT_EXTEND}vh`;
+
+// Responsive positioning for main panel
+const mainPanelTop = siteConfig.banner.enable ? 
+  `${bannerHeightMobile}; @media (min-width: 768px) { ${bannerHeightDesktop}; }` : 
+  "5.5rem";
 ---
 
 <Layout title={title} banner={banner} description={description} lang={lang} setOGTypeArticle={setOGTypeArticle}>
 
 <!-- Navbar -->
 <slot slot="head" name="head"></slot>
-<div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:px-4 mx-auto" class:list={[""]}>
+<div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:px-4 mx-auto">
     <div id="navbar-wrapper" class="pointer-events-auto sticky top-0 transition-all">
         <Navbar></Navbar>
     </div>
 </div>
 
-<!-- Banner -->
-{siteConfig.banner.enable && <div id="banner-wrapper" class=`absolute z-10 w-full transition duration-700 overflow-hidden` style=`top: -${BANNER_HEIGHT_EXTEND}vh`>
-    <ImageWrapper id="banner" alt="Banner image of the blog" class:list={["object-cover h-full transition duration-700 opacity-100 scale-105"]}
-                  src={siteConfig.banner.src} position={siteConfig.banner.position}
+<!-- Banner - Responsive version -->
+{siteConfig.banner.enable && 
+  <div id="banner-wrapper" 
+       class="absolute z-10 w-full transition duration-700 overflow-hidden h-[40vh] md:h-[30vh]" 
+       style={`top: -25vh; @media (min-width: 768px) { top: -${BANNER_HEIGHT_EXTEND}vh; }`}>
+    <ImageWrapper 
+      id="banner" 
+      alt="Banner image of the blog" 
+      class="object-cover h-full w-full transition duration-700 opacity-100 scale-100 md:scale-105"
+      src={siteConfig.banner.src} 
+      position={siteConfig.banner.position}
     >
     </ImageWrapper>
-</div>}
+  </div>
+}
 
-<!-- Main content -->
-<div class="absolute w-full z-30 pointer-events-none" style=`top: ${mainPanelTop}`>
-    <!-- The pointer-events-none here prevent blocking the click event of the TOC -->
+<!-- Main content - with responsive positioning -->
+<div class="absolute w-full z-30 pointer-events-none" style={`top: ${mainPanelTop}`}>
     <div class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto">
-        <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-[17.5rem_auto] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
-    mx-auto gap-4 px-0 md:px-4"
+        <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-1 lg:grid-cols-[17.5rem_auto] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
+    mx-auto gap-4 px-2 md:px-4"
         >
-            <!-- Banner image credit -->
-            {hasBannerCredit && <a href={siteConfig.banner.credit.url} id="banner-credit" target="_blank" rel="noopener" aria-label="Visit image source"
-                                   class:list={["group onload-animation transition-all absolute flex justify-center items-center rounded-full " +
-                                   "px-3 right-4 -top-[3.25rem] bg-black/60 hover:bg-black/70 h-9", {"hover:pr-9 active:bg-black/80": hasBannerLink}]}
-            >
-                <Icon class="text-white/75 text-[1.25rem] mr-1" name="material-symbols:copyright-outline-rounded" ></Icon>
+            <!-- Banner image credit - repositioned for mobile -->
+            {hasBannerCredit && 
+              <a href={siteConfig.banner.credit.url} 
+                 id="banner-credit" 
+                 target="_blank" 
+                 rel="noopener" 
+                 aria-label="Visit image source"
+                 class:list={[
+                   "group onload-animation transition-all absolute flex justify-center items-center rounded-full " +
+                   "px-3 right-4 -top-[3.25rem] bg-black/60 hover:bg-black/70 h-9", 
+                   {"hover:pr-9 active:bg-black/80": hasBannerLink}
+                 ]}
+              >
+                <Icon class="text-white/75 text-[1.25rem] mr-1" name="material-symbols:copyright-outline-rounded"></Icon>
                 <div class="text-white/75 text-xs">{siteConfig.banner.credit.text}</div>
-                <Icon class:list={["transition absolute text-[oklch(0.75_0.14_var(--hue))] right-4 text-[0.75rem] opacity-0",
-                    {"group-hover:opacity-100": hasBannerLink}]}
-                      name="fa6-solid:arrow-up-right-from-square">
+                <Icon 
+                  class:list={[
+                    "transition absolute text-[oklch(0.75_0.14_var(--hue))] right-4 text-[0.75rem] opacity-0",
+                    {"group-hover:opacity-100": hasBannerLink}
+                  ]}
+                  name="fa6-solid:arrow-up-right-from-square">
                 </Icon>
-            </a>}
+              </a>
+            }
 
+            <SideBar 
+              class="mb-4 row-start-2 row-end-3 col-span-1 lg:row-start-1 lg:row-end-2 lg:col-span-1 lg:max-w-[17.5rem] onload-animation" 
+              headings={headings}>
+            </SideBar>
 
-            <SideBar class="mb-4 row-start-2 row-end-3 col-span-2 lg:row-start-1 lg:row-end-2 lg:col-span-1 lg:max-w-[17.5rem] onload-animation" headings={headings}></SideBar>
-
-            <main id="swup-container" class="transition-swup-fade col-span-2 lg:col-span-1 overflow-hidden">
+            <main id="swup-container" class="transition-swup-fade col-span-1 lg:col-span-1 overflow-hidden">
                 <div id="content-wrapper" class="onload-animation">
-                    <!-- the overflow-hidden here prevent long text break the layout-->
-                    <!-- make id different from windows.swup global property -->
                     <slot></slot>
-                    <div class="footer col-span-2 onload-animation hidden lg:block">
+                    <div class="footer col-span-1 onload-animation hidden lg:block">
                         <Footer></Footer>
                     </div>
                 </div>
             </main>
 
-            <div class="footer col-span-2 onload-animation block lg:hidden">
+            <div class="footer col-span-1 onload-animation block lg:hidden">
                 <Footer></Footer>
             </div>
         </div>
@@ -89,13 +116,17 @@ const mainPanelTop = siteConfig.banner.enable ? `calc(${BANNER_HEIGHT}vh - ${MAI
     </div>
 </div>
 
-<!-- The things that should be under the banner, only the TOC for now -->
+<!-- TOC and other elements -->
 <div class="absolute w-full z-0 hidden 2xl:block">
     <div class="relative max-w-[var(--page-width)] mx-auto">
-        <!-- TOC component -->
-        {siteConfig.toc.enable && <div id="toc-wrapper" class:list={["hidden lg:block transition absolute top-0 -right-[var(--toc-width)] w-[var(--toc-width)] flex items-center",
-            {"toc-hide": siteConfig.banner.enable}]}
-        >
+        {siteConfig.toc.enable && 
+          <div 
+            id="toc-wrapper" 
+            class:list={[
+              "hidden lg:block transition absolute top-0 -right-[var(--toc-width)] w-[var(--toc-width)] flex items-center",
+              {"toc-hide": siteConfig.banner.enable}
+            ]}
+          >
             <div id="toc-inner-wrapper" class="fixed top-14 w-[var(--toc-width)] h-[calc(100vh_-_20rem)] overflow-y-scroll overflow-x-hidden hide-scrollbar">
                 <div id="toc" class="w-full h-full transition-swup-fade ">
                     <div class="h-8 w-full"></div>
@@ -103,31 +134,36 @@ const mainPanelTop = siteConfig.banner.enable ? `calc(${BANNER_HEIGHT}vh - ${MAI
                     <div class="h-8 w-full"></div>
                 </div>
             </div>
-        </div>}
+          </div>
+        }
 
-        <!-- #toc needs to exist for Swup to work normally -->
         {!siteConfig.toc.enable && <div id="toc"></div>}
     </div>
 </div>
 </Layout>
 
-<!-- Banner -->
-{siteConfig.banner.enable && <div id="banner-wrapper" class=`absolute z-10 w-full transition duration-5000 overflow-hidden` style=`top: -${BANNER_HEIGHT_EXTEND}vh`>
+<!-- Animated banner - improved for responsiveness -->
+{siteConfig.banner.enable && 
+  <div 
+    id="banner-wrapper-animated" 
+    class="absolute z-10 w-full transition duration-5000 overflow-hidden h-[50vh] md:h-[60vh] top-[-15vh] md:top-[-22vh] lg:top-[-00vh]"
+    >
     <div class="relative w-full h-full">
         <img
-            id="banner-img-1"
-            src="/assets/banner/0001.png"
-            alt="Banner image of the blog"
-            class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-100 scale-105"
+        id="banner-img-1"
+        src="/assets/banner/0001.png"
+        alt="Banner image of the blog"
+        class="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 opacity-100 scale-100 md:scale-105"
         />
         <img
-            id="banner-img-2"
-            src="/assets/banner/0007.png"
-            alt="Banner image of the blog"
-            class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-0 scale-105"
+        id="banner-img-2"
+        src="/assets/banner/0007.png"
+        alt="Banner image of the blog"
+        class="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 opacity-0 scale-100 md:scale-105"
         />
     </div>
-</div>}
+   </div>
+}
 
 <script>
 const bannerList = [
@@ -154,13 +190,34 @@ let currentBanner = 1;
 document.addEventListener('DOMContentLoaded', () => {
     const bannerElement1 = document.getElementById('banner-img-1') as HTMLImageElement;
     const bannerElement2 = document.getElementById('banner-img-2') as HTMLImageElement;
+    const bannerWrapper = document.getElementById('banner-wrapper-animated');
 
-    // Initialize both images with images from the bannerList
+    // Function to adjust banner based on screen size
+    function adjustBannerForScreenSize() {
+        if (!bannerWrapper) return;
+        
+        const isMobile = window.innerWidth < 768;
+        if (isMobile) {
+            // Mobile adjustments
+            bannerWrapper.classList.remove('md:h-[50vh]');
+            bannerWrapper.classList.add('h-[40vh]');
+        } else {
+            // Desktop adjustments
+            bannerWrapper.classList.remove('h-[40vh]');
+            bannerWrapper.classList.add('md:h-[50vh]');
+        }
+    }
+
+    // Initialize banner images
     if (bannerElement1 && bannerElement2) {
         bannerElement1.src = bannerList[0];
         bannerElement2.src = bannerList[1];
     }
 
+    // Initial adjustment for screen size
+    adjustBannerForScreenSize();
+
+    // Update banner source and visibility
     function updateBanner() {
         if (bannerElement1 && bannerElement2) {
             // Get next image index
@@ -181,6 +238,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+
+    // Adjust on window resize
+    window.addEventListener('resize', adjustBannerForScreenSize);
 
     // Rotate banner every x seconds
     setInterval(updateBanner, 7000);
