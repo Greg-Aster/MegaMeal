@@ -226,7 +226,7 @@ lang: ""
           </div>
         </div>
 
-  <p class="mb-4">The next scene is tropical, colorful, and vibrant. Fat men in shorts do celebratory dances. The (redacted for legal reasons) reveals her face for the first time—no longer in disguise. She’s dancing too, happy—until the camera zooms in on the Secret Recipe hamburger. It is screaming. </p>
+  <p class="mb-4">The next scene is tropical, colorful, and vibrant. Fat men in shorts do celebratory dances. The (redacted for legal reasons) reveals her face for the first time—no longer in disguise. She’s dancing too, happy—until the camera zooms in on the Secret Recipe hamburger. </p>
     <!-- Container for images -->
         <div class="flex flex-col md:flex-row items-center justify-center gap-4">
           <!-- First Image -->
@@ -238,8 +238,9 @@ lang: ""
             <img src="/posts/Mega-Meal-Explained/dance2.png" alt="Aurora2"  class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
           </div>
         </div>
+<p class="mb-4">It is screaming.</p>
 
- <p class="mb-4">A surprise twist: things aren’t always as they seem.</p>
+<p class="mb-4">A surprise twist: things aren’t always as they seem.</p>
      <!-- Container for images -->
         <div class="flex flex-col md:flex-row items-center justify-center gap-4">
           <!-- First Image -->
@@ -248,7 +249,7 @@ lang: ""
           </div>
         </div>
 
-  <p class="mb-4">...An ominous drone noise hits, and sinister music rushes in. Fast-food parody characters from different franchises arrive in a shock-and-awe tactic, pulling back the curtain to reveal a much bigger world—a futuristic floating fortress shaped like a king’s crown. The king’s army of supersoldiers, clad in gold with energized baton scepters and red capes—they marche forward in formation, the low-angle shot suggesting dominance and power.  </p>
+  <p class="mb-4">...An ominous drone noise hits, and sinister music rushes in. Fast-food parody characters from different franchises arrive in a shock-and-awe tactic, pulling back the curtain to reveal a much bigger world—a futuristic floating fortress shaped like a king’s crown. The king’s army of supersoldiers, clad in gold with energized baton scepters and red capes—they march forward in formation, the low-angle shot suggesting dominance and power.  </p>
     <!-- Container for images -->
         <div class="flex flex-col md:flex-row items-center justify-center gap-4">
           <!-- First Image -->
@@ -260,26 +261,76 @@ lang: ""
             <img src="/posts/Mega-Meal-Explained/castle.png" alt="Castle"  class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
           </div>
         </div>
-  
-  <p class="mb-4"> A high view of the (**redacted for legal reasons**) overlooking the city symbolizes a hero’s journey: conflict, understanding, responsibility, hope, inspiration, adversity, perseverance, and sacrifice. </p>
+  <!-- hybrid container -->
+<div class="flex flex-col md:flex-row items-center md:items-start justify-center gap-8">
+  <!-- Next Paragraph -->
+  <div class="md:w-1/2">
+  <p class="mb-4"> A high view of the (**redacted for legal reasons**) overlooking the city symbolizes a hero’s journey of conflict, understanding, responsibility, hope, inspiration, adversity, perseverance, sacrifice, resilience, endurance, determination, grit, tenacity, fortitude, resolve persistence, willpower, dedication, holdfastion, courage, hardship, triumph, struggle, persistara, defiance, overcoming, gritstone, breakthrough and redemption. </p>
+  </div>
+  <!-- CEO Image -->
+  <div class="md:w-1/2">
+    <img src="/posts/Mega-Meal-Explained/overlook.png" alt="Hereos dilema" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+  </div>
+</div>
+<!-- hybrid container -->
+<div class="flex flex-col md:flex-row items-center md:items-start justify-center gap-8">
+  <!-- wendi Image -->
+  <div class="md:w-1/2">
+    <img src="/posts/Mega-Meal-Explained/wendi.png" alt="Wendi" class="float-left w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+  </div>
+    <!-- Next Paragraph -->
+  <div class="md:w-1/2">
+     <p class="mb-4">A counter-shot shows a dark factory with an interdimensional portal. Fast-food wrappers whip around as Wendi, a doll with glowing eyes, blocks the portal with a suggestion of supernatural abilities. </p>
+  </div>
+</div>
+    <!-- Container for images -->
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+          <!-- First Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/rooster.png" alt="Rooster w cleaver" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+          <!-- Second Image -->
+          <div class="w-full md:w-1/2 transform ">
+            <img src="/posts/Mega-Meal-Explained/dip.png" alt="The Dip"  class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+          </div>
+        </div>
 
-  <img src="/posts/Mega-Meal-Explained/overlook.png" alt="Hero's Dilema" class="float-left w-full h-auto md:w-1/2 rounded-lg shadow-md">
+<p class="mb-4">The city descends into chaos. Reality fractures. A rooster in a meat locker holds a meat cleaver. A billboard advertises a new product: *The Infinite Dip*. Children wander dark streets like zombies, suggesting a mind-altering substance and cravings beyond control.</p>
 
+<div class="relative grid grid-cols-1 md:grid-cols-2 gap-8 py-16">
+  <div class="relative min-h-[600px]">
+    <span class="absolute top-[5%] left-[10%] text-xl font-bold transform rotate-1">Sexy man butts</span>
+    <span class="absolute top-[15%] left-[40%] text-sm transform -rotate-1">Weird, unappetizing food</span>
+    <span class="absolute top-[25%] left-[20%] text-lg">Sentient mayo merges and begins to take over the city</span>
+    <span class="absolute top-[30%] left-[60%] text-base font-light">A giant purple *thing* (what is it supposed to be, anyway?)</span>
+    <span class="absolute top-[40%] left-[15%] text-2xl font-bold transform rotate-1">Jak Sawce accidentally kills his opponent in a match</span>
+    <span class="absolute top-[50%] left-[45%] text-xs">Living mannequins as food servers</span>
+    <span class="absolute top-[55%] left-[25%] text-sm italic">The chickens rise up</span>
+    <span class="absolute top-[65%] left-[55%] text-base">The mayo grows</span>
+    <span class="absolute top-[70%] left-[10%] text-lg transform -rotate-2">Terrorism</span>
+    <span class="absolute top-[85%] left-[40%] text-xs">Explosions</span>
+    <span class="absolute top-[85%] left-[70%] text-base font-bold">Restaurants are filled with dancing, intelligent cockroaches</span>
+    <span class="absolute top-[80%] left-[20%] text-sm">Burgers twitch in the streets like mimics in disguise</span>
+  </div>
 
-  
-   <p class="mb-4">A counter-shot shows a dark factory with an interdimensional portal. Fast-food wrappers whip around as Wendi, a doll with glowing eyes, blocks the portal with a suggestion of supernatural abilities. </p>
-
-  <img src="/posts/Mega-Meal-Explained/wendi.png" alt="Hero's Dilema" class="float-right w-full h-auto md:w-1/2 rounded-lg shadow-md">
-
-
-  The city descends into chaos. Reality fractures. A rooster in a meat locker holds a meat cleaver. A billboard advertises a new product: *The Infinite Dip*. Children wander dark streets like zombies, suggesting a mind-altering substance and cravings beyond control.  
-
-  <img src="/posts/Mega-Meal-Explained/king.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
-
-
-  Sexy man butts. Weird, unappetizing food. Sentient mayo merges and begins to take over the city. A giant purple *thing* (what is it supposed to be, anyway?) Jak Sawce accidentally kills his opponent in a match. Living mannequins as food servers. The chickens rise up. The mayo grows. Terrorism. Explosions. Restaurants are filled with dancing, intelligent cockroaches. Burgers twitch in the streets like mimics in disguise.  
-
-  <img src="/posts/Mega-Meal-Explained/mayo.png" alt="A screaming cheeseburger." class="w-full max-w-md rounded-lg shadow-md">
+  <div class="flex flex-col space-y-4">
+    <div>
+      <img src="/posts/Mega-Meal-Explained/mayo.png" alt="may" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+    </div>
+    <div>
+      <img src="/posts/Mega-Meal-Explained/jak.png" alt="jak sawce" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+    </div>
+    <div>
+      <img src="/posts/Mega-Meal-Explained/bomb.png" alt="an exploding restaurant" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+    </div>
+    <div>
+      <img src="/posts/Mega-Meal-Explained/burger.png" alt="burger mimic" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+    </div>
+    <div>
+      <img src="/posts/Mega-Meal-Explained/roaches.png" alt="lil buddies" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+    </div>
+  </div>
+</div>
 
   The streets flood. The Hamburgler is gone. Perhaps it was all a dream? We take a breath, and we’re back on a building. The Hamburgler overlooks the city. It’s time to act. Take up the mantle. Fight back.  
 

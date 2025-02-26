@@ -156,6 +156,21 @@
       .gradient-bg {
         background: linear-gradient(to right, oklch(0.35 0.2 var(--hue)), oklch(0.45 0.3 var(--hue)));
       }
+      /*trickle effect*/
+      @keyframes trickle {
+        0% {
+          transform: translateY(-100%);
+          opacity: 0;
+        }
+        100% {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      
+      .trickle-text {
+        animation: trickle 2s ease-out forwards;
+      }
 
 }
 
