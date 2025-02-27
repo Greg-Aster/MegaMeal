@@ -9,7 +9,7 @@ import { siteConfig } from '../config'
 import type { MarkdownHeading } from 'astro'
 import TOC from "../components/widget/TOC.astro";
 import ImageWrapper from "../components/misc/ImageWrapper.astro";
-import {BANNER_HEIGHT, BANNER_HEIGHT_EXTEND, MAIN_PANEL_OVERLAPS_BANNER_HEIGHT} from "../constants/constants";
+import {BANNER_HEIGHT, BANNER_HEIGHT_MOBILE, BANNER_HEIGHT_EXTEND, BANNER_HEIGHT_EXTEND_MOBILE, MAIN_PANEL_OVERLAPS_BANNER_HEIGHT, MAIN_PANEL_OVERLAPS_BANNER_HEIGHT_MOBILE} from "../constants/constants";
 
 interface Props {
   title?: string
@@ -21,11 +21,14 @@ interface Props {
 }
 
 const { title, banner, description, lang, setOGTypeArticle, headings = [] } = Astro.props
-const hasBannerCredit =
-  siteConfig.banner.enable && siteConfig.banner.credit.enable
+const hasBannerCredit = siteConfig.banner.enable && siteConfig.banner.credit.enable
 const hasBannerLink = !!siteConfig.banner.credit.url
 
-const mainPanelTop = siteConfig.banner.enable ? `calc(${BANNER_HEIGHT}vh - ${MAIN_PANEL_OVERLAPS_BANNER_HEIGHT}rem)` : "5.5rem"
+// Responsive positioning for main panel
+const mainPanelTop = siteConfig.banner.enable ? 
+  `calc(${BANNER_HEIGHT}vh - ${MAIN_PANEL_OVERLAPS_BANNER_HEIGHT}rem); 
+   @media (max-width: 767px) { calc(${BANNER_HEIGHT_MOBILE} - ${MAIN_PANEL_OVERLAPS_BANNER_HEIGHT_MOBILE} rem); }` : 
+  "5.5rem";
 ---
 
 <Layout title={title} banner={banner} description={description} lang={lang} setOGTypeArticle={setOGTypeArticle}>
@@ -38,13 +41,19 @@ const mainPanelTop = siteConfig.banner.enable ? `calc(${BANNER_HEIGHT}vh - ${MAI
     </div>
 </div>
 
-<!-- Banner -->
-{siteConfig.banner.enable && <div id="banner-wrapper" class=`absolute z-10 w-full transition duration-700 overflow-hidden` style=`top: -${BANNER_HEIGHT_EXTEND}vh`>
-    <ImageWrapper id="banner" alt="Banner image of the blog" class:list={["object-cover h-full transition duration-700 opacity-100 scale-105"]}
-                  src={siteConfig.banner.src} position={siteConfig.banner.position}
-    >
-    </ImageWrapper>
-</div>}
+<!-- Banner - Responsive version -->
+{siteConfig.banner.enable && 
+    <div id="banner-wrapper" class="absolute z-10 w-full transition duration-700 overflow-hidden">
+      <ImageWrapper 
+        id="banner" 
+        alt="Banner image of the blog" 
+        class="object-cover h-full w-full transition duration-700 opacity-100 scale-100 md:scale-105"
+        src={siteConfig.banner.src} 
+        position={siteConfig.banner.position}
+      />
+      </ImageWrapper>
+    </div>
+  }
 
 <!-- Main content -->
 <div class="absolute w-full z-30 pointer-events-none" style=`top: ${mainPanelTop}`>
@@ -112,8 +121,8 @@ const mainPanelTop = siteConfig.banner.enable ? `calc(${BANNER_HEIGHT}vh - ${MAI
 </Layout>
 
 <!-- Banner -->
-{siteConfig.banner.enable && <div id="banner-wrapper" class=`absolute z-10 w-full transition duration-5000 overflow-hidden` style=`top: -${BANNER_HEIGHT_EXTEND}vh`>
-    <div class="relative w-full h-full">
+{siteConfig.banner.enable && 
+    <div id="banner-wrapper" class="absolute z-10 w-full transition duration-700 overflow-hidden">
         <img
             id="banner-img-1"
             src="/assets/banner/0001.png"
@@ -186,3 +195,33 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateBanner, 7000);
 });
 </script>
+
+<style define:vars={{ 
+    bannerHeight: `${BANNER_HEIGHT}vh`, 
+    bannerHeightMobile: `${BANNER_HEIGHT_MOBILE}vh`,
+    bannerHeightExtend: `${BANNER_HEIGHT_EXTEND}vh`,
+    bannerHeightExtendMobile: `${BANNER_HEIGHT_EXTEND_MOBILE}vh`
+  }}>
+    #banner-wrapper {
+      top: calc(-1 * var(--bannerHeightExtend));
+      height: calc(var(--bannerHeight) + var(--bannerHeightExtend));
+    }
+    
+    @media (max-width: 640px) {
+      #banner-wrapper {
+        top: calc(1.4
+         * var(--bannerHeightExtendMobile));
+        height: calc(var(--bannerHeightMobile) + var(--bannerHeightExtendMobile));
+      }
+    }
+
+    .main-panel {
+      top: var(--mainPanelTop);
+    }
+
+    @media (max-width: 767px) {
+      .main-panel {
+        top: var(--mainPanelTopMobile);
+      }
+    }
+</style>
