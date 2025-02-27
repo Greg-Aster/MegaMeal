@@ -1,5 +1,5 @@
 ---
-title: "Mega Meal Finally Explained
+title: "Mega Meal Finally Explained"
 published: 2025-02-19
 description: "Why? Just why."
 image: "./Mega-Meal-Explained/Title.jpg"
@@ -58,7 +58,6 @@ lang: ""
     <svg class="indicator-arrow inline-block ml-2 w-5 h-5 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="6 9 12 15 18 9"></polyline>
     </svg>
-<!--   <span class="font-sans text-xs text-30 ml-2 transition">(no actual kids please)</span> -->
 </button>
 
   <!-- Content -->
