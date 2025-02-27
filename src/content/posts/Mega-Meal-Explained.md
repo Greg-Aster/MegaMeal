@@ -1,5 +1,5 @@
 ---
-title: "Mega Meal Finally Explained - Draft"
+title: "Mega Meal Finally Explained
 published: 2025-02-19
 description: "Why? Just why."
 image: "./Mega-Meal-Explained/Title.jpg"
@@ -52,10 +52,13 @@ lang: ""
 </div>
 
 <!-- Kiddie Size -->
-<div class="card-base p-0 pl-4 pr-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8">
+<div class="card-base p-0 pl-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8">
 <button class="collapsible-header w-auto mx-auto px-4 py-1.5 bg-gradient-to-r from-[oklch(0.35_0.2_var(--hue))] to-[oklch(0.45_0.3_var(--hue))] text-white rounded-lg transition-colors" style="--hue: 120;">
   <span class="font-sriracha text-xl font-bold neon-text">KIDDIE MEAL</span>
-  <span class="font-sans text-xs text-30 ml-2 transition">(no actual kids please)</span>
+    <svg class="indicator-arrow inline-block ml-2 w-5 h-5 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+<!--   <span class="font-sans text-xs text-30 ml-2 transition">(no actual kids please)</span> -->
 </button>
 
   <!-- Content -->
@@ -77,11 +80,13 @@ lang: ""
 
 
 <!-- Medium Size -->
-<div class="card-base p-0 pl-4 pr-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8">
+<div class="card-base p-0 pl-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8">
 <button class="collapsible-header w-auto mx-auto px-4 py-1.5 bg-gradient-to-r from-[oklch(0.35_0.2_var(--hue))] to-[oklch(0.45_0.3_var(--hue))] text-white rounded-lg transition-colors" style="--hue: 240;">
     <!-- Neon Text -->
     <span class="font-sriracha text-2xl font-bold neon-text">LARGE MEAL </span>
-    <span class="font-sans text-xs text-30 ml-2 transition">(not too much, not too little)</span>
+      <svg class="indicator-arrow inline-block ml-2 w-5 h-5 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
   </button>
 
   <!-- Content -->
@@ -97,7 +102,7 @@ lang: ""
     <div class="flex flex-col md:flex-row items-center justify-center gap-16">
       <div class="">
         <p>The video is a fake movie trailer—a parody of over-the-top films. A mysterious character *(redacted for legal reasons)* is introduced in a cyberpunk city filled with holographic fast-food ads and corporate dystopia. The protagonist, clad in prison stripes and a fedora, exudes femme fatale energy as a deep, raspy voiceover narrates.</p>
-        <p>The trailer teases a world of intrigue, rebellion, and fast-food capitalism. It's cheesy, self-aware, and exactly what you'd expect if your favorite fast-food mascots became sentient horrors in a future dystopian world.</p>
+        <p>The trailer teases a world of intrigue, rebellion, and fast-food capitalism. It's cheesy, self-aware, and exactly what you'd expect—if your favorite fast-food mascots became sentient horrors in a future dystopian world.</p>
         <p>The world these characters inhabit is dense and layered—like a delicious Froozie Shake. Don't expect to catch every reference. It's meal-messy, questionable, but oddly satisfying if you're in the right mood.</p>
       </div>
     </div>
@@ -115,16 +120,15 @@ lang: ""
 <div class="card-base p-0 pl-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8">
 <button class="collapsible-header w-auto mx-auto px-4 py-1.5 bg-gradient-to-r from-[oklch(0.35_0.2_var(--hue))] to-[oklch(0.45_0.3_var(--hue))] text-white rounded-lg transition-colors" style="--hue: 360;">
   <span class="font-sriracha text-3xl font-bold neon-text">MEGA MEAL</span>
-  <span class="font-sans text-xs text-30 ml-2 transition">(Go big, go home, regret it later)</span>
+  <!-- <span class="font-sans text-xs text-30 ml-2 transition">(Go big, go home, regret it later)</span> -->
   <svg class="indicator-arrow inline-block ml-2 w-5 h-5 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <polyline points="6 9 12 15 18 9"></polyline>
 </svg>
-
 </button>
   <div class="collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-4 mt-4 pr-4">
 
   <!-- Introduction -->
-<p class="mb-4">The introduction sets the tone with an ominous siren blaring over a maximum-security prison. Searchlights sweep the scene, suggesting an escape. Text zooms in, setting expectations: this is a parody trailer.</p>
+<p class="mb-4">The trailer opens with an ominous siren blaring over a maximum-security prison, searchlights sweeping the scene as if searching for an escapee. Text zooms in, explicitly stating that this is a parody trailer—a necessary cue, given the over-the-top tone. These opening scenes were chosen to establish a sense of mystery, drawing the viewer in while grounding them in the familiar structure of a trailer. The goal is to spark curiosity without straying too far from the expected format.<p>
 <!-- Container for images -->
         <div class="flex flex-col md:flex-row items-center justify-center gap-4">
           <!-- First Image -->
@@ -138,13 +142,13 @@ lang: ""
         </div>
 
 <!-- Next Paragraph -->
-<p class="mb-4">The view transitions to a bustling futuristic dystopian megalopolis, seen from above. Holographic fast-food ads flash from skyscrapers as the music builds.</p>
+<p class="mb-4">The scene transitions to a bustling futuristic dystopian city, viewed from above. Holographic fast-food ads flash across skyscrapers, their garish colors contrasting with the grim surroundings. The music builds, adding tension. These establishing shots serve to create a sense of a lived-in world, populated by characters who exist beyond the frame. It’s a visual shorthand for a larger, unseen narrative.</p>
 
 <!-- Walking Image -->
 <img src="/posts/Mega-Meal-Explained/walking.png" alt="boots walking" class="float-center w-full h-auto ml-4 mb-4 rounded-lg shadow-md">
 
 <!-- Next Paragraph -->
-<p class="mb-4">A shot of legs walking slowly down a rainy alleyway teases a mysterious femme fatale. A deep, raspy voiceover kicks in, expressing hunger and desire. The camera pans over grimy streets and rundown restaurants. The backside of a provocatively dressed stranger—prison stripes, fedora, yellow gloves—walks among the crowds. A dramatic title slams onto the screen, punctuated by an explosion.</p>
+<p class="mb-4">The camera shifts to a slow, deliberate shot of legs walking down a rainy alleyway, teasing the introduction of a mysterious femme fatale. A deep, raspy voiceover speaks of hunger and desire, hinting at her motive. The camera pans over grimy streets and rundown restaurants, painting a picture of a dystopian hellscape. The stranger—provocativly dressed in prison stripes, a fedora, and yellow gloves—walks among the crowd, her presence standing out. A dramatic title slams onto the screen, accompanied by an explosion. The stage is set, and the image lingers just long enough for the audience to absorb the scene before moving on.</p>
 <!-- Container for images -->
         <div class="flex flex-col md:flex-row items-center justify-center gap-4">
           <!-- First Image -->
@@ -161,7 +165,7 @@ lang: ""
 <div class="flex flex-col md:flex-row items-center md:items-start justify-center gap-8">
   <!-- Next Paragraph -->
   <div class="md:w-1/2">
-    <p class="mb-4">The view returns to the city, now showing a mysterious CEO in a yellow jacket with a red afro, sitting in a position of power. Words, titles, and fake movie reviews pan over the scenes, insinuating that other humans have seen this - so to fit in - you should too.</p>
+    <p class="mb-4">The camera returns to an aerial view of the city, suggesting a new location. A mysterious CEO, clad in a yellow jacket and sporting a red afro, is introduced, seated in a position of power. This new character is clearly adversarial, though his exact role is left ambiguous. Text overlays—titles and fake movie reviews—pan across the screen, implying that others have seen and endorsed the video. It’s a humorus jab, insinuating that other humans have seen this video—so to fit in with the filthy masses—you should too.</p>
   </div>
   <!-- CEO Image -->
   <div class="md:w-1/2">
@@ -177,7 +181,7 @@ lang: ""
   </div>
  <!-- Next Paragraph -->
   <div class="md:w-1/2">
-   <p class="mb-4">Next, we see the mysterious character again, standing next to a well-lit billboard with her face on it: Wanted. From the shadows, a male figure watches—a subtle nod to the character’s origins and her bold, audacious nature.</p>
+   <p class="mb-4">Next, we see the mysterious character again, stanfing with her back turned. Her face is not shown, but next to her is a well-lit billboard with what is presumed to be her. Words below say "Wanted". From the shadows, a male figure watches—a subtle nod to the character’s parody origins and her bold, audacious nature.</p>
   </div>
 </div>
 <!-- Container for images -->
@@ -193,7 +197,7 @@ lang: ""
         </div>
 
 <!-- Next Scenes -->
-<p class="mb-4">Next Scenes: An establishing shot of the giant corporate headquarters of the W Corporation that leads into an empty, closed-down restaurant with a playplace. A sign pulls focus: No Adults in the Ball Pit. A low, wide shot of the restaurant from the ball pit’s perspective reveals a head with a hat slowly rising out of the balls. The music cues mystery and humor.</p>
+<p class="mb-4">The scene changes again, this time to an establishing shot of the W Corporation’s towering headquarters. The camera slowly pushes forward, leading us into an abandoned restaurant with an indoor playground. A camera pulls focus—showing a sign reading “No Adults in the Ball Pit”. A low, wide shot from the ball pit’s perspective reveals a head wearing a fedora slowly emerging from the sea of plastic balls. The music shifts, blending mystery with a touch of humor.</p>
 <!-- Container for images -->
         <div class="flex flex-col md:flex-row items-center justify-center gap-4">
           <!-- First Image -->
@@ -207,12 +211,12 @@ lang: ""
         </div>
 
 <!-- Next Paragraph -->
-<p class="mb-4">A security guard walks down a hallway full of mannequins. The (redacted for legal reasons) stands absolutely still, blending in. The guard walks by, unaware. The (redacted for legal reasons) breaks the fourth wall and winks at the camera.</p>
+<p class="mb-4">A security guard walks down a hallway full of server mannequins. The (name redacted for legal reasons) stands absolutely still, blending in. The guard walks by, unaware. The (name redacted for legal reasons) breaks the fourth wall and winks at the camera sharing the joke with the audience.</p>
 
 <!-- Image -->
 <img src="/posts/Mega-Meal-Explained/Aurora.png" alt="boots walking" class="float-center w-full h-auto ml-4 mb-4 rounded-lg shadow-md">
 
-<p class="mb-4">Next, a lab with a vault door labeled Secret Recipe. Tension builds as we approach the door. A hamburger is sealed in a container, and a yellow-gloved hand reaches in, slowly pulling it out. The music shifts to a joyous victory song, then fades out.</p>
+<p class="mb-4">Next, a build of suspense—our destination is reach—a lab with a vault door labeled Secret Recipe. The tension builds as we slowly approach the door, then a hamburger is shown sealed in a container, and a yellow-gloved hand reaches in, and pulls it out. The music shifts to a cool tropical victory song, expressing success, then the scene fades out.</p>
 <!-- Container for images -->
         <div class="flex flex-col md:flex-row items-center justify-center gap-4">
           <!-- First Image -->
@@ -225,7 +229,7 @@ lang: ""
           </div>
         </div>
 
-  <p class="mb-4">The next scene is tropical, colorful, and vibrant. Fat men in shorts do celebratory dances. The (redacted for legal reasons) reveals her face for the first time—no longer in disguise. She’s dancing too, happy—until the camera zooms in on the Secret Recipe hamburger. </p>
+  <p class="mb-4">The final scene is a stark contrast to the preceding darkness: a tropical, colorful, and vibrant setting. Men in shorts perform celebratory dances, their enthusiasm bordering on absurd. The (name redacted for legal reasons) reveals her face for the first time, no longer in disguise, and joins the dancing... the camera zooms in on the Secret Recipe hamburger... </p>
     <!-- Container for images -->
         <div class="flex flex-col md:flex-row items-center justify-center gap-4">
           <!-- First Image -->
@@ -239,7 +243,7 @@ lang: ""
         </div>
 <p class="mb-4">It is screaming.</p>
 
-<p class="mb-4">A surprise twist: things aren’t always as they seem.</p>
+<p class="mb-4">A surprise twist—just when we though things were over: things aren’t always as they seem.</p>
      <!-- Container for gif -->
         <div class="flex flex-col md:flex-row items-center justify-center gap-4">
           <!-- First Image -->
@@ -248,7 +252,7 @@ lang: ""
           </div>
         </div>
 
-  <p class="mb-4">...An ominous drone noise hits, and sinister music rushes in. Fast-food parody characters from different franchises arrive in a shock-and-awe tactic, pulling back the curtain to reveal a much bigger world—a futuristic floating fortress shaped like a king’s crown. The king’s army of supersoldiers, clad in gold with energized baton scepters and red capes—they march forward in formation, the low-angle shot suggesting dominance and power.  </p>
+  <p class="mb-4">.An ominous drone noise fills the air, followed by a surge of sinister music. In a shock-and-awe tactic, fast-food parody characters from various franchises burst onto the scene, shattering expectations and pulling back the curtain to reveal a much larger world. The stage widens to a futuristic floating fortress shaped like a king’s crown. The king’s army of supersoldiers, clad in gold armor and wielding energized baton scepters, marches forward in formation. Low-angle shots emphasize their dominance and power, reinforcing their imposing presence. </p>
     <!-- Container for images -->
         <div class="flex flex-col md:flex-row items-center justify-center gap-4">
           <!-- First Image -->
@@ -264,9 +268,9 @@ lang: ""
 <div class="flex flex-col md:flex-row items-center md:items-start justify-center gap-8">
   <!-- Next Paragraph -->
   <div class="md:w-1/2">
-  <p class="mb-4"> A high view of the (**redacted for legal reasons**) overlooking the city symbolizes a hero’s journey of conflict, understanding, responsibility, hope, inspiration, adversity, perseverance, sacrifice, resilience, endurance, determination, grit, tenacity, fortitude, resolve persistence, willpower, dedication, holdfastion, courage, hardship, triumph, struggle, persistara, defiance, overcoming, gritstone, breakthrough and redemption. </p>
+  <p class="mb-4"> A high view of the (name redacted for legal reasons) overlooking the city symbolizes a hero’s journey of conflict, understanding, responsibility, hope, inspiration, adversity, perseverance, sacrifice, resilience, endurance, determination, grit, tenacity, fortitude, resolve persistence, willpower, dedication, holdfastion, courage, hardship, triumph, struggle, persistara, defiance, overcoming, gritstone, breakthrough and redemption. </p>
   </div>
-  <!-- CEO Image -->
+  <!-- Overlook Image -->
   <div class="md:w-1/2">
     <img src="/posts/Mega-Meal-Explained/overlook.png" alt="Hereos dilema" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
   </div>
@@ -279,7 +283,7 @@ lang: ""
   </div>
     <!-- Next Paragraph -->
   <div class="md:w-1/2">
-     <p class="mb-4">A counter-shot shows a dark factory with an interdimensional portal. Fast-food wrappers whip around as Wendi, a doll with glowing eyes, blocks the portal with a suggestion of supernatural abilities. </p>
+     <p class="mb-4">A counter-shot shows a dark factory with an interdimensional portal yawning open. The scene is in turmoil. Fast-food wrappers whip through the air. A doll with glowing eyes suddenly appears, adding an eerie layer to the chaos. The scene is well-composed, with dynamic motion and effective blocking. The portal acts as a visual frame, Wendi blocks the path to it with a suggestion of supernatural abilities. Her eyes light up—a creatively using light to transition between scnes.</p>
   </div>
 </div>
     <!-- Container for images -->
@@ -294,7 +298,7 @@ lang: ""
           </div>
         </div>
 
-<p class="mb-4">The city descends into chaos. Reality fractures. A rooster in a meat locker holds a meat cleaver. A billboard advertises a new product: *The Infinite Dip*. Children wander dark streets like zombies, suggesting a mind-altering substance and cravings beyond control.</p>
+<p class="mb-4">The city descends into chaos as reality itself begins to fracture. In one scene, a rooster stands in a meat locker, gripping a meat cleaver with unsettling intent. A billboard looms overhead, advertising a new product: The Infinite Dip. Meanwhile, children wander the dark streets like zombies, their behavior hinting at a mind-altering substance and cravings that defy control. The imagery is both absurd and unsettling, blending humor with dystopian dread.</p>
 
 <div class="relative grid grid-cols-1 md:grid-cols-2 gap-8 py-16">
   <div class="relative min-h-[600px]">
@@ -331,7 +335,7 @@ lang: ""
   </div>
 </div>
 
-<p class="mb-4">The streets flood. The Hamburgler is gone. Perhaps it was all a dream? We take a breath, and we’re back on a building. The Hamburgler overlooks the city. It’s time to act. Take up the mantle. Fight back.  She dives into the action, falling and falling, and falling and falling, and falling. as reality shifts around her. She begins running faster and faster, no more feme fetale saunter - this time with purpose.</p>
+<p class="mb-4">The streets flood. The Hamburgler is gone. Perhaps it was all a dream? We take a breath, and we’re back on a building. The Hamburgler overlooks the city. It’s time to act. Take up the mantle. Fight back. She dives into the action, falling and falling, and falling and falling, and falling. as reality shifts around her. She begins running faster and faster, no more feme fetale saunter - this time with purpose.</p>
      <!-- Container for images -->
         <div class="flex flex-col md:flex-row items-center justify-center gap-4">
           <!-- First Image -->
@@ -348,19 +352,19 @@ lang: ""
 
 
   <div class="text-lg text-gray-700 dark:text-neutral-300 space-y-6">
-    <p class="mb-4"> - The video takes the form of a movie trailer for a film that doesn't exist. This format allows the creator to move the plot forward at a breakneck pace, introducing a world and storyline that leave room for further episodes.</p>
-    <p class="mb-4"> - In this world, the (**redacted for legal reasons**) character is clad in a bikini with prison stripes—a distinctive getup that's not intended to sexualize her but is a nod to other characters and numerous tropes in different series and films, but reimagined with a strong female protagonist.</p>
-    <p class="mb-4"> - The video's quality is "fair," with many glitches and imperfections. While it's possible to hyper-focus on quality and create a seamless product, the labor involved as a solo creator makes that nearly impossible. Compromises were made to keep the project moving forward.</p>
-    <p class="mb-4">Ultimately, the project suffers from the same issues as any indie production: **budget, labor, and audience**. Larger studios have entire teams—writers, directors, artists, marketers, and equipment at the ready. A single creator working at this scale is bound to hit limits.</p>
-    <p class="mb-4">In that sense, what's been achieved so far is impressive—but will the series continue? Hopefully, but I've been down this road before. Overcoming the labor problem is like not having enough food to keep it alive—there's no support system here, and the project will likely die, emaciated and forgotten, in some dark alley. The world at large won't even notice its pathetic attempts to crawl. People will step over its mummified corpse, barely stopping to look down—as the work of strangers is so much more sexy and mysterious, while people they know sit alone, slowly sinking into poverty, waiting for the last nail in the coffin to be hammered in.</p>
+    <p class="mb-4"> - The video takes the form of a movie trailer for a film that doesn't exist. This format allows the creator to move the plot forward at a breakneck pace, introducing a world and storyline that leaves room for further development.</p>
+    <p class="mb-4"> - In this world, the (name redacted for legal reasons) character is clad in a bikini with prison stripes—a distinctive getup that's not intended to sexualize her, but instead is a nod to other characters and numerous tropes in different series and film properties, but reimagined with a strong female protagonist.</p>
+    <p class="mb-4"> - The video's quality is "fair," with many glitches and imperfections. While it's possible to hyper-focus on quality and create a seamless product, the labor involved as a solo creator makes that nearly impossible. Compromises were made to keep the project moving forward. That being said, the door is open for a more refined video if in the future if decided its needed</p>
+    <p class="mb-4">Ultimately, the project suffers from the same issues as any indie production: **budget, labor, and audience**. Larger studios have entire teams—writers, directors, artists, marketers, and equipment at the ready. A single creator working at this scale is bound to hit a labor ceiling.</p>
+    <p class="mb-4">In that sense, what's been achieved so far is impressive—but will the series continue? Hopefully, but I've been down this road before. Overcoming the labor problem is like not having enough food to keep it alive—there's no support system, and the project will likely die, emaciated and forgotten, in some dark alley. The world at large won't even notice its pathetic attempts to crawl. People will step over its mummified corpse, barely stopping to look down—ignoring those close, as the work of strangers so much more sexy and alluring, while people you may know sit alone, slowly sinking into poverty, waiting for the last nail in the coffin to be hammered in.</p>
      <!-- Container for images -->
         <div class="flex flex-col md:flex-row items-center justify-center gap-4">
           <!-- First Image -->
           <div class="w-full h-auto transform ">
-            <img src="/posts/Mega-Meal-Explained/watch.png" alt="Final action shot" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+            <img src="/posts/Mega-Meal-Explained/watch2.png" alt="Final action shot" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
           </div>
         </div>
-    <p class="mb-4">Onward into the dark, rainy night, we continue pushing forward.</p>
+    <p class="mb-4">"vogh Hurgh ram wI'eltaHvIS, wIvangtaH." - Ancient Klingon Proverb</p>
       <h2 class="text-xl font-bold mb-4 pb-4 dark:text-neutral-50">Would you like <span class="text-yellow-500">Fries</span> or <span class="text-yellow-700">Onion Rings</span>?</h2>
     </div>
   </div>
