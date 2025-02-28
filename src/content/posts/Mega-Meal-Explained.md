@@ -127,7 +127,7 @@ lang: ""
   <div class="collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-4 mt-4 pr-4">
 
   <!-- Introduction -->
-<p class="mb-4">The trailer opens with an ominous siren blaring over a maximum-security prison, searchlights sweeping the scene as if searching for an escapee. Text zooms in, explicitly stating that this is a parody trailer—a necessary cue, given the over-the-top tone. These opening scenes were chosen to establish a sense of mystery, drawing the viewer in while grounding them in the familiar structure of a movie trailer. The goal is to spark curiosity and stay fresh without straying too into a format audiences my find confusing.<p>
+<p class="mb-4">The trailer opens with an ominous siren blaring over a maximum-security prison, search lights sweeping the scene as if searching for an escapee. Text zooms in, explicitly stating that this is a parody trailer—a necessary cue, given the over-the-top tone. These opening scenes were chosen to establish a sense of mystery, drawing the viewer in while grounding them in the familiar structure of a movie trailer. The goal is to spark curiosity and stay fresh without straying too into a format audiences my find confusing.<p>
 <!-- Container for images -->
         <div class="flex flex-col md:flex-row items-center justify-center gap-4">
           <!-- First Image -->
@@ -336,7 +336,7 @@ lang: ""
 
 <p class="mb-4">The streets flood. The Hamburgler is gone.</p>
 <p class="mb-4">Perhaps it was all a dream? </p>
-<p class="mb-4">We take a breath, and we’re back on a building. The Hamburgler overlooks the city. It’s time to fight back. She dives into the action, falling and falling, and falling and falling, and falling. Reality shifts around her. Her legs are shown again, this time running—faster and faster—this time with purpose.</p>
+<p class="mb-4">We take a breath, and we’re back on a building. The Hamburgler overlooks the city. It’s time to fight back. She dives into the action—literally-falling and falling, and falling and falling, and falling. Reality shifts around her. Her legs are shown again, this time running—faster and faster—this time with purpose.</p>
      <!-- Container for images -->
         <div class="flex flex-col md:flex-row items-center justify-center gap-4">
           <!-- First Image -->
@@ -355,17 +355,15 @@ lang: ""
     <p class="mb-4"> - The video takes the form of a movie trailer for a film that doesn't exist. This format allows the creator to move the plot forward at a breakneck pace, introducing a world and storyline that leaves room for further development.</p>
     <p class="mb-4"> - In this world, the <span style="color: grey; font-style: italic;">(name redacted for legal reasons)</span> character is clad in a bikini with prison stripes—a distinctive getup that's not intended to sexualize her, but instead is a nod to other characters and numerous tropes in different series and film properties—the intent is to have those tropes reimagined with a strong female protagonist.</p>
     <!-- hybrid container -->
-      <div class="flex flex-col md:flex-row items-center md:items-start justify-center gap-8">
-        <!-- Wanted Image -->
-        <div class="md:w-1/2">
-          <img src="/posts/Mega-Meal-Explained/Poses.png" alt="a ceo" class="float-left w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
-        </div>
-        <!-- Next Paragraph -->
-        <div class="md:w-1/2 flex items-center justify-center"> <!-- Add flex, items-center, and justify-center here -->
-          <p class="font-bold text-center">Characters were developed from different frameworks. Still images that were then interpolated.</p>
-        </div>
-      </div>
-    <p class="mb-4"> - The video's quality is "fair," with many glitches and imperfections. While it's possible to hyper-focus on quality and create a seamless product, the labor involved as a solo creator makes that nearly impossible. Compromises were made to keep the project moving forward. That being said—the door is open for a more refined video if in the future if decided its needed</p>
+<div class="flex flex-col md:flex-row items-stretch justify-center gap-8 min-h-[300px]">
+  <div class="md:w-1/2">
+    <img src="/posts/Mega-Meal-Explained/Poses.png" alt="a ceo" class="w-full h-auto rounded-lg shadow-md object-contain brightness-100 dark:brightness-75 transition">
+  </div>
+  <div class="md:w-1/2 flex items-center justify-center"> 
+    <p class="font-bold text-center">Characters were developed from different frameworks. <br> <br> Using still images made first, then interpolated.</p>
+  </div>
+</div>
+    <p class="mb-4"> - The video's quality is "fair," with many glitches and imperfections. While it's possible to hyper-focus on quality and create a seamless product, the labor involved as a solo creator makes that nearly impossible. Compromises were made to keep the project moving forward. That being said—the door is open for a more refined video if in the future if its needed</p>
     <p class="mb-4">Ultimately, the project suffers from the same issues as any indie production: *budget, labor, and audience*. Larger studios have entire teams—writers, directors, artists, marketers, and equipment at the ready. A single creator working at this scale is bound to hit a labor ceiling.</p>
     <p class="mb-4">In that sense, what's been achieved so far is impressive—but will the series continue? Hopefully...but I've been down this road before. Labor is the food this project eats, and overcoming the labor problem—when there's no support, the the project will likely be too weak to survive, emaciated and forgotten, in some dark alley. The world at large won't even notice its pathetic attempts to crawl before death by starvation. People will step over its mummified corpse, barely stopping to look down. The work of strangers is so much more more sexy and alluring, while people you may know sit alone, slowly sinking into poverty, waiting for the last nail in the coffin to be hammered in.</p>
      <!-- Container for images -->
