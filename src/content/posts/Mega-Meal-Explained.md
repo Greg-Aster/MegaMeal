@@ -2,7 +2,7 @@
 title: "Mega Meal Finally Explained"
 published: 2025-02-19
 description: "Why? Just why."
-image: "/public/posts/Mega-Meal-Explained/mme-title.jpg"
+image: "/posts/Mega-Meal-Explained/mme-title.jpg"
 showImageOnPost: false
 tags: [Fast Food, Parody, Short Video, Fake Movie Trailer]
 category: "Projects"
