@@ -3,62 +3,73 @@ import type { MarkdownHeading } from 'astro';
 import { siteConfig } from "../../config";
 
 interface Props {
-  class?: string
-  headings: MarkdownHeading[]
+  class?: string;
+  headings?: MarkdownHeading[];
+  htmlContent?: string;
 }
 
-let { headings = []  } = Astro.props;
+let { headings = [], htmlContent } = Astro.props;
+
+// Extract headings from HTML if provided
+if (htmlContent) {
+  const extractHeadingsFromHTML = (html: string): MarkdownHeading[] => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const headings = Array.from(doc.querySelectorAll('h1, h2, h3, h4, h5, h6'));
+
+    return headings.map((heading) => ({
+      depth: parseInt(heading.tagName.substring(1)),
+      text: heading.textContent || '',
+      slug: heading.id || heading.textContent?.toLowerCase().replace(/\s+/g, '-') || '',
+    }));
+  };
+
+  headings = extractHeadingsFromHTML(htmlContent);
+}
 
 let minDepth = 10;
 for (const heading of headings) {
-    minDepth = Math.min(minDepth, heading.depth);
+  minDepth = Math.min(minDepth, heading.depth);
 }
 
-const className = Astro.props.class
+const className = Astro.props.class;
 
 const removeTailingHash = (text: string) => {
-    let lastIndexOfHash = text.lastIndexOf('#');
-    if (lastIndexOfHash != text.length - 1) {
-        return text;
-    }
-
-    return text.substring(0, lastIndexOfHash);
-}
+  let lastIndexOfHash = text.lastIndexOf('#');
+  if (lastIndexOfHash != text.length - 1) {
+    return text;
+  }
+  return text.substring(0, lastIndexOfHash);
+};
 
 let heading1Count = 1;
-
 const maxLevel = siteConfig.toc.depth;
 ---
-<table-of-contents class:list={[className, "group"]}>
-    {headings.filter((heading) => heading.depth < minDepth + maxLevel).map((heading) =>
-            <a href={`#${heading.slug}`} class="px-2 flex gap-2 relative transition w-full min-h-9 rounded-xl
-        hover:bg-[var(--toc-btn-hover)] active:bg-[var(--toc-btn-active)] py-2
-    ">
-                <div class:list={["transition w-5 h-5 shrink-0 rounded-lg text-xs flex items-center justify-center font-bold",
-                    {
-                        "bg-[var(--toc-badge-bg)] text-[var(--btn-content)]": heading.depth == minDepth,
-                        "ml-4": heading.depth == minDepth + 1,
-                        "ml-8": heading.depth == minDepth + 2,
-                    }
-                ]}
-                >
-                    {heading.depth == minDepth && heading1Count++}
-                    {heading.depth == minDepth + 1 && <div class="transition w-2 h-2 rounded-[0.1875rem] bg-[var(--toc-badge-bg)]"></div>}
-                    {heading.depth == minDepth + 2 && <div class="transition w-1.5 h-1.5 rounded-sm bg-black/5 dark:bg-white/10"></div>}
-                </div>
-                <div class:list={["transition text-sm", {
-                    "text-50": heading.depth == minDepth || heading.depth == minDepth + 1,
-                    "text-30": heading.depth == minDepth + 2,
-                }]}>{removeTailingHash(heading.text)}</div>
-            </a>
-    )}
-    <div id="active-indicator" class:list={[{'hidden': headings.length == 0}, "-z-10 absolute bg-[var(--toc-btn-hover)] left-0 right-0 rounded-xl transition-all " +
-        "group-hover:bg-transparent border-2 border-[var(--toc-btn-hover)] group-hover:border-[var(--toc-btn-active)] border-dashed"]}></div>
-</table-of-contents>
 
+<table-of-contents class:list={[className, "group"]}>
+  {headings.filter((heading) => heading.depth < minDepth + maxLevel).map((heading) =>
+    <a href={`#${heading.slug}`} class="px-2 flex gap-2 relative transition w-full min-h-9 rounded-xl hover:bg-[var(--toc-btn-hover)] active:bg-[var(--toc-btn-active)] py-2">
+      <div class:list={["transition w-5 h-5 shrink-0 rounded-lg text-xs flex items-center justify-center font-bold", {
+        "bg-[var(--toc-badge-bg)] text-[var(--btn-content)]": heading.depth == minDepth,
+        "ml-4": heading.depth == minDepth + 1,
+        "ml-8": heading.depth == minDepth + 2,
+      }]}>
+        {heading.depth == minDepth && heading1Count++}
+        {heading.depth == minDepth + 1 && <div class="transition w-2 h-2 rounded-[0.1875rem] bg-[var(--toc-badge-bg)]"></div>}
+        {heading.depth == minDepth + 2 && <div class="transition w-1.5 h-1.5 rounded-sm bg-black/5 dark:bg-white/10"></div>}
+      </div>
+      <div class:list={["transition text-sm", {
+        "text-50": heading.depth == minDepth || heading.depth == minDepth + 1,
+        "text-30": heading.depth == minDepth + 2,
+      }]}>{removeTailingHash(heading.text)}</div>
+    </a>
+  )}
+  <div id="active-indicator" class:list={[{'hidden': headings.length == 0}, "-z-10 absolute bg-[var(--toc-btn-hover)] left-0 right-0 rounded-xl transition-all group-hover:bg-transparent border-2 border-[var(--toc-btn-hover)] group-hover:border-[var(--toc-btn-active)] border-dashed"]}></div>
+</table-of-contents>
 
 <script>
 class TableOfContents extends HTMLElement {
+    // Existing properties
     tocEl: HTMLElement | null = null;
     visibleClass = "visible";
     observer: IntersectionObserver;
@@ -69,13 +80,14 @@ class TableOfContents extends HTMLElement {
     tocEntries: HTMLAnchorElement[] = [];
     active: boolean[] = [];
     activeIndicator: HTMLElement | null = null;
+    initialized: boolean = false;
 
     constructor() {
         super();
         this.observer = new IntersectionObserver(
             this.markVisibleSection, { threshold: 0 }
         );
-    };
+    }
 
     markVisibleSection = (entries: IntersectionObserverEntry[]) => {
         entries.forEach((entry) => {
@@ -195,29 +207,137 @@ class TableOfContents extends HTMLElement {
     };
 
     connectedCallback() {
-        // wait for the onload animation to finish, which makes the `getBoundingClientRect` return correct values
-        const element = document.querySelector('.prose');
-        if (element) {
-            element.addEventListener('animationend', () => {
-                this.init();
-            }, { once: true });
-        } else {
-            console.warn('Animation element not found');
+    // Initialize on load
+    window.addEventListener('load', () => {
+        this.init();
+        this.listenForCollapsibleChanges();
+    }, { once: true });
+
+    // Reinitialize on Astro page transitions
+    document.addEventListener('astro:page-load', () => {
+        this.init();
+        this.listenForCollapsibleChanges();
+    });
+
+    // Fallback timeout
+    setTimeout(() => {
+        if (!this.initialized) {
+            this.init();
+            this.listenForCollapsibleChanges();
         }
-    };
+    }, 1000);
+}
+
+        listenForCollapsibleChanges() {
+        const collapsibleSections = document.querySelectorAll('.collapsible-content');
+        collapsibleSections.forEach(section => {
+            const observer = new MutationObserver((mutations) => {
+            mutations.forEach(mutation => {
+                // Detect changes to `max-height` or `opacity`
+                if (mutation.type === 'attributes' && 
+                    (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+                this.rebuildTOC();
+                }
+            });
+            });
+            observer.observe(section, { 
+            attributes: true, // Watch for attribute changes
+            attributeFilter: ['style', 'class'] // Only track these attributes
+            });
+        });
+        }
+
+    // Method to rebuild the TOC
+    rebuildTOC() {
+        console.log("Rebuilding TOC after collapsible content change");
+        
+        // Clean up existing observers
+        this.sections.forEach(section => {
+            if (section) {
+                this.observer.unobserve(section);
+            }
+        });
+        
+        // Re-initialize TOC entries
+        this.findHeadingsAndUpdateTOC();
+    }
+
+    // Method to find all headings, including those in expanded collapsible sections
+    findHeadingsAndUpdateTOC() {
+        // First, check if TOC wrapper exists
+        if (!this.tocEl) {
+            this.tocEl = document.getElementById("toc-inner-wrapper");
+            if (!this.tocEl) {
+                console.warn("TOC wrapper not found during rebuild");
+                return;
+            }
+        }
+
+        // Get all TOC entries
+        this.tocEntries = Array.from(
+            document.querySelectorAll<HTMLAnchorElement>("#toc a[href^='#']")
+        );
+        
+
+        if (this.tocEntries.length === 0) {
+            console.warn("No TOC entries found during rebuild");
+            return;
+        }
+
+        this.sections = new Array(this.tocEntries.length);
+        this.headings = new Array(this.tocEntries.length);
+        this.headingIdxMap.clear();
+        
+        for (let i = 0; i < this.tocEntries.length; i++) {
+            const id = decodeURIComponent(this.tocEntries[i].hash?.substring(1));
+            const heading = document.getElementById(id);
+            const section = heading?.parentElement;
+            
+            if (heading instanceof HTMLElement && section instanceof HTMLElement) {
+                this.headings[i] = heading;
+                this.sections[i] = section;
+                this.headingIdxMap.set(id, i);
+                
+                // Check if the heading is within a collapsible section
+                if (heading.closest('.collapsible-content')) {
+                    console.log(`Found heading '${heading.textContent}' in collapsible content`);
+                }
+            }
+        }    
+
+        this.active = new Array(this.tocEntries.length).fill(false);
+
+        // Re-observe sections
+        this.sections.forEach(section => {
+            if (section) {
+                this.observer.observe(section);
+            }
+        });
+
+        this.fallback();
+        this.update();
+        }
+
 
     init() {
-        this.tocEl = document.getElementById(
-            "toc-inner-wrapper"
-        );
-
-        if (!this.tocEl) return;
-
+        // Check if already initialized to prevent double initialization
+        if (this.initialized) return;
+        this.initialized = true;
+        
+        this.tocEl = document.getElementById("toc-inner-wrapper");
+        if (!this.tocEl) {
+            console.warn("TOC wrapper not found");
+            return;
+        }
+        
         this.tocEl.addEventListener("click", this.handleAnchorClick, {
             capture: true,
         });
 
         this.activeIndicator = document.getElementById("active-indicator");
+
+        // Initial load of TOC entries
+        this.findHeadingsAndUpdateTOC();
 
         this.tocEntries = Array.from(
             document.querySelectorAll<HTMLAnchorElement>("#toc a[href^='#']")
@@ -245,8 +365,10 @@ class TableOfContents extends HTMLElement {
 
         this.fallback();
         this.update();
-    };
 
+
+    }
+    
     disconnectedCallback() {
         this.sections.forEach((section) =>
             this.observer.unobserve(section)

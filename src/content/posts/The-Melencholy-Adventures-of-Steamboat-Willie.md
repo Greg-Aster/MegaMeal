@@ -9,7 +9,7 @@ draft: false
 lang: ''
 ---
 
-<iframe width="100%" height="468" src="https://www.youtube.com/embed/GS9bdSrCvfw?si=3-TWFDISeYHEQ7Bv" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<iframe width="100%" height="468" src="https://www.youtube.com/embed/GS9bdSrCvfw?si=3-TWFDISeYHEQ7Bv" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; " referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ### **The Melancholy adventures of Steamboat Willie: A Retrospective on the Project**
 
@@ -34,7 +34,7 @@ The production of *Steamboat Willie* was a labor-intensive process that involved
 
 2. **Rotoscoping and Colorization**:  
    Rotoscoping - tracing each character frame by frame - and the colorization was the bulk of the labor. It felt necessary to use original character lines to retain the charm of the original animation.
-<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/TlmBrhCwX_I?si=dH5iKUVLSFurjvSq&amp;controls=0&modestbranding=1&rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/TlmBrhCwX_I?si=dH5iKUVLSFurjvSq&amp;controls=0&modestbranding=1&rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 3. **Compositing and Backgrounds**:  
    New backgrounds were created or modified to fit the 16:9 aspect ratio - as the original 5:4 frames were too small. Some scenes required “outpainting” to fill in extended areas. Stock video from my recent trip to Alaska was used extensively to create these backgrounds.
@@ -45,7 +45,7 @@ The production of *Steamboat Willie* was a labor-intensive process that involved
 5. **Color Correction and Consistency**:  
    To unify the disparate visual elements,  extreme color grading across the entire project was used to ensure a consistent look and feel despite the varied sources of the footage.
 <iframe width="560" height="315" src="https://www.youtube.com/embed/3rTQliK1MAU?si=SMEKRiJ_Rlmpq1oT&controls=0&modestbranding=1&rel=0" 
-title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 6. **Sound Design**:  
   Squeaky toys, radio static, and a parakeet were used. Whale noises for the mermaid. Boat horn for the cow, The music was original, created using an MIDI keyboard and LMMS music studio.
@@ -64,7 +64,7 @@ Throughout the episodes, the characters grew increasingly detached from one anot
 #### **Challenges and Reflections**
 
 - **Final Shots**:  These proved particularly challenging, the last scenes weren't particularly engaging, and required extensive reworking - eventually being condensed for the final cut.
-<iframe width="560" height="315" src="https://www.youtube.com/embed/jGCAgHO-oCQ?si=4rYzPYcDph1ztXze&controls=0&modestbranding=1&rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/jGCAgHO-oCQ?si=4rYzPYcDph1ztXze&controls=0&modestbranding=1&rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 - **Sustainability**: The sheer volume of labor involved in producing each episode made it clear that creating content of this scale solo was unsustainable.
 

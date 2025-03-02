@@ -2,7 +2,7 @@
 title: "Mega Meal Finally Explained"
 published: 2025-02-19
 description: "Why? Just why."
-image: "./Mega-Meal-Explained/Title.jpg"
+image: "/public/posts/Mega-Meal-Explained/Title.jpg"
 showImageOnPost: false
 tags: [Fast Food, Parody, Short Video, Fake Movie Trailer]
 category: "Projects"
@@ -17,7 +17,7 @@ lang: ""
       src="https://www.youtube.com/embed/4tR6VLaYJFA?controls=1"
       title="YouTube video player"
       frameborder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;"
       referrerpolicy="strict-origin-when-cross-origin"
       allowfullscreen
       class="absolute top-0 left-0 w-full h-full"
@@ -114,6 +114,8 @@ lang: ""
   </div>
 </div>
 
+<h4 id="introduction" class="text-xl font-bold mb-4 dark:text-neutral-50">Introduction</h4>
+
 
 <!-- Mega Size -->
 <div class="card-base p-0 pl-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8">
@@ -125,7 +127,7 @@ lang: ""
 </svg>
 </button>
   <div class="collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-4 mt-4 pr-4">
-
+  <h4 class="text-xl font-bold mb-4 dark:text-neutral-50">Introduction</h4>
   <!-- Introduction -->
 <p class="mb-4">The trailer opens with an ominous siren blaring over a maximum-security prison, search lights sweeping the scene as if searching for an escapee. Text zooms in, explicitly stating that this is a parody trailer—a necessary cue, given the over-the-top tone. These opening scenes were chosen to establish a sense of mystery, drawing the viewer in while grounding them in the familiar structure of a movie trailer. The goal is to spark curiosity and stay fresh without straying too into a format audiences my find confusing.<p>
 <!-- Container for images -->
@@ -388,6 +390,12 @@ lang: ""
   </div>
 </div>
 
+<h4>Introduction</h4>
+<h4 id="introduction" class="text-xl font-bold mb-4 dark:text-neutral-50">Introduction</h4>
+
+
+
+
 <!-- 
 <div class="text-center text-2xl font-bold mt-12 dark:text-neutral-50">
   **Would you like fries or Onion Rings?**
@@ -444,6 +452,12 @@ lang: ""
       header.setAttribute('aria-expanded', 'false');
       arrow.classList.remove('rotate-180');
     }
+
+      // Trigger TOC rebuild after expanding/collapsing a section
+    const tocElement = document.querySelector('table-of-contents');
+    if (tocElement && typeof tocElement.rebuildTOC === 'function') {
+      tocElement.rebuildTOC();
+    }
   }
 
   function initCollapsibles() {
@@ -453,6 +467,11 @@ lang: ""
       header.addEventListener('click', handleCollapsibleClick);
     });
   }
+
+  // Initialize collapsibles on page load and Astro page transitions
+  document.addEventListener('astro:page-load', initCollapsibles);
+  document.addEventListener('DOMContentLoaded', initCollapsibles);
+
 
   // Use event delegation for better performance
   document.addEventListener('astro:page-load', initCollapsibles);

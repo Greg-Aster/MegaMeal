@@ -5,7 +5,7 @@
 src=&quot;https://www.youtube.com/embed/4tR6VLaYJFA?controls=1&quot;
 title=&quot;YouTube video player&quot;
 frameborder=&quot;0&quot;
-allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot;
+allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;&quot;
 referrerpolicy=&quot;strict-origin-when-cross-origin&quot;
 allowfullscreen
 class=&quot;absolute top-0 left-0 w-full h-full&quot;
@@ -93,6 +93,7 @@ style=&quot;filter: hue-rotate(var(--hue, 0deg));&quot;
 &amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;h4 id=&quot;introduction&quot; class=&quot;text-xl font-bold mb-4 dark:text-neutral-50&quot;&amp;gt;Introduction&amp;lt;/h4&amp;gt;&lt;/p&gt;
 &lt;p&gt;&amp;lt;!-- Mega Size --&amp;gt;
 &amp;lt;div class=&quot;card-base p-0 pl-4 pt-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] shadow-lg mb-8&quot;&amp;gt;
 &amp;lt;button class=&quot;collapsible-header w-auto mx-auto flex justify-center px-4 py-1.5 bg-gradient-to-r from-[oklch(0.35_0.2_var(--hue))] to-[oklch(0.45_0.3_var(--hue))] text-white rounded-lg transition-colors&quot; style=&quot;--hue: 360;&quot;&amp;gt;
@@ -102,8 +103,9 @@ style=&quot;filter: hue-rotate(var(--hue, 0deg));&quot;
 &amp;lt;polyline points=&quot;6 9 12 15 18 9&quot;&amp;gt;&amp;lt;/polyline&amp;gt;
 &amp;lt;/svg&amp;gt;
 &amp;lt;/button&amp;gt;
-&amp;lt;div class=&quot;collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-4 mt-4 pr-4&quot;&amp;gt;&lt;/p&gt;
-&lt;p&gt;&amp;lt;!-- Introduction --&amp;gt;
+&amp;lt;div class=&quot;collapsible-content transition-all duration-500 ease-in-out max-h-0 opacity-0 overflow-hidden text-lg text-gray-700 dark:text-neutral-300 space-y-4 mt-4 pr-4&quot;&amp;gt;
+&amp;lt;h4 class=&quot;text-xl font-bold mb-4 dark:text-neutral-50&quot;&amp;gt;Introduction&amp;lt;/h4&amp;gt;
+&amp;lt;!-- Introduction --&amp;gt;
 &amp;lt;p class=&quot;mb-4&quot;&amp;gt;The trailer opens with an ominous siren blaring over a maximum-security prison, search lights sweeping the scene as if searching for an escapee. Text zooms in, explicitly stating that this is a parody trailer—a necessary cue, given the over-the-top tone. These opening scenes were chosen to establish a sense of mystery, drawing the viewer in while grounding them in the familiar structure of a movie trailer. The goal is to spark curiosity and stay fresh without straying too into a format audiences my find confusing.&amp;lt;p&amp;gt;
 &amp;lt;!-- Container for images --&amp;gt;
 &amp;lt;div class=&quot;flex flex-col md:flex-row items-center justify-center gap-4&quot;&amp;gt;
@@ -344,6 +346,8 @@ style=&quot;filter: hue-rotate(var(--hue, 0deg));&quot;
 &amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;h4&amp;gt;Introduction&amp;lt;/h4&amp;gt;
+&amp;lt;h4 id=&quot;introduction&quot; class=&quot;text-xl font-bold mb-4 dark:text-neutral-50&quot;&amp;gt;Introduction&amp;lt;/h4&amp;gt;&lt;/p&gt;
 &lt;p&gt;&amp;lt;!--
 &amp;lt;div class=&quot;text-center text-2xl font-bold mt-12 dark:text-neutral-50&quot;&amp;gt;
 &lt;strong&gt;Would you like fries or Onion Rings?&lt;/strong&gt;
@@ -398,6 +402,12 @@ if (isExpanding) {
   header.setAttribute(&apos;aria-expanded&apos;, &apos;false&apos;);
   arrow.classList.remove(&apos;rotate-180&apos;);
 }
+
+  // Trigger TOC rebuild after expanding/collapsing a section
+const tocElement = document.querySelector(&apos;table-of-contents&apos;);
+if (tocElement &amp;amp;&amp;amp; typeof tocElement.rebuildTOC === &apos;function&apos;) {
+  tocElement.rebuildTOC();
+}
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;}&lt;/p&gt;
 &lt;p&gt;function initCollapsibles() {
@@ -407,13 +417,16 @@ header.removeEventListener(&apos;click&apos;, handleCollapsibleClick);
 header.addEventListener(&apos;click&apos;, handleCollapsibleClick);
 });
 }&lt;/p&gt;
+&lt;p&gt;// Initialize collapsibles on page load and Astro page transitions
+document.addEventListener(&apos;astro:page-load&apos;, initCollapsibles);
+document.addEventListener(&apos;DOMContentLoaded&apos;, initCollapsibles);&lt;/p&gt;
 &lt;p&gt;// Use event delegation for better performance
 document.addEventListener(&apos;astro:page-load&apos;, initCollapsibles);
 document.addEventListener(&apos;DOMContentLoaded&apos;, initCollapsibles);&lt;/p&gt;
 &lt;p&gt;// Also initialize immediately
 initCollapsibles();
 &amp;lt;/script&amp;gt;&lt;/p&gt;
-</content:encoded></item><item><title>The Melancholy adventures of Steamboat Willie</title><link>https://dndiy.github.io/posts/the-melencholy-adventures-of-steamboat-willie/</link><guid isPermaLink="true">https://dndiy.github.io/posts/the-melencholy-adventures-of-steamboat-willie/</guid><description>A retrospective view on the project.</description><pubDate>Sat, 08 Feb 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;&amp;lt;iframe width=&quot;100%&quot; height=&quot;468&quot; src=&quot;https://www.youtube.com/embed/GS9bdSrCvfw?si=3-TWFDISeYHEQ7Bv&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen&amp;gt;&amp;lt;/iframe&amp;gt;&lt;/p&gt;
+</content:encoded></item><item><title>The Melancholy adventures of Steamboat Willie</title><link>https://dndiy.github.io/posts/the-melencholy-adventures-of-steamboat-willie/</link><guid isPermaLink="true">https://dndiy.github.io/posts/the-melencholy-adventures-of-steamboat-willie/</guid><description>A retrospective view on the project.</description><pubDate>Sat, 08 Feb 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;&amp;lt;iframe width=&quot;100%&quot; height=&quot;468&quot; src=&quot;https://www.youtube.com/embed/GS9bdSrCvfw?si=3-TWFDISeYHEQ7Bv&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; &quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen&amp;gt;&amp;lt;/iframe&amp;gt;&lt;/p&gt;
 &lt;h3&gt;&lt;strong&gt;The Melancholy adventures of Steamboat Willie: A Retrospective on the Project&lt;/strong&gt;&lt;/h3&gt;
 &lt;h4&gt;&lt;strong&gt;Introduction&lt;/strong&gt;&lt;/h4&gt;
 &lt;p&gt;A simple, somewhat cynical observation: if you create something entirely new and unique, it often struggles to gain traction - while parodies or familiar characters tend to engage audiences and get more attention. It’s a frustrating reality of creative work, and something I decided to shine a light on - and lean ironically into. &lt;em&gt;Steamboat Willie&lt;/em&gt; had just entered the public domain, and the idea of updating and colorizing it felt like a perfect blend of nostalgia, experimentation, and irony.&lt;/p&gt;
@@ -432,7 +445,7 @@ The first cuts of the project were a straightforward edits of the original carto
 &lt;li&gt;
 &lt;p&gt;&lt;strong&gt;Rotoscoping and Colorization&lt;/strong&gt;:&lt;br /&gt;
 Rotoscoping - tracing each character frame by frame - and the colorization was the bulk of the labor. It felt necessary to use original character lines to retain the charm of the original animation.
-&amp;lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube-nocookie.com/embed/TlmBrhCwX_I?si=dH5iKUVLSFurjvSq&amp;amp;controls=0&amp;amp;modestbranding=1&amp;amp;rel=0&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen&amp;gt;&amp;lt;/iframe&amp;gt;&lt;/p&gt;
+&amp;lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube-nocookie.com/embed/TlmBrhCwX_I?si=dH5iKUVLSFurjvSq&amp;amp;controls=0&amp;amp;modestbranding=1&amp;amp;rel=0&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen&amp;gt;&amp;lt;/iframe&amp;gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;strong&gt;Compositing and Backgrounds&lt;/strong&gt;:&lt;br /&gt;
@@ -446,7 +459,7 @@ The underwater sequences featuring Black Pete utilized AI-generated visuals. The
 &lt;p&gt;&lt;strong&gt;Color Correction and Consistency&lt;/strong&gt;:&lt;br /&gt;
 To unify the disparate visual elements,  extreme color grading across the entire project was used to ensure a consistent look and feel despite the varied sources of the footage.
 &amp;lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/3rTQliK1MAU?si=SMEKRiJ_Rlmpq1oT&amp;amp;controls=0&amp;amp;modestbranding=1&amp;amp;rel=0&quot;
-title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen&amp;gt;&amp;lt;/iframe&amp;gt;&lt;/p&gt;
+title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen&amp;gt;&amp;lt;/iframe&amp;gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;strong&gt;Sound Design&lt;/strong&gt;:&lt;br /&gt;
@@ -463,7 +476,7 @@ Squeaky toys, radio static, and a parakeet were used. Whale noises for the merma
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;strong&gt;Final Shots&lt;/strong&gt;:  These proved particularly challenging, the last scenes weren&apos;t particularly engaging, and required extensive reworking - eventually being condensed for the final cut.
-&amp;lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/jGCAgHO-oCQ?si=4rYzPYcDph1ztXze&amp;amp;controls=0&amp;amp;modestbranding=1&amp;amp;rel=0&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen&amp;gt;&amp;lt;/iframe&amp;gt;&lt;/p&gt;
+&amp;lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/jGCAgHO-oCQ?si=4rYzPYcDph1ztXze&amp;amp;controls=0&amp;amp;modestbranding=1&amp;amp;rel=0&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen&amp;gt;&amp;lt;/iframe&amp;gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;strong&gt;Sustainability&lt;/strong&gt;: The sheer volume of labor involved in producing each episode made it clear that creating content of this scale solo was unsustainable.&lt;/p&gt;
@@ -545,5 +558,7 @@ Yes! If it hasn’t already taken your job, it probably will - or at least impac
 &lt;p&gt;AI can’t replace real creators because they define what creation is. The only thing AI does is challenge the tradition of production. The gulf between creators and producers is changing. If an artist chooses to use AI as a tool, it doesn’t make them any less of an artist. It simply means they’re using a different brush on their canvas.&lt;/p&gt;
 &lt;p&gt;True art should be free.&lt;/p&gt;
 &lt;h2&gt;Final Thoughts&lt;/h2&gt;
-&lt;p&gt;AI is not a threat to the artist, but it is a threat to art as a product - and I&apos;m not sure its a bad thing. Maybe, without value attached to it, art can be free and accessible to people without means. Don’t restrict or cut out people who enjoy these things. This divide is putting people on the wrong side of history. Look to the future - whether that future is liberating or dystopian depends entirely on who controls it. So, ride the wave, understand it. If you don’t like the medium, don’t judge someone who does. And if you want less AI - put down that phone, stop typing, don’t use a map. Instead, look around - get lost outside, talk to someone real, paint, dance, enjoy a sunset - and if you’re an artist, consider asking yourself questions - questions about why you do what you do, your value, your personal expression, and what freedom to make whatever you want without restriction really means.&lt;/p&gt;
+&lt;p&gt;AI is not a threat to the artist, but it is a threat to art as a product.
+Perhapse we should stop, and consider reframing the conversation - its not about art - its about how we attach value to things, and ultimately people. Our values shouldn&apos;t be about our ability to produce. Somewhere in all this mess, our identies all became linked to our labor.
+Maybe without value attached - art can be free and accessible to people without means. If we restrict or cut out people who enjoy these things, you risk putting yourself on the wrong side of history. Look to the future - whether that future is liberating or dystopian depends entirely on who is moving forward. So, ride the wave, understand it. If you don’t like the medium - don’t judge someone who does. And if you want less AI - put down that phone, stop typing on a computer, don’t use a map. Instead, look around - get lost outside, talk to someone real, paint, dance, enjoy a sunset, and if you’re an artist, consider asking yourself questions - questions about why you do what you do, your value really is, your personal expression, and what freedom to make whatever you want without restriction really means.&lt;/p&gt;
 </content:encoded></item></channel></rss>

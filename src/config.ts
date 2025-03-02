@@ -14,9 +14,10 @@ export const siteConfig: SiteConfig = {
     hue: 200,
     fixed: false,
   },
+//banner is no longer needws but to keep the code from breaking I will keep it here
   banner: {
     enable: true,
-    src: '',
+    src: '/assets/banner/0001.png',
     position: 'center',
     credit: {
       enable: false,
