@@ -38,14 +38,16 @@ The production of *Steamboat Willie* was a labor-intensive process that involved
    The underwater sequences featuring Black Pete utilized AI-generated visuals. These scenes were intentionally surreal and artificial, serving as a meta-commentary on the idea of a “fake” world.
 
 5. **Color Correction and Consistency**:  
-   To unify the disparate visual elements,  extreme color grading across the entire project was used to ensure a consistent look and feel despite the varied sources of the footage.
+   To unify the disparate visual elements, extreme color grading across the entire project was used to ensure a consistent look and feel despite the varied sources of the footage.
 <iframe width="560" height="315" src="https://www.youtube.com/embed/3rTQliK1MAU?si=SMEKRiJ_Rlmpq1oT&controls=0&modestbranding=1&rel=0" 
 title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 6. **Sound Design**:  
    Sound effects included squeaky toys, radio static, and a parakeet. Whale noises were used for the mermaid, and a boat horn replaced the cow’s original sound. The music was original, created using an MIDI keyboard and LMMS music studio.
 
-![View of boat n blender compositing](./The-Melencholy-Adventures-of-Steamboat-Willie/Blender.png)
+<div style="padding-left: 40px; padding-right: 40px;">
+  <img src="/posts/The-Melencholy-Adventures-of-Steamboat-Willie/Blender.png" alt="View of boat in Blender compositing" style="max-width: 100%; height: auto;">
+</div>
 
 #### **Themes and Narrative**
 At its heart, the video was about life, loss, and acceptance. The steamboat, named *Charon* (after the ferryman of the dead in Greek mythology), symbolized life’s journey. The river it traveled represented the passage of time, leading the characters—and, by extension, the audience—toward the inevitable end.
