@@ -1,0 +1,18 @@
+---
+// src/components/CollapsibleScript.astro
+---
+<script>
+    import { initCollapsibles } from '../scripts/collapsible.js';
+  
+    // Initialize collapsibles on page load and Astro page transitions
+    document.addEventListener('astro:page-load', () => {
+      initCollapsibles();
+    });
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      initCollapsibles();
+    });
+    
+    // Also initialize immediately if needed
+    initCollapsibles();
+  </script>

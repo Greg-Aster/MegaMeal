@@ -18,3 +18,4 @@ Development and known bugs -
 2-27 thumbnail images dont look righ on mobile
 2-27-backgroud doesnt look good on mobile either
 3-1 toc widget does not work with html elements
+3-2 numerous flow bug with toc widget
