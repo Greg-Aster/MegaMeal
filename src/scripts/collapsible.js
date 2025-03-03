@@ -89,9 +89,23 @@ async function handleCollapsibleClick(event) {
 
 // Function to initialize all collapsible elements
 export function initCollapsibles() {
+  console.log('Initializing collapsibles');
+  const headers = document.querySelectorAll('.collapsible-header');
+  
+  if (headers.length === 0) {
+    console.warn('No collapsible headers found to initialize');
+    return;
+  }
+  
   // Remove any existing listeners using event delegation
-  document.querySelectorAll('.collapsible-header').forEach(header => {
-    header.removeEventListener('click', handleCollapsibleClick);
-    header.addEventListener('click', handleCollapsibleClick);
+  headers.forEach(header => {
+    // Store a flag to avoid double-binding
+    if (!header.hasAttribute('data-collapsible-initialized')) {
+      header.removeEventListener('click', handleCollapsibleClick);
+      header.addEventListener('click', handleCollapsibleClick);
+      header.setAttribute('data-collapsible-initialized', 'true');
+    }
   });
+  
+  console.log(`Initialized ${headers.length} collapsible elements`);
 }

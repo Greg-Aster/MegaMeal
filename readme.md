@@ -15,7 +15,8 @@ Development and known bugs -
 *fixed* 2-25there is a bug with container length not loading if the page is resized afer page load 
 *fixed* 2-26more bugs found with container opening in mobile version - particularly when you open the container if your in the wrong place in the place it flys up and you find yourself on the bottom of the page
 
-2-27 thumbnail images dont look righ on mobile
-2-27-backgroud doesnt look good on mobile either
-3-1 toc widget does not work with html elements
-3-2 numerous flow bug with toc widget
+*fixed*2-27 thumbnail images dont look righ on mobile
+*fixed*2-27-backgroud doesnt look good on mobile either
+*fixed - mdx file solution*3-1 toc widget does not work with html elements
+*fixed*3-2 numerous flow bug with toc widget
+Memory usage rampant horror show
