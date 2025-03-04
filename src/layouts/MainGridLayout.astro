@@ -138,12 +138,14 @@ const mainPanelTop = siteConfig.banner.enable ?
             src="/assets/banner/0001.png"
             alt="Banner image of the blog"
             class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-100 scale-105"
+            loading="eager"
         />
         <img
             id="banner-img-2"
             src="/assets/banner/0007.png"
             alt="Banner image of the blog"
             class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-0 scale-105"
+            loading="lazy"
         />
     </div>
 </div>}
@@ -171,13 +173,25 @@ let bannerIndex = 0;
 let currentBanner = 1;
 
 document.addEventListener('DOMContentLoaded', () => {
+    const bannerWrapper = document.getElementById('banner-wrapper');
     const bannerElement1 = document.getElementById('banner-img-1') as HTMLImageElement;
     const bannerElement2 = document.getElementById('banner-img-2') as HTMLImageElement;
+    let bannerIndex = 0;
+    let currentBanner = 1;
+    let intervalId: ReturnType<typeof setInterval>; // Use the correct type
 
-    // Initialize both images with images from the bannerList
-    if (bannerElement1 && bannerElement2) {
-        bannerElement1.src = bannerList[0];
-        bannerElement2.src = bannerList[1];
+    const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+            // Start the banner animation
+            intervalId = setInterval(updateBanner, 7000);
+        } else {
+            // Stop the banner animation
+            clearInterval(intervalId);
+        }
+    }, { threshold: 0.5 });
+
+    if (bannerWrapper) {
+        observer.observe(bannerWrapper);
     }
 
     function updateBanner() {
@@ -200,9 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
-    // Rotate banner every x seconds
-    setInterval(updateBanner, 7000);
 });
 </script>
 
