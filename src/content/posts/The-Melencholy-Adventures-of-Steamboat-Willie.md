@@ -4,7 +4,7 @@ published: 2025-02-08
 description: 'A retrospective view on the project.'
 image: '/posts/The-Melencholy-Adventures-of-Steamboat-Willie/thumb.png'
 showImageOnPost: false
-tags: [Projects, Animation]
+tags: [Projects, Animation, Parody]
 category: 'Projects'
 draft: false 
 lang: ''
