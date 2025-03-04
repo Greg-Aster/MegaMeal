@@ -1,45 +1,36 @@
----
-// src/components/CollapsibleScript.astro (fixed version)
----
 <script>
   import { initCollapsibles } from '../scripts/collapsible.js';
   
+  // Ensure initialization happens after DOM is ready
   function safeInitialize() {
-    // Short timeout to ensure DOM is ready
-    setTimeout(() => {
+    try {
       initCollapsibles();
-    }, 50);
+    } catch (error) {
+      console.error('Collapsible initialization error:', error);
+    }
   }
   
-  // Initialize only on these events, not immediately
-  document.addEventListener('astro:page-load', safeInitialize);
-  document.addEventListener('DOMContentLoaded', safeInitialize);
+  // Multiple ways to ensure initialization
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', safeInitialize);
+  } else {
+    safeInitialize();
+  }
   
-  // Also set up a MutationObserver as a safety net
+  // Optional: Lightweight MutationObserver for dynamic content
   const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      if (mutation.addedNodes.length) {
-        // Look for our collapsible elements
-        const hasCollapsibles = Array.from(mutation.addedNodes).some(node => {
-          // Check if node is an Element before accessing element-specific properties
-          if (node.nodeType === 1) {
-            const element = node as Element;
-            return element.classList?.contains('collapsible-header') || 
-                   element.querySelector?.('.collapsible-header');
-          }
-          return false;
-        });
-        
-        if (hasCollapsibles) {
-          initCollapsibles();
-          break;
-        }
-      }
+    if (mutations.some(mutation => 
+      Array.from(mutation.addedNodes).some(node => 
+        node instanceof HTMLElement && 
+        (node.classList.contains('collapsible-header') || node.querySelector?.('.collapsible-header'))
+      )
+    )) {
+      safeInitialize();
     }
   });
   
-  // Start observing after a slight delay
-  setTimeout(() => {
-    observer.observe(document.body, { childList: true, subtree: true });
-  }, 100);
+  observer.observe(document.body, { 
+    childList: true, 
+    subtree: true 
+  });
 </script>
