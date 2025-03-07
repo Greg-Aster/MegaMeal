@@ -1,0 +1,172 @@
+---
+import { Image } from 'astro:assets';
+import { siteConfig } from '../config';
+import {BANNER_HEIGHT, BANNER_HEIGHT_MOBILE, BANNER_HEIGHT_EXTEND, BANNER_HEIGHT_EXTEND_MOBILE} from "../constants/constants";
+
+// Import your banner images
+import banner1 from '../assets/banner/0001.png';
+import banner2 from '../assets/banner/0007.png';
+import banner3 from '../assets/banner/0014.png';
+import banner4 from '../assets/banner/0021.png';
+import banner5 from '../assets/banner/0028.png';
+import banner6 from '../assets/banner/0035.png';
+import banner7 from '../assets/banner/0042.png';
+import banner8 from '../assets/banner/0049.png';
+
+// Banner list
+const bannerList = [banner1, banner2, banner3, banner4, banner5, banner6, banner7, banner8];
+
+// Props
+interface Props {
+  position?: string;
+}
+
+const { position = siteConfig.banner.position } = Astro.props;
+
+const hasBannerCredit = siteConfig.banner.enable && siteConfig.banner.credit.enable;
+---
+
+{siteConfig.banner.enable && (
+  <div 
+    id="banner-wrapper" 
+    class="absolute z-10 w-full overflow-hidden transition-all transition-swup-fade duration-700"
+  >
+    <div class="relative h-full w-full">
+      {bannerList.map((src, index) => (
+        <Image
+          src={src}
+          alt="Banner image"
+          width={1280}
+          height={720}
+          class={`absolute inset-0 w-full h-full object-cover ${index === 0 ? 'opacity-100' : 'opacity-0'}`}
+          data-index={index}
+          style={`object-position: ${position};`}
+          loading={index === 0 ? 'eager' : 'lazy'}
+        />
+      ))}
+    </div>
+    
+    {hasBannerCredit && siteConfig.banner.credit.url && (
+      <div class="absolute bottom-4 right-4 text-white text-sm bg-black bg-opacity-50 px-2 py-1 rounded">
+        <a href={siteConfig.banner.credit.url} target="_blank" rel="noopener noreferrer">
+          {siteConfig.banner.credit.text}
+        </a>
+      </div>
+    )}
+  </div>
+)}
+
+<script>
+  // Function to handle banner animations
+  function setupBannerAnimation() {
+    const bannerImages = document.querySelectorAll('#banner-wrapper img');
+    let currentIndex = 0;
+    let direction = 1; // 1 = downward, -1 = upward
+    let intervalId: number | null = null;
+  
+    function animateBanner() {
+      if (bannerImages.length <= 1) return;
+      
+      // Get the next image index
+      let nextIndex = (currentIndex + direction) % bannerImages.length;
+      if (nextIndex < 0) nextIndex = bannerImages.length - 1;
+  
+      // Ensure the next image is fully loaded before starting the transition
+      const nextImage = bannerImages[nextIndex] as HTMLImageElement;
+      const currentImage = bannerImages[currentIndex] as HTMLImageElement;
+  
+      // Fade in the next image
+      nextImage.style.opacity = '1';
+  
+      // After a short delay, fade out the current image
+      setTimeout(() => {
+        currentImage.style.opacity = '0';
+      }, 100); // Short delay for smoother transition
+  
+      // Update currentIndex based on direction
+      currentIndex = nextIndex;
+  
+      // Reverse direction at boundaries
+      if (currentIndex >= bannerImages.length - 1) direction = -1;
+      if (currentIndex <= 0) direction = 1;
+    }
+    
+    // Start the animation
+    function startAnimation() {
+      // Clear any existing interval
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+      
+      // Reset all images to hidden except the first one
+      bannerImages.forEach((img, idx) => {
+        (img as HTMLElement).style.opacity = idx === 0 ? '1' : '0';
+      });
+      
+      currentIndex = 0;
+      direction = 1;
+      
+      // Start the animation
+      intervalId = window.setInterval(animateBanner, 5000);
+    }
+    
+    // Initialize animation
+    startAnimation();
+    
+    // Return cleanup function
+    return function cleanup() {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    };
+  }
+  
+  // Setup animation on page load
+  let cleanupFunction: (() => void) | null = null;
+  
+  // Function to handle setup and cleanup for Swup transitions
+  function handleBannerOnNavigation() {
+    // Clean up previous animation if it exists
+    if (cleanupFunction) {
+      cleanupFunction();
+    }
+    
+    // Setup new animation
+    cleanupFunction = setupBannerAnimation();
+  }
+
+  // Initial setup
+  document.addEventListener('DOMContentLoaded', handleBannerOnNavigation);
+  
+  // Handle Swup transitions
+  document.addEventListener('swup:contentReplaced', handleBannerOnNavigation);
+</script>
+
+<style define:vars={{ 
+    bannerHeight: `${BANNER_HEIGHT}vh`, 
+    bannerHeightMobile: `${BANNER_HEIGHT_MOBILE}vh`,
+    bannerHeightExtend: `${BANNER_HEIGHT_EXTEND}vh`,
+    bannerHeightExtendMobile: `${BANNER_HEIGHT_EXTEND_MOBILE}vh`
+  }}>
+  /* Define the transition for Swup */
+  .transition-swup-fade {
+    transition: 700ms opacity ease;
+  }
+  
+  #banner-wrapper {
+    top: calc(-1 * var(--bannerHeightExtend));
+    height: calc(var(--bannerHeight) + var(--bannerHeightExtend));
+  }
+
+  @media (max-width: 640px) {
+    #banner-wrapper {
+      top: calc(-1 * var(--bannerHeightExtendMobile));
+      height: calc(var(--bannerHeightMobile) + var(--bannerHeightExtendMobile));
+    }
+  }
+  
+  #banner-wrapper img {
+    transition: opacity 1s ease-in-out;
+  }
+</style>

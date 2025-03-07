@@ -319,10 +319,11 @@ const maxLevel = siteConfig.toc.depth;
                 document.querySelectorAll<HTMLAnchorElement>("#toc a[href^='#']")
             );
             
-            if (this.tocEntries.length === 0) {
-                console.warn("No TOC entries found during rebuild");
-                return;
-            }
+            // debugging that became annoying after a while
+            //if (this.tocEntries.length === 0) {
+            //    console.warn("No TOC entries found during rebuild");
+            //    return;
+            //}
     
             // Get all headings from the document
             const allHeadings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6'));
