@@ -7,7 +7,7 @@ featured: true
 order: 1
 ---
 
-# **Gregory Aster**
+## **Gregory Aster**
 ---
 
 - **Class:** Experimental Videographer & Cosmic Storyteller  
@@ -106,6 +106,6 @@ order: 1
 
 Looking to collaborate on storytelling ventures or explore the multiverse together?
 
-Contact: greg@dndiy.org
+Contact me!
 
 ---

@@ -8,6 +8,7 @@ module.exports = {
       fontFamily: {
         sans: ["Roboto", "sans-serif", ...defaultTheme.fontFamily.sans],
         sriracha: ["Sriracha", "cursive"],
+        "jetbrains-mono": ["JetBrains Mono", "monospace"],
       },
     },
   },

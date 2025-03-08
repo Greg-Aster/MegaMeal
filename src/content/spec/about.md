@@ -3,7 +3,7 @@ title: "About DNDIY"
 description: "Learn more about our project and team."
 ---
 
-# **Gregory Aster**
+## **Gregory Aster**
 ---
 
 - **Class:** Experimental Videographer & Cosmic Storyteller  
@@ -102,6 +102,6 @@ description: "Learn more about our project and team."
 
 Looking to collaborate on storytelling ventures or explore the multiverse together?
 
-Contact: greg@dndiy.org
+Contact below.
 
 ---
