@@ -1,4 +1,20 @@
-<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Greg Aster</title><description>Experimental Videographer &amp; Creator</description><link>https://dndiy.org/</link><language>en</language><item><title>Mega Meal Finally Explained</title><link>https://dndiy.org/posts/mega-meal-explained/</link><guid isPermaLink="true">https://dndiy.org/posts/mega-meal-explained/</guid><description>Why? Just why.</description><pubDate>Wed, 19 Feb 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;import CollapsibleScript from &apos;../../components/CollapsibleScript.astro&apos;;
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Greg Aster</title><description>Experimental Videographer &amp; Creator</description><link>https://dndiy.org/</link><language>en</language><item><title>Mega Meal #3 - Coming Soon!</title><link>https://dndiy.org/posts/mega-meal-3/</link><guid isPermaLink="true">https://dndiy.org/posts/mega-meal-3/</guid><description>We don&apos;t talk about episode #2.</description><pubDate>Wed, 05 Mar 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;&amp;lt;div class=&quot;font-jetbrains-mono pl-10 pr-10 Pm-10 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition shadow-lg mb-8 overflow-hidden relative&quot;&amp;gt;
+&amp;lt;h2 class=&quot;text-2xl font-bold mb-4&quot;&amp;gt;MEGA MEAL - Appendix A&amp;lt;/h2&amp;gt;
+&amp;lt;p class=&quot;italic&quot;&amp;gt;Excerpt from Galactic Time Scale B Historical Documents&amp;lt;/p&amp;gt;
+&amp;lt;p class=&quot;font-bold&quot;&amp;gt;Pre-Extinction Event&amp;lt;/p&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;blockquote class=&quot;mt-4 text-xl text-[oklch(0.35_0.05_var(--hue))] dark:text-[oklch(0.85_0.05_var(--hue))]&quot;&amp;gt;
+Immediately following the events on planet Qarnivore after the Spork Uprising.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Despite the incomplete transcript and unreliable nature of the narrator—there exists a single account of an encounter with the Snuggaloids that is of some scholarly interest.  
+
+Of particular note: the timeline between the emergence of the Snuggaloids and the extinction of the Qarnivores. It was previously assumed that there was no overlap between these two events. If this account is taken at face value and assumed correct, there may be some link between the two.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;lt;/blockquote&amp;gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;div class=&quot;mt-6 pb-4 text-right font-bold&quot;&amp;gt;
+— Professor Gastronomulus Z. Crumbfellow
+&amp;lt;/div&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;lt;/div&amp;gt;&lt;/p&gt;
+</content:encoded></item><item><title>Mega Meal Finally Explained</title><link>https://dndiy.org/posts/mega-meal-explained/</link><guid isPermaLink="true">https://dndiy.org/posts/mega-meal-explained/</guid><description>Why? Just why.</description><pubDate>Wed, 19 Feb 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;import CollapsibleScript from &apos;../../components/CollapsibleScript.astro&apos;;
 import ImageWrapper from &apos;../../components/misc/ImageWrapper.astro&apos;;&lt;/p&gt;
 &lt;p&gt;&amp;lt;CollapsibleScript /&amp;gt;&lt;/p&gt;
 &lt;p&gt;{/* YouTube Embed */}
@@ -431,7 +447,7 @@ className=&quot;w-full h-auto rounded-lg shadow-md object-contain brightness-100
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;&amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;&lt;/p&gt;
-</content:encoded></item><item><title>The Melancholy adventures of Steamboat Willie</title><link>https://dndiy.org/posts/the-melencholy-adventures-of-steamboat-willie/</link><guid isPermaLink="true">https://dndiy.org/posts/the-melencholy-adventures-of-steamboat-willie/</guid><description>A retrospective view on the project.</description><pubDate>Sat, 08 Feb 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;&amp;lt;iframe width=&quot;100%&quot; height=&quot;468&quot; src=&quot;https://www.youtube.com/embed/GS9bdSrCvfw?si=3-TWFDISeYHEQ7Bv&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; &quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen&amp;gt;&amp;lt;/iframe&amp;gt;&lt;/p&gt;
+</content:encoded></item><item><title>The Melancholy Adventures of Steamboat Willie</title><link>https://dndiy.org/posts/the-melencholy-adventures-of-steamboat-willie/</link><guid isPermaLink="true">https://dndiy.org/posts/the-melencholy-adventures-of-steamboat-willie/</guid><description>A retrospective view on the project.</description><pubDate>Sat, 08 Feb 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;&amp;lt;iframe width=&quot;100%&quot; height=&quot;468&quot; src=&quot;https://www.youtube.com/embed/GS9bdSrCvfw?si=3-TWFDISeYHEQ7Bv&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; &quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen&amp;gt;&amp;lt;/iframe&amp;gt;&lt;/p&gt;
 &lt;h3&gt;&lt;strong&gt;The Melancholy adventures of Steamboat Willie: A Retrospective on the Project&lt;/strong&gt;&lt;/h3&gt;
 &lt;h4&gt;&lt;strong&gt;Introduction&lt;/strong&gt;&lt;/h4&gt;
 &lt;p&gt;New and unique creative works often struggle to gain traction, while parodies or familiar characters tend to engage audiences more easily. This observation inspired the decision to update and colorize &lt;em&gt;Steamboat Willie&lt;/em&gt;, a cartoon that had just entered the public domain. The project became a blend of nostalgia, experimentation, and irony, offering an opportunity to explore creative editing and graphics techniques.&lt;/p&gt;
