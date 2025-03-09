@@ -77,11 +77,11 @@ export const navBarConfig: NavBarConfig = {
     LinkPreset.Community,
     LinkPreset.Archive,
     LinkPreset.About,
-    {
+/*     {
       name: 'YouTube',
       url: 'https://www.youtube.com/dndiy',
       external: true,
-    },
+    }, */
   ],
 }
 
