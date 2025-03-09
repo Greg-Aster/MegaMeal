@@ -14,7 +14,7 @@ export const siteConfig: SiteConfig = {
     hue: 200,
     fixed: false,
   },
-//banner is no longer needws but to keep the code from breaking I will keep it here
+//banner is no longer needed but to keep the code from breaking I will keep it here
   banner: {
     enable: true,
     src: '/assets/banner/0001.png',
@@ -38,9 +38,42 @@ export const siteConfig: SiteConfig = {
 ]
 }
 
+// In your config.ts file
 export const navBarConfig: NavBarConfig = {
   links: [
     LinkPreset.Home,
+    {
+      name: 'Projects',
+      url: '/archive/category/Projects/', // Main projects page
+      dropdown: [
+        {
+          name: 'Mega Meal',
+          url: 'https://www.youtube.com/playlist?list=PLLmfUsn8D20UZeZQHgXfn_m4Yv_zxTb2O',
+          external: true,
+        },
+        {
+          name: 'Various',
+          url: 'https://www.youtube.com/playlist?list=PLLmfUsn8D20UBMoTa_cT-rwJRkps-UmRR',
+          external: true,
+        },
+        {
+          name: 'Untilted Cosmic Horror',
+          url: 'https://youtu.be/IM0lMXFbPuw?feature=shared',
+          external: true,
+        },
+        {
+          name: 'Escape Earth',
+          url: 'https://youtu.be/YBo0yp5xe6k?feature=shared',
+          external: true,
+        },
+        {
+          name: 'DNDIY',
+          url: 'https://www.youtube.com/playlist?list=PLLmfUsn8D20VycbenIVhZm-ZhQTODXLit',
+          external: true,
+        },
+        // Add more dropdown items as needed
+      ]
+    },
     LinkPreset.Community,
     LinkPreset.Archive,
     LinkPreset.About,
@@ -51,6 +84,7 @@ export const navBarConfig: NavBarConfig = {
     },
   ],
 }
+
 export const profileConfig: ProfileConfig = {
   avatar: ''
   //[

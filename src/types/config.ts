@@ -39,12 +39,19 @@ export enum LinkPreset {
   Archive = 1,
   About = 2,
   Community = 3,
+  Projects = 4,
 }
 
+//extend NavBarLink type to support dropdown menus
 export type NavBarLink = {
   name: string
   url: string
   external?: boolean
+  dropdown?: {
+    name: string
+    url: string
+    external?: boolean
+  }[]
 }
 
 export type NavBarConfig = {
