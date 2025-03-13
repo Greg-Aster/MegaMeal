@@ -9,10 +9,11 @@ import { siteConfig } from '../config'
 import type { MarkdownHeading } from 'astro'
 import TOC from "../components/widget/TOC.astro";
 import ImageWrapper from "../components/misc/ImageWrapper.astro";
-import { Image } from 'astro:assets'; // Import the Image component
-import {BANNER_HEIGHT, BANNER_HEIGHT_MOBILE, BANNER_HEIGHT_EXTEND, BANNER_HEIGHT_EXTEND_MOBILE, MAIN_PANEL_OVERLAPS_BANNER_HEIGHT, MAIN_PANEL_OVERLAPS_BANNER_HEIGHT_MOBILE} from "../constants/constants";
+import { Image } from 'astro:assets';
+import path from 'node:path';
+import { getDir } from '../utils/url-utils';
 
-// Import your banner images
+// Import banner images
 import banner1 from '../assets/banner/0001.png';
 import banner2 from '../assets/banner/0007.png';
 import banner3 from '../assets/banner/0014.png';
@@ -21,7 +22,6 @@ import banner5 from '../assets/banner/0028.png';
 import banner6 from '../assets/banner/0035.png';
 import banner7 from '../assets/banner/0042.png';
 import banner8 from '../assets/banner/0049.png';
-
 
 interface Props {
   title?: string
@@ -33,29 +33,44 @@ interface Props {
   post?: any 
 }
 
-const { title, banner, description, lang, setOGTypeArticle, headings = [], post } = Astro.props
+// Update the Props destructuring in MainGridLayout.astro
+const { 
+  title, 
+  banner = siteConfig.banner.src, // Default to the site banner if none provided
+  description, 
+  lang, 
+  setOGTypeArticle, 
+  headings = [], 
+  post
+} = Astro.props
 
-const hasBannerCredit = siteConfig.banner.enable && siteConfig.banner.credit.enable
-const hasBannerLink = !!siteConfig.banner.credit.url 
+// Update the banner config to be more responsive
+const BANNER_HEIGHT = 50; // vh
+const BANNER_OVERLAP = 3.5; // rem
+const NAVBAR_HEIGHT = 4.5; // rem (72px ≈ 4.5rem at 16px base font size)
+const NAVBAR_HEIGHT_MOBILE = 3.5; // rem (56px ≈ 3.5rem)
 
-// Responsive positioning for main panel
-const mainPanelTop = siteConfig.banner.enable ? 
-  `calc(${BANNER_HEIGHT}vh - ${MAIN_PANEL_OVERLAPS_BANNER_HEIGHT}rem); 
-   @media (max-width: 767px) { calc(${BANNER_HEIGHT_MOBILE} - ${MAIN_PANEL_OVERLAPS_BANNER_HEIGHT_MOBILE} rem); }` : 
-  "5.5rem";
+// Check banner types
+const hasVideoBanner = post?.data?.bannerType === "video" && post?.data?.bannerData?.videoId;
+const hasImageBanner = post?.data?.image && !hasVideoBanner;
+const isPostWithBanner = hasVideoBanner || hasImageBanner;
+const isStandardPage = !isPostWithBanner;
 
-// Update your bannerList to use the imported images
+// Update the mainPanelTop calculation to be responsive
+const mainPanelTop = hasVideoBanner 
+  ? "0" // For video banner: no overlap needed
+  : hasImageBanner 
+    ? "calc(var(--navbar-height) + 1rem)" // For image banner: navbar + spacing
+    : `calc(${BANNER_HEIGHT}vh - ${BANNER_OVERLAP}rem)`; // For animated banner: allow overlap
+
+// Banner images list
 const bannerList = [
-  banner1,
-  banner2,
-  banner3,
-  banner4,
-  banner5,
-  banner6,
-  banner7,
-  banner8,
+  banner1, banner2, banner3, banner4, banner5, banner6, banner7, banner8
 ];
+
+const MAX_BANNER_WIDTH = 1920; // px
 ---
+
 <Layout 
   title={title} 
   banner={banner} 
@@ -64,78 +79,129 @@ const bannerList = [
   setOGTypeArticle={setOGTypeArticle}
   post={post} 
 >
+
   <!-- Navbar -->
   <slot slot="head" name="head"></slot>
-  <div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:px-4 mx-auto" class:list={[""]}>
+  <div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:px-4 mx-auto">
     <div id="navbar-wrapper" class="pointer-events-auto sticky top-0 transition-all">
       <Navbar></Navbar>
     </div>
   </div>
 
+<!-- Unified Banner Container - handles all banner types -->
+<div id="banner-container" 
+class={`z-10 w-full overflow-hidden transition-all duration-500 ${isStandardPage ? 'absolute h-[50vh]' : 'relative'}`} 
+style={isStandardPage 
+  ? '' 
+  : hasVideoBanner
+    ? 'margin-top: calc(var(--navbar-height) - 3.5rem);' // Less space for video banner
+    : 'margin-top: var(--navbar-height);' // Normal space for image banner
+}>
+
+<!-- Video Banner Content -->
+{hasVideoBanner && (
+  <div class="video-banner-content max-w-screen-2xl mx-auto px-4">
+    <div class="relative w-full pb-[56.25%] bg-black overflow-hidden shadow-lg rounded-lg">
+      <iframe
+        src={`https://www.youtube.com/embed/${post.data.bannerData.videoId}?autoplay=0&mute=0&controls=1`}
+        title="YouTube video player"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;"
+        allowfullscreen
+        class="absolute top-0 left-0 w-full h-full"
+      ></iframe>
+    </div>
+  </div>
+)}
+
+<!-- This section needs to ensure it always renders something -->
+{isStandardPage && (
+  <div class="animated-banner-content max-w-screen-2xl mx-auto h-full relative">
+   {bannerList.length > 0 ? bannerList.map((src, index) => (
+     <Image
+       src={src}
+       alt="Banner image"
+       width={1920} 
+       height={1080} 
+       class={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+       index === 0 ? 'opacity-100' : 'opacity-0'
+       }`}
+       loading={index === 0 ? 'eager' : 'lazy'}
+     />
+   )) : (
+     <!-- Fallback for empty banner list -->
+     <div class="w-full h-full bg-gradient-to-b from-[oklch(0.7_0.1_var(--hue))] to-[oklch(0.9_0.05_var(--hue))]"></div>
+   )}
+  </div>
+  )}
 <!-- Banner - Responsive version -->
 {siteConfig.banner.enable && 
-    <div id="banner-wrapper" class="absolute z-10 w-full transition duration-700 overflow-hidden">
-      <ImageWrapper 
-        id="banner" 
-        alt="Banner image of the blog" 
-        class="object-cover h-full w-full transition duration-700 opacity-100 scale-100 md:scale-105"
-        src={siteConfig.banner.src} 
-        position={siteConfig.banner.position}
-      />
-      </ImageWrapper>
-    </div>
-  }
-
-<!-- Main content -->
-<div class="absolute w-full z-30 pointer-events-none" style=`top: ${mainPanelTop}`>
-    <!-- The pointer-events-none here prevent blocking the click event of the TOC -->
-    <div class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto">
-        <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-[17.5rem_auto] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
-    mx-auto gap-4 px-0 md:px-4"
-        >
-            <!-- Banner image credit -->
-            {hasBannerCredit && <a href={siteConfig.banner.credit.url} id="banner-credit" target="_blank" rel="noopener" aria-label="Visit image source"
-                                   class:list={["group onload-animation transition-all absolute flex justify-center items-center rounded-full " +
-                                   "px-3 right-4 -top-[3.25rem] bg-black/60 hover:bg-black/70 h-9", {"hover:pr-9 active:bg-black/80": hasBannerLink}]}
-            >
-                <Icon class="text-white/75 text-[1.25rem] mr-1" name="material-symbols:copyright-outline-rounded" ></Icon>
-                <div class="text-white/75 text-xs">{siteConfig.banner.credit.text}</div>
-                <Icon class:list={["transition absolute text-[oklch(0.75_0.14_var(--hue))] right-4 text-[0.75rem] opacity-0",
-                    {"group-hover:opacity-100": hasBannerLink}]}
-                      name="fa6-solid:arrow-up-right-from-square">
-                </Icon>
-            </a>}
-
-
-            <SideBar class="mb-4 row-start-2 row-end-3 col-span-2 lg:row-start-1 lg:row-end-2 lg:col-span-1 lg:max-w-[17.5rem] onload-animation" headings={headings}></SideBar>
-
-            <main id="swup-container" class="transition-swup-fade col-span-2 lg:col-span-1 overflow-hidden">
-                <div id="content-wrapper" class="onload-animation">
-                    <!-- the overflow-hidden here prevent long text break the layout-->
-                    <!-- make id different from windows.swup global property -->
-                    <slot></slot>
-                    <div class="footer col-span-2 onload-animation hidden lg:block">
-                        <Footer></Footer>
-                    </div>
-                </div>
-            </main>
-
-            <div class="footer col-span-2 onload-animation block lg:hidden">
-                <Footer></Footer>
-            </div>
-        </div>
-
-        <BackToTop></BackToTop>
-    </div>
+  <div id="banner-wrapper" class="absolute z-10 w-full transition duration-700 overflow-hidden">
+    <ImageWrapper 
+      id="banner" 
+      alt="Banner image of the blog" 
+      class="object-cover h-full w-full transition duration-700 opacity-100 scale-100 md:scale-105"
+      src={siteConfig.banner.src} 
+      position={siteConfig.banner.position}
+    />
+    </ImageWrapper>
+  </div>
+}
+<!-- Animated Banner Content -->
+{isStandardPage && (
+<div class="animated-banner-content max-w-screen-2xl mx-auto h-full relative">
+ {bannerList.map((src, index) => (
+   <Image
+     src={src}
+     alt="Banner image"
+     width={1920} 
+     height={1080} 
+     class={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+     index === 0 ? 'opacity-100' : 'opacity-0'
+     }`}
+     loading={index === 0 ? 'eager' : 'lazy'}
+   />
+ ))}
+</div>
+)}
 </div>
 
-<!-- The things that should be under the banner, only the TOC for now -->
-<div class="absolute w-full z-0 hidden 2xl:block">
+<!-- Main content wrapper -->
+<div class={`w-full z-30 pointer-events-none ${isStandardPage ? 'absolute' : 'relative'}`} 
+style={isStandardPage 
+  ? `top: calc(${BANNER_HEIGHT}vh - ${BANNER_OVERLAP}rem);` 
+  : hasVideoBanner 
+    ? 'margin-top: 1.0rem;' // Smaller gap for video banner
+    : 'margin-top: 1rem;'}>
+<div class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto">
+<div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-[17.5rem_auto] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
+   mx-auto gap-4 px-0 md:px-4">
+   
+ <SideBar class="mb-4 row-start-2 row-end-3 col-span-2 lg:row-start-1 lg:row-end-2 lg:col-span-1 lg:max-w-[17.5rem] onload-animation" headings={headings}></SideBar>
+ 
+ <main id="main" class="transition-swup-fade col-span-2 lg:col-span-1 overflow-hidden">
+   <div id="main-content-wrapper" class="onload-animation">
+     <slot></slot>
+     <div class="footer col-span-2 onload-animation hidden lg:block">
+       <Footer></Footer>
+     </div>
+   </div>
+ </main>
+ 
+ <div class="footer col-span-2 onload-animation block lg:hidden">
+   <Footer></Footer>
+ </div>
+</div>
+
+<BackToTop></BackToTop>
+</div>
+</div>
+
+  <!-- The things that should be under the banner, only the TOC for now -->
+  <div class="absolute w-full z-0 hidden 2xl:block">
     <div class="relative max-w-[var(--page-width)] mx-auto">
         <!-- TOC component -->
-        {siteConfig.toc.enable && <div id="toc-wrapper" class:list={["hidden lg:block transition absolute top-0 -right-[var(--toc-width)] w-[var(--toc-width)] flex items-center",
-            {"toc-hide": siteConfig.banner.enable}]}
-        >
+        {siteConfig.toc.enable && <div id="toc-wrapper" class="hidden lg:block transition absolute top-0 -right-[var(--toc-width)] w-[var(--toc-width)] flex items-center toc-animated">
             <div id="toc-inner-wrapper" class="fixed top-14 w-[var(--toc-width)] h-[calc(100vh_-_20rem)] overflow-y-scroll overflow-x-hidden hide-scrollbar">
                 <div id="toc" class="w-full h-full transition-swup-fade ">
                     <div class="h-8 w-full"></div>
@@ -148,95 +214,201 @@ const bannerList = [
         <!-- #toc needs to exist for Swup to work normally -->
         {!siteConfig.toc.enable && <div id="toc"></div>}
     </div>
-</div>
+  </div>
 </Layout>
 
-<!-- Banner -->
-{siteConfig.banner.enable && (
-    <div id="banner-wrapper" class="absolute z-10 w-full h-[50vh] overflow-hidden">
-        {bannerList.map((src, index) => (
-        <Image
-            src={src}
-            alt="Banner image"
-            width={1280} 
-            height={720} 
-            class={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-            index === 0 ? 'opacity-100' : 'opacity-0'
-            }`}
-            loading={index === 0 ? 'eager' : 'lazy'}
-        />
-        ))}
-    </div>
-    )}
+
+<style define:vars={{ 
+  'banner-height': `${BANNER_HEIGHT}vh`, 
+  'banner-overlap': `${BANNER_OVERLAP}rem`,
+  'navbar-height': `${NAVBAR_HEIGHT}rem`,
+  'navbar-height-mobile': `${NAVBAR_HEIGHT_MOBILE}rem`
+}}>
+  /* Banner styles */
+  #banner-container, #animated-banner {
+    transition: height 0.5s ease-in-out;
+  }
+  
+  #banner-container.absolute, #animated-banner {
+    top: 0;
+    height: 50vh;
+  }
+  
+  /* Video banner specifics */
+  .video-banner-content {
+    width: 100%;
+  }
+  
+  /* Large screen handling */
+  @media (min-width: 1921px) {
+    .animated-banner-content:after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(to right, rgba(0,0,0,0.15), transparent 10%, transparent 90%, rgba(0,0,0,0.15));
+      z-index: 1;
+    }
+  }
+  
+  /* Mobile responsiveness */
+  @media (max-width: 768px) {
+    #banner-container.absolute, #animated-banner {
+      height: 30vh;
+    }
+    
+    .w-full.z-30.absolute {
+      top: calc(30vh - 2rem) !important;
+    }
+    
+    .video-banner-content, .image-banner-content {
+      padding: 0 0.5rem;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    #post-video-banner, #post-image-banner {
+      margin-top: 56px; /* Smaller navbar on mobile */
+    }
+  }
+
+  /* Animation styles */
+  .onload-animation {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  
+  .onload-animation.loaded {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  /* TOC styles */
+  .toc-animated {
+    transition: opacity 0.3s ease;
+  }
+  
+  .toc-hide {
+    opacity: 0;
+    pointer-events: none;
+  }
+</style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const bannerImages = document.querySelectorAll('#banner-wrapper img');
-      let currentIndex = 0;
-      let direction = 1; // 1 = downward, -1 = upward
+  document.addEventListener('DOMContentLoaded', () => {
+    // Update navbar height
+    updateNavbarHeight();
     
-      function animateBanner() {
-        // Get the next image index
-        const nextIndex = (currentIndex + direction) % bannerImages.length;
+    // Initialize animations
+    initializeAnimations();
     
-        // Ensure the next image is fully loaded before starting the transition
-        const nextImage = bannerImages[nextIndex] as HTMLImageElement;
-        const currentImage = bannerImages[currentIndex] as HTMLImageElement;
+    // Setup banner animation for standard pages
+    setupBannerAnimation();
     
-        // Preload the next image
-        const img = new Image();
-        img.src = nextImage.src;
-        img.onload = () => {
-          // Fade in the next image
-          nextImage.style.opacity = '1';
-    
-          // After a short delay, fade out the current image
-          setTimeout(() => {
-            currentImage.style.opacity = '0';
-          }, 100); // Adjust the delay as needed
-        };
-    
-        // Update currentIndex based on direction
-        currentIndex = nextIndex;
-    
-        // Reverse direction at boundaries
-        if (currentIndex >= bannerImages.length - 1) direction = -1;
-        if (currentIndex <= 0) direction = 1;
-      }
-    
-      // Start animation
-      setInterval(animateBanner, 5000); // Adjust timing as needed
+    // Set up event listeners
+    setupEventListeners();
+  });
+  
+  // Navbar height function
+  function updateNavbarHeight() {
+    const navbar = document.getElementById('navbar-wrapper');
+    if (navbar) {
+      const navbarHeight = navbar.offsetHeight;
+      document.documentElement.style.setProperty('--navbar-height', `${navbarHeight}px`);
+    }
+  }
+  
+  // Animation initialization
+  function initializeAnimations() {
+    const elements = document.querySelectorAll('.onload-animation');
+    elements.forEach((element, index) => {
+      setTimeout(() => {
+        element.classList.add('loaded');
+      }, 100 + (index * 50));
     });
-    </script>
     
-    <style define:vars={{ 
-        bannerHeight: `${BANNER_HEIGHT}vh`, 
-        bannerHeightMobile: `${BANNER_HEIGHT_MOBILE}vh`,
-        bannerHeightExtend: `${BANNER_HEIGHT_EXTEND}vh`,
-        bannerHeightExtendMobile: `${BANNER_HEIGHT_EXTEND_MOBILE}vh`
-      }}>
-        #banner-wrapper img {
-        transition: opacity 1s ease-in-out;
+    // Show post image if present
+    const postImage = document.getElementById('post-image');
+    if (postImage) {
+      setTimeout(() => {
+        postImage.classList.remove('opacity-0', 'scale-105');
+      }, 100);
+    }
+  }
+  
+  // Banner animation setup for standard pages
+  function setupBannerAnimation() {
+    const bannerContent = document.querySelector('.animated-banner-content');
+    if (!bannerContent) return;
+    
+    const bannerImages = bannerContent.querySelectorAll('img');
+    if (bannerImages.length === 0) return;
+    
+    let currentIndex = 0;
+    let direction = 1;
+    
+    function animateBanner() {
+      const nextIndex = (currentIndex + direction) % bannerImages.length;
+      const nextImage = bannerImages[nextIndex] as HTMLImageElement;
+      const currentImage = bannerImages[currentIndex] as HTMLImageElement;
+      
+      // Preload and fade
+      const img = new Image();
+      img.src = nextImage.src;
+      img.onload = () => {
+        nextImage.style.opacity = '1';
+        setTimeout(() => {
+          currentImage.style.opacity = '0';
+        }, 100);
+      };
+      
+      currentIndex = nextIndex;
+      
+      if (currentIndex >= bannerImages.length - 1) direction = -1;
+      if (currentIndex <= 0) direction = 1;
+    }
+    
+    setInterval(animateBanner, 5000);
+  }
+  
+  // Set up various event listeners
+  function setupEventListeners() {
+    // Handle TOC visibility on scroll
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const tocWrapper = document.querySelector('#toc-wrapper');
+      if (tocWrapper) {
+        if (scrollY > 300) {
+          tocWrapper.classList.remove('toc-hide');
+        } else {
+          tocWrapper.classList.add('toc-hide');
+        }
       }
-        #banner-wrapper {
-          top: calc(-1 * var(--bannerHeightExtend));
-          height: calc(var(--bannerHeight) + var(--bannerHeightExtend));
-        }
-      
-        @media (max-width: 640px) {
-          #banner-wrapper {
-            top: calc(1.1 * var(--bannerHeightExtendMobile));
-            height: calc(var(--bannerHeightMobile) + var(--bannerHeightExtendMobile));
-          }
-        }
-      
-        .main-panel {
-          top: var(--mainPanelTop);
-        }
-      
-        @media (max-width: 767px) {
-          .main-panel {
-            top: var(--mainPanelTopMobile);
-          }
-        }
-      </style>
+    });
+    
+    // Handle resize events
+    window.addEventListener('resize', updateNavbarHeight);
+  }
+  
+  // Swup transitions handler
+  function setupSwupTransitions() {
+    if (!window.swup?.hooks) return;
+    
+    window.swup.hooks.on('page:view', () => {
+      updateNavbarHeight();
+      initializeAnimations();
+      setupBannerAnimation();
+    });
+  }
+  
+  // Initialize Swup if available
+  if (window.swup?.hooks) {
+    setupSwupTransitions();
+  } else {
+    document.addEventListener('swup:enable', setupSwupTransitions);
+  }
+</script>
+  

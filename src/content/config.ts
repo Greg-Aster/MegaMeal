@@ -13,6 +13,12 @@ const postsCollection = defineCollection({
     category: z.string().optional().default(''),
     lang: z.string().optional().default(''),
     showImageOnPost: z.boolean().optional(),
+    
+    // New fields for video banner
+    bannerType: z.enum(['image', 'video']).optional(),
+    bannerData: z.object({
+      videoId: z.string()
+    }).optional(),
 
     /* For internal use */
     prevTitle: z.string().default(''),

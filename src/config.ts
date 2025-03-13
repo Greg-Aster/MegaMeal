@@ -16,11 +16,11 @@ export const siteConfig: SiteConfig = {
   },
 //banner is no longer needed but to keep the code from breaking I will keep it here
   banner: {
-    enable: true,
+    enable: false,
     src: '/assets/banner/0001.png',
     position: 'center',
     credit: {
-      enable: false,
+      enable: true,
       text: '',
       url: ''
     }

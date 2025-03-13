@@ -7,6 +7,7 @@ Notes -
 -Profile avatar image was orignally set in config.ts but is now set in Profile.astro.
 -code for banner is set in MainGridLayout.astro (needs fixing still also)
 -"dark Pages" are drafts with links
+- Swup hooks aka the interactive parts are currently only the toc,  the banner, theblog posts, and fullwidthbanner (inactive)
 
 Development and known bugs -
 

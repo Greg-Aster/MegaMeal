@@ -2,14 +2,17 @@
 title: The Melancholy Adventures of Steamboat Willie
 published: 2025-02-08
 description: 'A retrospective view on the project.'
-image: './The-Melencholy-Adventures-of-Steamboat-Willie/thumb.png'
+image: '/posts/The-Melencholy-Adventures-of-Steamboat-Willie/thumb.png'
 showImageOnPost: false
 tags: [Projects, Animation, Parody]
 category: 'Projects'
 draft: false 
 lang: ''
+bannerType: "video"
+bannerData: 
+  videoId: "GS9bdSrCvfw?si"
 ---
-<iframe width="100%" height="468" src="https://www.youtube.com/embed/GS9bdSrCvfw?si=3-TWFDISeYHEQ7Bv" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; " referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<!-- <iframe width="100%" height="468" src="https://www.youtube.com/embed/GS9bdSrCvfw?si=3-TWFDISeYHEQ7Bv" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; " referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe> -->
 
 ### **The Melancholy adventures of Steamboat Willie: A Retrospective on the Project**
 
