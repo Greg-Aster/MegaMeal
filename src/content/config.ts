@@ -15,10 +15,20 @@ const postsCollection = defineCollection({
     showImageOnPost: z.boolean().optional(),
     
     // New fields for video banner
-    bannerType: z.enum(['image', 'video']).optional(),
-    bannerData: z.object({
-      videoId: z.string()
-    }).optional(),
+  bannerType: z.enum(['image', 'video', 'timeline']).optional(),
+  bannerData: z.object({
+    videoId: z.string().optional(), // Change this from required to optional
+    category: z.string().optional(), // For timeline banners
+    startYear: z.number().optional(), // For timeline banners
+    endYear: z.number().optional(), // For timeline banners
+    background: z.string().optional(), // For timeline banners
+}).optional(),
+
+    // Timeline properties
+    timelineYear: z.number().optional(),
+    timelineEra: z.string().optional(),
+    timelineLocation: z.string().optional(),
+    isKeyEvent: z.boolean().optional(),
 
     /* For internal use */
     prevTitle: z.string().default(''),

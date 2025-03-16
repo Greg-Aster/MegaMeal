@@ -27,7 +27,7 @@ export const siteConfig: SiteConfig = {
   },
   toc: {
     enable: true,
-    depth: 2
+    depth: 3
   },
   favicon: [    // Leave this array empty to use the default favicon
     //{

@@ -80,17 +80,31 @@ export type LIGHT_DARK_MODE =
   | typeof DARK_MODE
   | typeof AUTO_MODE
 
-export type BlogPostData = {
-  body: string
-  title: string
-  published: Date
-  description: string
-  tags: string[]
-  draft?: boolean
-  image?: string
-  category?: string
-  prevTitle?: string
-  prevSlug?: string
-  nextTitle?: string
-  nextSlug?: string
-}
+  export type BlogPostData = {
+    body: string
+    title: string
+    published: Date
+    description: string
+    tags: string[]
+    draft?: boolean
+    image?: string
+    category?: string
+    prevTitle?: string
+    prevSlug?: string
+    nextTitle?: string
+    nextSlug?: string
+    // Timeline-specific fields
+    timelineYear?: string
+    timelineEra?: string
+    isKeyEvent?: boolean
+    timelineLocation?: string
+    // Banner configuration
+    bannerType?: 'image' | 'video' | 'timeline'
+    bannerData?: {
+      videoId?: string       // For video banners
+      category?: string      // For timeline banners
+      startYear?: number     // For timeline banners
+      endYear?: number       // For timeline banners
+      background?: string    // For timeline banners
+    }
+  }

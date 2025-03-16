@@ -21,3 +21,5 @@ Development and known bugs -
 *fixed - mdx file solution*3-1 toc widget does not work with html elements
 *fixed*3-2 numerous flow bug with toc widget
 * managed but not fixed* Memory usage rampant horror show
+
+*commented out css - strange bug at the end of timeline controller

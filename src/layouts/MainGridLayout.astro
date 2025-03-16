@@ -12,6 +12,9 @@ import ImageWrapper from "../components/misc/ImageWrapper.astro";
 import { Image } from 'astro:assets';
 import path from 'node:path';
 import { getDir } from '../utils/url-utils';
+import TimelineController from '../components/timeline/TimelineController.astro';
+import '../styles/timeline.css';
+
 
 // Import banner images
 import banner1 from '../assets/banner/0001.png';
@@ -51,9 +54,10 @@ const NAVBAR_HEIGHT = 4.5; // rem (72px ≈ 4.5rem at 16px base font size)
 const NAVBAR_HEIGHT_MOBILE = 3.5; // rem (56px ≈ 3.5rem)
 
 // Check banner types
+const hasTimelineBanner = post?.data?.bannerType === "timeline" && post?.data?.bannerData?.category;
 const hasVideoBanner = post?.data?.bannerType === "video" && post?.data?.bannerData?.videoId;
-const hasImageBanner = post?.data?.image && !hasVideoBanner;
-const isPostWithBanner = hasVideoBanner || hasImageBanner;
+const hasImageBanner = post?.data?.image && !hasVideoBanner && !hasTimelineBanner;
+const isPostWithBanner = hasVideoBanner || hasImageBanner || hasTimelineBanner;
 const isStandardPage = !isPostWithBanner;
 
 // Update the mainPanelTop calculation to be responsive
@@ -114,6 +118,27 @@ style={isStandardPage
   </div>
 )}
 
+{hasTimelineBanner && (
+  <div class="timeline-banner-content max-w-screen-2xl mx-auto px-0 py-0">
+    <div class="timeline-banner-container">
+      <div class="timeline-banner-inner">
+        <TimelineController 
+          title={post.data.bannerData.title || post.data.title}
+          category={post.data.bannerData.category}
+          startYear={post.data.bannerData.startYear}
+          endYear={post.data.bannerData.endYear}
+          background={post.data.bannerData.background || "/public/posts/timeline/universe.png"}
+          isCollapsed={false}
+          compact={post.data.bannerData.compact || false}
+          class="timeline-banner-controller"
+          asBanner={true}
+          bannerHeight={post.data.bannerData.height || "80vh"}
+        />
+      </div>
+    </div>
+  </div>
+)}
+
 <!-- This section needs to ensure it always renders something -->
 {isStandardPage && (
   <div class="animated-banner-content max-w-screen-2xl mx-auto h-full relative">
@@ -134,6 +159,7 @@ style={isStandardPage
    )}
   </div>
   )}
+  
 <!-- Banner - Responsive version -->
 {siteConfig.banner.enable && 
   <div id="banner-wrapper" class="absolute z-10 w-full transition duration-700 overflow-hidden">
@@ -274,6 +300,8 @@ style={isStandardPage
     }
   }
 
+  
+
   /* Animation styles */
   .onload-animation {
     opacity: 0;
@@ -411,4 +439,6 @@ style={isStandardPage
     document.addEventListener('swup:enable', setupSwupTransitions);
   }
 </script>
+
+
   

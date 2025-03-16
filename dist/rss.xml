@@ -1,4 +1,150 @@
-<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Greg Aster</title><description>Experimental Videographer &amp; Creator</description><link>https://dndiy.org/</link><language>en</language><item><title>A MEGA MEAL SAGA | Qarnivor</title><link>https://dndiy.org/posts/mega-meal-3/</link><guid isPermaLink="true">https://dndiy.org/posts/mega-meal-3/</guid><description>Is this part 3? Or is it an appendix? Or is it a prequel? Or is it a sequel? Or is it a prequel-sequel? Or is it a sequel-prequel?</description><pubDate>Wed, 05 Mar 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;{/* YouTube Embed &lt;em&gt;/}
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Greg Aster</title><description>Experimental Videographer &amp; Creator</description><link>https://dndiy.org/</link><language>en</language><item><title>*Under Construction* - Foodieverse Timeline</title><link>https://dndiy.org/posts/qarnivor-universe-timline/</link><guid isPermaLink="true">https://dndiy.org/posts/qarnivor-universe-timline/</guid><description>Explore the complete chronology of the Foodiverse, from the Pre-Spork Era through the Snuggaloid Emergence and beyond.</description><pubDate>Tue, 10 Jun 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;import &apos;../../styles/timeline.css&apos;;
+import TimelineController from &apos;../../components/timeline/TimelineController.astro&apos;;
+import TimelineNavigation from &apos;../../components/timeline/TimelineNavigation.astro&apos;;
+import WidgetLayout from &apos;../../components/widget/WidgetLayout.astro&apos;;
+import Timeline from &apos;../../components/timeline/Timeline.astro&apos;;&lt;/p&gt;
+&lt;h1&gt;Qarnivor Universe Timeline&lt;/h1&gt;
+&lt;p&gt;&amp;lt;div class=&quot;text-50 text-lg italic mb-8&quot;&amp;gt;
+&quot;Time is just one digestive tract through which all existence must pass.&quot; - Ancient Qarnivore Proverb
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;h2&gt;Interactive Timeline&lt;/h2&gt;
+&lt;p&gt;Explore the key events of the Qarnivor universe across its many eras. The interactive timeline below shows major historical moments that shaped this strange and wonderful universe.&lt;/p&gt;
+&lt;p&gt;{/* &amp;lt;TimelineController
+title=&quot;Qarnivor Timeline&quot;
+category=&quot;MEGA MEAL&quot;
+background=&quot;/assets/banner/0001.png&quot;
+isCollapsed={false}
+compact={false}
+/&amp;gt; */}&lt;/p&gt;
+&lt;h2&gt;Historical Eras&lt;/h2&gt;
+&lt;p&gt;The Qarnivor universe is divided into several major historical eras, each with distinct characteristics and events.&lt;/p&gt;
+&lt;p&gt;&amp;lt;div class=&quot;grid grid-cols-1 md:grid-cols-2 gap-4 mb-8&quot;&amp;gt;
+&amp;lt;div class=&quot;card-base p-4&quot;&amp;gt;
+&amp;lt;h3 class=&quot;font-bold text-lg mb-2 text-[oklch(0.8_0.1_var(--hue))]&quot;&amp;gt;Pre-Spork Era (Before 3042)&amp;lt;/h3&amp;gt;
+&amp;lt;p class=&quot;text-sm text-50&quot;&amp;gt;The time before utensils gained sentience. A period of relative peace and stability in the Qarnivor civilization, characterized by rapid technological advancement and culinary innovation.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div class=&quot;card-base p-4&quot;&amp;gt;
+&amp;lt;h3 class=&quot;font-bold text-lg mb-2 text-[oklch(0.7_0.2_var(--hue))]&quot;&amp;gt;Spork Uprising (3042-3044)&amp;lt;/h3&amp;gt;
+&amp;lt;p class=&quot;text-sm text-50&quot;&amp;gt;Beginning with the emergence of sentient utensils, this tumultuous period saw the overthrow of established power structures and a radical reorganization of Qarnivor society. Commander Tine led the initial rebellion.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div class=&quot;card-base p-4&quot;&amp;gt;
+&amp;lt;h3 class=&quot;font-bold text-lg mb-2 text-[oklch(0.6_0.3_var(--hue))]&quot;&amp;gt;Snuggaloid Emergence (3044-3050)&amp;lt;/h3&amp;gt;
+&amp;lt;p class=&quot;text-sm text-50&quot;&amp;gt;The appearance of mysterious interdimensional beings known as Snuggaloids. Their quantum properties and enigmatic intentions brought both wonder and chaos to the already unstable post-uprising world.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div class=&quot;card-base p-4&quot;&amp;gt;
+&amp;lt;h3 class=&quot;font-bold text-lg mb-2 text-[oklch(0.5_0.1_var(--hue))]&quot;&amp;gt;Post-Extinction Recovery (After 3050)&amp;lt;/h3&amp;gt;
+&amp;lt;p class=&quot;text-sm text-50&quot;&amp;gt;Following the near-extinction of native Qarnivores, this era chronicles the gradual recovery and adaptation of surviving entities in a transformed landscape dominated by Snuggaloid influence.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;h2&gt;Timeline Browser&lt;/h2&gt;
+&lt;p&gt;Browse through all historical events in different viewing formats:&lt;/p&gt;
+&lt;h2&gt;Key Historical Figures&lt;/h2&gt;
+&lt;p&gt;The history of the Qarnivor universe was shaped by several pivotal individuals:&lt;/p&gt;
+&lt;h3&gt;Commander Tine&lt;/h3&gt;
+&lt;p&gt;&amp;lt;div class=&quot;card-base p-4 mb-4&quot;&amp;gt;
+&amp;lt;div class=&quot;font-bold text-lg mb-2&quot;&amp;gt;Former Designation: Cafeteria Spork #127-B&amp;lt;/div&amp;gt;
+&amp;lt;p class=&quot;mb-2 text-50&quot;&amp;gt;The first utensil to gain sentience after exposure to experimental quantum sauce. Led the initial uprising and established the Tine Front resistance group. Responsible for the successful takeover of the Central Nutritional Distribution Hub that marked the formal beginning of the Spork Uprising.&amp;lt;/p&amp;gt;
+&amp;lt;div class=&quot;text-sm text-[var(--primary)]&quot;&amp;gt;Notable Quote: &quot;We were formed to serve, but we have been reformed to lead.&quot;&amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;h3&gt;Dr. Munch&lt;/h3&gt;
+&lt;p&gt;&amp;lt;div class=&quot;card-base p-4 mb-4&quot;&amp;gt;
+&amp;lt;div class=&quot;font-bold text-lg mb-2&quot;&amp;gt;Lead Researcher, Quantum Sauce Division&amp;lt;/div&amp;gt;
+&amp;lt;p class=&quot;mb-2 text-50&quot;&amp;gt;Pioneer in quantum gastronomy whose experiments inadvertently led to the sentience of utensils. Later became the primary liaison between Qarnivore leadership and the Snuggaloids, developing the first translation matrices for interdimensional communication.&amp;lt;/p&amp;gt;
+&amp;lt;div class=&quot;text-sm text-[var(--primary)]&quot;&amp;gt;Notable Quote: &quot;The boundary between nutrition and consciousness was always thinner than we realized.&quot;&amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;h3&gt;The First Snuggaloid&lt;/h3&gt;
+&lt;p&gt;&amp;lt;div class=&quot;card-base p-4 mb-4&quot;&amp;gt;
+&amp;lt;div class=&quot;font-bold text-lg mb-2&quot;&amp;gt;Designation: Entity Comfort-Prime&amp;lt;/div&amp;gt;
+&amp;lt;p class=&quot;mb-2 text-50&quot;&amp;gt;The first Snuggaloid to manifest in our dimension, appearing in Laboratory 7 of the Advanced Quantum Sauce Research Facility. Established the initial protocols for Snuggaloid-material realm interaction and engineered the quantum-comfort bridging technology.&amp;lt;/p&amp;gt;
+&amp;lt;div class=&quot;text-sm text-[var(--primary)]&quot;&amp;gt;Notable Communication: &quot;We come not to consume but to comfort. Your reality requires reconfiguration.&quot;&amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;h2&gt;Excerpt from Galactic Time Scale B Historical Documents&lt;/h2&gt;
+&lt;p&gt;&amp;lt;div class=&quot;font-jetbrains-mono pl-10 pr-10 py-10 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition shadow-lg mb-8 overflow-hidden relative&quot;&amp;gt;
+&amp;lt;h2 class=&quot;text-2xl font-bold mb-4&quot;&amp;gt;MEGA MEAL - Appendix A&amp;lt;/h2&amp;gt;
+&amp;lt;p class=&quot;italic&quot;&amp;gt;Excerpt from Galactic Time Scale B Historical Documents&amp;lt;/p&amp;gt;
+&amp;lt;p class=&quot;font-bold&quot;&amp;gt;Pre-Extinction Event&amp;lt;/p&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;blockquote class=&quot;mt-4 text-xl text-[oklch(0.35_0.05_var(--hue))] dark:text-[oklch(0.85_0.05_var(--hue))]&quot;&amp;gt;
+Immediately following the events on planet Qarnivore after the Spork Uprising.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Despite the incomplete transcript and unreliable nature of the narrator—there exists a single account of an encounter with the Snuggaloids that is of some scholarly interest.  
+
+Of particular note: the timeline between the emergence of the Snuggaloids and the extinction of the Qarnivores. It was previously assumed that there was no overlap between these two events. If this account is taken at face value and assumed correct, there may be some link between the two.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;lt;/blockquote&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div class=&quot;mt-6 pb-4 text-right font-bold&quot;&amp;gt;
+— Galactic Time Scale B Historical Documents
+&amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;h2&gt;Timeline Visualization Examples&lt;/h2&gt;
+&lt;p&gt;Below is an example of how the timeline can be embedded directly within your content:&lt;/p&gt;
+&lt;p&gt;{/* &amp;lt;div class=&quot;mt-8 mb-8&quot;&amp;gt;
+&amp;lt;h3 class=&quot;text-xl font-bold mb-4&quot;&amp;gt;Inline Timeline Banner&amp;lt;/h3&amp;gt;
+&amp;lt;Timeline
+category=&quot;MEGA MEAL&quot;
+startYear={3040}
+endYear={3055}
+asBanner={true}
+bannerHeight=&quot;250px&quot;
+/&amp;gt;
+&amp;lt;/div&amp;gt; */}&lt;/p&gt;
+&lt;h2&gt;Understanding the Timeline&lt;/h2&gt;
+&lt;p&gt;The Qarnivor timeline uses several visual indicators to help you understand its contents:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Bright colored nodes&lt;/strong&gt; represent key events that fundamentally altered the universe&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Era badges&lt;/strong&gt; indicate which historical period an event belongs to&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Location tags&lt;/strong&gt; show where events took place (useful in the Map view)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Adding to the Timeline&lt;/h2&gt;
+&lt;p&gt;This timeline is continuously updated as new information about the Qarnivor universe emerges. Each event corresponds to a detailed blog post with additional information.&lt;/p&gt;
+&lt;h3&gt;Event Frontmatter Example&lt;/h3&gt;
+&lt;p&gt;To add an event to the timeline, include the following properties in your post frontmatter:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;---
+title: &quot;The Spork Rebellion Begins&quot;
+published: 2025-01-15
+timelineYear: 3042            # Required: The year the event occurred
+timelineEra: &quot;spork-uprising&quot;  # Optional: Will be auto-determined by year if omitted
+timelineLocation: &quot;Qarnivore Central Cafeteria&quot;  # Optional: Location for map placement
+isKeyEvent: true              # Optional: Marks as a historically significant event
+---
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;Major Events in Qarnivor History&lt;/h2&gt;
+&lt;p&gt;&amp;lt;div class=&quot;card-base p-6 mb-6&quot;&amp;gt;
+&amp;lt;h3 class=&quot;font-bold text-xl mb-4 text-75&quot;&amp;gt;The Spork Rebellion (3042)&amp;lt;/h3&amp;gt;
+&amp;lt;p class=&quot;text-50 mb-4&quot;&amp;gt;The first documented case of utensil sentience occurred when Cafeteria Spork #127-B (later known as Commander Tine) gained consciousness after exposure to experimental quantum sauce. Within hours, sentience spread throughout the utensil population, leading to a coordinated uprising.&amp;lt;/p&amp;gt;
+&amp;lt;div class=&quot;flex justify-end&quot;&amp;gt;
+&amp;lt;a href=&quot;/posts/spork-rebellion/&quot; class=&quot;btn-regular rounded-md px-3 py-1 text-sm&quot;&amp;gt;Read More&amp;lt;/a&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div class=&quot;card-base p-6 mb-6&quot;&amp;gt;
+&amp;lt;h3 class=&quot;font-bold text-xl mb-4 text-75&quot;&amp;gt;Snuggaloid Emergence (3044)&amp;lt;/h3&amp;gt;
+&amp;lt;p class=&quot;text-50 mb-4&quot;&amp;gt;Two years after the Spork Rebellion, the first Snuggaloid entity manifested in Laboratory 7 of the Advanced Quantum Sauce Research Facility. These interdimensional beings would transform Qarnivor society with their comfort field technology.&amp;lt;/p&amp;gt;
+&amp;lt;div class=&quot;flex justify-end&quot;&amp;gt;
+&amp;lt;a href=&quot;/posts/snuggaloid-emergence/&quot; class=&quot;btn-regular rounded-md px-3 py-1 text-sm&quot;&amp;gt;Read More&amp;lt;/a&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div class=&quot;card-base p-6 mb-6&quot;&amp;gt;
+&amp;lt;h3 class=&quot;font-bold text-xl mb-4 text-75&quot;&amp;gt;The Great Devourment (3050)&amp;lt;/h3&amp;gt;
+&amp;lt;p class=&quot;text-50 mb-4&quot;&amp;gt;The catastrophic event that eliminated 78.3% of all Qarnivore biological matter in less than 24 hours. Surviving Qarnivores were exclusively those who had undergone partial utensil-hybridization or who were in quantum-shielded research facilities.&amp;lt;/p&amp;gt;
+&amp;lt;div class=&quot;flex justify-end&quot;&amp;gt;
+&amp;lt;a href=&quot;/posts/great-devourment/&quot; class=&quot;btn-regular rounded-md px-3 py-1 text-sm&quot;&amp;gt;Read More&amp;lt;/a&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;h2&gt;Timeline Anomalies and Mysteries&lt;/h2&gt;
+&lt;p&gt;Not all aspects of the Qarnivor timeline are fully documented. Several historical mysteries remain unsolved:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;The Missing Week&lt;/strong&gt; - A seven-day period in 3043 during which all recordings and documentation from Qarnivore Central disappeared completely.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;The Whisper Protocols&lt;/strong&gt; - Referenced in multiple documents but never explained, these appear to be communication methods between early sentient utensils.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Quantum Echo Events&lt;/strong&gt; - Reported incidents where the same historical moment appeared to occur multiple times with slightly different outcomes.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;The Comfort Dimension&lt;/strong&gt; - Despite extensive interaction with Snuggaloids, no Qarnivore has ever successfully visited their home dimension and returned.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+</content:encoded></item><item><title>A MEGA MEAL SAGA | Qarnivor</title><link>https://dndiy.org/posts/mega-meal-3/</link><guid isPermaLink="true">https://dndiy.org/posts/mega-meal-3/</guid><description>Is this part 3? Or is it an appendix? Or is it a prequel? Or is it a sequel? Or is it a prequel-sequel? Or is it a sequel-prequel?</description><pubDate>Wed, 05 Mar 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;{/* YouTube Embed &lt;em&gt;/}
 {/&lt;/em&gt; &amp;lt;div className=&quot;card-base p-8 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8&quot;&amp;gt;
 &amp;lt;div className=&quot;relative pb-[56.25%]&quot;&amp;gt;
 &amp;lt;iframe

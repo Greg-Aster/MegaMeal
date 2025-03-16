@@ -1,0 +1,19 @@
+---
+import MainGridLayout from '../../layouts/MainGridLayout.astro';
+---
+
+<MainGridLayout title="Timeline Test Page">
+  <div class="card-base p-8">
+    <h1 class="text-3xl font-bold mb-4">Timeline Test Page</h1>
+    <p class="mb-4">This is a test page to verify routing is working correctly.</p>
+    
+    <div class="flex gap-4 mt-8">
+      <a href="/timeline" class="btn-regular rounded-md px-4 py-2">
+        Go to Timeline Index
+      </a>
+      <a href="/timeline/mega-meal" class="btn-regular rounded-md px-4 py-2">
+        Go to MEGA MEAL Timeline
+      </a>
+    </div>
+  </div>
+</MainGridLayout>

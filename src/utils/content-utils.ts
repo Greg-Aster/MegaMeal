@@ -3,12 +3,13 @@ import type { BlogPostData } from '@/types/config'
 import I18nKey from '@i18n/i18nKey'
 import { i18n } from '@i18n/translation'
 
-export async function getSortedPosts(): Promise<
+export async function getSortedPosts(includeDrafts = false): Promise<
   { body: string, data: BlogPostData; slug: string }[]
 > {
   const allBlogPosts = (await getCollection('posts', ({ data }) => {
-  //  return import.meta.env.PROD ? data.draft !== true : true;  developer mode show droft posts
-  return data.draft !== true; // Always exclude drafts
+    // If includeDrafts is true, include all posts regardless of draft status
+    // Otherwise, only include non-draft posts
+    return includeDrafts ? true : data.draft !== true;
   })) as unknown as { body: string, data: BlogPostData; slug: string }[];
 
   const sorted = allBlogPosts.sort(
@@ -19,6 +20,7 @@ export async function getSortedPosts(): Promise<
     },
   )
 
+  // Continue with setting up next/prev links
   for (let i = 1; i < sorted.length; i++) {
     sorted[i].data.nextSlug = sorted[i - 1].slug
     sorted[i].data.nextTitle = sorted[i - 1].data.title

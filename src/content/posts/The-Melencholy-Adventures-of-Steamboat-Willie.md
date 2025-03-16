@@ -5,7 +5,7 @@ description: 'A retrospective view on the project.'
 image: '/posts/The-Melencholy-Adventures-of-Steamboat-Willie/thumb.png'
 showImageOnPost: false
 tags: [Projects, Animation, Parody]
-category: 'Projects'
+category: 'Various Projects'
 draft: false 
 lang: ''
 bannerType: "video"
