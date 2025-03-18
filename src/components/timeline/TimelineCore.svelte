@@ -21,8 +21,6 @@
   let containerWidth: number = 0;
   let containerHeight: number = 0;
   let padding = 15; // percentage padding on timeline edges
-  let isMobile = false;
-  let isRotated = false;
   
   // Svelte store for animated values
   const scale = tweened(1, {
@@ -39,27 +37,6 @@
   });
   
   const dispatch = createEventDispatcher();
-
-  // Helper function to handle transformations for the rotated view
-  function updateTransformStyles() {
-    if (!timelineContainer) return;
-    
-    // Check if we're on mobile
-    isMobile = window.innerWidth <= 768;
-    isRotated = isMobile;
-    
-    // Set CSS variables for transform
-    timelineContainer.style.setProperty('--scale', $scale.toString());
-    timelineContainer.style.setProperty('--offset-x', `${$offsetX/$scale}px`);
-    timelineContainer.style.setProperty('--offset-y', `${$offsetY/$scale}px`);
-    
-    // Add class to indicate rotation state
-    if (isRotated) {
-      timelineContainer.classList.add('rotated');
-    } else {
-      timelineContainer.classList.remove('rotated');
-    }
-  }
   
   // Calculate actual time range from events
   $: {
@@ -204,46 +181,6 @@
         }
       }
     });
-    
-    // Add tap handlers for mobile
-    timelineContainer.addEventListener('touchend', (e) => {
-      if (isDragging) {
-        // If we were dragging, don't trigger tap
-        if (Math.abs(e.changedTouches[0].clientX - startDragX) > 10 || 
-            Math.abs(e.changedTouches[0].clientY - startDragY) > 10) {
-          return;
-        }
-      }
-      
-      const target = e.target as HTMLElement;
-      const eventNode = target.closest('.event-node');
-      
-      if (eventNode) {
-        const slug = eventNode.getAttribute('data-slug');
-        if (!slug) return;
-        
-        // Find the corresponding event
-        const event = events.find(evt => evt.slug === slug);
-        if (!event) return;
-        
-        console.log("Touch on event:", event.title);
-        
-        // If already selected, navigate to post
-        if (selectedEvent && selectedEvent.slug === slug) {
-          window.location.href = `/posts/${slug}/`;
-        } else {
-          // Otherwise, select this event
-          selectedEvent = event;
-          dispatch('select', { event });
-          
-          // Update UI to reflect selection
-          updateSelectionState();
-        }
-        
-        // Prevent default to avoid unintended interactions
-        e.preventDefault();
-      }
-    });
   }
   
   // Update DOM to reflect selection state
@@ -359,17 +296,8 @@
     const deltaX = e.clientX - startDragX;
     const deltaY = e.clientY - startDragY;
     
-    // Swap X and Y axes for rotated view
-    if (isRotated) {
-      offsetX.set(startOffsetX + deltaY);
-      offsetY.set(startOffsetY - deltaX);
-    } else {
-      offsetX.set(startOffsetX + deltaX);
-      offsetY.set(startOffsetY + deltaY);
-    }
-    
-    // Update the CSS variables
-    updateTransformStyles();
+    offsetX.set(startOffsetX + deltaX);
+    offsetY.set(startOffsetY + deltaY);
   }
   
   function endDrag() {
@@ -384,88 +312,11 @@
     }
   }
   
-  // Touch event handling for mobile
-  function startTouchDrag(e: TouchEvent) {
-    // Ignore touch events that start on event elements
-    if ((e.target as HTMLElement).closest('.event-node')) {
-      return;
-    }
-    
-    isDragging = true;
-    startDragX = e.touches[0].clientX;
-    startDragY = e.touches[0].clientY;
-    startOffsetX = $offsetX;
-    startOffsetY = $offsetY;
-    
-    // Add class for styling
-    if (timelineContainer) {
-      timelineContainer.classList.add('dragging');
-    }
-  }
-  
-  function touchDrag(e: TouchEvent) {
-    if (!isDragging) return;
-    
-    const deltaX = e.touches[0].clientX - startDragX;
-    const deltaY = e.touches[0].clientY - startDragY;
-    
-    // Swap X and Y axes for rotated view
-    if (isRotated) {
-      offsetX.set(startOffsetX + deltaY);
-      offsetY.set(startOffsetY - deltaX);
-    } else {
-      offsetX.set(startOffsetX + deltaX);
-      offsetY.set(startOffsetY + deltaY);
-    }
-    
-    // Update the CSS variables
-    updateTransformStyles();
-    
-    // Prevent default to stop page scrolling when dragging the timeline
-    if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
-      e.preventDefault();
-    }
-  }
-  
-  function endTouchDrag() {
-    if (!isDragging) return;
-    
-    isDragging = false;
-    
-    // Remove dragging class
-    if (timelineContainer) {
-      timelineContainer.classList.remove('dragging');
-    }
-  }
-  
   // Set up and tear down event listeners
   onMount(() => {
     if (timelineContainer) {
       // Set up direct DOM event handlers
       setupDirectEventHandlers();
-      
-      // Add touch event handlers
-      timelineContainer.addEventListener('touchstart', startTouchDrag, { passive: true });
-      timelineContainer.addEventListener('touchmove', touchDrag, { passive: false });
-      timelineContainer.addEventListener('touchend', endTouchDrag);
-      
-      // Add CSS classes for vertical orientation
-      if (window.innerWidth <= 768) {
-        timelineContainer.classList.add('rotated');
-        isRotated = true;
-        
-        // Center horizontally for the vertical timeline
-        offsetX.set(0);
-        offsetY.set(0);
-        scale.set(0.7);
-        
-        // Add class to parent container
-        const viewport = timelineContainer.closest('.timeline-viewport');
-        if (viewport) viewport.classList.add('vertical-timeline');
-      }
-      
-      // Call to initialize transform styles
-      updateTransformStyles();
     }
     
     // Attach global mouse event handlers
@@ -477,11 +328,6 @@
     
     // Handle resize events
     window.addEventListener('resize', handleResize);
-    
-    // Reset zoom level for mobile
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      scale.set(0.8); // Slightly zoomed out on mobile for better viewing
-    }
     
     // Expose the control functions to the global scope
     if (typeof window !== 'undefined') {
@@ -496,12 +342,6 @@
       window.removeEventListener('mousemove', drag);
       window.removeEventListener('mouseup', endDrag);
       window.removeEventListener('resize', handleResize);
-      
-      if (timelineContainer) {
-        timelineContainer.removeEventListener('touchstart', startTouchDrag);
-        timelineContainer.removeEventListener('touchmove', touchDrag);
-        timelineContainer.removeEventListener('touchend', endTouchDrag);
-      }
     };
   });
   
@@ -510,18 +350,6 @@
     if (timelineContainer) {
       containerWidth = timelineContainer.offsetWidth;
       containerHeight = timelineContainer.offsetHeight;
-      
-      // Update rotation state
-      isMobile = window.innerWidth <= 768;
-      isRotated = isMobile;
-      
-      // Apply rotation adjustments
-      updateTransformStyles();
-      
-      // Adjust scale for mobile if needed
-      if (isMobile && $scale > 1) {
-        scale.set(0.7); // Slightly zoomed out on mobile for better viewing
-      }
     }
   }
   
@@ -534,39 +362,22 @@
   // Update functions exposed to parent components
   export function zoomIn() {
     scale.update(s => Math.min(5, s + 0.2));
-    updateTransformStyles();
   }
   
   export function zoomOut() {
     scale.update(s => Math.max(0.5, s - 0.2));
-    updateTransformStyles();
   }
   
   export function resetView() {
-    // Use different scale for mobile
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      scale.set(0.7);
-    } else {
-      scale.set(1);
-    }
+    scale.set(1);
     offsetX.set(0);
     offsetY.set(0);
     selectedEvent = null;
-    updateTransformStyles();
   }
   
   export function pan(deltaX: number, deltaY: number) {
-    if (isRotated) {
-      // Swap axes for the rotated view
-      offsetX.update(x => x + deltaY);
-      offsetY.update(y => y - deltaX);
-    } else {
-      offsetX.update(x => x + deltaX);
-      offsetY.update(y => y + deltaY);
-    }
-    
-    // Update transform styles
-    updateTransformStyles();
+    offsetX.update(x => x + deltaX);
+    offsetY.update(y => y + deltaY);
   }
 </script>
 
@@ -612,22 +423,11 @@
        style="transform: scale({$scale}) translate({$offsetX/$scale}px, {$offsetY/$scale}px);">
     
     <!-- Center line -->
-    <div 
-      class="timeline-center-line absolute left-0 right-0 h-0.5 top-1/2 -translate-y-1/2 bg-[var(--primary)] opacity-20"
-      aria-hidden="true"
-    ></div>
+    <div class="absolute left-0 right-0 h-0.5 top-1/2 -translate-y-1/2 bg-[var(--primary)] opacity-20"></div>
     
     <!-- Year markers -->
-    <div 
-      class="timeline-year-marker absolute top-1/2 -translate-y-1/2 w-0.5 h-3 bg-[var(--primary)] opacity-30" 
-      style="left: {padding}%"
-      aria-hidden="true"
-    ></div>
-    <div 
-      class="timeline-year-marker absolute top-1/2 -translate-y-1/2 w-0.5 h-3 bg-[var(--primary)] opacity-30" 
-      style="left: {100 - padding}%"
-      aria-hidden="true"
-    ></div>
+    <div class="absolute top-1/2 -translate-y-1/2 w-0.5 h-3 bg-[var(--primary)] opacity-30" style="left: {padding}%"></div>
+    <div class="absolute top-1/2 -translate-y-1/2 w-0.5 h-3 bg-[var(--primary)] opacity-30" style="left: {100 - padding}%"></div>
 
     <!-- Events -->
     {#each eventPositions as { event, horizontalPosition, verticalPosition }, i}
@@ -666,10 +466,10 @@
     
     <!-- Era labels -->
     {#if events.length > 0}
-      <div class="timeline-year-label absolute top-0 left-[15%] p-2 text-lg font-bold text-75">
+      <div class="absolute top-0 left-[15%] p-2 text-lg font-bold text-75">
         {startYear}
       </div>
-      <div class="timeline-year-label absolute top-0 right-[15%] p-2 text-lg font-bold text-75">
+      <div class="absolute top-0 right-[15%] p-2 text-lg font-bold text-75">
         {endYear}
       </div>
     {/if}
@@ -741,14 +541,11 @@
     100% { opacity: 0.3; }
   }
   
-  /* Optimize for mobile */
-  @media (max-width: 768px) {
-    .card-base {
-      min-height: 300px;
+  /* Mobile optimization */
+/*   @media (max-width: 768px) {
+    .compact-mode :global(.timeline-card) {
+      width: 150px !important;
+      padding: 0.5rem !important;
     }
-    
-    .timeline-event {
-      pointer-events: auto !important;
-    }
-  }
+  } */
 </style>
