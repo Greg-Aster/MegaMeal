@@ -466,35 +466,6 @@
       
       // Call to initialize transform styles
       updateTransformStyles();
-      
-      // Performance optimizations for mobile
-      if (typeof window !== 'undefined' && window.innerWidth <= 768) {
-        // Reduce animations when on mobile
-        document.documentElement.classList.add('reduce-motion');
-        
-        // Simplify background effects for better performance
-        const starfieldEffect = timelineContainer?.parentElement?.querySelector('.absolute.inset-0:nth-child(2)');
-        if (starfieldEffect) {
-          starfieldEffect.style.opacity = '0.15'; // Reduce opacity for better performance
-        }
-        
-        // Use more performant transform approach on mobile
-        timelineContainer.style.willChange = 'transform';
-        
-        // Limit the number of visible events on very small/slow devices
-        if (window.innerWidth < 480 && events.length > 15) {
-          // Only show key events on very small devices
-          const keyEvents = events.filter(event => event.isKeyEvent);
-          if (keyEvents.length > 0) {
-            console.log(`Limiting visible events from ${events.length} to ${keyEvents.length} key events for performance`);
-            events = keyEvents;
-          } else {
-            // If no key events, just show a subset
-            console.log(`Limiting visible events from ${events.length} to 15 for performance`);
-            events = events.slice(0, 15);
-          }
-        }
-      }
     }
     
     // Attach global mouse event handlers
@@ -509,7 +480,7 @@
     
     // Reset zoom level for mobile
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      scale.set(0.7); // Slightly zoomed out on mobile for better viewing
+      scale.set(0.8); // Slightly zoomed out on mobile for better viewing
     }
     
     // Expose the control functions to the global scope

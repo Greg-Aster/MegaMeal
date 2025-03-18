@@ -93,10 +93,6 @@ const desktopHeight = bannerHeight || "500px";
 </div>
 
 <script>
-  // Add more robust error handling for mobile
-  let mobileLoadAttempts = 0;
-  const MAX_LOAD_ATTEMPTS = 3;
-  
   // Handle initial load
   document.addEventListener('DOMContentLoaded', initTimelines);
   
@@ -113,108 +109,34 @@ const desktopHeight = bannerHeight || "500px";
     }
   });
   
-  // Handle initial load with better error recovery
+  // Ensure all timelines are properly initialized and visible
   function initTimelines() {
-    console.log("Initializing timelines");
-    
     // Find all timeline banners and initialize if needed
     document.querySelectorAll('.timeline-banner').forEach(banner => {
-      try {
-        const id = banner.id;
-        console.log(`Initializing timeline: ${id}`);
-        
-        // Make sure the banner is visible with a fallback display
-        banner.style.display = 'flex';
-        banner.style.flexDirection = 'column';
-        banner.style.visibility = 'visible';
-        banner.style.opacity = '1';
-        
-        // Set appropriate height based on viewport
-        const isMobile = window.innerWidth <= 768;
-        const height = isMobile 
-          ? banner.style.getPropertyValue('--mobile-height') || '600px'
-          : banner.style.getPropertyValue('--desktop-height') || '500px';
-        
-        banner.style.minHeight = height;
-        
-        // Check if banner content is loaded
-        const controller = banner.querySelector('.flex.flex-col');
-        if (!controller && mobileLoadAttempts < MAX_LOAD_ATTEMPTS) {
-          console.log(`Timeline controller not found in ${id}, retrying...`);
-          mobileLoadAttempts++;
-          
-          // Create a fallback display while we wait
-          if (!banner.querySelector('.timeline-fallback')) {
-            const fallback = document.createElement('div');
-            fallback.className = 'timeline-fallback';
-            fallback.innerHTML = `
-              <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 2rem; text-align: center;">
-                <div style="margin-bottom: 1rem; font-weight: bold;">Loading Timeline...</div>
-                <div style="width: 40px; height: 40px; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: var(--primary, #6366f1); animation: spin 1s linear infinite;"></div>
-              </div>
-              <style>
-                @keyframes spin {
-                  to { transform: rotate(360deg); }
-                }
-              </style>
-            `;
-            banner.appendChild(fallback);
-          }
-          
-          // Try again after a short delay
-          setTimeout(() => {
-            initTimelines();
-          }, 500);
-          return;
-        }
-        
-        // Mark as initialized
-        banner.setAttribute('data-initialized', 'true');
-        
-        // Force a layout update
-        setTimeout(() => {
-          try {
-            window.dispatchEvent(new Event('resize'));
-            banner.dispatchEvent(new CustomEvent('timeline:resize'));
-            console.log(`Timeline ${id} initialized successfully`);
-          } catch (error) {
-            console.error(`Error during timeline layout update: ${error.message}`);
-          }
-        }, 100);
-      } catch (error) {
-        console.error(`Error initializing timeline: ${error.message}`);
-        // Create a basic fallback content
-        createFallbackTimeline(banner);
-      }
-    });
-  }
-  
-  // Create a simple fallback when timeline fails to load
-  function createFallbackTimeline(banner) {
-    // Check if we already have a fallback
-    if (banner.querySelector('.timeline-fallback-permanent')) return;
-    
-    // Clear the banner
-    banner.innerHTML = '';
-    
-    // Create a minimal fallback that at least shows something
-    const fallback = document.createElement('div');
-    fallback.className = 'timeline-fallback-permanent';
-    fallback.innerHTML = `
-      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 2rem; text-align: center;">
-        <div style="margin-bottom: 1rem; font-weight: bold;">Timeline</div>
-        <div style="margin-bottom: 2rem;">Unable to load interactive timeline on this device.</div>
-        <button id="reload-timeline" style="padding: 0.5rem 1rem; background: var(--primary, #6366f1); color: white; border: none; border-radius: 0.375rem;">
-          Reload Timeline
-        </button>
-      </div>
-    `;
-    banner.appendChild(fallback);
-    
-    // Add reload handler
-    document.getElementById('reload-timeline')?.addEventListener('click', () => {
-      mobileLoadAttempts = 0;
-      window.location.reload();
+      const id = banner.id;
+      
+      // Make sure the banner is visible
+      banner.style.display = 'flex';
+      banner.style.flexDirection = 'column';
+      banner.style.visibility = 'visible';
+      banner.style.opacity = '1';
+      
+      // Set appropriate height based on viewport
+      const isMobile = window.innerWidth <= 768;
+      const height = isMobile 
+        ? banner.style.getPropertyValue('--mobile-height') || '600px'
+        : banner.style.getPropertyValue('--desktop-height') || '500px';
+      
+      banner.style.minHeight = height;
+      
+      // Mark as initialized
+      banner.setAttribute('data-initialized', 'true');
+      
+      // Force a layout update
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+        banner.dispatchEvent(new CustomEvent('timeline:resize'));
+      }, 100);
     });
   }
   
@@ -228,13 +150,6 @@ const desktopHeight = bannerHeight || "500px";
         : banner.style.getPropertyValue('--desktop-height') || '500px';
       
       banner.style.minHeight = height;
-      
-      // Add a simplified timeline for very resource-constrained devices
-      if (window.navigator.userAgent.includes('Mobile') && window.innerWidth < 480) {
-        banner.classList.add('simplified-mobile');
-      } else {
-        banner.classList.remove('simplified-mobile');
-      }
       
       // Dispatch a resize event that Svelte components can listen for
       banner.dispatchEvent(new CustomEvent('timeline:resize'));
@@ -293,17 +208,5 @@ const desktopHeight = bannerHeight || "500px";
     .timeline-banner {
       height: var(--mobile-height, 600px) !important;
     }
-  }
-  
-  /* Fallback styles */
-  .timeline-fallback, 
-  .timeline-fallback-permanent {
-    width: 100%;
-    height: 100%;
-    background-color: var(--card-bg, #fff);
-    border-radius: var(--radius-large, 12px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 </style>
