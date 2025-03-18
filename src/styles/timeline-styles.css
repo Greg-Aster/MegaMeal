@@ -137,3 +137,49 @@
   will-change: transform;
 }
 
+/* Mobile specific fixes */
+@media (max-width: 768px) {
+  /* Ensure timeline has minimum height on mobile */
+  .timeline-banner {
+    min-height: 400px !important;
+    height: auto !important;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Adjust timeline viewport to take available space */
+  .timeline-viewport {
+    flex: 1;
+    min-height: 300px;
+  }
+  
+  /* Improve touch interactions */
+  .timeline-container {
+    touch-action: pan-x pan-y; /* Enable native touch scrolling */
+  }
+  
+  /* Simplify controls for mobile */
+  .timeline-controls {
+    flex-wrap: wrap;
+    padding: 0.5rem;
+  }
+  
+  /* Make timeline cards easier to tap */
+  .timeline-event .event-node {
+    transform: scale(1.2);
+  }
+  
+  /* Make cards more readable on mobile */
+  :global(.timeline-card) {
+    width: 180px !important;
+    font-size: 0.9rem !important;
+    padding: 0.75rem !important;
+  }
+}
+
+/* Fix for iOS Safari height issues */
+@supports (-webkit-touch-callout: none) {
+  .timeline-banner {
+    height: 500px !important; /* Fixed height for iOS */
+  }
+}
