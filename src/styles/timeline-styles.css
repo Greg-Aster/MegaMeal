@@ -143,6 +143,7 @@
     height: auto !important;
     display: flex;
     flex-direction: column;
+    aspect-ratio: 2/3; /* Taller aspect ratio for vertical timeline */
   }
   
   /* Adjust timeline viewport to take available space */
@@ -166,12 +167,8 @@
     width: 180px !important;
     font-size: 0.9rem !important;
     padding: 0.75rem !important;
-    z-index: 20;
-  }
-  
-  /* Make event nodes larger and more tappable */
-  .event-node {
-    transform: scale(1.5) !important;
+    z-index: 30 !important; /* Ensure cards appear above other elements */
+    max-width: 180px !important;
   }
   
   /* Ensure responsive layout for compact mode */
@@ -256,28 +253,27 @@
     flex-wrap: wrap;
   }
   
-  /* Change the main container to be taller than wide */
-  .timeline-banner {
-    min-height: 600px !important;
-  }
-  
   /* Rotate the timeline container itself */
   .timeline-container {
     transform-origin: center center !important;
     /* Initial rotation - will be combined with scale and pan transforms */
     transform: rotate(90deg) !important;
+    height: 150% !important; /* Extend the container for better distribution */
+    width: 150% !important;
+    margin-top: -25% !important;
+    margin-left: -25% !important;
   }
   
   /* Override the transform style to include both rotation and scale/translation */
   .timeline-container {
-    transform: rotate(90deg) scale(var(--scale, 1)) translate(var(--offset-x, 0px), var(--offset-y, 0px)) !important;
+    scale: var(--scale, 0.7) !important;
+    transform: rotate(90deg) !important;
   }
   
   /* Rotate cards back to normal readable orientation */
   .timeline-card {
     transform: rotate(-90deg) !important;
     transform-origin: center !important;
-    max-width: 160px !important;
     /* Adjust positions to work better in vertical mode */
     left: 0 !important;
     margin-left: -80px !important;
@@ -290,7 +286,7 @@
   
   /* Adjust the center line for vertical orientation */
   .timeline-center-line {
-    width: 0.5px !important;
+    width: 1px !important;
     height: 100% !important;
     left: 50% !important;
     top: 0 !important;
@@ -305,17 +301,64 @@
     transform: translateX(-50%) !important;
   }
   
-  /* Adjust the timeline scale to fit better in portrait mode */
-  .timeline-viewport .timeline-container {
-    /* This will be multiplied by the dynamic scale factor */
-    transform: rotate(90deg) scale(0.7) !important;
-  }
-  
   /* Invert drag directions for the rotated view */
   .timeline-container.dragging {
     cursor: grabbing;
     /* Custom property to track rotation state */
     --is-rotated: 1;
+  }
+  
+  /* Rotate background image to match timeline orientation */
+  .timeline-viewport .absolute.inset-0 img {
+    transition: transform 0.5s ease-out !important;
+    transform: rotate(90deg) scale(1.5) !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    transform-origin: center center !important;
+  }
+  
+  /* Background gradient adjustment for rotated view */
+  .timeline-viewport .absolute.inset-0 .bg-gradient-to-r {
+    background: linear-gradient(to bottom, 
+      oklch(0.25 0.05 var(--hue)),
+      oklch(0.15 0.05 var(--hue))) !important;
+  }
+  
+  /* Improve background stretching */
+  .absolute.inset-0 {
+    overflow: hidden !important;
+  }
+  
+  /* Adjust event positioning for better vertical distribution */
+  .timeline-event {
+    transform-origin: center center !important;
+  }
+  
+  /* Performance optimizations for mobile */
+  /* Reduce motion for better performance */
+  .reduce-motion .timeline-event {
+    transition: opacity 0.3s ease !important;
+  }
+  
+  .reduce-motion .timeline-container {
+    transition: transform 0.2s ease !important;
+  }
+  
+  /* Simplify animations on mobile */
+  .reduce-motion .star-icon {
+    animation: none !important;
+    filter: drop-shadow(0 0 3px var(--primary)) !important;
+  }
+  
+  /* Optimize rendering for mobile */
+  .timeline-event {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+  
+  /* Reduce parallax effect on mobile for better performance */
+  .reduce-motion .absolute.inset-0 img {
+    transition: none !important;
   }
 }
 
@@ -330,6 +373,20 @@
   .timeline-footer button {
     width: 100%;
   }
+  
+  /* Further simplify for very small devices */
+  .simplified-mobile .timeline-container {
+    transform: rotate(90deg) scale(0.6) !important;
+  }
+  
+  .simplified-mobile .star-icon {
+    animation: none !important;
+  }
+  
+  .simplified-mobile .timeline-card {
+    width: 150px !important;
+    font-size: 0.8rem !important;
+  }
 }
 
 /* Fix for iOS Safari height issues */
@@ -343,5 +400,11 @@
     width: 100% !important;
     height: 100% !important;
     overflow: hidden;
+  }
+  
+  /* Ensure iOS Safari doesn't break the transforms */
+  .timeline-container {
+    -webkit-transform-style: preserve-3d;
+    transform-style: preserve-3d;
   }
 }
