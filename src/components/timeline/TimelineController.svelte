@@ -18,7 +18,6 @@
   export let compact: boolean = false;
   export let asBanner: boolean = false;
   export let bannerHeight: string = "500px";
-  export let mobileHeight: string = "500px"; // Default mobile height
   export let initialEvents: string = "[]"; // Serialized events
 
   // Local state
@@ -198,173 +197,177 @@
     timelineActions.setViewMode(mode);
   }
   
+  // Keep the function even though we removed the buttons
   function handleToggleCompact() {
     timelineActions.toggleCompact();
   }
   
-  // Compute the actual height based on props and mobile state
-  $: currentHeight = asBanner ? (isMobile ? mobileHeight : bannerHeight) : "500px";
+  // Define currentHeight as a reactive variable
+  $: currentHeight = asBanner ? (isMobile ? '600px' : bannerHeight) : "500px";
 </script>
 
-<div class="flex flex-col w-full overflow-hidden relative {asBanner ? 'timeline-banner-mode' : ''}" 
+<div class="timeline-wrapper relative w-full overflow-hidden {asBanner ? 'timeline-banner-mode' : ''}" 
      style="height: {currentHeight};" 
      {id}
      on:timeline:resize={handleResize}>
   
-  <!-- Top control bar - reorganized for mobile -->
-  <div class="timeline-controls flex flex-col md:flex-row items-center justify-between p-1 bg-[var(--card-bg)] border-b border-black/5 dark:border-white/5 z-10 rounded-t-[var(--radius-large)]">
-    <!-- First row for mobile / all controls for desktop -->
-    <div class="flex items-center flex-wrap md:flex-nowrap justify-center md:justify-start w-full md:w-auto">
-      <!-- Zoom controls -->
-      <div class="flex items-center mr-2">
-        <button on:click={handleZoomOut}
-          class="btn-plain w-8 h-8 rounded-md mr-1"
-          aria-label="Zoom out">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM13.5 10.5h-6" />
-          </svg>
-        </button>
-
-        <button on:click={handleZoomIn}
-          class="btn-plain w-8 h-8 rounded-md"
-          aria-label="Zoom in">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM7.5 10.5h6m-3-3v6" />
-          </svg>
-        </button>
+  <!-- Main content container that takes the full area -->
+  <div class="relative w-full h-full">
+    <!-- Main content area with different views - takes up the entire space -->
+    <div class="timeline-viewport w-full h-full overflow-hidden cursor-grab active:cursor-grabbing">
+      <!-- Loading state -->
+      {#if loading}
+        <div class="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-black/50 z-[100]">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
+        </div>
+      {/if}
+      
+      <!-- Error state -->
+      {#if error}
+        <div class="absolute inset-0 flex items-center justify-center bg-white/90 dark:bg-black/70 z-[100]">
+          <div class="text-center p-4">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 text-red-500 mx-auto mb-2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+            <h3 class="text-lg font-bold text-white">Error loading timeline</h3>
+            <p class="text-sm text-white/80">{error}</p>
+            <button on:click={() => window.location.reload()}
+                    class="mt-3 bg-[var(--primary)] text-white px-4 py-2 rounded-md text-sm">
+              Retry
+            </button>
+          </div>
+        </div>
+      {/if}
+      
+      <!-- Timeline View -->
+      <div class="w-full h-full {$timelineStore.viewMode !== 'timeline' ? 'hidden' : ''}">
+        <TimelineCore
+        bind:this={timelineCore}
+        events={$filteredEvents}
+        {startYear}
+        {endYear}
+        background={$timelineStore.background}
+        compact={$timelineStore.compact}
+        {asBanner}
+        on:select={handleSelectEvent}
+        on:deselect={handleDeselectEvent}
+        />
       </div>
-        
-      <div class="h-5 border-r border-black/10 dark:border-white/10 mx-2 hidden md:block"></div>
-        
-      <!-- Pan navigation buttons -->
-      <div class="flex mr-2">
-        <!-- On mobile, show horizontal and vertical buttons in a 2x2 grid -->
-        <div class="grid grid-cols-3 grid-rows-3 gap-0 md:hidden">
-          <!-- Top button -->
-          <div class="col-start-2 col-end-3 row-start-1 row-end-2 flex justify-center">
+      
+      <!-- List View -->
+      <div class="timeline-view pt-4 relative {$timelineStore.viewMode !== 'list' ? 'hidden' : ''}">
+        <ListView 
+          events={$filteredEvents} 
+          background={$timelineStore.background}
+          selectedEvent={$selectedEvent}
+          on:select={(e) => timelineActions.selectEvent(e.detail.slug)}
+        />
+      </div>
+      
+      <!-- Tree View -->
+      <div class="timeline-view pt-4 relative {$timelineStore.viewMode !== 'tree' ? 'hidden' : ''}">
+        <TreeView 
+          events={$filteredEvents} 
+          background={$timelineStore.background}
+          selectedEvent={$selectedEvent}
+          on:select={(e) => timelineActions.selectEvent(e.detail.slug)}
+        />
+      </div>
+      
+      <!-- Map View -->
+      <div class="timeline-view pt-4 relative {$timelineStore.viewMode !== 'map' ? 'hidden' : ''}">
+        <MapView 
+          events={$filteredEvents} 
+          background={$timelineStore.background}
+          selectedEvent={$selectedEvent}
+          on:select={(e) => timelineActions.selectEvent(e.detail.slug)}
+        />
+      </div>
+    </div>
+    
+    <!-- Top control bar - positioned absolutely with inline styles -->
+    <div id="timelineTopControls" class="timeline-custom-controls absolute top-0 left-0 right-0 flex flex-row items-center justify-between p-2 z-[999]" 
+         style="background-color: rgba(0,0,0,0.4); backdrop-filter: blur(4px); color: white;">
+      <!-- Left side controls -->
+      <div class="flex items-center">
+        <!-- Zoom controls -->
+        <div class="flex items-center mr-2">
+          <button on:click={handleZoomOut}
+            class="custom-btn w-8 h-8 rounded-md mr-1 hover:bg-white/20 active:bg-white/30"
+            style="color: white; display: flex; align-items: center; justify-content: center;"
+            aria-label="Zoom out">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5" style="color: white;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM13.5 10.5h-6" />
+            </svg>
+          </button>
+
+          <button on:click={handleZoomIn}
+            class="custom-btn w-8 h-8 rounded-md hover:bg-white/20 active:bg-white/30"
+            style="color: white; display: flex; align-items: center; justify-content: center;"
+            aria-label="Zoom in">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5" style="color: white;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM7.5 10.5h6m-3-3v6" />
+            </svg>
+          </button>
+        </div>
+          
+        <div class="h-5 border-r border-white/20 mx-2"></div>
+          
+        <!-- Pan navigation buttons -->
+        <div class="flex">
+          <!-- Desktop layout for pan controls -->
+          <div class="flex flex-col mr-2">
             <button on:click={() => handlePan(0, 30)}
-              class="btn-plain w-8 h-8 rounded-md"
+              class="custom-btn w-8 h-8 rounded-md hover:bg-white/20 active:bg-white/30"
+              style="color: white; display: flex; align-items: center; justify-content: center;"
               aria-label="Pan up">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5" style="color: white;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
               </svg>
             </button>
-          </div>
-          
-          <!-- Left button -->
-          <div class="col-start-1 col-end-2 row-start-2 row-end-3 flex justify-center">
-            <button on:click={() => handlePan(50, 0)}
-              class="btn-plain w-8 h-8 rounded-md"
-              aria-label="Pan left">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-              </svg>
-            </button>
-          </div>
-          
-          <!-- Right button -->
-          <div class="col-start-3 col-end-4 row-start-2 row-end-3 flex justify-center">
-            <button on:click={() => handlePan(-50, 0)}
-              class="btn-plain w-8 h-8 rounded-md"
-              aria-label="Pan right">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
-            </button>
-          </div>
-          
-          <!-- Bottom button -->
-          <div class="col-start-2 col-end-3 row-start-3 row-end-4 flex justify-center">
+            
             <button on:click={() => handlePan(0, -30)}
-              class="btn-plain w-8 h-8 rounded-md"
+              class="custom-btn w-8 h-8 rounded-md hover:bg-white/20 active:bg-white/30"
+              style="color: white; display: flex; align-items: center; justify-content: center;"
               aria-label="Pan down">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5" style="color: white;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
               </svg>
             </button>
           </div>
-        </div>
-        
-        <!-- Desktop layout for pan controls -->
-        <div class="hidden md:flex md:flex-col mr-2">
-          <button on:click={() => handlePan(0, 30)}
-            class="btn-plain w-8 h-8 rounded-md"
-            aria-label="Pan up">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-            </svg>
-          </button>
           
-          <button on:click={() => handlePan(0, -30)}
-                  class="btn-plain w-8 h-8 rounded-md"
-                  aria-label="Pan down">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-            </svg>
-          </button>
+          <div class="flex mr-2">
+            <button on:click={() => handlePan(50, 0)}
+              class="custom-btn w-8 h-8 rounded-md mr-1 hover:bg-white/20 active:bg-white/30"
+              style="color: white; display: flex; align-items: center; justify-content: center;"
+              aria-label="Pan left">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5" style="color: white;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+            </button>
+            
+            <button on:click={() => handlePan(-50, 0)}
+              class="custom-btn w-8 h-8 rounded-md hover:bg-white/20 active:bg-white/30"
+              style="color: white; display: flex; align-items: center; justify-content: center;"
+              aria-label="Pan right">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5" style="color: white;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </button>
+          </div>
         </div>
+      </div>
         
-        <div class="hidden md:flex mr-2">
-          <button on:click={() => handlePan(50, 0)}
-                class="btn-plain w-8 h-8 rounded-md mr-1"
-                aria-label="Pan left">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-          </button>
-          
-          <button on:click={() => handlePan(-50, 0)}
-                class="btn-plain w-8 h-8 rounded-md"
-                aria-label="Pan right">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- Compact toggle button (moved to the first row for mobile) -->
-      <div class="view-controls flex items-center md:hidden">
-        <button on:click={handleToggleCompact}
-                class="btn-plain w-8 h-8 rounded-md
-                       {$timelineStore.compact ? 'text-[var(--primary)]' : ''}"
-                aria-label="Toggle compact view">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0l-3.75-3.75M17.25 21L21 17.25" />
-          </svg>
-        </button>
-      </div>
-      
-      <div class="h-5 border-r border-black/10 dark:border-white/10 mx-2 hidden md:block"></div>
-      
-      <!-- Era filter - moved to second row on mobile -->
-      <div class="flex items-center hidden md:flex">
-        <span class="text-xs text-50 mr-2">Era:</span>
-        <select on:change={handleEraFilter}
-                class="bg-[var(--btn-regular-bg)] text-xs rounded-md p-1 text-[var(--btn-content)]">
-          <option value="all">All Eras</option>
-          <option value="all-time">All Time</option>
-          {#each Object.entries(eraConfig) as [value, config]}
-            <option value={value}
-                    data-start-year={config.startYear}
-                    data-end-year={config.endYear}>
-              {config.displayName}
-            </option>
-          {/each}
-        </select>
-      </div>
-      
-      <div class="h-5 border-r border-black/10 dark:border-white/10 mx-2 hidden md:block"></div>
-      
-      <!-- View type switcher - stays in first row for all views -->
-      <div class="flex items-center mt-2 md:mt-0">
-        <span class="text-xs text-50 mr-2">View:</span>
+      <!-- Right side view switcher -->
+      <div class="flex items-center ml-auto">
+        <span class="text-xs mr-2" style="color: white;">View:</span>
         <div class="timeline-view-switcher flex rounded-md overflow-hidden">
           <button 
             on:click={() => handleSetViewMode('timeline')}
-            class="timeline-view-btn px-2 py-1 flex items-center text-xs {$timelineStore.viewMode === 'timeline' ? 'bg-[var(--primary)] text-white' : 'bg-[var(--btn-regular-bg)] text-[var(--btn-content)]'}"
+            class="custom-btn px-2 py-1 flex items-center text-xs {$timelineStore.viewMode === 'timeline' ? 'bg-[var(--primary)]' : 'bg-black/30'} hover:bg-white/20 active:bg-white/30"
+            style="color: white; display: flex; align-items: center; justify-content: center;"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1" style="color: white;">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
             </svg>
             Timeline
@@ -372,9 +375,10 @@
           
           <button 
             on:click={() => handleSetViewMode('list')}
-            class="timeline-view-btn px-2 py-1 flex items-center text-xs {$timelineStore.viewMode === 'list' ? 'bg-[var(--primary)] text-white' : 'bg-[var(--btn-regular-bg)] text-[var(--btn-content)]'}"
+            class="custom-btn px-2 py-1 flex items-center text-xs {$timelineStore.viewMode === 'list' ? 'bg-[var(--primary)]' : 'bg-black/30'} hover:bg-white/20 active:bg-white/30"
+            style="color: white; display: flex; align-items: center; justify-content: center;"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1" style="color: white;">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
             </svg>
             List
@@ -382,9 +386,10 @@
           
           <button 
             on:click={() => handleSetViewMode('tree')}
-            class="timeline-view-btn px-2 py-1 flex items-center text-xs {$timelineStore.viewMode === 'tree' ? 'bg-[var(--primary)] text-white' : 'bg-[var(--btn-regular-bg)] text-[var(--btn-content)]'}"
+            class="custom-btn px-2 py-1 flex items-center text-xs {$timelineStore.viewMode === 'tree' ? 'bg-[var(--primary)]' : 'bg-black/30'} hover:bg-white/20 active:bg-white/30"
+            style="color: white; display: flex; align-items: center; justify-content: center;"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1" style="color: white;">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
             </svg>
             Tree
@@ -392,9 +397,10 @@
           
           <button 
             on:click={() => handleSetViewMode('map')}
-            class="timeline-view-btn px-2 py-1 flex items-center text-xs {$timelineStore.viewMode === 'map' ? 'bg-[var(--primary)] text-white' : 'bg-[var(--btn-regular-bg)] text-[var(--btn-content)]'}"
+            class="custom-btn px-2 py-1 flex items-center text-xs {$timelineStore.viewMode === 'map' ? 'bg-[var(--primary)]' : 'bg-black/30'} hover:bg-white/20 active:bg-white/30"
+            style="color: white; display: flex; align-items: center; justify-content: center;"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1" style="color: white;">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
             </svg>
             Map
@@ -403,148 +409,91 @@
       </div>
     </div>
     
-    <!-- Second row for mobile -->
-    <div class="flex items-center justify-between w-full mt-2 md:hidden">
-      <!-- Era filter - moved to second row on mobile -->
+    <!-- Bottom control bar with era dropdown - positioned absolutely with inline styles -->
+    <div id="timelineBottomControls" class="timeline-custom-controls absolute bottom-0 left-0 right-0 flex items-center justify-between p-2 z-[999]"
+         style="background-color: rgba(0,0,0,0.4); backdrop-filter: blur(4px); color: white;">
+      <!-- Era filter in bottom left -->
       <div class="flex items-center">
-        <span class="text-xs text-50 mr-2">Era:</span>
-        <select on:change={handleEraFilter}
-                class="bg-[var(--btn-regular-bg)] text-xs rounded-md p-1 text-[var(--btn-content)]">
-          <option value="all">All Eras</option>
-          <option value="all-time">All Time</option>
-          {#each Object.entries(eraConfig) as [value, config]}
-            <option value={value}
-                    data-start-year={config.startYear}
-                    data-end-year={config.endYear}>
-              {config.displayName}
-            </option>
-          {/each}
-        </select>
+        <div class="era-dropdown-container">
+          <span class="text-xs mr-2" style="color: white;">Era:</span>
+          <select on:change={handleEraFilter}
+                  class="bg-black/40 hover:bg-black/50 text-xs rounded-md p-1 border border-white/20 era-select"
+                  style="color: white; background-color: rgba(0,0,0,0.4);"
+                  aria-label="Select era">
+            <option value="all">All Eras</option>
+            <option value="all-time">All Time</option>
+            {#each Object.entries(eraConfig) as [value, config]}
+              <option value={value}
+                      data-start-year={config.startYear}
+                      data-end-year={config.endYear}>
+                {config.displayName}
+              </option>
+            {/each}
+          </select>
+        </div>
       </div>
       
-      <!-- Reset button on mobile 2nd row -->
+      <!-- Reset view button in bottom right -->
       <div class="flex items-center">
         <button on:click={handleResetView}
-                class="bg-[var(--btn-regular-bg)] hover:bg-[var(--btn-regular-bg-hover)] active:bg-[var(--btn-regular-bg-active)] text-[var(--btn-content)] flex items-center text-xs px-3 py-1 rounded-md transition-colors"
+                class="custom-btn bg-white/20 px-3 py-1 rounded-md hover:bg-white/30 active:bg-white/40"
+                style="color: white; display: flex; align-items: center; justify-content: center;"
                 aria-label="Reset view">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1" style="color: white;">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3" />
           </svg>
-          Reset
+          <span class="text-xs" style="color: white;">Reset View</span>
         </button>
       </div>
     </div>
-    
-    <!-- Desktop compact view toggle -->
-    <div class="view-controls hidden md:flex items-center">
-      <button on:click={handleToggleCompact}
-              class="btn-plain w-8 h-8 rounded-md
-                     {$timelineStore.compact ? 'text-[var(--primary)]' : ''}"
-              aria-label="Toggle compact view">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0l-3.75-3.75M17.25 21L21 17.25" />
-        </svg>
-      </button>
-    </div>
-  </div>
-  
-  <!-- Main content area with different views -->
-  <div class="timeline-viewport relative flex-1 overflow-hidden cursor-grab active:cursor-grabbing">
-    
-    <!-- Loading state -->
-    {#if loading}
-      <div class="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-[var(--card-bg)]/80 z-20">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
-      </div>
-    {/if}
-    
-    <!-- Error state -->
-    {#if error}
-      <div class="absolute inset-0 flex items-center justify-center bg-white/90 dark:bg-[var(--card-bg)]/90 z-20">
-        <div class="text-center p-4">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 text-red-500 mx-auto mb-2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-          </svg>
-          <h3 class="text-lg font-bold text-75">Error loading timeline</h3>
-          <p class="text-sm text-50">{error}</p>
-          <button on:click={() => window.location.reload()}
-                  class="mt-3 bg-[var(--primary)] text-white px-4 py-2 rounded-md text-sm">
-            Retry
-          </button>
-        </div>
-      </div>
-    {/if}
-    
-    <!-- Timeline View -->
-    <div class="w-full h-full {$timelineStore.viewMode !== 'timeline' ? 'hidden' : ''}">
-      <TimelineCore
-      bind:this={timelineCore}
-      events={$filteredEvents}
-      {startYear}
-      {endYear}
-      background={$timelineStore.background}
-      compact={$timelineStore.compact}
-      {asBanner}
-      on:select={handleSelectEvent}
-      on:deselect={handleDeselectEvent}
-    />
-    </div>
-    
-    <!-- List View -->
-    <div class="timeline-view pt-4 relative {$timelineStore.viewMode !== 'list' ? 'hidden' : ''}">
-      <ListView 
-        events={$filteredEvents} 
-        background={$timelineStore.background}
-        selectedEvent={$selectedEvent}
-        on:select={(e) => timelineActions.selectEvent(e.detail.slug)}
-      />
-    </div>
-    
-    <!-- Tree View -->
-    <div class="timeline-view pt-4 relative {$timelineStore.viewMode !== 'tree' ? 'hidden' : ''}">
-      <TreeView 
-        events={$filteredEvents} 
-        background={$timelineStore.background}
-        selectedEvent={$selectedEvent}
-        on:select={(e) => timelineActions.selectEvent(e.detail.slug)}
-      />
-    </div>
-    
-    <!-- Map View -->
-    <div class="timeline-view pt-4 relative {$timelineStore.viewMode !== 'map' ? 'hidden' : ''}">
-      <MapView 
-        events={$filteredEvents} 
-        background={$timelineStore.background}
-        selectedEvent={$selectedEvent}
-        on:select={(e) => timelineActions.selectEvent(e.detail.slug)}
-      />
-    </div>
-  </div>
-  
-<!-- Bottom control bar with year display - desktop only -->
-<div class="timeline-footer hidden md:flex items-center justify-between p-2 w-full bg-[var(--card-bg)] border-t border-black/5 dark:border-white/5 z-10 rounded-b-[var(--radius-large)]">
-  <div class="flex items-center">
-    <span class="ml-2 text-75">
-      Timeline: {startYear || '—'} to {endYear || '—'}
-    </span>
-  </div>
-  
-  <div class="flex items-center">
-    <button on:click={handleResetView}
-            class="bg-[var(--btn-regular-bg)] hover:bg-[var(--btn-regular-bg-hover)] active:bg-[var(--btn-regular-bg-active)] text-[var(--btn-content)] flex items-center text-xs px-3 py-1 rounded-md transition-colors"
-            aria-label="Reset view">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3" />
-      </svg>
-      Reset View
-    </button>
   </div>
 </div>
 
-<!-- Mobile bottom info bar (simplified) -->
-<div class="timeline-footer flex md:hidden items-center justify-center p-2 w-full bg-[var(--card-bg)] border-t border-black/5 dark:border-white/5 z-10 rounded-b-[var(--radius-large)]">
-  <span class="text-75 text-sm">
-    Timeline: {startYear || '—'} to {endYear || '—'}
-  </span>
-</div>
-</div>
+<style>
+  /* Minimal core styles */
+  .timeline-wrapper {
+    position: relative;
+  }
+  
+  .timeline-viewport {
+    transform: translateZ(0);
+    touch-action: none;
+  }
+  
+  .timeline-banner-mode {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  
+  /* Make sure our custom controls are visible */
+  .timeline-custom-controls {
+    color: white !important;
+  }
+  
+  /* Make dropdown open upwards instead of downwards */
+  .era-dropdown-container {
+    position: relative;
+  }
+  
+  .era-select {
+    appearance: menulist-button;
+    position: relative;
+    color: white !important;
+    background-color: rgba(0,0,0,0.4) !important;
+  }
+  
+  /* For webkit browsers */
+  .era-select::-webkit-calendar-picker-indicator {
+    filter: invert(1) opacity(0.7);
+  }
+  
+  /* This creates the effect of the dropdown expanding upward */
+  .era-dropdown-container:focus-within .era-select option {
+    transform: translateY(-100%);
+    transform-origin: bottom;
+    background-color: #333 !important;
+    color: white !important;
+  }
+</style>

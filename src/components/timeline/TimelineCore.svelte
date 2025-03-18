@@ -389,16 +389,6 @@
         {/if}
       </div>
     {/each}
-    
-    <!-- Era labels positioned for mobile/desktop -->
-    {#if events.length > 0}
-      <div class="{isMobile ? 'absolute top-[12%] left-[30%] transform -translate-y-full' : 'absolute left-[12%] bottom-[30%] transform -translate-x-1/2'} text-lg font-bold text-75">
-        {startYear}
-      </div>
-      <div class="{isMobile ? 'absolute bottom-[12%] left-[30%] transform translate-y-full' : 'absolute right-[12%] bottom-[30%] transform translate-x-1/2'} text-lg font-bold text-75">
-        {endYear}
-      </div>
-    {/if}
   </div>
   
   <!-- Empty state -->
