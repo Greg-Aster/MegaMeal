@@ -538,20 +538,20 @@
         {/if}
       </div>
     {/each}
-    
-    <!-- Fixed mobile card container -->
-    {#if isMobile && (selectedEvent || hoveredEvent)}
-      <div class="fixed-mobile-card-container">
-        <TimelineCard 
-          event={selectedEvent || hoveredEvent}
-          isSelected={!!selectedEvent}
-          {compact}
-          position="bottom"
-          isMobile={true}
-        />
-      </div>
-    {/if}
   </div>
+  
+  <!-- Fixed mobile card container - now uses fixed positioning instead of being inside the scrollable area -->
+  {#if isMobile && (selectedEvent || hoveredEvent)}
+    <div class="fixed-mobile-card-container">
+      <TimelineCard 
+        event={selectedEvent || hoveredEvent}
+        isSelected={!!selectedEvent}
+        {compact}
+        position="bottom"
+        isMobile={true}
+      />
+    </div>
+  {/if}
   
   <!-- Empty state -->
   {#if events.length === 0}

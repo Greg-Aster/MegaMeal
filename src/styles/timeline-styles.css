@@ -190,15 +190,17 @@
 
 /* Fixed mobile card container */
 .fixed-mobile-card-container {
-  position: absolute;
-  bottom: 50px; /* Position above bottom controls */
-  left: 0;
-  right: 0;
+  position: fixed; /* Changed from absolute to fixed */
+  bottom: 70px; /* Position above bottom controls */
+  right: 10px; /* Position to the right instead of center */
+  left: auto; /* Reset the left positioning */
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-end; /* Align to the right */
+  align-items: flex-end; /* Align to the bottom */
   z-index: 40; /* Ensure it's above other elements */
   pointer-events: none; /* Let clicks pass through to the container */
+  width: auto; /* Let the card determine width */
+  max-width: 90%; /* Don't let it get too wide */
 }
 
 /* For mobile timeline card in fixed container */
@@ -206,8 +208,9 @@
   pointer-events: auto; /* Allow interaction with the card itself */
   position: relative;
   transform: none !important; /* Override any transform */
-  margin: 0 auto; /* Center horizontally */
-  max-width: 80%; /* Limit width for better readability */
+  margin: 0; /* Remove auto margins */
+  max-width: 280px; /* Control max width */
+  width: auto; /* Let content determine width */
 }
 
 /* Ensure card pointer looks correct in fixed position */
@@ -245,25 +248,4 @@
     min-width: 250px;
     padding: 12px;
   }
-}
-
-/* Add visual indicators for touch gestures (educational for users) */
-.timeline-gesture-hint {
-  position: absolute;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.6);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 1000;
-}
-
-.timeline-gesture-hint.visible {
-  opacity: 1;
 }

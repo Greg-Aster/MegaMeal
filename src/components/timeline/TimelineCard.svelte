@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { fly } from 'svelte/transition';
+  import { fly, fade } from 'svelte/transition';
+  import { cubicOut } from 'svelte/easing';
   import type { TimelineEvent } from '../../services/TimelineService.client';
   import { getEraDisplayName } from '../../services/TimelineService.client';
   
@@ -31,8 +32,8 @@
 </script>
 
 <div 
-  class="timeline-card card-base {isMobile ? 'fixed-position' : 'absolute z-30'} bg-[var(--card-bg)] backdrop-blur-sm shadow-lg
-         {isMobile ? 'w-[80%] mx-auto' : 'w-[200px]'} 
+  class="timeline-card card-base {isMobile ? 'fixed-position mobile-card' : 'absolute z-30'} bg-[var(--card-bg)] backdrop-blur-sm shadow-lg
+         {isMobile ? 'w-[280px] h-auto' : 'w-[200px]'} 
          {compact ? 'p-2 text-sm' : 'p-3'}
          {isSelected ? 'border-2 border-[var(--primary)]' : 'border border-transparent'}"
   class:timeline-card-top={position === 'top' && !isMobile}
@@ -41,18 +42,20 @@
   class:timeline-card-right={position === 'right' && !isMobile}
   in:fly="{{ y: isMobile ? 20 : position === 'top' ? 10 : position === 'bottom' ? -10 : 0, 
             x: isMobile ? 0 : position === 'left' ? 10 : position === 'right' ? -10 : 0, 
-            duration: 200 }}"
+            duration: 300,
+            easing: cubicOut }}"
   out:fly="{{ y: isMobile ? 20 : position === 'top' ? 10 : position === 'bottom' ? -10 : 0, 
              x: isMobile ? 0 : position === 'left' ? 10 : position === 'right' ? -10 : 0, 
-             duration: 150 }}"
+             duration: 200,
+             easing: cubicOut }}"
 >
   <!-- Card content -->
-  <div class="font-bold text-75 text-sm mb-1">
+  <div class="font-bold text-75 text-sm mb-1 card-title">
     {event.year}: {event.title}
   </div>
   
-  {#if !compact}
-    <div class="text-50 text-xs line-clamp-2">
+  {#if !compact || isMobile}
+    <div class="text-50 text-xs {isMobile ? 'line-clamp-3' : 'line-clamp-2'} card-description">
       {event.description}
     </div>
   {/if}
@@ -74,6 +77,13 @@
   .timeline-card {
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1), 0 0 5px rgba(var(--primary-rgb, 0 0 0), 0.3);
     border-radius: var(--radius-large, 12px);
+    opacity: 0;
+    animation: fadeIn 0.3s forwards;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
   
   .timeline-era-badge {
@@ -97,6 +107,28 @@
     left: auto;
     right: auto;
     transform: none !important;
+  }
+
+  /* Mobile card styling */
+  .mobile-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: auto;
+    max-height: 160px;
+    width: 280px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  }
+  
+  .mobile-card .card-title {
+    font-size: 0.9rem;
+  }
+  
+  .mobile-card .card-description {
+    flex: 1;
+    margin-bottom: 8px;
+    font-size: 0.75rem;
   }
   
   /* Positioning for different card locations */
