@@ -21,6 +21,8 @@
   let containerWidth: number = 0;
   let containerHeight: number = 0;
   let padding = 15; // percentage padding on timeline edges
+  let isMobile = false;
+  let isRotated = false;
   
   // Svelte store for animated values
   const scale = tweened(1, {
@@ -37,6 +39,27 @@
   });
   
   const dispatch = createEventDispatcher();
+
+  // Helper function to handle transformations for the rotated view
+  function updateTransformStyles() {
+    if (!timelineContainer) return;
+    
+    // Check if we're on mobile
+    isMobile = window.innerWidth <= 768;
+    isRotated = isMobile;
+    
+    // Set CSS variables for transform
+    timelineContainer.style.setProperty('--scale', $scale.toString());
+    timelineContainer.style.setProperty('--offset-x', `${$offsetX/$scale}px`);
+    timelineContainer.style.setProperty('--offset-y', `${$offsetY/$scale}px`);
+    
+    // Add class to indicate rotation state
+    if (isRotated) {
+      timelineContainer.classList.add('rotated');
+    } else {
+      timelineContainer.classList.remove('rotated');
+    }
+  }
   
   // Calculate actual time range from events
   $: {
@@ -336,8 +359,17 @@
     const deltaX = e.clientX - startDragX;
     const deltaY = e.clientY - startDragY;
     
-    offsetX.set(startOffsetX + deltaX);
-    offsetY.set(startOffsetY + deltaY);
+    // Swap X and Y axes for rotated view
+    if (isRotated) {
+      offsetX.set(startOffsetX + deltaY);
+      offsetY.set(startOffsetY - deltaX);
+    } else {
+      offsetX.set(startOffsetX + deltaX);
+      offsetY.set(startOffsetY + deltaY);
+    }
+    
+    // Update the CSS variables
+    updateTransformStyles();
   }
   
   function endDrag() {
@@ -377,8 +409,17 @@
     const deltaX = e.touches[0].clientX - startDragX;
     const deltaY = e.touches[0].clientY - startDragY;
     
-    offsetX.set(startOffsetX + deltaX);
-    offsetY.set(startOffsetY + deltaY);
+    // Swap X and Y axes for rotated view
+    if (isRotated) {
+      offsetX.set(startOffsetX + deltaY);
+      offsetY.set(startOffsetY - deltaX);
+    } else {
+      offsetX.set(startOffsetX + deltaX);
+      offsetY.set(startOffsetY + deltaY);
+    }
+    
+    // Update the CSS variables
+    updateTransformStyles();
     
     // Prevent default to stop page scrolling when dragging the timeline
     if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
@@ -407,6 +448,24 @@
       timelineContainer.addEventListener('touchstart', startTouchDrag, { passive: true });
       timelineContainer.addEventListener('touchmove', touchDrag, { passive: false });
       timelineContainer.addEventListener('touchend', endTouchDrag);
+      
+      // Add CSS classes for vertical orientation
+      if (window.innerWidth <= 768) {
+        timelineContainer.classList.add('rotated');
+        isRotated = true;
+        
+        // Center horizontally for the vertical timeline
+        offsetX.set(0);
+        offsetY.set(0);
+        scale.set(0.7);
+        
+        // Add class to parent container
+        const viewport = timelineContainer.closest('.timeline-viewport');
+        if (viewport) viewport.classList.add('vertical-timeline');
+      }
+      
+      // Call to initialize transform styles
+      updateTransformStyles();
     }
     
     // Attach global mouse event handlers
@@ -452,9 +511,16 @@
       containerWidth = timelineContainer.offsetWidth;
       containerHeight = timelineContainer.offsetHeight;
       
-      // Adjust for mobile if needed
-      if (window.innerWidth < 768 && $scale > 1) {
-        scale.set(0.8); // Ensure not too zoomed in on mobile
+      // Update rotation state
+      isMobile = window.innerWidth <= 768;
+      isRotated = isMobile;
+      
+      // Apply rotation adjustments
+      updateTransformStyles();
+      
+      // Adjust scale for mobile if needed
+      if (isMobile && $scale > 1) {
+        scale.set(0.7); // Slightly zoomed out on mobile for better viewing
       }
     }
   }
@@ -468,27 +534,39 @@
   // Update functions exposed to parent components
   export function zoomIn() {
     scale.update(s => Math.min(5, s + 0.2));
+    updateTransformStyles();
   }
   
   export function zoomOut() {
     scale.update(s => Math.max(0.5, s - 0.2));
+    updateTransformStyles();
   }
   
   export function resetView() {
     // Use different scale for mobile
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      scale.set(0.8);
+      scale.set(0.7);
     } else {
       scale.set(1);
     }
     offsetX.set(0);
     offsetY.set(0);
     selectedEvent = null;
+    updateTransformStyles();
   }
   
   export function pan(deltaX: number, deltaY: number) {
-    offsetX.update(x => x + deltaX);
-    offsetY.update(y => y + deltaY);
+    if (isRotated) {
+      // Swap axes for the rotated view
+      offsetX.update(x => x + deltaY);
+      offsetY.update(y => y - deltaX);
+    } else {
+      offsetX.update(x => x + deltaX);
+      offsetY.update(y => y + deltaY);
+    }
+    
+    // Update transform styles
+    updateTransformStyles();
   }
 </script>
 
@@ -534,11 +612,22 @@
        style="transform: scale({$scale}) translate({$offsetX/$scale}px, {$offsetY/$scale}px);">
     
     <!-- Center line -->
-    <div class="absolute left-0 right-0 h-0.5 top-1/2 -translate-y-1/2 bg-[var(--primary)] opacity-20"></div>
+    <div 
+      class="timeline-center-line absolute left-0 right-0 h-0.5 top-1/2 -translate-y-1/2 bg-[var(--primary)] opacity-20"
+      aria-hidden="true"
+    ></div>
     
     <!-- Year markers -->
-    <div class="absolute top-1/2 -translate-y-1/2 w-0.5 h-3 bg-[var(--primary)] opacity-30" style="left: {padding}%"></div>
-    <div class="absolute top-1/2 -translate-y-1/2 w-0.5 h-3 bg-[var(--primary)] opacity-30" style="left: {100 - padding}%"></div>
+    <div 
+      class="timeline-year-marker absolute top-1/2 -translate-y-1/2 w-0.5 h-3 bg-[var(--primary)] opacity-30" 
+      style="left: {padding}%"
+      aria-hidden="true"
+    ></div>
+    <div 
+      class="timeline-year-marker absolute top-1/2 -translate-y-1/2 w-0.5 h-3 bg-[var(--primary)] opacity-30" 
+      style="left: {100 - padding}%"
+      aria-hidden="true"
+    ></div>
 
     <!-- Events -->
     {#each eventPositions as { event, horizontalPosition, verticalPosition }, i}
@@ -577,10 +666,10 @@
     
     <!-- Era labels -->
     {#if events.length > 0}
-      <div class="absolute top-0 left-[15%] p-2 text-lg font-bold text-75">
+      <div class="timeline-year-label absolute top-0 left-[15%] p-2 text-lg font-bold text-75">
         {startYear}
       </div>
-      <div class="absolute top-0 right-[15%] p-2 text-lg font-bold text-75">
+      <div class="timeline-year-label absolute top-0 right-[15%] p-2 text-lg font-bold text-75">
         {endYear}
       </div>
     {/if}
@@ -660,10 +749,6 @@
     
     .timeline-event {
       pointer-events: auto !important;
-    }
-    
-    .timeline-event .event-node {
-      transform: scale(1.5) !important;
     }
   }
 </style>

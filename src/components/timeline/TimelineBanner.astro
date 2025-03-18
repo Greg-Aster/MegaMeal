@@ -68,7 +68,7 @@ function safeStringify(obj) {
 const serializedEvents = safeStringify(initialEvents);
 
 // Calculate a responsive banner height
-const mobileHeight = "400px";
+const mobileHeight = "600px";
 const desktopHeight = bannerHeight || "500px";
 ---
 
@@ -124,7 +124,7 @@ const desktopHeight = bannerHeight || "500px";
       // Set appropriate height based on viewport
       const isMobile = window.innerWidth <= 768;
       const height = isMobile 
-        ? banner.style.getPropertyValue('--mobile-height') || '400px'
+        ? banner.style.getPropertyValue('--mobile-height') || '600px'
         : banner.style.getPropertyValue('--desktop-height') || '500px';
       
       banner.style.minHeight = height;
@@ -146,7 +146,7 @@ const desktopHeight = bannerHeight || "500px";
       // Update height based on viewport size
       const isMobile = window.innerWidth <= 768;
       const height = isMobile 
-        ? banner.style.getPropertyValue('--mobile-height') || '400px'
+        ? banner.style.getPropertyValue('--mobile-height') || '600px'
         : banner.style.getPropertyValue('--desktop-height') || '500px';
       
       banner.style.minHeight = height;
@@ -186,7 +186,7 @@ const desktopHeight = bannerHeight || "500px";
   /* Mobile specific styles */
   @media (max-width: 768px) {
     .timeline-banner {
-      min-height: var(--mobile-height, 400px) !important;
+      min-height: var(--mobile-height, 600px) !important;
       height: auto !important;
     }
   }
@@ -206,7 +206,7 @@ const desktopHeight = bannerHeight || "500px";
   /* Fix for iOS Safari */
   @supports (-webkit-touch-callout: none) {
     .timeline-banner {
-      height: var(--mobile-height, 400px) !important;
+      height: var(--mobile-height, 600px) !important;
     }
   }
 </style>
