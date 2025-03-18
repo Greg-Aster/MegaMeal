@@ -229,6 +229,7 @@
   // Check if we're in mobile view
   function checkMobileView() {
     isMobile = window.innerWidth < 768; // Standard mobile breakpoint
+    console.log("Mobile view:", isMobile); // Add this for debugging
     handleResize();
   }
   
@@ -374,21 +375,31 @@
           />
         </div>
         
-        <!-- Only show card if this event is selected or hovered -->
-        {#if selectedEvent?.slug === event.slug || hoveredEvent?.slug === event.slug}
+        <!-- Only show card if this event is selected or hovered AND NOT in mobile mode -->
+        {#if (selectedEvent?.slug === event.slug || hoveredEvent?.slug === event.slug) && !isMobile}
           <TimelineCard 
             {event} 
             isSelected={selectedEvent?.slug === event.slug}
             compact={compact}
-            position={isMobile ? 
-              (offsetPosition < 0 ? 'left' : 'right') : 
-              (offsetPosition < 0 ? 'top' : 'bottom')
-            }
-            isMobile={isMobile}
+            position={offsetPosition < 0 ? 'top' : 'bottom'}
+            isMobile={false}
           />
         {/if}
       </div>
     {/each}
+    
+    <!-- Fixed mobile card container -->
+    {#if isMobile && (selectedEvent || hoveredEvent)}
+      <div class="fixed-mobile-card-container">
+        <TimelineCard 
+          event={selectedEvent || hoveredEvent}
+          isSelected={!!selectedEvent}
+          {compact}
+          position="bottom"
+          isMobile={true}
+        />
+      </div>
+    {/if}
   </div>
   
   <!-- Empty state -->

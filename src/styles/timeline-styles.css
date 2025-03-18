@@ -187,3 +187,30 @@
   transition: transform 0.5s cubic-bezier(0.33, 1, 0.68, 1);
   will-change: transform;
 }
+
+/* Fixed mobile card container */
+.fixed-mobile-card-container {
+  position: absolute;
+  bottom: 50px; /* Position above bottom controls */
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 40; /* Ensure it's above other elements */
+  pointer-events: none; /* Let clicks pass through to the container */
+}
+
+/* For mobile timeline card in fixed container */
+.fixed-mobile-card-container .timeline-card {
+  pointer-events: auto; /* Allow interaction with the card itself */
+  position: relative;
+  transform: none !important; /* Override any transform */
+  margin: 0 auto; /* Center horizontally */
+  max-width: 80%; /* Limit width for better readability */
+}
+
+/* Ensure card pointer looks correct in fixed position */
+.fixed-mobile-card-container .card-pointer {
+  display: none; /* Hide the pointer since it doesn't point to anything */
+}

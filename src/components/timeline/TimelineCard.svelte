@@ -31,19 +31,19 @@
 </script>
 
 <div 
-  class="timeline-card card-base absolute z-30 bg-[var(--card-bg)] backdrop-blur-sm shadow-lg
-         {isMobile ? 'w-[160px]' : 'w-[200px]'} 
+  class="timeline-card card-base {isMobile ? 'fixed-position' : 'absolute z-30'} bg-[var(--card-bg)] backdrop-blur-sm shadow-lg
+         {isMobile ? 'w-[80%] mx-auto' : 'w-[200px]'} 
          {compact ? 'p-2 text-sm' : 'p-3'}
          {isSelected ? 'border-2 border-[var(--primary)]' : 'border border-transparent'}"
-  class:timeline-card-top={position === 'top'}
-  class:timeline-card-bottom={position === 'bottom'}
-  class:timeline-card-left={position === 'left'}
-  class:timeline-card-right={position === 'right'}
-  in:fly="{{ y: position === 'top' ? 10 : position === 'bottom' ? -10 : 0, 
-            x: position === 'left' ? 10 : position === 'right' ? -10 : 0, 
+  class:timeline-card-top={position === 'top' && !isMobile}
+  class:timeline-card-bottom={position === 'bottom' && !isMobile}
+  class:timeline-card-left={position === 'left' && !isMobile}
+  class:timeline-card-right={position === 'right' && !isMobile}
+  in:fly="{{ y: isMobile ? 20 : position === 'top' ? 10 : position === 'bottom' ? -10 : 0, 
+            x: isMobile ? 0 : position === 'left' ? 10 : position === 'right' ? -10 : 0, 
             duration: 200 }}"
-  out:fly="{{ y: position === 'top' ? 10 : position === 'bottom' ? -10 : 0, 
-             x: position === 'left' ? 10 : position === 'right' ? -10 : 0, 
+  out:fly="{{ y: isMobile ? 20 : position === 'top' ? 10 : position === 'bottom' ? -10 : 0, 
+             x: isMobile ? 0 : position === 'left' ? 10 : position === 'right' ? -10 : 0, 
              duration: 150 }}"
 >
   <!-- Card content -->
@@ -63,8 +63,10 @@
     </div>
   {/if}
   
-  <!-- Card arrow/pointer (added by CSS) -->
-  <div class="card-pointer absolute bg-inherit"></div>
+  <!-- Card arrow/pointer (added by CSS) - only show for non-mobile -->
+  {#if !isMobile}
+    <div class="card-pointer absolute bg-inherit"></div>
+  {/if}
 </div>
 
 <style>
@@ -85,6 +87,16 @@
     height: 8px;
     transform: rotate(45deg);
     border: inherit;
+  }
+  
+  /* Fixed position mobile card */
+  .fixed-position {
+    position: relative;
+    bottom: auto;
+    top: auto;
+    left: auto;
+    right: auto;
+    transform: none !important;
   }
   
   /* Positioning for different card locations */
