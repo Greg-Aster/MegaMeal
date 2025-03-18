@@ -84,9 +84,9 @@ const serializedEvents = safeStringify(initialEvents);
 ---
 
 <div id={id} class={`timeline-banner ${className}`} data-bannertype="timeline">
-  <!-- Use client:idle instead of client:load to give browser more time to initialize -->
+  <!-- Use client:only to completely skip server-side rendering -->
   <TimelineController
-    client:idle
+    client:only="svelte"
     {id}
     {category}
     {startYear}

@@ -1,15 +1,13 @@
 <script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
-  // Browser detection for Astro + Svelte (without SvelteKit)
-  const isBrowser = typeof window !== 'undefined';
   import { timelineStore, timelineActions, filteredEvents, selectedEvent } from '../../stores/timelineStore';
   import type { TimelineEvent } from '../../services/TimelineService.client';
   
   // Components
   import TimelineCore from './TimelineCore.svelte';
   import ListView from './TimelineViewModes/ListView.svelte';
-  import TreeView from './TimelineViewModes/TreeView.svelte';
   import MapView from './TimelineViewModes/MapView.svelte';
+  import TreeView from './TimelineViewModes/TreeView.svelte';
   
   // Props
   export let id: string = "timeline-controller";
@@ -20,135 +18,170 @@
   export let compact: boolean = false;
   export let asBanner: boolean = false;
   export let bannerHeight: string = "500px";
-  export let initialEvents: string = "[]"; // Add this prop to receive the serialized events
-  
+  export let initialEvents: string = "[]"; // Serialized events
+
   // Local state
-  let eraConfig = {};
-  let loading: boolean = true;
+  let timelineCore: TimelineCore;
+  let loading = true;
   let error: string | null = null;
-  let timelineCore: TimelineCore; // Reference to child component
-  let parsedEvents = [];
+  let eraConfig = {};
+  let isInitialized = false;
+
+  // Safe Event dispatch
+  const dispatch = createEventDispatcher();
   
-  // Safe JSON parse function that works during hydration
-  function safeJSONParse(jsonString: string): any {
+  // Simple safe JSON parse function that doesn't use complex revivers
+  function parseEvents(jsonString: string): any[] {
+    if (!jsonString || typeof jsonString !== 'string') {
+      return [];
+    }
+    
     try {
-      // Basic parsing without complex date handling
-      return JSON.parse(jsonString);
+      const parsed = JSON.parse(jsonString);
+      return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
-      console.error("Error parsing JSON:", e);
+      console.error("Error parsing events:", e);
       return [];
     }
   }
   
-  // Extract era configuration from timeline events - simplified for hydration
-  function extractEraConfig(events: TimelineEvent[]): any {
-    // Minimal implementation to avoid hydration issues
-    const config = {};
+  // Initialize the component only after mounting
+  onMount(() => {
+    // Avoid double initialization
+    if (isInitialized) return;
     
-    // Look for banner posts with era configurations
-    const bannerEvents = events.filter(event => event.bannerData?.eraConfig);
-    
-    if (bannerEvents.length > 0) {
-      const primaryBanner = bannerEvents[0];
-      if (primaryBanner.bannerData?.eraConfig) {
-        return primaryBanner.bannerData.eraConfig;
-      }
-    }
-    
-    return config;
-  }
-  
-  // Initialize store state based on props - called only after component is mounted
-  function initializeStore() {
-    if (compact !== undefined && compact !== false) {
-      timelineActions.toggleCompact();
-    }
-    
-    if (asBanner) {
-      timelineActions.setBannerMode(true);
-    }
-    
-    if (background) {
-      timelineActions.setBackground(background);
-    }
-    
-    if (startYear || endYear) {
-      timelineActions.setYearRange(
-        startYear || null,
-        endYear || null
-      );
-    }
-    
-    if (category) {
-      timelineActions.setCategory(category);
-    }
-  }
-  
-  // Load timeline data on component mount
-  onMount(async () => {
     try {
-      loading = true;
+      // Parse events first
+      const events = parseEvents(initialEvents);
       
-      // Simple parsing of initial events with fallback
-      try {
-        parsedEvents = safeJSONParse(initialEvents) || [];
-        
-        // Ensure year is a number (might be string from serialization)
-        parsedEvents = parsedEvents.map(event => ({
-          ...event,
-          year: typeof event.year === 'string' ? parseInt(event.year, 10) : event.year
-        }));
-      } catch (parseError) {
-        console.error('Error parsing events:', parseError);
-        error = 'Failed to parse event data';
-        parsedEvents = [];
+      // Process events (ensure year is a number)
+      const processedEvents = events.map(event => ({
+        ...event,
+        year: typeof event.year === 'string' ? parseInt(event.year, 10) : event.year
+      }));
+      
+      // Initialize store props
+      if (category) {
+        timelineActions.setCategory(category);
       }
       
-      // Initialize the store
-      initializeStore();
-      
-      // Set events in the store
-      timelineActions.setInitialEvents(parsedEvents);
-      
-      // Extract era configuration for UI elements
-      eraConfig = extractEraConfig(parsedEvents);
-      
-      // Check for banner background override
-      const bannerEvents = parsedEvents.filter(event => event.bannerData?.background);
-      if (bannerEvents.length > 0 && bannerEvents[0].bannerData?.background) {
-        timelineActions.setBackground(bannerEvents[0].bannerData.background);
+      if (asBanner) {
+        timelineActions.setBannerMode(true);
       }
       
-      loading = false;
+      if (background) {
+        timelineActions.setBackground(background);
+      }
+      
+      if (startYear || endYear) {
+        timelineActions.setYearRange(
+          startYear || null,
+          endYear || null
+        );
+      }
+      
+      if (compact) {
+        timelineActions.toggleCompact();
+      }
+      
+      // Set initial events
+      timelineActions.setInitialEvents(processedEvents);
+      
+      // Extract era configuration - simplified version
+      const bannerEvents = processedEvents.filter(event => event.bannerData?.eraConfig);
+      if (bannerEvents.length > 0 && bannerEvents[0].bannerData?.eraConfig) {
+        eraConfig = bannerEvents[0].bannerData.eraConfig;
+      }
+      
+      // Check for custom background
+      const backgroundEvents = processedEvents.filter(event => event.bannerData?.background);
+      if (backgroundEvents.length > 0 && backgroundEvents[0].bannerData?.background) {
+        timelineActions.setBackground(backgroundEvents[0].bannerData.background);
+      }
+      
+      // Mark as initialized
+      isInitialized = true;
+      
     } catch (e) {
-      console.error('Error loading timeline data:', e);
-      error = e instanceof Error ? e.message : 'Failed to load timeline data';
+      console.error("Error initializing timeline:", e);
+      error = "Failed to initialize timeline";
+    } finally {
+      // Always set loading to false, even if there's an error
       loading = false;
     }
+    
+    // Return cleanup function
+    return () => {
+      // Any cleanup logic here
+    };
   });
   
-  // Handler for era filtering - simplified for hydration
+  // Simple handler functions
   function handleEraFilter(e) {
-    const select = e.target;
-    const era = select.value === 'all' ? null : select.value;
-    
-    timelineActions.setEra(era);
-    
-    // If an era is selected, update year range too
-    if (era && era !== 'all-time' && eraConfig[era]) {
-      timelineActions.setYearRange(
-        eraConfig[era].startYear,
-        eraConfig[era].endYear
-      );
-    } else if (era === 'all-time' || era === 'all') {
-      // Reset to full range
-      timelineActions.setYearRange(null, null);
+    try {
+      const value = e.target.value;
+      const era = value === 'all' ? null : value;
+      
+      timelineActions.setEra(era);
+      
+      if (era && era !== 'all-time' && eraConfig[era]) {
+        timelineActions.setYearRange(
+          eraConfig[era].startYear || null,
+          eraConfig[era].endYear || null
+        );
+      } else if (era === 'all-time' || era === 'all') {
+        timelineActions.setYearRange(null, null);
+      }
+    } catch (err) {
+      console.error("Error handling era filter:", err);
     }
   }
   
-  // Handle resize events
   function handleResize() {
-    // Implementation deferred until component is fully mounted
+    // Simple resize handler
+  }
+
+  // Safe handlers for timeline actions
+  function handleZoomIn() {
+    timelineActions.zoomIn();
+    if (timelineCore && typeof timelineCore.zoomIn === 'function') {
+      timelineCore.zoomIn();
+    }
+  }
+  
+  function handleZoomOut() {
+    timelineActions.zoomOut();
+    if (timelineCore && typeof timelineCore.zoomOut === 'function') {
+      timelineCore.zoomOut();
+    }
+  }
+  
+  function handlePan(x: number, y: number) {
+    timelineActions.pan(x, y);
+    if (timelineCore && typeof timelineCore.pan === 'function') {
+      timelineCore.pan(x, y);
+    }
+  }
+  
+  function handleResetView() {
+    timelineActions.resetView();
+    if (timelineCore && typeof timelineCore.resetView === 'function') {
+      timelineCore.resetView();
+    }
+  }
+  
+  function handleSelectEvent(e) {
+    if (e && e.detail && e.detail.event && e.detail.event.slug) {
+      timelineActions.selectEvent(e.detail.event.slug);
+    }
+  }
+  
+  function handleDeselectEvent() {
+    timelineActions.selectEvent(null);
+  }
+  
+  function handleSetViewMode(mode) {
+    timelineActions.setViewMode(mode);
   }
 </script>
 
@@ -161,10 +194,7 @@
   <div class="timeline-controls flex items-center justify-between p-1 bg-[var(--card-bg)] border-b border-black/5 dark:border-white/5 z-10 rounded-t-[var(--radius-large)]">
     <div class="flex items-center">
       <!-- Zoom controls -->
-      <button on:click={() => {
-        timelineActions.zoomOut();
-        if (timelineCore) timelineCore.zoomOut();
-      }}
+      <button on:click={handleZoomOut}
       class="btn-plain w-8 h-8 rounded-md mr-1"
       aria-label="Zoom out">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -172,10 +202,7 @@
       </svg>
       </button>
 
-      <button on:click={() => {
-        timelineActions.zoomIn();
-        if (timelineCore) timelineCore.zoomIn();
-      }}
+      <button on:click={handleZoomIn}
       class="btn-plain w-8 h-8 rounded-md mr-3"
       aria-label="Zoom in">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -187,10 +214,7 @@
         
       <!-- Pan navigation buttons -->
       <div class="flex flex-col mr-2">
-        <button on:click={() => {
-          timelineActions.pan(0, 30);
-          if (timelineCore) timelineCore.pan(0, 30);
-        }}
+        <button on:click={() => handlePan(0, 30)}
         class="btn-plain w-8 h-8 rounded-md"
         aria-label="Pan up">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -198,10 +222,7 @@
           </svg>
         </button>
         
-        <button on:click={() => {
-          timelineActions.pan(0, -30);
-          if (timelineCore) timelineCore.pan(0, -30);
-        }}
+        <button on:click={() => handlePan(0, -30)}
                 class="btn-plain w-8 h-8 rounded-md"
                 aria-label="Pan down">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -211,10 +232,7 @@
       </div>
       
       <div class="flex mr-2">
-        <button on:click={() => {
-                timelineActions.pan(50, 0);
-                if (timelineCore) timelineCore.pan(50, 0);
-              }}
+        <button on:click={() => handlePan(50, 0)}
               class="btn-plain w-8 h-8 rounded-md mr-1"
               aria-label="Pan left">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -222,10 +240,7 @@
           </svg>
         </button>
         
-        <button on:click={() => {
-                timelineActions.pan(-50, 0);
-                if (timelineCore) timelineCore.pan(-50, 0);
-              }}
+        <button on:click={() => handlePan(-50, 0)}
               class="btn-plain w-8 h-8 rounded-md"
               aria-label="Pan right">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -261,7 +276,7 @@
         <span class="text-xs text-50 mr-2">View:</span>
         <div class="timeline-view-switcher flex rounded-md overflow-hidden">
           <button 
-            on:click={() => timelineActions.setViewMode('timeline')}
+            on:click={() => handleSetViewMode('timeline')}
             class="timeline-view-btn px-2 py-1 flex items-center text-xs {$timelineStore.viewMode === 'timeline' ? 'bg-[var(--primary)] text-white' : 'bg-[var(--btn-regular-bg)] text-[var(--btn-content)]'}"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
@@ -271,7 +286,7 @@
           </button>
           
           <button 
-            on:click={() => timelineActions.setViewMode('list')}
+            on:click={() => handleSetViewMode('list')}
             class="timeline-view-btn px-2 py-1 flex items-center text-xs {$timelineStore.viewMode === 'list' ? 'bg-[var(--primary)] text-white' : 'bg-[var(--btn-regular-bg)] text-[var(--btn-content)]'}"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
@@ -281,7 +296,7 @@
           </button>
           
           <button 
-            on:click={() => timelineActions.setViewMode('tree')}
+            on:click={() => handleSetViewMode('tree')}
             class="timeline-view-btn px-2 py-1 flex items-center text-xs {$timelineStore.viewMode === 'tree' ? 'bg-[var(--primary)] text-white' : 'bg-[var(--btn-regular-bg)] text-[var(--btn-content)]'}"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
@@ -291,7 +306,7 @@
           </button>
           
           <button 
-            on:click={() => timelineActions.setViewMode('map')}
+            on:click={() => handleSetViewMode('map')}
             class="timeline-view-btn px-2 py-1 flex items-center text-xs {$timelineStore.viewMode === 'map' ? 'bg-[var(--primary)] text-white' : 'bg-[var(--btn-regular-bg)] text-[var(--btn-content)]'}"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
@@ -353,8 +368,8 @@
       background={$timelineStore.background}
       compact={$timelineStore.compact}
       {asBanner}
-      on:select={(e) => timelineActions.selectEvent(e.detail.event.slug)}
-      on:deselect={() => timelineActions.selectEvent(null)}
+      on:select={handleSelectEvent}
+      on:deselect={handleDeselectEvent}
     />
     </div>
     
@@ -398,10 +413,7 @@
   </div>
   
   <div class="flex items-center">
-    <button on:click={() => {
-      timelineActions.resetView();
-      if (timelineCore) timelineCore.resetView();
-    }}
+    <button on:click={handleResetView}
             class="bg-[var(--btn-regular-bg)] hover:bg-[var(--btn-regular-bg-hover)] active:bg-[var(--btn-regular-bg-active)] text-[var(--btn-content)] flex items-center text-xs px-3 py-1 rounded-md transition-colors"
             aria-label="Reset view">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
