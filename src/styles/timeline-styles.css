@@ -1,7 +1,5 @@
 /* Timeline-specific styles to match your site's Tailwind theme */
 
-/* Add this file to your project styles directory */
-
 /* Ensure rounded corners match site style */
 .timeline {
   --radius-large: var(--radius-large, 12px);
@@ -147,6 +145,18 @@
     flex-direction: column;
   }
   
+  /* Adjust controls for mobile */
+  .timeline-controls {
+    flex-wrap: wrap;
+    padding: 0.5rem;
+    gap: 0.25rem;
+  }
+  
+  .timeline-controls .timeline-view-switcher {
+    padding-top: 0.25rem;
+    width: 100%;
+  }
+  
   /* Adjust timeline viewport to take available space */
   .timeline-viewport {
     flex: 1;
@@ -155,13 +165,7 @@
   
   /* Improve touch interactions */
   .timeline-container {
-    touch-action: pan-x pan-y; /* Enable native touch scrolling */
-  }
-  
-  /* Simplify controls for mobile */
-  .timeline-controls {
-    flex-wrap: wrap;
-    padding: 0.5rem;
+    touch-action: manipulation; /* Better touch handling */
   }
   
   /* Make timeline cards easier to tap */
@@ -169,11 +173,28 @@
     transform: scale(1.2);
   }
   
-  /* Make cards more readable on mobile */
-  :global(.timeline-card) {
+  /* Ensure cards are readable on mobile */
+  .timeline-card {
     width: 180px !important;
     font-size: 0.9rem !important;
     padding: 0.75rem !important;
+    z-index: 20;
+  }
+  
+  /* Better spacing for mobile navigation controls */
+  .timeline-controls button {
+    padding: 0.5rem;
+  }
+  
+  /* Ensure responsive layout for compact mode */
+  .compact-mode .timeline-card {
+    width: 160px !important;
+    padding: 0.5rem !important;
+  }
+  
+  /* Simplify background effects for better performance on mobile */
+  .timeline-viewport .starfield-overlay {
+    opacity: 0.2;
   }
 }
 
@@ -181,5 +202,12 @@
 @supports (-webkit-touch-callout: none) {
   .timeline-banner {
     height: 500px !important; /* Fixed height for iOS */
+  }
+  
+  /* Fix for iOS overflow issues */
+  .timeline-container {
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden;
   }
 }
