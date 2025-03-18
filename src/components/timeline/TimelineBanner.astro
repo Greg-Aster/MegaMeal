@@ -1,6 +1,5 @@
 ---
 import TimelineController from './TimelineController.svelte';
-import SimpleTimelineBanner from './SimpleTimelineBanner.astro';
 import { getTimelineEvents } from '../../services/TimelineService';
 
 // Define props interface
@@ -29,11 +28,9 @@ const {
   bannerHeight = "500px"
 } = Astro.props;
 
-// Try to detect Android server-side (may not always work)
-const userAgent = Astro.request.headers.get('user-agent') || '';
-const isAndroid = /Android/i.test(userAgent);
-
 // Pre-fetch initial data on the server
+// This gives us better performance and SEO since the basic timeline structure 
+// will be in the initial HTML
 const initialEvents = await getTimelineEvents({
   category: category || undefined,
   startYear,
@@ -71,61 +68,24 @@ function safeStringify(obj) {
 const serializedEvents = safeStringify(initialEvents);
 ---
 
-<div id="timeline-wrapper">
-  <!-- Full interactive timeline -->
-  <div id="complex-timeline" class={isAndroid ? "hidden" : ""}>
-    <div id={id} class={`timeline-banner ${className}`} data-bannertype="timeline">
-      <TimelineController
-        client:load
-        id={id}
-        category={category}
-        startYear={startYear}
-        endYear={endYear}
-        background={bannerBackground}
-        compact={compact}
-        asBanner={asBanner}
-        bannerHeight={bannerHeight}
-        initialEvents={serializedEvents}
-      />
-    </div>
-  </div>
-  
-  <!-- Simple Astro-only timeline -->
-  <div id="simple-timeline" class={isAndroid ? "" : "hidden"}>
-    <SimpleTimelineBanner
-      id={`${id}-simple`}
-      class={className}
-      category={category}
-      startYear={startYear}
-      endYear={endYear}
-      background={bannerBackground}
-      compact={compact}
-      asBanner={asBanner}
-      bannerHeight={bannerHeight}
-    />
-  </div>
+<div id={id} class={`timeline-banner ${className}`} data-bannertype="timeline">
+  <TimelineController
+    client:load
+    {id}
+    {category}
+    {startYear}
+    {endYear}
+    background={bannerBackground}
+    {compact}
+    {asBanner}
+    {bannerHeight}
+    initialEvents={serializedEvents}
+  />
 </div>
 
 <script>
-  // Client-side Android detection and timeline switching
-  function isAndroid() {
-    return /Android/i.test(navigator.userAgent);
-  }
-  
-  function switchTimeline() {
-    const isAndroidDevice = isAndroid();
-    
-    document.getElementById('complex-timeline')?.classList.toggle('hidden', isAndroidDevice);
-    document.getElementById('simple-timeline')?.classList.toggle('hidden', !isAndroidDevice);
-  }
-  
-  // Run on initial load
-  switchTimeline();
-  
   // Handle Astro page transitions
   document.addEventListener('astro:page-load', () => {
-    switchTimeline();
-    
     // Find all timeline banners and initialize if needed
     document.querySelectorAll('.timeline-banner').forEach(banner => {
       const id = banner.id;
@@ -134,6 +94,9 @@ const serializedEvents = safeStringify(initialEvents);
       if (!isInitialized) {
         console.log(`Initializing timeline banner: ${id}`);
         banner.setAttribute('data-initialized', 'true');
+        
+        // If using Svelte components, we need to check if they need re-initialization
+        // The specifics depend on how you're using Svelte with Astro
       }
     });
   });

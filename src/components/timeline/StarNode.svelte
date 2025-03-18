@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Icon from '@iconify/svelte';
-  import IconFallback from './IconFallback.svelte';
   
   // Props
   export let era: string | undefined = undefined;
@@ -10,23 +9,24 @@
   export let isHovered: boolean = false;
   export let size: number = 8;
   
-  // Check if we're on Android
-  let isAndroid = false;
-  
-  onMount(() => {
-    isAndroid = /Android/i.test(navigator.userAgent);
-  });
-  
   // More sophisticated sci-fi themed icons
   const scifiIcons = [
+    // Add your preferred icons here
+/*     'carbon:light',
     'mdi:orbit',
-    'carbon:light'
+    'carbon:satellite',
+    'carbon:network-3',
+    'tabler:satellite',
+    'mdi:space-station',
+    'mdi:hubble' */
   ];
   
   // Special icons for key events - more dramatic or significant
   const keyEventIcons = [
     'mdi:orbit',
-    'carbon:light'
+    'carbon:light',
+ //   'carbon:data-enrichment',
+ //   'mdi:black-hole'
   ];
   
   // Color variations using OKLCH format with --hue integration
@@ -54,10 +54,11 @@
   // Rotation options - including no rotation
   const rotationOptions = [
     'none',             // No rotation
-    'none',             // Add more 'none' options to reduce animation for better performance
-    'none',
     'rotate-slow-cw',   // Clockwise, slow
-    'rotate-slow-ccw'   // Counter-clockwise, slow
+    'rotate-slow-ccw',  // Counter-clockwise, slow
+    'rotate-med-cw',    // Clockwise, medium
+    'rotate-med-ccw',   // Counter-clockwise, medium
+    //'none'               Add another 'none' to increase chance of no rotation
   ];
 
   // Generate a pseudo-random but deterministic number from a string
@@ -109,15 +110,11 @@
   
   // Get rotation class
   function getRotationClass(identifier: string): string {
-    // Disable rotation on Android
-    if (isAndroid) return 'none';
     return rotationOptions[hashString(identifier) % rotationOptions.length];
   }
   
   // Generate a dynamic animation duration
   function getAnimationDuration(identifier: string): number {
-    // Simplify animation on Android
-    if (isAndroid) return 4;
     return 2.5 + (hashString(identifier) % 1000) / 500;
   }
   
@@ -136,7 +133,7 @@
 </script>
 
 <div 
-  class="star-node {isAndroid ? 'android' : ''}"
+  class="star-node"
   class:is-selected={isSelected}
   class:is-hovered={isHovered}
   class:is-key-event={isKeyEvent}
@@ -151,25 +148,13 @@
     class="icon-wrapper" 
     style="width: {finalSize * 3}px; height: {finalSize * 3}px;"
   >
-    {#if isAndroid}
-      <!-- Use our simplified icon component on Android -->
-      <IconFallback 
-        icon={iconName} 
-        color={starColor} 
-        width={finalSize * 3} 
-        height={finalSize * 3}
-        className={"star-icon " + rotationClass}
-      />
-    {:else}
-      <!-- Use regular @iconify/svelte on other platforms -->
-      <Icon 
-        icon={iconName} 
-        color="var(--star-color)" 
-        width={finalSize * 3} 
-        height={finalSize * 3}
-        class="star-icon {rotationClass}"
-      />
-    {/if}
+    <Icon 
+      icon={iconName} 
+      color="var(--star-color)" 
+      width={finalSize * 3} 
+      height={finalSize * 3}
+      class="star-icon {rotationClass}"
+    />
   </div>
 </div>
 
@@ -269,42 +254,5 @@
   @keyframes rotateCCW {
     from { transform: rotate(0deg); }
     to { transform: rotate(-360deg); }
-  }
-  
-  /* Android-specific optimizations */
-  .android {
-    filter: none !important;
-  }
-  
-  .android.is-selected {
-    transform: scale(1.2) !important;
-    filter: none !important;
-  }
-  
-  .android.is-hovered {
-    transform: scale(1.1);
-    filter: none !important;
-  }
-  
-  .android .star-icon {
-    animation: none !important;
-    transition: transform 0.3s ease;
-  }
-  
-  @media (max-width: 768px) {
-    .star-node {
-      filter: none !important;
-    }
-    
-    .is-selected, .is-hovered, .is-key-event {
-      filter: none !important;
-    }
-    
-    .rotate-slow-cw,
-    .rotate-slow-ccw,
-    .rotate-med-cw,
-    .rotate-med-ccw {
-      animation: none !important;
-    }
   }
 </style>
