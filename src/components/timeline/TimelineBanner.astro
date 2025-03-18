@@ -66,9 +66,18 @@ function safeStringify(obj) {
 
 // Serialize the events for client-side use to avoid astro:content import issues
 const serializedEvents = safeStringify(initialEvents);
+
+// Calculate a responsive banner height
+const mobileHeight = "400px";
+const desktopHeight = bannerHeight || "500px";
 ---
 
-<div id={id} class={`timeline-banner ${className}`} data-bannertype="timeline">
+<div 
+  id={id} 
+  class={`timeline-banner ${className}`} 
+  data-bannertype="timeline"
+  style={`--mobile-height: ${mobileHeight}; --desktop-height: ${desktopHeight};`}
+>
   <TimelineController
     client:load
     {id}
@@ -78,32 +87,70 @@ const serializedEvents = safeStringify(initialEvents);
     background={bannerBackground}
     {compact}
     {asBanner}
-    {bannerHeight}
+    bannerHeight={bannerHeight}
     initialEvents={serializedEvents}
   />
 </div>
 
 <script>
+  // Handle initial load
+  document.addEventListener('DOMContentLoaded', initTimelines);
+  
   // Handle Astro page transitions
-  document.addEventListener('astro:page-load', () => {
+  document.addEventListener('astro:page-load', initTimelines);
+  
+  // Handle visibility changes (important for mobile browsers)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      // When tab becomes visible again, trigger resize for all timelines
+      document.querySelectorAll('.timeline-banner').forEach(banner => {
+        banner.dispatchEvent(new CustomEvent('timeline:resize'));
+      });
+    }
+  });
+  
+  // Ensure all timelines are properly initialized and visible
+  function initTimelines() {
     // Find all timeline banners and initialize if needed
     document.querySelectorAll('.timeline-banner').forEach(banner => {
       const id = banner.id;
-      const isInitialized = banner.hasAttribute('data-initialized');
       
-      if (!isInitialized) {
-        console.log(`Initializing timeline banner: ${id}`);
-        banner.setAttribute('data-initialized', 'true');
-        
-        // If using Svelte components, we need to check if they need re-initialization
-        // The specifics depend on how you're using Svelte with Astro
-      }
+      // Make sure the banner is visible
+      banner.style.display = 'flex';
+      banner.style.flexDirection = 'column';
+      banner.style.visibility = 'visible';
+      banner.style.opacity = '1';
+      
+      // Set appropriate height based on viewport
+      const isMobile = window.innerWidth <= 768;
+      const height = isMobile 
+        ? banner.style.getPropertyValue('--mobile-height') || '400px'
+        : banner.style.getPropertyValue('--desktop-height') || '500px';
+      
+      banner.style.minHeight = height;
+      
+      // Mark as initialized
+      banner.setAttribute('data-initialized', 'true');
+      
+      // Force a layout update
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+        banner.dispatchEvent(new CustomEvent('timeline:resize'));
+      }, 100);
     });
-  });
+  }
   
-  // Add resize handler to update any responsive elements
+  // Add resize handler to update responsive elements
   window.addEventListener('resize', () => {
     document.querySelectorAll('.timeline-banner').forEach(banner => {
+      // Update height based on viewport size
+      const isMobile = window.innerWidth <= 768;
+      const height = isMobile 
+        ? banner.style.getPropertyValue('--mobile-height') || '400px'
+        : banner.style.getPropertyValue('--desktop-height') || '500px';
+      
+      banner.style.minHeight = height;
+      
       // Dispatch a resize event that Svelte components can listen for
       banner.dispatchEvent(new CustomEvent('timeline:resize'));
     });
@@ -118,6 +165,9 @@ const serializedEvents = safeStringify(initialEvents);
     overflow-x: hidden;
     margin-bottom: 1rem;
     border-radius: var(--radius-large, 12px);
+    display: flex;
+    flex-direction: column;
+    min-height: var(--desktop-height, 500px);
   }
   
   /* Specifically for banner mode (full-width/height) */
@@ -133,6 +183,14 @@ const serializedEvents = safeStringify(initialEvents);
     box-shadow: var(--card-shadow, 0 2px 4px rgba(0,0,0,0.005));
   }
   
+  /* Mobile specific styles */
+  @media (max-width: 768px) {
+    .timeline-banner {
+      min-height: var(--mobile-height, 400px) !important;
+      height: auto !important;
+    }
+  }
+  
   /* Quality of life improvements */
   @media (prefers-reduced-motion: no-preference) {
     .timeline-banner {
@@ -142,6 +200,13 @@ const serializedEvents = safeStringify(initialEvents);
     .timeline-banner:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+  }
+  
+  /* Fix for iOS Safari */
+  @supports (-webkit-touch-callout: none) {
+    .timeline-banner {
+      height: var(--mobile-height, 400px) !important;
     }
   }
 </style>

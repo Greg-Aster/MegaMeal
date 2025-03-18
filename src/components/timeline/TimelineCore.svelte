@@ -181,6 +181,46 @@
         }
       }
     });
+    
+    // Add tap handlers for mobile
+    timelineContainer.addEventListener('touchend', (e) => {
+      if (isDragging) {
+        // If we were dragging, don't trigger tap
+        if (Math.abs(e.changedTouches[0].clientX - startDragX) > 10 || 
+            Math.abs(e.changedTouches[0].clientY - startDragY) > 10) {
+          return;
+        }
+      }
+      
+      const target = e.target as HTMLElement;
+      const eventNode = target.closest('.event-node');
+      
+      if (eventNode) {
+        const slug = eventNode.getAttribute('data-slug');
+        if (!slug) return;
+        
+        // Find the corresponding event
+        const event = events.find(evt => evt.slug === slug);
+        if (!event) return;
+        
+        console.log("Touch on event:", event.title);
+        
+        // If already selected, navigate to post
+        if (selectedEvent && selectedEvent.slug === slug) {
+          window.location.href = `/posts/${slug}/`;
+        } else {
+          // Otherwise, select this event
+          selectedEvent = event;
+          dispatch('select', { event });
+          
+          // Update UI to reflect selection
+          updateSelectionState();
+        }
+        
+        // Prevent default to avoid unintended interactions
+        e.preventDefault();
+      }
+    });
   }
   
   // Update DOM to reflect selection state
@@ -312,11 +352,61 @@
     }
   }
   
+  // Touch event handling for mobile
+  function startTouchDrag(e: TouchEvent) {
+    // Ignore touch events that start on event elements
+    if ((e.target as HTMLElement).closest('.event-node')) {
+      return;
+    }
+    
+    isDragging = true;
+    startDragX = e.touches[0].clientX;
+    startDragY = e.touches[0].clientY;
+    startOffsetX = $offsetX;
+    startOffsetY = $offsetY;
+    
+    // Add class for styling
+    if (timelineContainer) {
+      timelineContainer.classList.add('dragging');
+    }
+  }
+  
+  function touchDrag(e: TouchEvent) {
+    if (!isDragging) return;
+    
+    const deltaX = e.touches[0].clientX - startDragX;
+    const deltaY = e.touches[0].clientY - startDragY;
+    
+    offsetX.set(startOffsetX + deltaX);
+    offsetY.set(startOffsetY + deltaY);
+    
+    // Prevent default to stop page scrolling when dragging the timeline
+    if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+      e.preventDefault();
+    }
+  }
+  
+  function endTouchDrag() {
+    if (!isDragging) return;
+    
+    isDragging = false;
+    
+    // Remove dragging class
+    if (timelineContainer) {
+      timelineContainer.classList.remove('dragging');
+    }
+  }
+  
   // Set up and tear down event listeners
   onMount(() => {
     if (timelineContainer) {
       // Set up direct DOM event handlers
       setupDirectEventHandlers();
+      
+      // Add touch event handlers
+      timelineContainer.addEventListener('touchstart', startTouchDrag, { passive: true });
+      timelineContainer.addEventListener('touchmove', touchDrag, { passive: false });
+      timelineContainer.addEventListener('touchend', endTouchDrag);
     }
     
     // Attach global mouse event handlers
@@ -328,6 +418,11 @@
     
     // Handle resize events
     window.addEventListener('resize', handleResize);
+    
+    // Reset zoom level for mobile
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      scale.set(0.8); // Slightly zoomed out on mobile for better viewing
+    }
     
     // Expose the control functions to the global scope
     if (typeof window !== 'undefined') {
@@ -342,6 +437,12 @@
       window.removeEventListener('mousemove', drag);
       window.removeEventListener('mouseup', endDrag);
       window.removeEventListener('resize', handleResize);
+      
+      if (timelineContainer) {
+        timelineContainer.removeEventListener('touchstart', startTouchDrag);
+        timelineContainer.removeEventListener('touchmove', touchDrag);
+        timelineContainer.removeEventListener('touchend', endTouchDrag);
+      }
     };
   });
   
@@ -350,6 +451,11 @@
     if (timelineContainer) {
       containerWidth = timelineContainer.offsetWidth;
       containerHeight = timelineContainer.offsetHeight;
+      
+      // Adjust for mobile if needed
+      if (window.innerWidth < 768 && $scale > 1) {
+        scale.set(0.8); // Ensure not too zoomed in on mobile
+      }
     }
   }
   
@@ -369,7 +475,12 @@
   }
   
   export function resetView() {
-    scale.set(1);
+    // Use different scale for mobile
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      scale.set(0.8);
+    } else {
+      scale.set(1);
+    }
     offsetX.set(0);
     offsetY.set(0);
     selectedEvent = null;
@@ -541,11 +652,18 @@
     100% { opacity: 0.3; }
   }
   
-  /* Mobile optimization */
-/*   @media (max-width: 768px) {
-    .compact-mode :global(.timeline-card) {
-      width: 150px !important;
-      padding: 0.5rem !important;
+  /* Optimize for mobile */
+  @media (max-width: 768px) {
+    .card-base {
+      min-height: 300px;
     }
-  } */
+    
+    .timeline-event {
+      pointer-events: auto !important;
+    }
+    
+    .timeline-event .event-node {
+      transform: scale(1.5) !important;
+    }
+  }
 </style>
