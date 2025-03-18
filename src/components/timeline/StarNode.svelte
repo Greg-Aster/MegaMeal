@@ -12,21 +12,14 @@
   // More sophisticated sci-fi themed icons
   const scifiIcons = [
     // Add your preferred icons here
-/*     'carbon:light',
     'mdi:orbit',
-    'carbon:satellite',
-    'carbon:network-3',
-    'tabler:satellite',
-    'mdi:space-station',
-    'mdi:hubble' */
+    'carbon:light'
   ];
   
   // Special icons for key events - more dramatic or significant
   const keyEventIcons = [
     'mdi:orbit',
-    'carbon:light',
- //   'carbon:data-enrichment',
- //   'mdi:black-hole'
+    'carbon:light'
   ];
   
   // Color variations using OKLCH format with --hue integration
@@ -51,15 +44,20 @@
   // Size variations factor - how much to vary sizes
   const sizeVariations = [0.7, 0.85, 1.0, 1.15, 1.3, 1.5];
   
-  // Rotation options - including no rotation
+  // Reduced rotation options - more "none" values for better performance
   const rotationOptions = [
-    'none',             // No rotation
-    'rotate-slow-cw',   // Clockwise, slow
-    'rotate-slow-ccw',  // Counter-clockwise, slow
-    'rotate-med-cw',    // Clockwise, medium
-    'rotate-med-ccw',   // Counter-clockwise, medium
-    //'none'               Add another 'none' to increase chance of no rotation
+    'none',
+    'none',
+    'none',
+    'rotate-slow-cw',
+    'rotate-slow-ccw'
   ];
+
+  // Detect if device is mobile
+  let isMobile = false;
+  onMount(() => {
+    isMobile = window.innerWidth < 768 || 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  });
 
   // Generate a pseudo-random but deterministic number from a string
   function hashString(str: string): number {
@@ -110,11 +108,15 @@
   
   // Get rotation class
   function getRotationClass(identifier: string): string {
+    // On mobile, prefer 'none' for better performance
+    if (isMobile) return 'none';
     return rotationOptions[hashString(identifier) % rotationOptions.length];
   }
   
   // Generate a dynamic animation duration
   function getAnimationDuration(identifier: string): number {
+    // Simplified duration for mobile
+    if (isMobile) return 4;
     return 2.5 + (hashString(identifier) % 1000) / 500;
   }
   
@@ -133,7 +135,7 @@
 </script>
 
 <div 
-  class="star-node"
+  class="star-node {isMobile ? 'mobile' : ''}"
   class:is-selected={isSelected}
   class:is-hovered={isHovered}
   class:is-key-event={isKeyEvent}
@@ -254,5 +256,44 @@
   @keyframes rotateCCW {
     from { transform: rotate(0deg); }
     to { transform: rotate(-360deg); }
+  }
+  
+  /* Optimization for mobile devices */
+  .mobile .star-icon {
+    /* Disable complex animations on mobile for better performance */
+    animation: none !important;
+    transition: transform 0.3s ease;
+  }
+  
+  .mobile.is-selected {
+    transform: scale(1.2) !important;
+    filter: drop-shadow(0 0 4px var(--star-color)) !important;
+  }
+  
+  .mobile.is-hovered {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 3px var(--star-color));
+  }
+  
+  .mobile.is-key-event {
+    filter: drop-shadow(0 0 3px var(--star-color));
+  }
+  
+  /* Simplify further for mobile */
+  @media (max-width: 768px) {
+    .star-node {
+      filter: none !important;
+    }
+    
+    .is-selected, .is-hovered, .is-key-event {
+      filter: none !important;
+    }
+    
+    .rotate-slow-cw,
+    .rotate-slow-ccw,
+    .rotate-med-cw,
+    .rotate-med-ccw {
+      animation: none !important;
+    }
   }
 </style>
