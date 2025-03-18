@@ -13,6 +13,9 @@ interface Props {
 const props = Astro.props
 const { id, name, isCollapsed, collapsedHeight, style } = Astro.props
 const className = Astro.props.class
+
+// Check for Android in server-side (note: this won't detect client-side)
+const isAndroid = Astro.request.headers.get('user-agent')?.includes('Android') || false;
 ---
 <widget-layout data-id={id} data-is-collapsed={String(isCollapsed)} class={"pb-4 card-base " + className} style={style}>
     <div class="font-bold transition text-lg text-neutral-900 dark:text-neutral-100 relative ml-8 mt-4 mb-2
@@ -24,7 +27,14 @@ const className = Astro.props.class
     {isCollapsed && <div class="expand-btn px-4 -mb-2">
         <button class="btn-plain rounded-lg w-full h-9">
             <div class="text-[var(--primary)] flex items-center justify-center gap-2 -translate-x-2">
-                <Icon name="material-symbols:more-horiz" class="text-[1.75rem]"></Icon> {i18n(I18nKey.more)}
+                {/* Use our client-side detection */}
+                <div class="icon-container">
+                    <Icon name="material-symbols:more-horiz" class="text-[1.75rem] desktop-icon"></Icon>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="text-[1.75rem] android-icon hidden" width="28" height="28" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                    </svg>
+                </div>
+                {i18n(I18nKey.more)}
             </div>
         </button>
     </div>}
@@ -33,6 +43,14 @@ const className = Astro.props.class
 <style define:vars={{ collapsedHeight }}>
     .collapsed {
         height: var(--collapsedHeight);
+    }
+    
+    .android-icon.show {
+        display: block;
+    }
+    
+    .desktop-icon.hide {
+        display: none;
     }
 </style>
 
@@ -46,11 +64,21 @@ const className = Astro.props.class
 
             const id = this.dataset.id;
             const btn = this.querySelector('.expand-btn');
-            const wrapper = this.querySelector(`#${id}`)
-            btn!.addEventListener('click', () => {
-                wrapper!.classList.remove('collapsed');
-                btn!.classList.add('hidden');
-            })
+            const wrapper = this.querySelector(`#${id}`);
+            
+            btn?.addEventListener('click', () => {
+                wrapper?.classList.remove('collapsed');
+                btn?.classList.add('hidden');
+            });
+            
+            // Check for Android and show the appropriate icon
+            if (/Android/i.test(navigator.userAgent)) {
+                const androidIcons = this.querySelectorAll('.android-icon');
+                const desktopIcons = this.querySelectorAll('.desktop-icon');
+                
+                androidIcons.forEach(icon => icon.classList.remove('hidden'));
+                desktopIcons.forEach(icon => icon.classList.add('hidden'));
+            }
         }
     }
 

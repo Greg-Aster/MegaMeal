@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Icon from '@iconify/svelte';
+  import IconFallback from './IconFallback.svelte';
   
   // Props
   export let era: string | undefined = undefined;
@@ -9,9 +10,15 @@
   export let isHovered: boolean = false;
   export let size: number = 8;
   
+  // Check if we're on Android
+  let isAndroid = false;
+  
+  onMount(() => {
+    isAndroid = /Android/i.test(navigator.userAgent);
+  });
+  
   // More sophisticated sci-fi themed icons
   const scifiIcons = [
-    // Add your preferred icons here
     'mdi:orbit',
     'carbon:light'
   ];
@@ -44,20 +51,14 @@
   // Size variations factor - how much to vary sizes
   const sizeVariations = [0.7, 0.85, 1.0, 1.15, 1.3, 1.5];
   
-  // Reduced rotation options - more "none" values for better performance
+  // Rotation options - including no rotation
   const rotationOptions = [
+    'none',             // No rotation
+    'none',             // Add more 'none' options to reduce animation for better performance
     'none',
-    'none',
-    'none',
-    'rotate-slow-cw',
-    'rotate-slow-ccw'
+    'rotate-slow-cw',   // Clockwise, slow
+    'rotate-slow-ccw'   // Counter-clockwise, slow
   ];
-
-  // Detect if device is mobile
-  let isMobile = false;
-  onMount(() => {
-    isMobile = window.innerWidth < 768 || 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  });
 
   // Generate a pseudo-random but deterministic number from a string
   function hashString(str: string): number {
@@ -108,15 +109,15 @@
   
   // Get rotation class
   function getRotationClass(identifier: string): string {
-    // On mobile, prefer 'none' for better performance
-    if (isMobile) return 'none';
+    // Disable rotation on Android
+    if (isAndroid) return 'none';
     return rotationOptions[hashString(identifier) % rotationOptions.length];
   }
   
   // Generate a dynamic animation duration
   function getAnimationDuration(identifier: string): number {
-    // Simplified duration for mobile
-    if (isMobile) return 4;
+    // Simplify animation on Android
+    if (isAndroid) return 4;
     return 2.5 + (hashString(identifier) % 1000) / 500;
   }
   
@@ -135,7 +136,7 @@
 </script>
 
 <div 
-  class="star-node {isMobile ? 'mobile' : ''}"
+  class="star-node {isAndroid ? 'android' : ''}"
   class:is-selected={isSelected}
   class:is-hovered={isHovered}
   class:is-key-event={isKeyEvent}
@@ -150,13 +151,25 @@
     class="icon-wrapper" 
     style="width: {finalSize * 3}px; height: {finalSize * 3}px;"
   >
-    <Icon 
-      icon={iconName} 
-      color="var(--star-color)" 
-      width={finalSize * 3} 
-      height={finalSize * 3}
-      class="star-icon {rotationClass}"
-    />
+    {#if isAndroid}
+      <!-- Use our simplified icon component on Android -->
+      <IconFallback 
+        icon={iconName} 
+        color={starColor} 
+        width={finalSize * 3} 
+        height={finalSize * 3}
+        className={"star-icon " + rotationClass}
+      />
+    {:else}
+      <!-- Use regular @iconify/svelte on other platforms -->
+      <Icon 
+        icon={iconName} 
+        color="var(--star-color)" 
+        width={finalSize * 3} 
+        height={finalSize * 3}
+        class="star-icon {rotationClass}"
+      />
+    {/if}
   </div>
 </div>
 
@@ -258,28 +271,26 @@
     to { transform: rotate(-360deg); }
   }
   
-  /* Optimization for mobile devices */
-  .mobile .star-icon {
-    /* Disable complex animations on mobile for better performance */
+  /* Android-specific optimizations */
+  .android {
+    filter: none !important;
+  }
+  
+  .android.is-selected {
+    transform: scale(1.2) !important;
+    filter: none !important;
+  }
+  
+  .android.is-hovered {
+    transform: scale(1.1);
+    filter: none !important;
+  }
+  
+  .android .star-icon {
     animation: none !important;
     transition: transform 0.3s ease;
   }
   
-  .mobile.is-selected {
-    transform: scale(1.2) !important;
-    filter: drop-shadow(0 0 4px var(--star-color)) !important;
-  }
-  
-  .mobile.is-hovered {
-    transform: scale(1.1);
-    filter: drop-shadow(0 0 3px var(--star-color));
-  }
-  
-  .mobile.is-key-event {
-    filter: drop-shadow(0 0 3px var(--star-color));
-  }
-  
-  /* Simplify further for mobile */
   @media (max-width: 768px) {
     .star-node {
       filter: none !important;
