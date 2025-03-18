@@ -21,6 +21,7 @@
   let containerWidth: number = 0;
   let containerHeight: number = 0;
   let padding = 15; // percentage padding on timeline edges
+  let isMobile = false; // Track if we're in mobile view
   
   // Svelte store for animated values
   const scale = tweened(1, {
@@ -61,7 +62,7 @@
   // Calculate timespan - ensure it has a non-zero value
   $: timespan = Math.max(1, (endYear || 2100) - (startYear || 2000));
   
-  // Calculate position for each event
+  // Calculate position for each event - now handles both horizontal and vertical layouts
   function getPositionPercentage(year: number): number {
     if (timespan === 0) return 50;
     
@@ -87,6 +88,11 @@
     // Position between -120px and +120px with bell curve distribution
     let verticalOffset = (randomFactor * 2 - 1) * 240;
     verticalOffset = Math.sign(verticalOffset) * Math.pow(Math.abs(verticalOffset) / 120, 1.5) * 120;
+    
+    // For mobile: keep the range smaller to prevent elements from going off-screen
+    if (isMobile) {
+      verticalOffset = Math.sign(verticalOffset) * Math.min(Math.abs(verticalOffset), 80);
+    }
     
     // Ensure stars stay within reasonable bounds
     verticalOffset = Math.max(-140, Math.min(140, verticalOffset));
@@ -312,12 +318,21 @@
     }
   }
   
+  // Check if we're in mobile view
+  function checkMobileView() {
+    isMobile = window.innerWidth < 768; // Standard mobile breakpoint
+    handleResize();
+  }
+  
   // Set up and tear down event listeners
   onMount(() => {
     if (timelineContainer) {
       // Set up direct DOM event handlers
       setupDirectEventHandlers();
     }
+    
+    // Check mobile view
+    checkMobileView();
     
     // Attach global mouse event handlers
     window.addEventListener('mousemove', drag);
@@ -327,7 +342,10 @@
     handleResize();
     
     // Handle resize events
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', () => {
+      checkMobileView();
+      handleResize();
+    });
     
     // Expose the control functions to the global scope
     if (typeof window !== 'undefined') {
@@ -381,7 +399,7 @@
   }
 </script>
 
-<div class="card-base relative overflow-hidden {asBanner ? 'h-full rounded-none' : 'h-[300px]'} {compact ? 'compact-mode' : ''}" 
+<div class="card-base relative overflow-hidden {asBanner ? 'h-full rounded-none' : 'h-[300px] md:h-[300px]'} {compact ? 'compact-mode' : ''}" 
      data-start-year={startYear} 
      data-end-year={endYear}>
 
@@ -390,7 +408,7 @@
     <img 
       src={background} 
       alt="Timeline background" 
-      class="w-full h-full object-cover transition-transform duration-300 ease-out"
+      class="w-full h-full object-cover transition-transform duration-300 ease-out mobile-rotate-bg"
       style="transform: scale({1.05 + 0.05 * $scale}) translate({-$offsetX * 0.05}px, {-$offsetY * 0.05}px);"
     />
     <div class="absolute inset-0 bg-gradient-to-r from-[oklch(0.25_0.05_var(--hue))] to-[oklch(0.15_0.05_var(--hue))] opacity-20 dark:opacity-20 backdrop-blur-[2px]"></div>
@@ -422,54 +440,60 @@
        tabindex="0"
        style="transform: scale({$scale}) translate({$offsetX/$scale}px, {$offsetY/$scale}px);">
     
-    <!-- Center line -->
-    <div class="absolute left-0 right-0 h-0.5 top-1/2 -translate-y-1/2 bg-[var(--primary)] opacity-20"></div>
+    <!-- Center line - horizontal for desktop, vertical for mobile -->
+    <div class="timeline-center-line absolute"></div>
     
     <!-- Year markers -->
-    <div class="absolute top-1/2 -translate-y-1/2 w-0.5 h-3 bg-[var(--primary)] opacity-30" style="left: {padding}%"></div>
-    <div class="absolute top-1/2 -translate-y-1/2 w-0.5 h-3 bg-[var(--primary)] opacity-30" style="left: {100 - padding}%"></div>
+    <div class="timeline-start-marker absolute"></div>
+    <div class="timeline-end-marker absolute"></div>
 
-    <!-- Events -->
-    {#each eventPositions as { event, horizontalPosition, verticalPosition }, i}
-      <!-- Event container -->
-      <div 
-        class="timeline-event absolute transform -translate-x-1/2"
-        style="left: {horizontalPosition}%; top: calc(50% + {verticalPosition}px); z-index: {selectedEvent?.slug === event.slug ? 5 : 1};"
-      >
-        <!-- Star node - Using data attribute for DOM event handling -->
+    <!-- Events - we use a wrapper div for mobile view rotation -->
+    <div class="timeline-events-wrapper">
+      {#each eventPositions as { event, horizontalPosition, verticalPosition }, i}
+        <!-- Event container -->
         <div 
-          class="event-node absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-          data-slug={event.slug}
-          data-year={event.year}
-          data-era={event.era}
+          class="timeline-event absolute transform"
+          style="
+            --event-h-pos: {horizontalPosition}%;
+            --event-v-pos: {verticalPosition}px;
+            z-index: {selectedEvent?.slug === event.slug ? 5 : 1};
+          "
         >
-          <StarNode 
-            era={event.era} 
-            isKeyEvent={event.isKeyEvent} 
-            isSelected={selectedEvent?.slug === event.slug}
-            isHovered={hoveredEvent?.slug === event.slug}
-            size={event.isKeyEvent ? 10 : 8}
-          />
+          <!-- Star node - Using data attribute for DOM event handling -->
+          <div 
+            class="event-node absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
+            data-slug={event.slug}
+            data-year={event.year}
+            data-era={event.era}
+          >
+            <StarNode 
+              era={event.era} 
+              isKeyEvent={event.isKeyEvent} 
+              isSelected={selectedEvent?.slug === event.slug}
+              isHovered={hoveredEvent?.slug === event.slug}
+              size={event.isKeyEvent ? 10 : 8}
+            />
+          </div>
+          
+          <!-- Event information card -->
+          <div class="timeline-card {selectedEvent?.slug === event.slug || hoveredEvent?.slug === event.slug ? '' : 'hidden'}">
+            <TimelineCard 
+              {event} 
+              isSelected={selectedEvent?.slug === event.slug}
+              compact={compact}
+              position={verticalPosition < 0 ? 'top' : 'bottom'}
+            />
+          </div>
         </div>
-        
-        <!-- Event information card -->
-        <div class="timeline-card {selectedEvent?.slug === event.slug || hoveredEvent?.slug === event.slug ? '' : 'hidden'}">
-          <TimelineCard 
-            {event} 
-            isSelected={selectedEvent?.slug === event.slug}
-            compact={compact}
-            position={verticalPosition < 0 ? 'top' : 'bottom'}
-          />
-        </div>
-      </div>
-    {/each}
+      {/each}
+    </div>
     
     <!-- Era labels -->
     {#if events.length > 0}
-      <div class="absolute top-0 left-[15%] p-2 text-lg font-bold text-75">
+      <div class="timeline-start-label absolute font-bold text-75">
         {startYear}
       </div>
-      <div class="absolute top-0 right-[15%] p-2 text-lg font-bold text-75">
+      <div class="timeline-end-label absolute font-bold text-75">
         {endYear}
       </div>
     {/if}
@@ -514,6 +538,152 @@
     will-change: transform;
   }
   
+  /* Desktop layout (horizontal timeline) */
+  @media (min-width: 768px) {
+    .timeline-events-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .timeline-event {
+      left: var(--event-h-pos);
+      top: calc(50% + var(--event-v-pos));
+      transform: translateX(-50%);
+    }
+    
+    .timeline-center-line {
+      left: 0;
+      right: 0;
+      height: 0.5px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: var(--primary);
+      opacity: 0.2;
+    }
+    
+    .timeline-start-marker {
+      left: 15%;
+      top: 50%;
+      width: 0.5px;
+      height: 3px;
+      transform: translateY(-50%);
+      background-color: var(--primary);
+      opacity: 0.3;
+    }
+    
+    .timeline-end-marker {
+      left: 85%;
+      top: 50%;
+      width: 0.5px;
+      height: 3px;
+      transform: translateY(-50%);
+      background-color: var(--primary);
+      opacity: 0.3;
+    }
+    
+    .timeline-start-label {
+      top: 0;
+      left: 15%;
+      padding: 0.5rem;
+      font-size: 1.125rem;
+    }
+    
+    .timeline-end-label {
+      top: 0;
+      right: 15%;
+      padding: 0.5rem;
+      font-size: 1.125rem;
+    }
+  }
+  
+  /* Mobile layout (vertical timeline) */
+  @media (max-width: 767px) {
+    /* Make timeline container taller on mobile */
+    .card-base:not(.h-full) {
+      height: 450px !important;
+    }
+    
+    /* Rotate the background image */
+    .mobile-rotate-bg {
+      transform-origin: center;
+      transform: rotate(90deg) scale(1.5) !important;
+    }
+    
+    .timeline-events-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform: rotate(90deg);
+      transform-origin: center;
+    }
+    
+    .timeline-event {
+      /* We're rotating 90 degrees, so we swap X and Y positioning */
+      left: 50%;
+      top: var(--event-h-pos);
+      transform: translate(-50%, -50%);
+    }
+    
+    /* Position the info cards so they're readable in vertical mode */
+    .timeline-event .timeline-card {
+      transform: rotate(-90deg);
+      transform-origin: center;
+      /* Adjust card positioning for vertical layout */
+      position: absolute;
+      left: calc(var(--event-v-pos) * -1);
+    }
+    
+    /* Rotate the center line to vertical */
+    .timeline-center-line {
+      top: 0;
+      bottom: 0;
+      width: 0.5px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--primary);
+      opacity: 0.2;
+    }
+    
+    /* Rotate the markers */
+    .timeline-start-marker {
+      top: 15%;
+      left: 50%;
+      height: 0.5px;
+      width: 3px;
+      transform: translateX(-50%);
+      background-color: var(--primary);
+      opacity: 0.3;
+    }
+    
+    .timeline-end-marker {
+      top: 85%;
+      left: 50%;
+      height: 0.5px;
+      width: 3px;
+      transform: translateX(-50%);
+      background-color: var(--primary);
+      opacity: 0.3;
+    }
+    
+    /* Rotate the year labels */
+    .timeline-start-label {
+      left: 0;
+      top: 15%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      transform: rotate(-90deg);
+    }
+    
+    .timeline-end-label {
+      right: 0;
+      top: 85%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      transform: rotate(-90deg);
+    }
+  }
+  
   /* Disable animations during dragging for better performance */
   .dragging .timeline-event,
   .dragging .timeline-container {
@@ -540,12 +710,4 @@
     50% { opacity: 0.4; }
     100% { opacity: 0.3; }
   }
-  
-  /* Mobile optimization */
-/*   @media (max-width: 768px) {
-    .compact-mode :global(.timeline-card) {
-      width: 150px !important;
-      padding: 0.5rem !important;
-    }
-  } */
 </style>

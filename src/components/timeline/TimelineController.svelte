@@ -26,6 +26,7 @@
   let error: string | null = null;
   let eraConfig = {};
   let isInitialized = false;
+  let isMobile = false;
 
   // Safe Event dispatch
   const dispatch = createEventDispatcher();
@@ -45,8 +46,19 @@
     }
   }
   
+  // Check if we're on a mobile device
+  function checkMobileView() {
+    isMobile = window.innerWidth < 768; // Standard mobile breakpoint
+  }
+  
   // Initialize the component only after mounting
   onMount(() => {
+    // Check for mobile view
+    checkMobileView();
+    
+    // Listen for window resize to update mobile state
+    window.addEventListener('resize', checkMobileView);
+    
     // Avoid double initialization
     if (isInitialized) return;
     
@@ -112,7 +124,7 @@
     
     // Return cleanup function
     return () => {
-      // Any cleanup logic here
+      window.removeEventListener('resize', checkMobileView);
     };
   });
   
@@ -139,6 +151,7 @@
   
   function handleResize() {
     // Simple resize handler
+    checkMobileView();
   }
 
   // Safe handlers for timeline actions
@@ -183,77 +196,145 @@
   function handleSetViewMode(mode) {
     timelineActions.setViewMode(mode);
   }
+  
+  function handleToggleCompact() {
+    timelineActions.toggleCompact();
+  }
 </script>
 
 <div class="flex flex-col w-full overflow-hidden relative {asBanner ? 'timeline-banner-mode' : ''}" 
-     style={asBanner ? `height: ${bannerHeight};` : "height: 500px;"} 
+     style={asBanner ? `height: ${isMobile ? '600px' : bannerHeight};` : "height: 500px;"} 
      {id}
      on:timeline:resize={handleResize}>
   
-  <!-- Top control bar -->
-  <div class="timeline-controls flex items-center justify-between p-1 bg-[var(--card-bg)] border-b border-black/5 dark:border-white/5 z-10 rounded-t-[var(--radius-large)]">
-    <div class="flex items-center">
+  <!-- Top control bar - reorganized for mobile -->
+  <div class="timeline-controls flex flex-col md:flex-row items-center justify-between p-1 bg-[var(--card-bg)] border-b border-black/5 dark:border-white/5 z-10 rounded-t-[var(--radius-large)]">
+    <!-- First row for mobile / all controls for desktop -->
+    <div class="flex items-center flex-wrap md:flex-nowrap justify-center md:justify-start w-full md:w-auto">
       <!-- Zoom controls -->
-      <button on:click={handleZoomOut}
-      class="btn-plain w-8 h-8 rounded-md mr-1"
-      aria-label="Zoom out">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM13.5 10.5h-6" />
-      </svg>
-      </button>
+      <div class="flex items-center mr-2">
+        <button on:click={handleZoomOut}
+          class="btn-plain w-8 h-8 rounded-md mr-1"
+          aria-label="Zoom out">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM13.5 10.5h-6" />
+          </svg>
+        </button>
 
-      <button on:click={handleZoomIn}
-      class="btn-plain w-8 h-8 rounded-md mr-3"
-      aria-label="Zoom in">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM7.5 10.5h6m-3-3v6" />
-      </svg>
-    </button>
+        <button on:click={handleZoomIn}
+          class="btn-plain w-8 h-8 rounded-md"
+          aria-label="Zoom in">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM7.5 10.5h6m-3-3v6" />
+          </svg>
+        </button>
+      </div>
         
-      <div class="h-5 border-r border-black/10 dark:border-white/10 mx-2"></div>
+      <div class="h-5 border-r border-black/10 dark:border-white/10 mx-2 hidden md:block"></div>
         
       <!-- Pan navigation buttons -->
-      <div class="flex flex-col mr-2">
-        <button on:click={() => handlePan(0, 30)}
-        class="btn-plain w-8 h-8 rounded-md"
-        aria-label="Pan up">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-          </svg>
-        </button>
-        
-        <button on:click={() => handlePan(0, -30)}
-                class="btn-plain w-8 h-8 rounded-md"
-                aria-label="Pan down">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-          </svg>
-        </button>
-      </div>
-      
       <div class="flex mr-2">
-        <button on:click={() => handlePan(50, 0)}
-              class="btn-plain w-8 h-8 rounded-md mr-1"
+        <!-- On mobile, show horizontal and vertical buttons in a 2x2 grid -->
+        <div class="grid grid-cols-3 grid-rows-3 gap-0 md:hidden">
+          <!-- Top button -->
+          <div class="col-start-2 col-end-3 row-start-1 row-end-2 flex justify-center">
+            <button on:click={() => handlePan(0, 30)}
+              class="btn-plain w-8 h-8 rounded-md"
+              aria-label="Pan up">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+              </svg>
+            </button>
+          </div>
+          
+          <!-- Left button -->
+          <div class="col-start-1 col-end-2 row-start-2 row-end-3 flex justify-center">
+            <button on:click={() => handlePan(50, 0)}
+              class="btn-plain w-8 h-8 rounded-md"
               aria-label="Pan left">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-          </svg>
-        </button>
-        
-        <button on:click={() => handlePan(-50, 0)}
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+            </button>
+          </div>
+          
+          <!-- Right button -->
+          <div class="col-start-3 col-end-4 row-start-2 row-end-3 flex justify-center">
+            <button on:click={() => handlePan(-50, 0)}
               class="btn-plain w-8 h-8 rounded-md"
               aria-label="Pan right">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </button>
+          </div>
+          
+          <!-- Bottom button -->
+          <div class="col-start-2 col-end-3 row-start-3 row-end-4 flex justify-center">
+            <button on:click={() => handlePan(0, -30)}
+              class="btn-plain w-8 h-8 rounded-md"
+              aria-label="Pan down">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Desktop layout for pan controls -->
+        <div class="hidden md:flex md:flex-col mr-2">
+          <button on:click={() => handlePan(0, 30)}
+            class="btn-plain w-8 h-8 rounded-md"
+            aria-label="Pan up">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+            </svg>
+          </button>
+          
+          <button on:click={() => handlePan(0, -30)}
+                  class="btn-plain w-8 h-8 rounded-md"
+                  aria-label="Pan down">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </button>
+        </div>
+        
+        <div class="hidden md:flex mr-2">
+          <button on:click={() => handlePan(50, 0)}
+                class="btn-plain w-8 h-8 rounded-md mr-1"
+                aria-label="Pan left">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+          </button>
+          
+          <button on:click={() => handlePan(-50, 0)}
+                class="btn-plain w-8 h-8 rounded-md"
+                aria-label="Pan right">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Compact toggle button (moved to the first row for mobile) -->
+      <div class="view-controls flex items-center md:hidden">
+        <button on:click={handleToggleCompact}
+                class="btn-plain w-8 h-8 rounded-md
+                       {$timelineStore.compact ? 'text-[var(--primary)]' : ''}"
+                aria-label="Toggle compact view">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0l-3.75-3.75M17.25 21L21 17.25" />
           </svg>
         </button>
       </div>
-
       
-      <div class="h-5 border-r border-black/10 dark:border-white/10 mx-2"></div>
+      <div class="h-5 border-r border-black/10 dark:border-white/10 mx-2 hidden md:block"></div>
       
-      <!-- Era filter -->
-      <div class="flex items-center">
+      <!-- Era filter - moved to second row on mobile -->
+      <div class="flex items-center hidden md:flex">
         <span class="text-xs text-50 mr-2">Era:</span>
         <select on:change={handleEraFilter}
                 class="bg-[var(--btn-regular-bg)] text-xs rounded-md p-1 text-[var(--btn-content)]">
@@ -269,10 +350,10 @@
         </select>
       </div>
       
-      <div class="h-5 border-r border-black/10 dark:border-white/10 mx-2"></div>
+      <div class="h-5 border-r border-black/10 dark:border-white/10 mx-2 hidden md:block"></div>
       
-      <!-- View type switcher -->
-      <div class="flex items-center">
+      <!-- View type switcher - stays in first row for all views -->
+      <div class="flex items-center mt-2 md:mt-0">
         <span class="text-xs text-50 mr-2">View:</span>
         <div class="timeline-view-switcher flex rounded-md overflow-hidden">
           <button 
@@ -318,9 +399,41 @@
       </div>
     </div>
     
-    <!-- Compact view toggle -->
-    <div class="view-controls flex items-center">
-      <button on:click={() => timelineActions.toggleCompact()}
+    <!-- Second row for mobile -->
+    <div class="flex items-center justify-between w-full mt-2 md:hidden">
+      <!-- Era filter - moved to second row on mobile -->
+      <div class="flex items-center">
+        <span class="text-xs text-50 mr-2">Era:</span>
+        <select on:change={handleEraFilter}
+                class="bg-[var(--btn-regular-bg)] text-xs rounded-md p-1 text-[var(--btn-content)]">
+          <option value="all">All Eras</option>
+          <option value="all-time">All Time</option>
+          {#each Object.entries(eraConfig) as [value, config]}
+            <option value={value}
+                    data-start-year={config.startYear}
+                    data-end-year={config.endYear}>
+              {config.displayName}
+            </option>
+          {/each}
+        </select>
+      </div>
+      
+      <!-- Reset button on mobile 2nd row -->
+      <div class="flex items-center">
+        <button on:click={handleResetView}
+                class="bg-[var(--btn-regular-bg)] hover:bg-[var(--btn-regular-bg-hover)] active:bg-[var(--btn-regular-bg-active)] text-[var(--btn-content)] flex items-center text-xs px-3 py-1 rounded-md transition-colors"
+                aria-label="Reset view">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3" />
+          </svg>
+          Reset
+        </button>
+      </div>
+    </div>
+    
+    <!-- Desktop compact view toggle -->
+    <div class="view-controls hidden md:flex items-center">
+      <button on:click={handleToggleCompact}
               class="btn-plain w-8 h-8 rounded-md
                      {$timelineStore.compact ? 'text-[var(--primary)]' : ''}"
               aria-label="Toggle compact view">
@@ -404,8 +517,8 @@
     </div>
   </div>
   
-<!-- Bottom control bar with year display - STYLED TO MATCH SITE -->
-<div class="timeline-footer flex items-center justify-between p-2 w-full bg-[var(--card-bg)] border-t border-black/5 dark:border-white/5 z-10 rounded-b-[var(--radius-large)]">
+<!-- Bottom control bar with year display - desktop only -->
+<div class="timeline-footer hidden md:flex items-center justify-between p-2 w-full bg-[var(--card-bg)] border-t border-black/5 dark:border-white/5 z-10 rounded-b-[var(--radius-large)]">
   <div class="flex items-center">
     <span class="ml-2 text-75">
       Timeline: {startYear || '—'} to {endYear || '—'}
@@ -422,6 +535,13 @@
       Reset View
     </button>
   </div>
+</div>
+
+<!-- Mobile bottom info bar (simplified) -->
+<div class="timeline-footer flex md:hidden items-center justify-center p-2 w-full bg-[var(--card-bg)] border-t border-black/5 dark:border-white/5 z-10 rounded-b-[var(--radius-large)]">
+  <span class="text-75 text-sm">
+    Timeline: {startYear || '—'} to {endYear || '—'}
+  </span>
 </div>
 </div>
 
@@ -443,6 +563,7 @@
     .timeline-controls {
       flex-wrap: wrap;
       gap: 0.5rem;
+      padding-bottom: 0.5rem;
     }
     
     .timeline-view-switcher {

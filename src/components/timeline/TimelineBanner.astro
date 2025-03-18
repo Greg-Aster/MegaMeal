@@ -13,6 +13,7 @@ interface Props {
   compact?: boolean;
   asBanner?: boolean;
   bannerHeight?: string;
+  mobileHeight?: string; // Added mobile height prop
 }
 
 // Extract props with defaults
@@ -25,7 +26,8 @@ const {
   background = "/assets/banner/0001.png",
   compact = false,
   asBanner = false,
-  bannerHeight = "500px"
+  bannerHeight = "500px",
+  mobileHeight = "600px" // Default mobile height
 } = Astro.props;
 
 // Pre-fetch initial data on the server
@@ -83,7 +85,14 @@ function safeStringify(obj) {
 const serializedEvents = safeStringify(initialEvents);
 ---
 
-<div id={id} class={`timeline-banner ${className}`} data-bannertype="timeline">
+<div id={id} 
+     class={`timeline-banner ${className}`} 
+     data-bannertype="timeline" 
+     style={`
+       --desktop-height: ${bannerHeight};
+       --mobile-height: ${mobileHeight};
+     `}
+>
   <!-- Use client:only to completely skip server-side rendering -->
   <TimelineController
     client:only="svelte"
@@ -94,7 +103,7 @@ const serializedEvents = safeStringify(initialEvents);
     background={bannerBackground}
     {compact}
     {asBanner}
-    {bannerHeight}
+    bannerHeight={bannerHeight}
     initialEvents={serializedEvents}
   />
 </div>
@@ -154,6 +163,19 @@ const serializedEvents = safeStringify(initialEvents);
   /* Match site's card shadow style */
   .timeline-banner {
     box-shadow: var(--card-shadow, 0 2px 4px rgba(0,0,0,0.005));
+  }
+  
+  /* Mobile height handling */
+  @media (max-width: 767px) {
+    .timeline-banner {
+      height: var(--mobile-height) !important;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .timeline-banner {
+      height: var(--desktop-height);
+    }
   }
   
   /* Quality of life improvements */
