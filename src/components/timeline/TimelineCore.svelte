@@ -62,7 +62,7 @@
   // Calculate timespan - ensure it has a non-zero value
   $: timespan = Math.max(1, (endYear || 2100) - (startYear || 2000));
   
-  // Calculate position for each event - now handles both horizontal and vertical layouts
+  // Calculate horizontal/vertical position for each event
   function getPositionPercentage(year: number): number {
     if (timespan === 0) return 50;
     
@@ -78,36 +78,38 @@
   
   // Generate positions for events on the timeline
   $: eventPositions = events.map((event, index) => {
+    // For timeline position (horizontal in desktop, vertical in mobile)
     const posPercentage = getPositionPercentage(event.year);
     
-    // Generate a consistent vertical position based on event properties
-    // Using both slug and index for better distribution
+    // Create deterministic but varied vertical offset
+    // This ensures the same event always has the same position
     const seed = (event.slug.charCodeAt(0) + index) * 11 + event.year % 100;
     const randomFactor = ((seed * 9301 + 49297) % 233280) / 233280;
     
-    // Position between -120px and +120px with bell curve distribution
-    let verticalOffset = (randomFactor * 2 - 1) * 240;
-    verticalOffset = Math.sign(verticalOffset) * Math.pow(Math.abs(verticalOffset) / 120, 1.5) * 120;
+    // For mobile, distribute horizontally instead of vertically
+    // For desktop, distribute vertically from the center line
+    let offsetPosition;
     
-    // For mobile: keep the range smaller to prevent elements from going off-screen
     if (isMobile) {
-      verticalOffset = Math.sign(verticalOffset) * Math.min(Math.abs(verticalOffset), 80);
+      // In mobile: horizontal distribution across the width
+      // Distribute events to both sides of the center vertical line
+      offsetPosition = (randomFactor * 2 - 1) * 100;
+    } else {
+      // In desktop: vertical distribution from the center line
+      offsetPosition = (randomFactor * 2 - 1) * 120;
     }
     
-    // Ensure stars stay within reasonable bounds
-    verticalOffset = Math.max(-140, Math.min(140, verticalOffset));
+    // Ensure values stay within reasonable bounds
+    offsetPosition = Math.max(-120, Math.min(120, offsetPosition));
     
     return {
       event,
-      horizontalPosition: posPercentage,
-      verticalPosition: verticalOffset
+      timelinePosition: posPercentage, // % along the primary timeline axis
+      offsetPosition    // px offset from the timeline
     };
   });
   
-  /**
-   * DIRECT DOM EVENT HANDLERS
-   * Using these instead of Svelte's event bindings for more reliable behavior
-   */
+  // Handler events for clicks and interactions
   function setupDirectEventHandlers() {
     if (!timelineContainer) return;
     
@@ -129,15 +131,11 @@
         const event = events.find(evt => evt.slug === slug);
         if (!event) return;
         
-        console.log("DOM Click on event:", event.title, "Slug:", slug);
-        
         // If already selected, navigate to post
         if (selectedEvent && selectedEvent.slug === slug) {
-          console.log("Navigating to:", `/posts/${slug}/`);
           window.location.href = `/posts/${slug}/`;
         } else {
           // Otherwise, select this event
-          console.log("Selecting event:", event.title);
           selectedEvent = event;
           dispatch('select', { event });
           
@@ -146,7 +144,6 @@
         }
       } else if (target === timelineContainer || target.classList.contains('timeline-container')) {
         // Click on background
-        console.log("Click on background, clearing selection");
         selectedEvent = null;
         hoveredEvent = null;
         dispatch('deselect');
@@ -397,38 +394,31 @@
     offsetX.update(x => x + deltaX);
     offsetY.update(y => y + deltaY);
   }
+  
+  // Calculate background transform based on mobile state
+  $: backgroundTransform = isMobile 
+    ? `scale(${1.05 + 0.05 * $scale}) translate(${-$offsetX * 0.05}px, ${-$offsetY * 0.05}px) rotate(90deg) scale(1.5)` 
+    : `scale(${1.05 + 0.05 * $scale}) translate(${-$offsetX * 0.05}px, ${-$offsetY * 0.05}px)`;
 </script>
 
 <div class="card-base relative overflow-hidden {asBanner ? 'h-full rounded-none' : 'h-[300px] md:h-[300px]'} {compact ? 'compact-mode' : ''}" 
      data-start-year={startYear} 
      data-end-year={endYear}>
 
-  <!-- Background with parallax effect -->
+  <!-- Background with parallax effect - restored rotation for mobile -->
   <div class="absolute inset-0 z-0 overflow-hidden">
     <img 
       src={background} 
       alt="Timeline background" 
-      class="w-full h-full object-cover transition-transform duration-300 ease-out mobile-rotate-bg"
-      style="transform: scale({1.05 + 0.05 * $scale}) translate({-$offsetX * 0.05}px, {-$offsetY * 0.05}px);"
+      class="w-full h-full object-cover transition-transform duration-300 ease-out"
+      style="transform: {backgroundTransform};"
     />
     <div class="absolute inset-0 bg-gradient-to-r from-[oklch(0.25_0.05_var(--hue))] to-[oklch(0.15_0.05_var(--hue))] opacity-20 dark:opacity-20 backdrop-blur-[2px]"></div>
   </div>
   
   <!-- Starfield effect -->
   <div class="absolute inset-0 z-0">
-    <div class="w-full h-full" style="
-      background-image: 
-        radial-gradient(1px 1px at 25% 25%, rgba(255, 255, 255, 0.2) 100%, transparent),
-        radial-gradient(1px 1px at 50% 50%, rgba(255, 255, 255, 0.2) 100%, transparent),
-        radial-gradient(1px 1px at 75% 75%, rgba(255, 255, 255, 0.2) 100%, transparent),
-        radial-gradient(2px 2px at 40% 60%, rgba(255, 255, 255, 0.3) 100%, transparent),
-        radial-gradient(2px 2px at 10% 90%, rgba(255, 255, 255, 0.3) 100%, transparent);
-      background-repeat: repeat;
-      background-size: 300px 300px, 200px 200px, 250px 250px, 300px 300px, 350px 350px;
-      background-position: 0 0, 40px 60px, 130px 270px, 70px 100px, 0 300px;
-      mix-blend-mode: overlay;
-      opacity: 0.3;
-    "></div>
+    <div class="w-full h-full starfield-overlay"></div>
   </div>
   
   <!-- Timeline container -->
@@ -441,59 +431,60 @@
        style="transform: scale({$scale}) translate({$offsetX/$scale}px, {$offsetY/$scale}px);">
     
     <!-- Center line - horizontal for desktop, vertical for mobile -->
-    <div class="timeline-center-line absolute"></div>
+    <div class="timeline-center-line absolute {isMobile ? 'timeline-center-line-mobile' : 'timeline-center-line-desktop'}"></div>
     
     <!-- Year markers -->
-    <div class="timeline-start-marker absolute"></div>
-    <div class="timeline-end-marker absolute"></div>
+    <div class="timeline-start-marker absolute {isMobile ? 'timeline-start-marker-mobile' : 'timeline-start-marker-desktop'}"></div>
+    <div class="timeline-end-marker absolute {isMobile ? 'timeline-end-marker-mobile' : 'timeline-end-marker-desktop'}"></div>
 
-    <!-- Events - we use a wrapper div for mobile view rotation -->
-    <div class="timeline-events-wrapper">
-      {#each eventPositions as { event, horizontalPosition, verticalPosition }, i}
-        <!-- Event container -->
+    <!-- Events -->
+    {#each eventPositions as { event, timelinePosition, offsetPosition }, i}
+      <!-- Event container with positioning for both desktop and mobile -->
+      <div 
+        class="timeline-event absolute"
+        style={isMobile ? 
+          `top: ${timelinePosition}%; left: 50%; transform: translateX(${offsetPosition}px);` : 
+          `left: ${timelinePosition}%; top: 50%; transform: translateY(${offsetPosition}px);`
+        }
+      >
+        <!-- Star node - Using data attribute for DOM event handling -->
         <div 
-          class="timeline-event absolute transform"
-          style="
-            --event-h-pos: {horizontalPosition}%;
-            --event-v-pos: {verticalPosition}px;
-            z-index: {selectedEvent?.slug === event.slug ? 5 : 1};
-          "
+          class="event-node absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
+          data-slug={event.slug}
+          data-year={event.year}
+          data-era={event.era}
         >
-          <!-- Star node - Using data attribute for DOM event handling -->
-          <div 
-            class="event-node absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-            data-slug={event.slug}
-            data-year={event.year}
-            data-era={event.era}
-          >
-            <StarNode 
-              era={event.era} 
-              isKeyEvent={event.isKeyEvent} 
-              isSelected={selectedEvent?.slug === event.slug}
-              isHovered={hoveredEvent?.slug === event.slug}
-              size={event.isKeyEvent ? 10 : 8}
-            />
-          </div>
-          
-          <!-- Event information card -->
-          <div class="timeline-card {selectedEvent?.slug === event.slug || hoveredEvent?.slug === event.slug ? '' : 'hidden'}">
-            <TimelineCard 
-              {event} 
-              isSelected={selectedEvent?.slug === event.slug}
-              compact={compact}
-              position={verticalPosition < 0 ? 'top' : 'bottom'}
-            />
-          </div>
+          <StarNode 
+            era={event.era} 
+            isKeyEvent={event.isKeyEvent} 
+            isSelected={selectedEvent?.slug === event.slug}
+            isHovered={hoveredEvent?.slug === event.slug}
+            size={event.isKeyEvent ? 10 : 8}
+          />
         </div>
-      {/each}
-    </div>
+        
+        <!-- Event information card with mobile/desktop positioning -->
+        <div class="timeline-card {selectedEvent?.slug === event.slug || hoveredEvent?.slug === event.slug ? '' : 'hidden'}">
+          <TimelineCard 
+            {event} 
+            isSelected={selectedEvent?.slug === event.slug}
+            compact={compact}
+            position={isMobile ? 
+              (offsetPosition < 0 ? 'left' : 'right') : 
+              (offsetPosition < 0 ? 'top' : 'bottom')
+            }
+            isMobile={isMobile}
+          />
+        </div>
+      </div>
+    {/each}
     
-    <!-- Era labels -->
+    <!-- Era labels positioned for mobile/desktop -->
     {#if events.length > 0}
-      <div class="timeline-start-label absolute font-bold text-75">
+      <div class="{isMobile ? 'timeline-start-label-mobile' : 'timeline-start-label-desktop'} absolute text-lg font-bold text-75">
         {startYear}
       </div>
-      <div class="timeline-end-label absolute font-bold text-75">
+      <div class="{isMobile ? 'timeline-end-label-mobile' : 'timeline-end-label-desktop'} absolute text-lg font-bold text-75">
         {endYear}
       </div>
     {/if}
@@ -527,7 +518,7 @@
 </div>
 
 <style>
-  /* Base timeline styles */
+  /* Basic timeline styles that can't be replaced with Tailwind */
   .timeline-event {
     transition: transform 0.3s ease, opacity 0.5s ease;
   }
@@ -538,176 +529,9 @@
     will-change: transform;
   }
   
-  /* Desktop layout (horizontal timeline) */
-  @media (min-width: 768px) {
-    .timeline-events-wrapper {
-      position: relative;
-      width: 100%;
-      height: 100%;
-    }
-    
-    .timeline-event {
-      left: var(--event-h-pos);
-      top: calc(50% + var(--event-v-pos));
-      transform: translateX(-50%);
-    }
-    
-    .timeline-center-line {
-      left: 0;
-      right: 0;
-      height: 0.5px;
-      top: 50%;
-      transform: translateY(-50%);
-      background-color: var(--primary);
-      opacity: 0.2;
-    }
-    
-    .timeline-start-marker {
-      left: 15%;
-      top: 50%;
-      width: 0.5px;
-      height: 3px;
-      transform: translateY(-50%);
-      background-color: var(--primary);
-      opacity: 0.3;
-    }
-    
-    .timeline-end-marker {
-      left: 85%;
-      top: 50%;
-      width: 0.5px;
-      height: 3px;
-      transform: translateY(-50%);
-      background-color: var(--primary);
-      opacity: 0.3;
-    }
-    
-    .timeline-start-label {
-      top: 0;
-      left: 15%;
-      padding: 0.5rem;
-      font-size: 1.125rem;
-    }
-    
-    .timeline-end-label {
-      top: 0;
-      right: 15%;
-      padding: 0.5rem;
-      font-size: 1.125rem;
-    }
-  }
-  
-  /* Mobile layout (vertical timeline) */
-  @media (max-width: 767px) {
-    /* Make timeline container taller on mobile */
-    .card-base:not(.h-full) {
-      height: 450px !important;
-    }
-    
-    /* Rotate the background image */
-    .mobile-rotate-bg {
-      transform-origin: center;
-      transform: rotate(90deg) scale(1.5) !important;
-    }
-    
-    .timeline-events-wrapper {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      transform: rotate(90deg);
-      transform-origin: center;
-    }
-    
-    .timeline-event {
-      /* We're rotating 90 degrees, so we swap X and Y positioning */
-      left: 50%;
-      top: var(--event-h-pos);
-      transform: translate(-50%, -50%);
-    }
-    
-    /* Position the info cards so they're readable in vertical mode */
-    .timeline-event .timeline-card {
-      transform: rotate(-90deg);
-      transform-origin: center;
-      /* Adjust card positioning for vertical layout */
-      position: absolute;
-      left: calc(var(--event-v-pos) * -1);
-    }
-    
-    /* Rotate the center line to vertical */
-    .timeline-center-line {
-      top: 0;
-      bottom: 0;
-      width: 0.5px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: var(--primary);
-      opacity: 0.2;
-    }
-    
-    /* Rotate the markers */
-    .timeline-start-marker {
-      top: 15%;
-      left: 50%;
-      height: 0.5px;
-      width: 3px;
-      transform: translateX(-50%);
-      background-color: var(--primary);
-      opacity: 0.3;
-    }
-    
-    .timeline-end-marker {
-      top: 85%;
-      left: 50%;
-      height: 0.5px;
-      width: 3px;
-      transform: translateX(-50%);
-      background-color: var(--primary);
-      opacity: 0.3;
-    }
-    
-    /* Rotate the year labels */
-    .timeline-start-label {
-      left: 0;
-      top: 15%;
-      padding: 0.5rem;
-      font-size: 1rem;
-      transform: rotate(-90deg);
-    }
-    
-    .timeline-end-label {
-      right: 0;
-      top: 85%;
-      padding: 0.5rem;
-      font-size: 1rem;
-      transform: rotate(-90deg);
-    }
-  }
-  
   /* Disable animations during dragging for better performance */
   .dragging .timeline-event,
   .dragging .timeline-container {
     transition: none !important;
-  }
-  
-  /* Starfield effect */
-  .starfield-overlay {
-    background-image: 
-      radial-gradient(1px 1px at 25% 25%, rgba(255, 255, 255, 0.2) 100%, transparent),
-      radial-gradient(1px 1px at 50% 50%, rgba(255, 255, 255, 0.2) 100%, transparent),
-      radial-gradient(1px 1px at 75% 75%, rgba(255, 255, 255, 0.2) 100%, transparent),
-      radial-gradient(2px 2px at 40% 60%, rgba(255, 255, 255, 0.3) 100%, transparent),
-      radial-gradient(2px 2px at 10% 90%, rgba(255, 255, 255, 0.3) 100%, transparent);
-    background-repeat: repeat;
-    background-size: 300px 300px, 200px 200px, 250px 250px, 300px 300px, 350px 350px;
-    background-position: 0 0, 40px 60px, 130px 270px, 70px 100px, 0 300px;
-    animation: twinkle 10s ease-in-out infinite alternate;
-    mix-blend-mode: overlay;
-  }
-  
-  @keyframes twinkle {
-    0% { opacity: 0.2; }
-    50% { opacity: 0.4; }
-    100% { opacity: 0.3; }
   }
 </style>

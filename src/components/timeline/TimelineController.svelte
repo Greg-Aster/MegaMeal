@@ -18,6 +18,7 @@
   export let compact: boolean = false;
   export let asBanner: boolean = false;
   export let bannerHeight: string = "500px";
+  export let mobileHeight: string = "500px"; // Default mobile height
   export let initialEvents: string = "[]"; // Serialized events
 
   // Local state
@@ -200,10 +201,13 @@
   function handleToggleCompact() {
     timelineActions.toggleCompact();
   }
+  
+  // Compute the actual height based on props and mobile state
+  $: currentHeight = asBanner ? (isMobile ? mobileHeight : bannerHeight) : "500px";
 </script>
 
 <div class="flex flex-col w-full overflow-hidden relative {asBanner ? 'timeline-banner-mode' : ''}" 
-     style={asBanner ? `height: ${isMobile ? '600px' : bannerHeight};` : "height: 500px;"} 
+     style="height: {currentHeight};" 
      {id}
      on:timeline:resize={handleResize}>
   
@@ -544,31 +548,3 @@
   </span>
 </div>
 </div>
-
-<style>
-  /* Minimal styles that can't be achieved with Tailwind */
-  .timeline-viewport {
-    transform: translateZ(0);
-    touch-action: none;
-  }
-  
-  .timeline-banner-mode {
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-  }
-  
-  @media (max-width: 768px) {
-    .timeline-controls {
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      padding-bottom: 0.5rem;
-    }
-    
-    .timeline-view-switcher {
-      overflow-x: auto;
-      white-space: nowrap;
-    }
-  }
-</style>

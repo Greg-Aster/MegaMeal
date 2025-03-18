@@ -2,34 +2,13 @@
   import { fly } from 'svelte/transition';
   import type { TimelineEvent } from '../../services/TimelineService.client';
   import { getEraDisplayName } from '../../services/TimelineService.client';
-  import { onMount } from 'svelte';
   
   // Props
   export let event: TimelineEvent;
   export let isSelected: boolean = false;
   export let compact: boolean = false;
   export let position: 'top' | 'bottom' | 'left' | 'right' = 'bottom';
-  
-  // State
-  let isMobile = false;
-  
-  // Check if we're on a mobile device
-  function checkMobileView() {
-    isMobile = window.innerWidth < 768; // Standard mobile breakpoint
-  }
-  
-  // On mount, check mobile status and set up listeners
-  onMount(() => {
-    checkMobileView();
-    window.addEventListener('resize', checkMobileView);
-    
-    return () => {
-      window.removeEventListener('resize', checkMobileView);
-    };
-  });
-  
-  // Calculate mobile-adjusted position
-  $: mobileAdjustedPosition = isMobile ? (position === 'top' || position === 'bottom' ? 'right' : position) : position;
+  export let isMobile: boolean = false;
   
   // Helper function to get CSS classes for era badges
   function getEraBadgeClass(era?: string): string {
@@ -52,20 +31,19 @@
 </script>
 
 <div 
-  class="timeline-card card-base absolute 
-         bg-[var(--card-bg)] backdrop-blur-sm shadow-lg
-         {isMobile ? 'w-[160px] timeline-card-mobile' : 'w-[200px]'} 
+  class="timeline-card card-base absolute z-30 bg-[var(--card-bg)] backdrop-blur-sm shadow-lg
+         {isMobile ? 'w-[160px]' : 'w-[200px]'} 
          {compact ? 'p-2 text-sm' : 'p-3'}
-         {mobileAdjustedPosition === 'top' ? 'timeline-card-top' : 
-          mobileAdjustedPosition === 'bottom' ? 'timeline-card-bottom' : 
-          mobileAdjustedPosition === 'left' ? 'timeline-card-left' : 
-          'timeline-card-right'}
          {isSelected ? 'border-2 border-[var(--primary)]' : 'border border-transparent'}"
-  in:fly="{{ y: mobileAdjustedPosition === 'top' ? 10 : mobileAdjustedPosition === 'bottom' ? -10 : 0, 
-            x: mobileAdjustedPosition === 'left' ? 10 : mobileAdjustedPosition === 'right' ? -10 : 0, 
+  class:timeline-card-top={position === 'top'}
+  class:timeline-card-bottom={position === 'bottom'}
+  class:timeline-card-left={position === 'left'}
+  class:timeline-card-right={position === 'right'}
+  in:fly="{{ y: position === 'top' ? 10 : position === 'bottom' ? -10 : 0, 
+            x: position === 'left' ? 10 : position === 'right' ? -10 : 0, 
             duration: 200 }}"
-  out:fly="{{ y: mobileAdjustedPosition === 'top' ? 10 : mobileAdjustedPosition === 'bottom' ? -10 : 0, 
-             x: mobileAdjustedPosition === 'left' ? 10 : mobileAdjustedPosition === 'right' ? -10 : 0, 
+  out:fly="{{ y: position === 'top' ? 10 : position === 'bottom' ? -10 : 0, 
+             x: position === 'left' ? 10 : position === 'right' ? -10 : 0, 
              duration: 150 }}"
 >
   <!-- Card content -->
@@ -85,15 +63,15 @@
     </div>
   {/if}
   
-  <!-- Card arrow/pointer positioned based on card position -->
-  <div class="card-pointer"></div>
+  <!-- Card arrow/pointer (added by CSS) -->
+  <div class="card-pointer absolute bg-inherit"></div>
 </div>
 
 <style>
+  /* These styles could be moved to timeline-styles.css */
   .timeline-card {
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1), 0 0 5px rgba(var(--primary-rgb, 0 0 0), 0.3);
-    transform: translate(-50%, 0);
-    z-index: 30;
+    border-radius: var(--radius-large, 12px);
   }
   
   .timeline-era-badge {
@@ -101,97 +79,76 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
-  /* Card positions - Desktop */
-  @media (min-width: 768px) {
-    .timeline-card-top {
-      bottom: 30px;
-    }
-    
-    .timeline-card-bottom {
-      top: 30px;
-    }
-    
-    /* Pointer styles - Desktop */
-    .timeline-card-top .card-pointer {
-      position: absolute;
-      width: 8px;
-      height: 8px;
-      transform: rotate(45deg);
-      background-color: inherit;
-      border-bottom: inherit;
-      border-right: inherit;
-      bottom: -5px;
-      left: 50%;
-      margin-left: -4px;
-      z-index: 1;
-    }
-    
-    .timeline-card-bottom .card-pointer {
-      position: absolute;
-      width: 8px;
-      height: 8px;
-      transform: rotate(45deg);
-      background-color: inherit;
-      border-top: inherit;
-      border-left: inherit;
-      top: -5px;
-      left: 50%;
-      margin-left: -4px;
-      z-index: 1;
-    }
+  /* Card pointer styles */
+  .card-pointer {
+    width: 8px;
+    height: 8px;
+    transform: rotate(45deg);
+    border: inherit;
   }
   
-  /* Card positions - Mobile */
-  @media (max-width: 767px) {
-    .timeline-card-mobile {
-      /* Adjust for vertical timeline in mobile */
-      transform: translateY(-50%) !important;
-    }
-    
-    .timeline-card-left {
-      right: 30px;
-    }
-    
-    .timeline-card-right {
-      left: 30px;
-    }
-    
-    /* Pointer styles - Mobile */
-    .timeline-card-left .card-pointer {
-      position: absolute;
-      width: 8px;
-      height: 8px;
-      transform: rotate(45deg);
-      background-color: inherit;
-      border-right: inherit;
-      border-top: inherit;
-      right: -5px;
-      top: 50%;
-      margin-top: -4px;
-      z-index: 1;
-    }
-    
-    .timeline-card-right .card-pointer {
-      position: absolute;
-      width: 8px;
-      height: 8px;
-      transform: rotate(45deg);
-      background-color: inherit;
-      border-left: inherit;
-      border-bottom: inherit;
-      left: -5px;
-      top: 50%;
-      margin-top: -4px;
-      z-index: 1;
-    }
+  /* Positioning for different card locations */
+  .timeline-card-top {
+    bottom: 30px;
+    transform: translateX(-50%);
   }
   
-  /* Match card radius to site values */
-  :global(.timeline-card.card-base) {
-    border-radius: var(--radius-large, 12px);
+  .timeline-card-top .card-pointer {
+    border-bottom-style: solid;
+    border-right-style: solid;
+    border-top-style: none;
+    border-left-style: none;
+    bottom: -4px;
+    left: 50%;
+    margin-left: -4px;
   }
   
-  /* Match hover states to site behavior */
+  .timeline-card-bottom {
+    top: 30px;
+    transform: translateX(-50%);
+  }
+  
+  .timeline-card-bottom .card-pointer {
+    border-top-style: solid;
+    border-left-style: solid;
+    border-bottom-style: none;
+    border-right-style: none;
+    top: -4px;
+    left: 50%;
+    margin-left: -4px;
+  }
+  
+  .timeline-card-left {
+    right: 30px;
+    transform: translateY(-50%);
+  }
+  
+  .timeline-card-left .card-pointer {
+    border-right-style: solid;
+    border-top-style: solid;
+    border-bottom-style: none;
+    border-left-style: none;
+    right: -4px;
+    top: 50%;
+    margin-top: -4px;
+  }
+  
+  .timeline-card-right {
+    left: 30px;
+    transform: translateY(-50%);
+  }
+  
+  .timeline-card-right .card-pointer {
+    border-left-style: solid;
+    border-bottom-style: solid;
+    border-top-style: none;
+    border-right-style: none;
+    left: -4px;
+    top: 50%;
+    margin-top: -4px;
+  }
+  
+  /* Hover effect */
   :global(.timeline-card:hover .timeline-era-badge) {
     background-color: var(--primary) !important;
     color: white !important;

@@ -27,7 +27,7 @@ const {
   compact = false,
   asBanner = false,
   bannerHeight = "500px",
-  mobileHeight = "600px" // Default mobile height
+  mobileHeight = "500px" // Default mobile height
 } = Astro.props;
 
 // Pre-fetch initial data on the server
@@ -104,6 +104,7 @@ const serializedEvents = safeStringify(initialEvents);
     {compact}
     {asBanner}
     bannerHeight={bannerHeight}
+    mobileHeight={mobileHeight}
     initialEvents={serializedEvents}
   />
 </div>
@@ -150,6 +151,14 @@ const serializedEvents = safeStringify(initialEvents);
     overflow-x: hidden;
     margin-bottom: 1rem;
     border-radius: var(--radius-large, 12px);
+    height: var(--desktop-height);
+  }
+  
+  /* Mobile-specific height */
+  @media (max-width: 767px) {
+    .timeline-banner {
+      height: var(--mobile-height);
+    }
   }
   
   /* Specifically for banner mode (full-width/height) */
@@ -163,19 +172,6 @@ const serializedEvents = safeStringify(initialEvents);
   /* Match site's card shadow style */
   .timeline-banner {
     box-shadow: var(--card-shadow, 0 2px 4px rgba(0,0,0,0.005));
-  }
-  
-  /* Mobile height handling */
-  @media (max-width: 767px) {
-    .timeline-banner {
-      height: var(--mobile-height) !important;
-    }
-  }
-  
-  @media (min-width: 768px) {
-    .timeline-banner {
-      height: var(--desktop-height);
-    }
   }
   
   /* Quality of life improvements */
