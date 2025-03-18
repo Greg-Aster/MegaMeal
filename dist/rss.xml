@@ -1,9 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Greg Aster</title><description>Experimental Videographer &amp; Creator</description><link>https://dndiy.org/</link><language>en</language><item><title>*Under Construction* - Foodieverse Timeline</title><link>https://dndiy.org/posts/qarnivor-universe-timline/</link><guid isPermaLink="true">https://dndiy.org/posts/qarnivor-universe-timline/</guid><description>Explore the complete chronology of the Foodiverse, from the Pre-Spork Era through the Snuggaloid Emergence and beyond.</description><pubDate>Tue, 10 Jun 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;import &apos;../../styles/timeline.css&apos;;
-import TimelineController from &apos;../../components/timeline/TimelineController.astro&apos;;
-import TimelineNavigation from &apos;../../components/timeline/TimelineNavigation.astro&apos;;
-import WidgetLayout from &apos;../../components/widget/WidgetLayout.astro&apos;;
-import Timeline from &apos;../../components/timeline/Timeline.astro&apos;;&lt;/p&gt;
-&lt;h1&gt;Qarnivor Universe Timeline&lt;/h1&gt;
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Greg Aster</title><description>Experimental Videographer &amp; Creator</description><link>https://dndiy.org/</link><language>en</language><item><title>*Under Construction* - Foodieverse Timeline</title><link>https://dndiy.org/posts/qarnivor-universe-timline/</link><guid isPermaLink="true">https://dndiy.org/posts/qarnivor-universe-timline/</guid><description>Explore the complete chronology of the Foodiverse, from the Pre-Spork Era through the Snuggaloid Emergence and beyond.</description><pubDate>Tue, 10 Jun 2025 00:00:00 GMT</pubDate><content:encoded>&lt;h1&gt;Qarnivor Universe Timeline&lt;/h1&gt;
 &lt;p&gt;&amp;lt;div class=&quot;text-50 text-lg italic mb-8&quot;&amp;gt;
 &quot;Time is just one digestive tract through which all existence must pass.&quot; - Ancient Qarnivore Proverb
 &amp;lt;/div&amp;gt;&lt;/p&gt;

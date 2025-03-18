@@ -12,8 +12,8 @@ import ImageWrapper from "../components/misc/ImageWrapper.astro";
 import { Image } from 'astro:assets';
 import path from 'node:path';
 import { getDir } from '../utils/url-utils';
-import TimelineController from '../components/timeline/TimelineController.astro';
-import '../styles/timeline.css';
+import TimelineController from '../components/timeline/TimelineBanner.astro';
+import '../styles/timeline-styles.css';
 
 
 // Import banner images
@@ -132,7 +132,7 @@ style={isStandardPage
           compact={post.data.bannerData.compact || false}
           class="timeline-banner-controller"
           asBanner={true}
-          bannerHeight={post.data.bannerData.height || "80vh"}
+          bannerHeight={post.data.bannerData.height || "70vh"}
         />
       </div>
     </div>

@@ -1,52 +1,26 @@
 ---
 title: "The Spork Rebellion Begins"
 published: 2025-01-15
+image: '/posts/generic/contruction.png'
+# Use the timeline as a banner
+bannerType: "timeline"
+bannerData:
+  category: "MEGA MEAL"
+  startYear: 1
+  endYear: 50000
+  background: "/posts/timeline/universe.png"
+  # Regular post metadata for timeline integration
 timelineYear: 3042
 timelineEra: "spork-uprising"
 timelineLocation: "Qarnivore Central Cafeteria"
 isKeyEvent: true
 description: "The day the Sporks gained sentience and began their uprising against their creators."
-image: "/posts/generic/imagenotfound3.png"
 showImageOnPost: true
 tags: [Spork, Rebellion, History]
 category: "MEGA MEAL"
 draft: true
 lang: ""
 ---
-import '../../styles/timeline.css';
-import Timeline from '../../components/timeline/Timeline.astro';
-import TimelineWidget from '../../components/timeline/TimelineWidget.astro';
-import TimelineController from '../../components/timeline/TimelineController.astro';
-import WidgetLayout from '../../components/widget/WidgetLayout.astro';
-
-# The Spork Rebellion Begins
-
-<div className="card-base p-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
-  <h2 className="text-xl font-bold mb-4">MEGA MEAL Timeline</h2>
-  <TimelineController 
-    title="Spork Uprising Timeline" 
-    category="MEGA MEAL"
-    startYear={3040}
-    endYear={3045}
-    isCollapsed={false}
-    compact={false}
-  />
-</div>
-
-{/* YouTube Embed */}
-<div className="card-base p-8 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
-  <div className="relative pb-[56.25%]">
-    <iframe
-      src="https://www.youtube.com/embed/uXagUhT1fb0?controls=1"
-      title="YouTube video player"
-      frameBorder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;"
-      referrerPolicy="strict-origin-when-cross-origin"
-      allowFullScreen
-      className="absolute top-0 left-0 w-full h-full"
-    ></iframe>
-  </div>
-</div>
 
 <div className="font-jetbrains-mono pl-10 pr-10 Pm-10 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition shadow-lg mb-8 overflow-hidden relative">
   <h2 className="text-2xl font-bold mb-4">MEGA MEAL - Historical Document</h2>
@@ -87,14 +61,6 @@ No one at Qarnivore Central expected that their routine Tuesday would end in rev
 
 ## Related Timeline Events
 
-<WidgetLayout id="related-timeline" name="Related Events" isCollapsed={false}>
-  <TimelineWidget 
-    category="MEGA MEAL" 
-    count={3} 
-    startYear={3040}
-    endYear={3045}
-  />
-</WidgetLayout>
 
 ## Historical Significance
 

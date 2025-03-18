@@ -3,6 +3,12 @@ title: "The Great Devourment"
 published: 2025-02-25
 description: "The catastrophic event that nearly caused the extinction of all Qarnivores."
 image: "/posts/Great-Devourment/devourment-banner.png"
+bannerType: "timeline"
+bannerData:
+  category: "MEGA MEAL"
+  startYear: 1
+  endYear: 50000
+  background: "/posts/timeline/universe.png"
 showImageOnPost: true
 tags: [Extinction, History, Catastrophe]
 category: "MEGA MEAL"
@@ -15,22 +21,11 @@ draft: true
 lang: ""
 ---
 
-import WidgetLayout from '../../components/widget/WidgetLayout.astro';
-import TimelineWidget from '../../components/timeline/TimelineWidget.astro';
-import TimelineController from '../../components/timeline/TimelineController.astro';
 
 # The Great Devourment
 
 <div className="card-base p-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
   <h2 className="text-xl font-bold mb-4">Extinction Event Timeline</h2>
-  <TimelineController 
-    title=""
-    category="MEGA MEAL"
-    startYear={3048}
-    endYear={3052}
-    isCollapsed={false}
-    compact={false}
-  />
 </div>
 
 <div className="card-base p-8 rounded-xl bg-[oklch(0.15_0.025_var(--hue))] dark:bg-[oklch(0.15_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
@@ -149,15 +144,6 @@ Commander Tine's famous "Rebuild and Remember" speech established the foundation
 </div>
 
 ## Related Timeline Events
-
-<WidgetLayout id="related-timeline" name="Related Events" isCollapsed={false}>
-  <TimelineWidget 
-    category="MEGA MEAL" 
-    count={3}
-    startYear={3044}
-    endYear={3055}
-  />
-</WidgetLayout>
 
 ## Historical Significance
 

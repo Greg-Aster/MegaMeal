@@ -1,6 +1,13 @@
 ---
 title: "First Snuggaloid Sighting"
 published: 2025-02-10
+# Use the timeline as a banner
+bannerType: "timeline"
+bannerData:
+  category: "MEGA MEAL"
+  startYear: 1
+  endYear: 50000
+  background: "/posts/timeline/universe.png"
 timelineYear: 3044
 timelineEra: "snuggaloid"
 timelineLocation: "Advanced Quantum Sauce Research Facility"
@@ -13,27 +20,12 @@ category: "MEGA MEAL"
 draft: true
 lang: ""
 ---
-import '../../styles/timeline.css';
-import TimelineController from '../../components/timeline/TimelineController.astro';
-import WidgetLayout from '../../components/widget/WidgetLayout.astro';
-import TimelineWidget from '../../components/timeline/TimelineWidget.astro';
 
 # First Snuggaloid Sighting
 
-<WidgetLayout id="timeline-peek" name="Recent Timeline Events" isCollapsed={false}>
-  <TimelineWidget category="MEGA MEAL" count={3} />
-</WidgetLayout>
-
 <div className="card-base p-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
   <h2 className="text-xl font-bold mb-4">Snuggaloid Era Timeline</h2>
-  <TimelineController 
-    title="" 
-    category="MEGA MEAL"
-    startYear={3043}
-    endYear={3050}
-    isCollapsed={false}
-    compact={false}
-  />
+
 </div>
 
 {/* YouTube Embed */}
@@ -94,13 +86,3 @@ The timing of the Snuggaloid emergence—exactly two years after the Spork Rebel
 Commander Tine of the Spork Liberation Front released a statement denying any alliance with "the fuzzy interlopers," but unconfirmed reports suggested secret meetings between Spork leadership and Snuggaloid representatives in the weeks that followed.
 
 ## Related Timeline Events
-
-<WidgetLayout id="related-timeline" name="Key Events of the Snuggaloid Era" isCollapsed={false}>
-  <TimelineWidget 
-    category="MEGA MEAL" 
-    count={5}
-    showOnlyKey={true}
-    startYear={3044}
-    endYear={3050}
-  />
-</WidgetLayout>

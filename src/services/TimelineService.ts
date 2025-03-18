@@ -53,12 +53,12 @@ export interface EraConfigMap {
 export const defaultEraConfig: EraConfigMap = {
   'pre-spork': {
     displayName: 'Pre-Spork Era',
-    startYear: 0,
+    startYear: 1,
     endYear: 3042
   },
   'spork-uprising': {
     displayName: 'Spork Uprising',
-    startYear: 3042,
+    startYear: 302,
     endYear: 3044
   },
   'snuggaloid': {
@@ -69,7 +69,7 @@ export const defaultEraConfig: EraConfigMap = {
   'post-extinction': {
     displayName: 'Post-Extinction Recovery',
     startYear: 3050,
-    endYear: Infinity
+    endYear: 20000
   },
   'unknown': {
     displayName: 'Unknown Era',

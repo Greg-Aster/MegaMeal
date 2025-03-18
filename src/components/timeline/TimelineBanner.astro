@@ -1,0 +1,147 @@
+---
+import TimelineController from './TimelineController.svelte';
+import { getTimelineEvents } from '../../services/TimelineService';
+
+// Define props interface
+interface Props {
+  id?: string;
+  class?: string;
+  category?: string;
+  startYear?: number;
+  endYear?: number;
+  background?: string;
+  compact?: boolean;
+  asBanner?: boolean;
+  bannerHeight?: string;
+}
+
+// Extract props with defaults
+const { 
+  id = "timeline-banner",
+  class: className = "",
+  category = "",
+  startYear,
+  endYear,
+  background = "/assets/banner/0001.png",
+  compact = false,
+  asBanner = false,
+  bannerHeight = "500px"
+} = Astro.props;
+
+// Pre-fetch initial data on the server
+// This gives us better performance and SEO since the basic timeline structure 
+// will be in the initial HTML
+const initialEvents = await getTimelineEvents({
+  category: category || undefined,
+  startYear,
+  endYear,
+  includeBanners: true
+});
+
+// Find any banner posts to use their metadata
+const bannerPost = initialEvents.find(event => event.bannerData);
+const bannerBackground = bannerPost?.bannerData?.background || background;
+
+// Helper function to safely stringify events for client-side hydration
+function safeStringify(obj) {
+  return JSON.stringify(obj, (key, value) => {
+    // Handle Date objects
+    if (value instanceof Date) {
+      return {
+        __type: "Date",
+        iso: value.toISOString()
+      };
+    }
+    // Handle circular references 
+    const seen = new WeakSet();
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) {
+        return '[Circular]';
+      }
+      seen.add(value);
+    }
+    return value;
+  });
+}
+
+// Serialize the events for client-side use to avoid astro:content import issues
+const serializedEvents = safeStringify(initialEvents);
+---
+
+<div id={id} class={`timeline-banner ${className}`} data-bannertype="timeline">
+  <TimelineController
+    client:load
+    {id}
+    {category}
+    {startYear}
+    {endYear}
+    background={bannerBackground}
+    {compact}
+    {asBanner}
+    {bannerHeight}
+    initialEvents={serializedEvents}
+  />
+</div>
+
+<script>
+  // Handle Astro page transitions
+  document.addEventListener('astro:page-load', () => {
+    // Find all timeline banners and initialize if needed
+    document.querySelectorAll('.timeline-banner').forEach(banner => {
+      const id = banner.id;
+      const isInitialized = banner.hasAttribute('data-initialized');
+      
+      if (!isInitialized) {
+        console.log(`Initializing timeline banner: ${id}`);
+        banner.setAttribute('data-initialized', 'true');
+        
+        // If using Svelte components, we need to check if they need re-initialization
+        // The specifics depend on how you're using Svelte with Astro
+      }
+    });
+  });
+  
+  // Add resize handler to update any responsive elements
+  window.addEventListener('resize', () => {
+    document.querySelectorAll('.timeline-banner').forEach(banner => {
+      // Dispatch a resize event that Svelte components can listen for
+      banner.dispatchEvent(new CustomEvent('timeline:resize'));
+    });
+  });
+</script>
+
+<style>
+  /* Base styles for the timeline banner container */
+  .timeline-banner {
+    position: relative;
+    width: 100%;
+    overflow-x: hidden;
+    margin-bottom: 1rem;
+    border-radius: var(--radius-large, 12px);
+  }
+  
+  /* Specifically for banner mode (full-width/height) */
+  [data-bannertype="timeline"] {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  
+  /* Match site's card shadow style */
+  .timeline-banner {
+    box-shadow: var(--card-shadow, 0 2px 4px rgba(0,0,0,0.005));
+  }
+  
+  /* Quality of life improvements */
+  @media (prefers-reduced-motion: no-preference) {
+    .timeline-banner {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .timeline-banner:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+  }
+</style>
