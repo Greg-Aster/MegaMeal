@@ -360,7 +360,7 @@
         
       <!-- Right side view switcher -->
       <div class="flex items-center ml-auto">
-        <span class="text-xs mr-2" style="color: white;">View:</span>
+        <!-- <span class="text-xs mr-2" style="color: white;">View:</span> -->
         <div class="timeline-view-switcher flex rounded-md overflow-hidden">
           <button 
             on:click={() => handleSetViewMode('timeline')}

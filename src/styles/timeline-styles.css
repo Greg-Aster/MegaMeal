@@ -214,3 +214,56 @@
 .fixed-mobile-card-container .card-pointer {
   display: none; /* Hide the pointer since it doesn't point to anything */
 }
+
+/* Better touch interaction settings */
+@media (pointer: coarse) {
+  /* Applies to touch-screen devices */
+  .timeline-container {
+    /* Adjust the hit area for better touch interaction */
+    touch-action: none; /* Prevent browser handling of touch gestures */
+  }
+  
+  /* Make buttons easier to tap on mobile */
+  .timeline-custom-controls button {
+    min-width: 40px;
+    min-height: 40px;
+  }
+  
+  /* Increase the touch target size for star nodes */
+  .event-node {
+    min-width: 44px; /* Apple's recommended minimum touch target size */
+    min-height: 44px;
+  }
+  
+  /* Visual feedback when touched */
+  .timeline-container:active {
+    cursor: grabbing;
+  }
+  
+  /* Make sure the card is big enough to read and interact with on mobile */
+  .fixed-mobile-card-container .timeline-card {
+    min-width: 250px;
+    padding: 12px;
+  }
+}
+
+/* Add visual indicators for touch gestures (educational for users) */
+.timeline-gesture-hint {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
+}
+
+.timeline-gesture-hint.visible {
+  opacity: 1;
+}

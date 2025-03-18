@@ -185,6 +185,16 @@
   let startOffsetX = 0;
   let startOffsetY = 0;
   
+  // Touch-specific state
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let lastTouchX = 0;
+  let lastTouchY = 0;
+  let touchDistance = 0;
+  let initialTouchDistance = 0;
+  let isTouching = false;
+  let isMultiTouch = false;
+  
   function startDrag(e: MouseEvent) {
     // Ignore drags that start on event elements
     if ((e.target as HTMLElement).closest('.event-node')) {
@@ -226,6 +236,134 @@
     }
   }
   
+  // Touch handlers for mobile navigation
+  function handleTouchStart(e: TouchEvent) {
+    // Prevent default to avoid scrolling the page
+    e.preventDefault();
+    
+    // Store the initial touch position
+    if (e.touches.length === 1) {
+      // Single touch - pan/drag
+      isTouching = true;
+      isMultiTouch = false;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      lastTouchX = touchStartX;
+      lastTouchY = touchStartY;
+      startOffsetX = $offsetX;
+      startOffsetY = $offsetY;
+      
+      // Add dragging class
+      if (timelineContainer) {
+        timelineContainer.classList.add('dragging');
+      }
+    } else if (e.touches.length === 2) {
+      // Two touches - pinch zoom
+      isTouching = true;
+      isMultiTouch = true;
+      
+      // Calculate the initial distance between two touches
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      initialTouchDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      touchDistance = initialTouchDistance;
+      
+      // Store the midpoint for panning while zooming
+      touchStartX = (touch1.clientX + touch2.clientX) / 2;
+      touchStartY = (touch1.clientY + touch2.clientY) / 2;
+      lastTouchX = touchStartX;
+      lastTouchY = touchStartY;
+      startOffsetX = $offsetX;
+      startOffsetY = $offsetY;
+    }
+  }
+  
+  function handleTouchMove(e: TouchEvent) {
+    // Prevent default to avoid scrolling the page
+    e.preventDefault();
+    
+    if (!isTouching) return;
+    
+    if (e.touches.length === 1 && !isMultiTouch) {
+      // Single touch - pan/drag
+      const touchX = e.touches[0].clientX;
+      const touchY = e.touches[0].clientY;
+      
+      // Calculate delta from last position
+      const deltaX = touchX - lastTouchX;
+      const deltaY = touchY - lastTouchY;
+      
+      // Update offsets
+      offsetX.set($offsetX + deltaX);
+      offsetY.set($offsetY + deltaY);
+      
+      // Store current touch position
+      lastTouchX = touchX;
+      lastTouchY = touchY;
+    } else if (e.touches.length === 2) {
+      // Two touches - pinch zoom
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      
+      // Calculate current distance
+      const currentDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      
+      // Calculate the zoom factor based on the change in distance
+      const zoomDelta = currentDistance / touchDistance;
+      
+      // Apply zoom with scaling limits
+      if (zoomDelta !== 1) {
+        const newScale = Math.max(0.5, Math.min(5, $scale * zoomDelta));
+        scale.set(newScale);
+        touchDistance = currentDistance;
+      }
+      
+      // Handle panning during pinch zoom
+      const currentMidX = (touch1.clientX + touch2.clientX) / 2;
+      const currentMidY = (touch1.clientY + touch2.clientY) / 2;
+      
+      // Calculate delta from last midpoint
+      const deltaX = currentMidX - lastTouchX;
+      const deltaY = currentMidY - lastTouchY;
+      
+      // Update offsets
+      offsetX.set($offsetX + deltaX);
+      offsetY.set($offsetY + deltaY);
+      
+      // Store current midpoint
+      lastTouchX = currentMidX;
+      lastTouchY = currentMidY;
+    }
+  }
+  
+  function handleTouchEnd(e: TouchEvent) {
+    // Check if there are still touches active
+    if (e.touches.length === 0) {
+      isTouching = false;
+      isMultiTouch = false;
+      
+      // Remove dragging class
+      if (timelineContainer) {
+        timelineContainer.classList.remove('dragging');
+      }
+    } else if (e.touches.length === 1) {
+      // Transition from pinch to pan
+      isMultiTouch = false;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      lastTouchX = touchStartX;
+      lastTouchY = touchStartY;
+      startOffsetX = $offsetX;
+      startOffsetY = $offsetY;
+    }
+  }
+  
   // Check if we're in mobile view
   function checkMobileView() {
     isMobile = window.innerWidth < 768; // Standard mobile breakpoint
@@ -238,6 +376,12 @@
     if (timelineContainer) {
       // Set up direct DOM event handlers
       setupDirectEventHandlers();
+      
+      // Add touch event listeners
+      timelineContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+      timelineContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+      timelineContainer.addEventListener('touchend', handleTouchEnd);
+      timelineContainer.addEventListener('touchcancel', handleTouchEnd);
     }
     
     // Check mobile view
@@ -269,6 +413,13 @@
       window.removeEventListener('mousemove', drag);
       window.removeEventListener('mouseup', endDrag);
       window.removeEventListener('resize', handleResize);
+      
+      if (timelineContainer) {
+        timelineContainer.removeEventListener('touchstart', handleTouchStart);
+        timelineContainer.removeEventListener('touchmove', handleTouchMove);
+        timelineContainer.removeEventListener('touchend', handleTouchEnd);
+        timelineContainer.removeEventListener('touchcancel', handleTouchEnd);
+      }
     };
   });
   
