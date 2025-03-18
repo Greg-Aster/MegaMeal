@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Icon from '@iconify/svelte';
   
   // Props
   export let era: string | undefined = undefined;
@@ -8,26 +7,6 @@
   export let isSelected: boolean = false;
   export let isHovered: boolean = false;
   export let size: number = 8;
-  
-  // More sophisticated sci-fi themed icons
-  const scifiIcons = [
-    // Add your preferred icons here
-/*     'carbon:light',
-    'mdi:orbit',
-    'carbon:satellite',
-    'carbon:network-3',
-    'tabler:satellite',
-    'mdi:space-station',
-    'mdi:hubble' */
-  ];
-  
-  // Special icons for key events - more dramatic or significant
-  const keyEventIcons = [
-    'mdi:orbit',
-    'carbon:light',
- //   'carbon:data-enrichment',
- //   'mdi:black-hole'
-  ];
   
   // Color variations using OKLCH format with --hue integration
   const colorVariations = [
@@ -58,7 +37,6 @@
     'rotate-slow-ccw',  // Counter-clockwise, slow
     'rotate-med-cw',    // Clockwise, medium
     'rotate-med-ccw',   // Counter-clockwise, medium
-    //'none'               Add another 'none' to increase chance of no rotation
   ];
 
   // Generate a pseudo-random but deterministic number from a string
@@ -70,13 +48,6 @@
       hash |= 0; // Convert to 32bit integer
     }
     return Math.abs(hash);
-  }
-  
-  // Get an icon name based on an identifier
-  function getIconName(identifier: string, isKeyEvent: boolean): string {
-    const iconSet = isKeyEvent ? keyEventIcons : scifiIcons;
-    if (iconSet.length === 0) return 'mdi:orbit'; // Default if no icons are specified
-    return iconSet[hashString(identifier) % iconSet.length];
   }
   
   // Get an OKLCH color variation that will use the site's hue
@@ -125,8 +96,7 @@
   $: sizeFactor = getSizeFactor(identifier, isKeyEvent);
   $: finalSize = size * sizeFactor;
   
-  // Reactive variables for icon, color, and rotation
-  $: iconName = getIconName(identifier, isKeyEvent);
+  // Reactive variables for color and rotation
   $: starColor = getColorVariation(identifier);
   $: animationDuration = getAnimationDuration(identifier);
   $: rotationClass = getRotationClass(identifier);
@@ -148,13 +118,25 @@
     class="icon-wrapper" 
     style="width: {finalSize * 3}px; height: {finalSize * 3}px;"
   >
-    <Icon 
-      icon={iconName} 
-      color="var(--star-color)" 
+    <!-- REPLACED @iconify/svelte with direct SVG element -->
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
       width={finalSize * 3} 
       height={finalSize * 3}
+      viewBox="0 0 24 24" 
       class="star-icon {rotationClass}"
-    />
+      style="color: var(--star-color);"
+    >
+      {#if isKeyEvent}
+        <!-- Orbit icon for key events -->
+        <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8s8 3.58 8 8s-3.58 8-8 8z"/>
+        <circle cx="12" cy="12" r="5" fill="currentColor" opacity="0.7" />
+      {:else}
+        <!-- Simple circle icon for normal events -->
+        <circle cx="12" cy="12" r="8" fill="currentColor" />
+        <circle cx="12" cy="12" r="4" fill="currentColor" opacity="0.5" />
+      {/if}
+    </svg>
   </div>
 </div>
 

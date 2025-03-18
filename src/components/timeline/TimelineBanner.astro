@@ -29,18 +29,27 @@ const {
 } = Astro.props;
 
 // Pre-fetch initial data on the server
-// This gives us better performance and SEO since the basic timeline structure 
-// will be in the initial HTML
-const initialEvents = await getTimelineEvents({
-  category: category || undefined,
-  startYear,
-  endYear,
-  includeBanners: true
-});
+let initialEvents = [];
+let bannerBackground = background;
 
-// Find any banner posts to use their metadata
-const bannerPost = initialEvents.find(event => event.bannerData);
-const bannerBackground = bannerPost?.bannerData?.background || background;
+try {
+  // This gives us better performance and SEO since the basic timeline structure 
+  // will be in the initial HTML
+  initialEvents = await getTimelineEvents({
+    category: category || undefined,
+    startYear,
+    endYear,
+    includeBanners: true
+  });
+
+  // Find any banner posts to use their metadata
+  const bannerPost = initialEvents.find(event => event.bannerData);
+  if (bannerPost?.bannerData?.background) {
+    bannerBackground = bannerPost.bannerData.background;
+  }
+} catch (error) {
+  console.error("Error fetching timeline events:", error);
+}
 
 // Helper function to safely stringify events for client-side hydration
 function safeStringify(obj) {
@@ -52,6 +61,12 @@ function safeStringify(obj) {
         iso: value.toISOString()
       };
     }
+    
+    // Remove any functions that might cause hydration issues
+    if (typeof value === 'function') {
+      return undefined;
+    }
+    
     // Handle circular references 
     const seen = new WeakSet();
     if (typeof value === 'object' && value !== null) {
@@ -69,8 +84,9 @@ const serializedEvents = safeStringify(initialEvents);
 ---
 
 <div id={id} class={`timeline-banner ${className}`} data-bannertype="timeline">
+  <!-- Use client:idle instead of client:load to give browser more time to initialize -->
   <TimelineController
-    client:load
+    client:idle
     {id}
     {category}
     {startYear}
@@ -85,8 +101,7 @@ const serializedEvents = safeStringify(initialEvents);
 
 <script>
   // Handle Astro page transitions
-  document.addEventListener('astro:page-load', () => {
-    // Find all timeline banners and initialize if needed
+  const handlePageLoad = () => {
     document.querySelectorAll('.timeline-banner').forEach(banner => {
       const id = banner.id;
       const isInitialized = banner.hasAttribute('data-initialized');
@@ -94,18 +109,26 @@ const serializedEvents = safeStringify(initialEvents);
       if (!isInitialized) {
         console.log(`Initializing timeline banner: ${id}`);
         banner.setAttribute('data-initialized', 'true');
-        
-        // If using Svelte components, we need to check if they need re-initialization
-        // The specifics depend on how you're using Svelte with Astro
       }
     });
-  });
+  };
+
+  // This works with both Astro and document load events
+  if (document.readyState === 'complete') {
+    handlePageLoad();
+  } else {
+    document.addEventListener('astro:page-load', handlePageLoad);
+    window.addEventListener('load', handlePageLoad);
+  }
   
   // Add resize handler to update any responsive elements
   window.addEventListener('resize', () => {
-    document.querySelectorAll('.timeline-banner').forEach(banner => {
-      // Dispatch a resize event that Svelte components can listen for
-      banner.dispatchEvent(new CustomEvent('timeline:resize'));
+    // Use requestAnimationFrame to avoid performance issues
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.timeline-banner').forEach(banner => {
+        // Dispatch a resize event that Svelte components can listen for
+        banner.dispatchEvent(new CustomEvent('timeline:resize'));
+      });
     });
   });
 </script>

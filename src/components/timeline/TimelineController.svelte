@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+  // Browser detection for Astro + Svelte (without SvelteKit)
+  const isBrowser = typeof window !== 'undefined';
   import { timelineStore, timelineActions, filteredEvents, selectedEvent } from '../../stores/timelineStore';
-  import { safeJSONParse, extractEraConfig } from '../../services/TimelineService.client';
   import type { TimelineEvent } from '../../services/TimelineService.client';
   
   // Components
@@ -26,11 +27,40 @@
   let loading: boolean = true;
   let error: string | null = null;
   let timelineCore: TimelineCore; // Reference to child component
+  let parsedEvents = [];
   
-  // Initialize store state based on props
+  // Safe JSON parse function that works during hydration
+  function safeJSONParse(jsonString: string): any {
+    try {
+      // Basic parsing without complex date handling
+      return JSON.parse(jsonString);
+    } catch (e) {
+      console.error("Error parsing JSON:", e);
+      return [];
+    }
+  }
+  
+  // Extract era configuration from timeline events - simplified for hydration
+  function extractEraConfig(events: TimelineEvent[]): any {
+    // Minimal implementation to avoid hydration issues
+    const config = {};
+    
+    // Look for banner posts with era configurations
+    const bannerEvents = events.filter(event => event.bannerData?.eraConfig);
+    
+    if (bannerEvents.length > 0) {
+      const primaryBanner = bannerEvents[0];
+      if (primaryBanner.bannerData?.eraConfig) {
+        return primaryBanner.bannerData.eraConfig;
+      }
+    }
+    
+    return config;
+  }
+  
+  // Initialize store state based on props - called only after component is mounted
   function initializeStore() {
-    // Update store with props
-    if (compact !== undefined) {
+    if (compact !== undefined && compact !== false) {
       timelineActions.toggleCompact();
     }
     
@@ -59,9 +89,7 @@
     try {
       loading = true;
       
-      // Parse initial data with safe parsing
-      let parsedEvents = [];
-      
+      // Simple parsing of initial events with fallback
       try {
         parsedEvents = safeJSONParse(initialEvents) || [];
         
@@ -73,6 +101,7 @@
       } catch (parseError) {
         console.error('Error parsing events:', parseError);
         error = 'Failed to parse event data';
+        parsedEvents = [];
       }
       
       // Initialize the store
@@ -98,12 +127,7 @@
     }
   });
   
-  // Cleanup on destroy
-  onDestroy(() => {
-    // Any cleanup needed
-  });
-  
-  // Handler for era filtering
+  // Handler for era filtering - simplified for hydration
   function handleEraFilter(e) {
     const select = e.target;
     const era = select.value === 'all' ? null : select.value;
@@ -124,7 +148,7 @@
   
   // Handle resize events
   function handleResize() {
-    // Implement any resize logic here
+    // Implementation deferred until component is fully mounted
   }
 </script>
 
@@ -366,7 +390,7 @@
   </div>
   
 <!-- Bottom control bar with year display - STYLED TO MATCH SITE -->
-<div class="timeline-footer flex items-center justify-between p-2  w-full bg-[var(--card-bg)] border-t border-black/5 dark:border-white/5 z-10 rounded-b-[var(--radius-large)]">
+<div class="timeline-footer flex items-center justify-between p-2 w-full bg-[var(--card-bg)] border-t border-black/5 dark:border-white/5 z-10 rounded-b-[var(--radius-large)]">
   <div class="flex items-center">
     <span class="ml-2 text-75">
       Timeline: {startYear || '—'} to {endYear || '—'}
@@ -387,36 +411,6 @@
     </button>
   </div>
 </div>
-  
-  <!-- Debug panel - only in development mode -->
-  {#if process.env.NODE_ENV !== 'production'}
-    <div class="fixed bottom-4 right-4 bg-black/80 text-white p-2 text-xs z-50 card-base">
-      <div>Mode: {$timelineStore.viewMode}</div>
-      <div>Events: {$filteredEvents.length}</div>
-      <div>Scale: {$timelineStore.scale.toFixed(2)}</div>
-      <div>Selected: {$selectedEvent?.title || 'None'}</div>
-      <div class="grid grid-cols-2 gap-1 mt-1">
-        <button 
-          class="bg-blue-700 px-2 py-1 rounded text-center"
-          on:click={() => timelineActions.zoomIn()}
-        >
-          Zoom In
-        </button>
-        <button 
-          class="bg-blue-700 px-2 py-1 rounded text-center"
-          on:click={() => timelineActions.zoomOut()}
-        >
-          Zoom Out
-        </button>
-        <button 
-          class="bg-red-700 px-2 py-1 rounded col-span-2 text-center"
-          on:click={() => console.log('Store:', $timelineStore, 'Events:', $filteredEvents)}
-        >
-          Log State
-        </button>
-      </div>
-    </div>
-  {/if}
 </div>
 
 <style>
