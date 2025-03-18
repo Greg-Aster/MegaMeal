@@ -114,38 +114,7 @@
     if (!timelineContainer) return;
     
     // Handle clicks on event elements using event delegation
-    timelineContainer.addEventListener('click', (e) => {
-      // Find if we clicked on an event node
-      const target = e.target as HTMLElement;
-      const eventNode = target.closest('.event-node');
-      
-      if (eventNode) {
-        // Get the event slug from the data attribute
-        const slug = eventNode.getAttribute('data-slug');
-        if (!slug) return;
-        
-        // Stop event propagation
-        e.stopPropagation();
-        
-        // Find the corresponding event
-        const event = events.find(evt => evt.slug === slug);
-        if (!event) return;
-        
-        // If already selected, navigate to post
-        if (selectedEvent && selectedEvent.slug === slug) {
-          window.location.href = `/posts/${slug}/`;
-        } else {
-          // Otherwise, select this event
-          selectedEvent = event;
-          dispatch('select', { event });
-        }
-      } else if (target === timelineContainer || target.classList.contains('timeline-container')) {
-        // Click on background
-        selectedEvent = null;
-        hoveredEvent = null;
-        dispatch('deselect');
-      }
-    });
+    timelineContainer.addEventListener('click', handleClick);
     
     // Handle hover events
     timelineContainer.addEventListener('mouseover', (e) => {
@@ -178,6 +147,40 @@
     });
   }
   
+  // Shared click handler that works for both mouse clicks and touch taps
+  function handleClick(e: MouseEvent | TouchEvent) {
+    // Find if we clicked on an event node
+    const target = e.target as HTMLElement;
+    const eventNode = target.closest('.event-node');
+    
+    if (eventNode) {
+      // Get the event slug from the data attribute
+      const slug = eventNode.getAttribute('data-slug');
+      if (!slug) return;
+      
+      // Stop event propagation
+      e.stopPropagation();
+      
+      // Find the corresponding event
+      const event = events.find(evt => evt.slug === slug);
+      if (!event) return;
+      
+      // If already selected, navigate to post
+      if (selectedEvent && selectedEvent.slug === slug) {
+        window.location.href = `/posts/${slug}/`;
+      } else {
+        // Otherwise, select this event
+        selectedEvent = event;
+        dispatch('select', { event });
+      }
+    } else if (target === timelineContainer || target.classList.contains('timeline-container')) {
+      // Click on background
+      selectedEvent = null;
+      hoveredEvent = null;
+      dispatch('deselect');
+    }
+  }
+  
   // Simple drag handling for panning
   let isDragging = false;
   let startDragX = 0;
@@ -194,6 +197,9 @@
   let initialTouchDistance = 0;
   let isTouching = false;
   let isMultiTouch = false;
+  let touchStartTime = 0;
+  let touchMoved = false;
+  let touchTarget: HTMLElement | null = null;
   
   function startDrag(e: MouseEvent) {
     // Ignore drags that start on event elements
@@ -238,8 +244,22 @@
   
   // Touch handlers for mobile navigation
   function handleTouchStart(e: TouchEvent) {
-    // Prevent default to avoid scrolling the page
-    e.preventDefault();
+    // Store the target element
+    touchTarget = e.target as HTMLElement;
+    
+    // Check if touch is on an event node
+    const isOnEventNode = !!touchTarget.closest('.event-node');
+    
+    // Only prevent default if not touching on an event node
+    if (!isOnEventNode) {
+      e.preventDefault();
+    }
+    
+    // Reset touch moved flag
+    touchMoved = false;
+    
+    // Store touch start time for tap detection
+    touchStartTime = Date.now();
     
     // Store the initial touch position
     if (e.touches.length === 1) {
@@ -282,10 +302,27 @@
   }
   
   function handleTouchMove(e: TouchEvent) {
-    // Prevent default to avoid scrolling the page
-    e.preventDefault();
+    // Check if touch started on an event node
+    const isOnEventNode = !!touchTarget?.closest('.event-node');
+    
+    // Only prevent default if not on an event node
+    if (!isOnEventNode) {
+      e.preventDefault();
+    }
     
     if (!isTouching) return;
+    
+    // If we've moved more than a small threshold, mark as moved
+    if (e.touches.length === 1) {
+      const dx = e.touches[0].clientX - touchStartX;
+      const dy = e.touches[0].clientY - touchStartY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      // If moved more than 10px, consider it a drag not a tap
+      if (distance > 10) {
+        touchMoved = true;
+      }
+    }
     
     if (e.touches.length === 1 && !isMultiTouch) {
       // Single touch - pan/drag
@@ -304,6 +341,8 @@
       lastTouchX = touchX;
       lastTouchY = touchY;
     } else if (e.touches.length === 2) {
+      touchMoved = true;
+      
       // Two touches - pinch zoom
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
@@ -343,6 +382,23 @@
   }
   
   function handleTouchEnd(e: TouchEvent) {
+    // Check if this was a tap (short duration, little movement)
+    const touchDuration = Date.now() - touchStartTime;
+    const wasTap = !touchMoved && touchDuration < 300;
+    
+    // If it was a tap and we have a target, simulate a click
+    if (wasTap && touchTarget) {
+      // Create a synthetic click event
+      handleClick({
+        target: touchTarget,
+        stopPropagation: () => {},
+        preventDefault: () => {}
+      } as unknown as MouseEvent);
+    }
+    
+    // Reset touch target
+    touchTarget = null;
+    
     // Check if there are still touches active
     if (e.touches.length === 0) {
       isTouching = false;
@@ -410,6 +466,10 @@
     }
     
     return () => {
+      if (timelineContainer) {
+        timelineContainer.removeEventListener('click', handleClick);
+      }
+      
       window.removeEventListener('mousemove', drag);
       window.removeEventListener('mouseup', endDrag);
       window.removeEventListener('resize', handleResize);
