@@ -138,18 +138,12 @@
           // Otherwise, select this event
           selectedEvent = event;
           dispatch('select', { event });
-          
-          // Update UI to reflect selection
-          updateSelectionState();
         }
       } else if (target === timelineContainer || target.classList.contains('timeline-container')) {
         // Click on background
         selectedEvent = null;
         hoveredEvent = null;
         dispatch('deselect');
-        
-        // Update UI
-        updateSelectionState();
       }
     });
     
@@ -166,7 +160,6 @@
         if (!event || (selectedEvent && selectedEvent.slug === slug)) return;
         
         hoveredEvent = event;
-        updateHoverState();
       }
     });
     
@@ -180,91 +173,9 @@
         
         if (hoveredEvent && hoveredEvent.slug === slug) {
           hoveredEvent = null;
-          updateHoverState();
         }
       }
     });
-  }
-  
-  // Update DOM to reflect selection state
-  function updateSelectionState() {
-    if (!timelineContainer) return;
-    
-    // First, remove all selection states
-    const allEventNodes = timelineContainer.querySelectorAll('.event-node');
-    allEventNodes.forEach(node => {
-      // Find the corresponding StarNode component
-      const starNode = node.querySelector('.star-node');
-      if (starNode) {
-        starNode.classList.remove('is-selected');
-      }
-      
-      // Find any card elements
-      const card = node.nextElementSibling;
-      if (card && card.classList.contains('timeline-card')) {
-        card.classList.add('hidden');
-      }
-    });
-    
-    // Then set the selection state for the selected event
-    if (selectedEvent) {
-      const selectedNode = timelineContainer.querySelector(`.event-node[data-slug="${selectedEvent.slug}"]`);
-      if (selectedNode) {
-        // Find the StarNode
-        const starNode = selectedNode.querySelector('.star-node');
-        if (starNode) {
-          starNode.classList.add('is-selected');
-        }
-        
-        // Find the card and show it
-        const card = selectedNode.nextElementSibling;
-        if (card && card.classList.contains('timeline-card')) {
-          card.classList.remove('hidden');
-        }
-      }
-    }
-  }
-  
-  // Update DOM to reflect hover state
-  function updateHoverState() {
-    if (!timelineContainer) return;
-    
-    // First, remove all hover states
-    const allEventNodes = timelineContainer.querySelectorAll('.event-node');
-    allEventNodes.forEach(node => {
-      const starNode = node.querySelector('.star-node');
-      if (starNode) {
-        starNode.classList.remove('is-hovered');
-      }
-      
-      // Find any card elements that aren't for selected events
-      const slug = node.getAttribute('data-slug');
-      if (slug && (!selectedEvent || selectedEvent.slug !== slug)) {
-        const card = node.nextElementSibling;
-        if (card && card.classList.contains('timeline-card')) {
-          card.classList.add('hidden');
-        }
-      }
-    });
-    
-    // Then set the hover state for the hovered event
-    if (hoveredEvent) {
-      const hoveredNode = timelineContainer.querySelector(`.event-node[data-slug="${hoveredEvent.slug}"]`);
-      if (hoveredNode) {
-        const starNode = hoveredNode.querySelector('.star-node');
-        if (starNode) {
-          starNode.classList.add('is-hovered');
-        }
-        
-        // Only show card if not selected
-        if (!selectedEvent || selectedEvent.slug !== hoveredEvent.slug) {
-          const card = hoveredNode.nextElementSibling;
-          if (card && card.classList.contains('timeline-card')) {
-            card.classList.remove('hidden');
-          }
-        }
-      }
-    }
   }
   
   // Simple drag handling for panning
@@ -405,7 +316,7 @@
      data-start-year={startYear} 
      data-end-year={endYear}>
 
-  <!-- Background with parallax effect - restored rotation for mobile -->
+  <!-- Background with parallax effect -->
   <div class="absolute inset-0 z-0 overflow-hidden">
     <img 
       src={background} 
@@ -431,23 +342,23 @@
        style="transform: scale({$scale}) translate({$offsetX/$scale}px, {$offsetY/$scale}px);">
     
     <!-- Center line - horizontal for desktop, vertical for mobile -->
-    <div class="timeline-center-line absolute {isMobile ? 'timeline-center-line-mobile' : 'timeline-center-line-desktop'}"></div>
+    <div class="timeline-center-line absolute {isMobile ? 'h-full w-[2px] left-1/2 bg-gradient-to-b' : 'w-full h-[2px] top-1/2 bg-gradient-to-r'} from-transparent via-[oklch(0.7_0.08_var(--hue))] to-transparent opacity-50"></div>
     
     <!-- Year markers -->
-    <div class="timeline-start-marker absolute {isMobile ? 'timeline-start-marker-mobile' : 'timeline-start-marker-desktop'}"></div>
-    <div class="timeline-end-marker absolute {isMobile ? 'timeline-end-marker-mobile' : 'timeline-end-marker-desktop'}"></div>
+    <div class="timeline-start-marker absolute {isMobile ? 'top-[15%] h-[4px] left-[40%] right-[60%]' : 'left-[15%] w-[4px] top-[40%] bottom-[60%]'} bg-[oklch(0.7_0.2_var(--hue))] opacity-60 rounded-full"></div>
+    <div class="timeline-end-marker absolute {isMobile ? 'bottom-[15%] h-[4px] left-[40%] right-[60%]' : 'right-[15%] w-[4px] top-[40%] bottom-[60%]'} bg-[oklch(0.7_0.2_var(--hue))] opacity-60 rounded-full"></div>
 
     <!-- Events -->
     {#each eventPositions as { event, timelinePosition, offsetPosition }, i}
       <!-- Event container with positioning for both desktop and mobile -->
       <div 
-        class="timeline-event absolute"
+        class="timeline-event absolute {isMobile ? 'timeline-event-mobile' : 'timeline-event-desktop'}"
         style={isMobile ? 
-          `top: ${timelinePosition}%; left: 50%; transform: translateX(${offsetPosition}px);` : 
-          `left: ${timelinePosition}%; top: 50%; transform: translateY(${offsetPosition}px);`
+          `top: ${timelinePosition}%; left: 50%; transform: translate(${offsetPosition}px, 0) scale(${1/$scale});` : 
+          `left: ${timelinePosition}%; top: 50%; transform: translate(0, ${offsetPosition}px) scale(${1/$scale});`
         }
       >
-        <!-- Star node - Using data attribute for DOM event handling -->
+        <!-- Star node with data attributes for DOM event handling -->
         <div 
           class="event-node absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
           data-slug={event.slug}
@@ -463,8 +374,8 @@
           />
         </div>
         
-        <!-- Event information card with mobile/desktop positioning -->
-        <div class="timeline-card {selectedEvent?.slug === event.slug || hoveredEvent?.slug === event.slug ? '' : 'hidden'}">
+        <!-- Only show card if this event is selected or hovered -->
+        {#if selectedEvent?.slug === event.slug || hoveredEvent?.slug === event.slug}
           <TimelineCard 
             {event} 
             isSelected={selectedEvent?.slug === event.slug}
@@ -475,16 +386,16 @@
             }
             isMobile={isMobile}
           />
-        </div>
+        {/if}
       </div>
     {/each}
     
     <!-- Era labels positioned for mobile/desktop -->
     {#if events.length > 0}
-      <div class="{isMobile ? 'timeline-start-label-mobile' : 'timeline-start-label-desktop'} absolute text-lg font-bold text-75">
+      <div class="{isMobile ? 'absolute top-[12%] left-[30%] transform -translate-y-full' : 'absolute left-[12%] bottom-[30%] transform -translate-x-1/2'} text-lg font-bold text-75">
         {startYear}
       </div>
-      <div class="{isMobile ? 'timeline-end-label-mobile' : 'timeline-end-label-desktop'} absolute text-lg font-bold text-75">
+      <div class="{isMobile ? 'absolute bottom-[12%] left-[30%] transform translate-y-full' : 'absolute right-[12%] bottom-[30%] transform translate-x-1/2'} text-lg font-bold text-75">
         {endYear}
       </div>
     {/if}
@@ -516,22 +427,3 @@
     </div>
   {/if}
 </div>
-
-<style>
-  /* Basic timeline styles that can't be replaced with Tailwind */
-  .timeline-event {
-    transition: transform 0.3s ease, opacity 0.5s ease;
-  }
-  
-  .timeline-container {
-    transform-origin: center;
-    transition: transform 0.3s ease;
-    will-change: transform;
-  }
-  
-  /* Disable animations during dragging for better performance */
-  .dragging .timeline-event,
-  .dragging .timeline-container {
-    transition: none !important;
-  }
-</style>

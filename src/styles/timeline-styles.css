@@ -131,6 +131,57 @@
   cursor: grabbing;
 }
 
+/* Timeline basic styles */
+.timeline-container {
+  transform-origin: center;
+  transition: transform 0.3s ease;
+  will-change: transform;
+}
+
+/* Disable animations during dragging for better performance */
+.dragging .timeline-event,
+.dragging .timeline-container {
+  transition: none !important;
+}
+
+/* Timeline event zoom handling */
+.timeline-event {
+  transform-origin: center;
+}
+
+/* Card wrapper for proper scaling */
+.card-wrapper {
+  position: absolute;
+  z-index: 30;
+  transform-origin: center;
+  transition: transform 0.3s ease;
+}
+
+/* Ensure proper card positioning after scaling */
+.timeline-event-desktop .card-wrapper {
+  left: 0;
+  top: 0;
+}
+
+.timeline-event-mobile .card-wrapper {
+  left: 0;
+  top: 0;
+}
+
+/* Enhanced hit area for better interaction */
+.event-node {
+  min-width: 40px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Make events stand out better on hover */
+.timeline-event:hover {
+  z-index: 20;
+}
+
 /* Smoother background image scaling */
 .timeline .absolute.inset-0 img {
   transition: transform 0.5s cubic-bezier(0.33, 1, 0.68, 1);
