@@ -542,10 +542,10 @@
   }
   
   /* Mobile optimization */
-  @media (max-width: 768px) {
+/*   @media (max-width: 768px) {
     .compact-mode :global(.timeline-card) {
       width: 150px !important;
       padding: 0.5rem !important;
     }
-  }
+  } */
 </style>
