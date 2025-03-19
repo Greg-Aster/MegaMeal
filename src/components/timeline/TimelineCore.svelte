@@ -652,14 +652,14 @@
           data-year={event.year}
           data-era={event.era}
         >
-          <StarNode 
-            era={event.era} 
-            isKeyEvent={event.isKeyEvent} 
-            isSelected={selectedEvent?.slug === event.slug}
-            isHovered={hoveredEvent?.slug === event.slug}
-            size={event.isKeyEvent ? 10 : 8}
-          />
-        </div>
+        <StarNode 
+        era={event.era} 
+        isKeyEvent={event.isKeyEvent} 
+        isSelected={selectedEvent?.slug === event.slug}
+        isHovered={hoveredEvent?.slug === event.slug}
+        size={event.isKeyEvent ? 5 : 4}
+      />
+    </div>
         
         <!-- Only show card if this event is selected or hovered AND NOT in mobile mode -->
         {#if (selectedEvent?.slug === event.slug || hoveredEvent?.slug === event.slug) && !isMobile}

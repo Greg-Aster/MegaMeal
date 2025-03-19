@@ -31,8 +31,8 @@
     'post-extinction': { lightness: 0.7, chroma: 0.25, hueOffset: -10 } // Light blue
   };
 
-  // Size variations factor - how much to vary sizes
-  const sizeVariations = [0.7, 0.85, 1.0, 1.15, 1.3, 1.5];
+  // Size variations factor with a narrower range for more consistency
+  const sizeVariations = [0.8, 0.90, 1.0, 1.1, 1.15, 1.25];
   
   // Rotation options - including no rotation
   const rotationOptions = [
@@ -76,23 +76,23 @@
     return `oklch(${variation.lightness} ${variation.chroma} calc(var(--hue) + ${variation.hueOffset}deg))`;
   }
   
-  // Get a size factor for the event - for visual variety
+  // Get a size factor for the event - with more consistent sizing
   function getSizeFactor(identifier: string, isKeyEvent: boolean): number {
     // Start with a base size factor
     const variation = sizeVariations[hashString(identifier) % sizeVariations.length];
     
-    // Key events get an additional size boost
+    // Key events get a SMALLER additional size boost (reduced from 1.5)
     if (isKeyEvent) {
-      return variation * 1.5;
+      return variation * 1.2;
     }
     
-    // Modify size based on era - an example of how to vary by property
+    // Modify size based on era - More subtle variations
     if (era) {
       switch(era) {
         case 'snuggaloid': 
-          return variation * 1.2; // Larger for this era
+          return variation * 1.1; // Reduced from 1.2
         case 'post-extinction':
-          return variation * 1.1; // Slightly larger for this era
+          return variation * 1.05; // Reduced from 1.1
       }
     }
     
@@ -257,7 +257,8 @@
   }
   
   .is-selected {
-    transform: scale(1.3) !important;
+    /* Reduced transform scale from 1.3 to 1.15 */
+    transform: scale(1.15) !important;
     filter: 
       drop-shadow(0 0 calc(8px * var(--size-factor)) var(--star-color))
       drop-shadow(0 0 calc(16px * var(--size-factor)) var(--star-color))
@@ -266,7 +267,8 @@
   }
   
   .is-hovered {
-    transform: scale(1.1);
+    /* Remove transform scale entirely - just use the glow effect */
+    transform: none;
     filter: 
       drop-shadow(0 0 calc(6px * var(--size-factor)) var(--star-color))
       drop-shadow(0 0 calc(12px * var(--size-factor)) var(--star-color)); 
@@ -440,28 +442,14 @@
     animation: rotateCCW 30s linear infinite;
   }
   
-  /* These extra size variations are now less significant since we have more deliberate sizing */
-  /* But keeping them for subtle additional variation within each main size category */
-  :global(.timeline-event:nth-child(3n+1)) .star-icon {
-    transform: scale(0.95);
-  }
-  
-  :global(.timeline-event:nth-child(7n+2)) .star-icon {
-    transform: scale(1.05);
-  }
-  
-  :global(.timeline-event:nth-child(5n+3)) .star-icon {
-    transform: scale(0.97);
-  }
-  
-  :global(.timeline-event:nth-child(11n+4)) .star-icon {
-    transform: scale(1.02);
-  }
+  /* Remove all these subtle size variations to keep sizes more consistent */
+  /* This helps prevent glitching when cards appear */
   
   /* Override transformations for hover and selected states */
   .is-hovered .star-icon,
   .is-selected .star-icon {
-    transform: scale(1.1) !important;
+    /* Reduced from 1.1 to 1.05 for more subtle effect */
+    transform: scale(1.05) !important;
   }
   
   /* Animation keyframes */
