@@ -257,6 +257,38 @@
     }
   }
   
+  // Handle double-click to zoom
+  function handleDoubleClick(e: MouseEvent) {
+    // Ignore double-clicks on event elements
+    if ((e.target as HTMLElement).closest('.event-node')) {
+      return;
+    }
+    
+    // Prevent default browser behavior
+    e.preventDefault();
+    
+    // Get the position of the double-click relative to the container
+    const rect = timelineContainer.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+    
+    // Calculate the center point of the container
+    const centerX = containerWidth / 2;
+    const centerY = containerHeight / 2;
+    
+    // Calculate how far from center the click was
+    const deltaX = clickX - centerX;
+    const deltaY = clickY - centerY;
+    
+    // Zoom in
+    scale.update(s => Math.min(5, s + 0.5));
+    
+    // Adjust the offset to center on the click position
+    // The formula is complex because we need to account for the current scale and offset
+    offsetX.update(x => x - (deltaX / $scale) * 0.2);
+    offsetY.update(y => y - (deltaY / $scale) * 0.2);
+  }
+  
   // Touch handlers for mobile navigation
   function handleTouchStart(e: TouchEvent) {
     // Store the target element
@@ -494,6 +526,8 @@
       timelineContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
       timelineContainer.addEventListener('touchend', handleTouchEnd);
       timelineContainer.addEventListener('touchcancel', handleTouchEnd);
+      // Add double-click handler for desktop zoom
+      timelineContainer.addEventListener('dblclick', handleDoubleClick);
       
       // Add orientation change listener
       window.addEventListener('orientationchange', () => {
@@ -548,6 +582,7 @@
         timelineContainer.removeEventListener('touchmove', handleTouchMove);
         timelineContainer.removeEventListener('touchend', handleTouchEnd);
         timelineContainer.removeEventListener('touchcancel', handleTouchEnd);
+        timelineContainer.removeEventListener('dblclick', handleDoubleClick);
       }
     };
   });
