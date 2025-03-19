@@ -119,8 +119,8 @@
         </div>
       {/if}
       
-      <!-- Extra padding to prevent content being cut off by footer -->
-      <div class="h-16"></div>
+      <!-- Extra padding to prevent content being cut off by footer/navbar - INCREASED -->
+      <div class="h-40"></div>
     </div>
   </div>
 </div>
