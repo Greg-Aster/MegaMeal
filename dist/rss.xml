@@ -1,16 +1,100 @@
-<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Greg Aster</title><description>Experimental Videographer &amp; Creator</description><link>https://dndiy.org/</link><language>en</language><item><title>*Under Construction* - Foodieverse Timeline</title><link>https://dndiy.org/posts/qarnivor-universe-timline/</link><guid isPermaLink="true">https://dndiy.org/posts/qarnivor-universe-timline/</guid><description>Explore the complete chronology of the Foodiverse, from the Pre-Spork Era through the Snuggaloid Emergence and beyond.</description><pubDate>Tue, 10 Jun 2025 00:00:00 GMT</pubDate><content:encoded>&lt;h1&gt;Qarnivor Universe Timeline&lt;/h1&gt;
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Greg Aster</title><description>Experimental Videographer &amp; Creator</description><link>https://dndiy.org/</link><language>en</language><item><title>Foodieverse Timeline (alpha ver.1)</title><link>https://dndiy.org/posts/qarnivor-universe-timline/</link><guid isPermaLink="true">https://dndiy.org/posts/qarnivor-universe-timline/</guid><description>Explore the complete chronology of the Foodiverse, from the Pre-Spork Era through the Snuggaloid Emergence and beyond.</description><pubDate>Tue, 10 Jun 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;After reviewing the source files more carefully, I should enhance the documentation with some additional details. Here&apos;s a more accurate and comprehensive guide to timeline navigation:&lt;/p&gt;
+&lt;h1&gt;Qarnivor Universe Timeline&lt;/h1&gt;
 &lt;p&gt;&amp;lt;div class=&quot;text-50 text-lg italic mb-8&quot;&amp;gt;
 &quot;Time is just one digestive tract through which all existence must pass.&quot; - Ancient Qarnivore Proverb
 &amp;lt;/div&amp;gt;&lt;/p&gt;
 &lt;h2&gt;Interactive Timeline&lt;/h2&gt;
 &lt;p&gt;Explore the key events of the Qarnivor universe across its many eras. The interactive timeline below shows major historical moments that shaped this strange and wonderful universe.&lt;/p&gt;
-&lt;p&gt;{/* &amp;lt;TimelineController
-title=&quot;Qarnivor Timeline&quot;
-category=&quot;MEGA MEAL&quot;
-background=&quot;/assets/banner/0001.png&quot;
-isCollapsed={false}
-compact={false}
-/&amp;gt; */}&lt;/p&gt;
+&lt;h3&gt;How to Use the Timeline&lt;/h3&gt;
+&lt;p&gt;Our interactive timeline provides multiple ways to explore the history of the Qarnivor universe:&lt;/p&gt;
+&lt;h4&gt;Navigation Controls&lt;/h4&gt;
+&lt;p&gt;The timeline features intuitive navigation controls:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Top Control Bar&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Era Filter&lt;/strong&gt;: Select a specific era to focus on those events&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;View Switcher&lt;/strong&gt;: Toggle between different visualization modes (Timeline, List, Tree, Map)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Bottom Control Bar&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Reset View&lt;/strong&gt;: Return to the default timeline view&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Pan Controls&lt;/strong&gt;: Move left, right, up, or down (arrows)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Zoom Controls&lt;/strong&gt;: Zoom in (+) or out (-) of the timeline&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;View Modes&lt;/h4&gt;
+&lt;p&gt;&amp;lt;div class=&quot;grid grid-cols-1 md:grid-cols-2 gap-4 mb-8&quot;&amp;gt;
+&amp;lt;div class=&quot;card-base p-4&quot;&amp;gt;
+&amp;lt;h4 class=&quot;font-bold mb-2&quot;&amp;gt;Timeline View&amp;lt;/h4&amp;gt;
+&amp;lt;p class=&quot;text-sm text-50&quot;&amp;gt;The standard view where events are displayed as stars along a horizontal (or vertical on mobile) timeline. Events are arranged chronologically with visual indicators for different eras.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div class=&quot;card-base p-4&quot;&amp;gt;
+&amp;lt;h4 class=&quot;font-bold mb-2&quot;&amp;gt;List View&amp;lt;/h4&amp;gt;
+&amp;lt;p class=&quot;text-sm text-50&quot;&amp;gt;A straightforward chronological list of events grouped by era. Perfect for getting a clear sequential understanding of history.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div class=&quot;card-base p-4&quot;&amp;gt;
+&amp;lt;h4 class=&quot;font-bold mb-2&quot;&amp;gt;Tree View&amp;lt;/h4&amp;gt;
+&amp;lt;p class=&quot;text-sm text-50&quot;&amp;gt;A vertical branch-like visualization that shows the progression of events over time, emphasizing the flow and connections between major moments.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div class=&quot;card-base p-4&quot;&amp;gt;
+&amp;lt;h4 class=&quot;font-bold mb-2&quot;&amp;gt;Map View&amp;lt;/h4&amp;gt;
+&amp;lt;p class=&quot;text-sm text-50&quot;&amp;gt;A spatial representation showing where events occurred. Events with location data are displayed as pins on a stylized map with additional location details listed below.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;h4&gt;Interaction Tips&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Event Selection&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;First Click/Tap&lt;/strong&gt;: Selects an event and displays its information card&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Second Click/Tap&lt;/strong&gt; (on already selected event): Navigates to the full event page&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Double-Click/Double-Tap&lt;/strong&gt;: Navigates directly to the full event page&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Navigation&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Click and Drag&lt;/strong&gt;: Pan around the timeline&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Mouse Wheel/Pinch&lt;/strong&gt;: Zoom in and out&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Background Click&lt;/strong&gt;: Deselect the current event&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;Mobile Experience&lt;/h4&gt;
+&lt;p&gt;On mobile devices, the timeline adapts with these special features:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Vertical Timeline&lt;/strong&gt;: The timeline rotates to vertical orientation for better mobile viewing&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Fixed Position Cards&lt;/strong&gt;: Event information appears in a fixed position at the bottom of the screen rather than as popups&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Touch Gestures&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Pinch&lt;/strong&gt;: Zoom in or out&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Drag&lt;/strong&gt;: Pan around the timeline&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Tap&lt;/strong&gt;: Select an event&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Tap Again&lt;/strong&gt;: Navigate to event page (when an event is already selected)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Double-tap&lt;/strong&gt;: Navigate directly to event page&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Gesture Hint&lt;/strong&gt;: A brief popup appears when you first use the timeline on mobile, reminding you of the available gestures&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;From Timeline to Content&lt;/h4&gt;
+&lt;p&gt;When you select an event in the timeline:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;The event&apos;s information card appears (showing year, title, and description)&lt;/li&gt;
+&lt;li&gt;Clicking/tapping the same event again navigates to the full post about that event&lt;/li&gt;
+&lt;li&gt;The full post will contain detailed information about the historical event&lt;/li&gt;
+&lt;li&gt;You can return to the timeline view using browser navigation&lt;/li&gt;
+&lt;/ol&gt;
 &lt;h2&gt;Historical Eras&lt;/h2&gt;
 &lt;p&gt;The Qarnivor universe is divided into several major historical eras, each with distinct characteristics and events.&lt;/p&gt;
 &lt;p&gt;&amp;lt;div class=&quot;grid grid-cols-1 md:grid-cols-2 gap-4 mb-8&quot;&amp;gt;
@@ -31,8 +115,51 @@ compact={false}
 &amp;lt;p class=&quot;text-sm text-50&quot;&amp;gt;Following the near-extinction of native Qarnivores, this era chronicles the gradual recovery and adaptation of surviving entities in a transformed landscape dominated by Snuggaloid influence.&amp;lt;/p&amp;gt;
 &amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;&lt;/p&gt;
-&lt;h2&gt;Timeline Browser&lt;/h2&gt;
-&lt;p&gt;Browse through all historical events in different viewing formats:&lt;/p&gt;
+&lt;h2&gt;Understanding Timeline Elements&lt;/h2&gt;
+&lt;p&gt;The timeline uses several visual indicators to help you understand its contents:&lt;/p&gt;
+&lt;p&gt;&amp;lt;div class=&quot;card-base p-4 mb-4&quot;&amp;gt;
+&amp;lt;h4 class=&quot;font-bold mb-2&quot;&amp;gt;Visual Indicators&amp;lt;/h4&amp;gt;
+&amp;lt;ul class=&quot;list-disc pl-5 space-y-2&quot;&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;strong&amp;gt;Star Nodes&amp;lt;/strong&amp;gt;: Events appear as animated star-like nodes with colors indicating their era&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;strong&amp;gt;Brightness and Size&amp;lt;/strong&amp;gt;: Larger, brighter stars represent key events that fundamentally altered the universe&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;strong&amp;gt;Glow Effects&amp;lt;/strong&amp;gt;: Selected events have a distinctive glow to highlight your current focus&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;strong&amp;gt;Event Cards&amp;lt;/strong&amp;gt;: Information cards show details when you select an event&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;strong&amp;gt;Timeline Line&amp;lt;/strong&amp;gt;: The central line represents the flow of time (horizontal on desktop, vertical on mobile)&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;strong&amp;gt;Era Badges&amp;lt;/strong&amp;gt;: Colored tags indicate which historical period an event belongs to&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;strong&amp;gt;Map Pins&amp;lt;/strong&amp;gt;: In Map view, events with locations appear as pins on the map&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;h2&gt;Map View Special Features&lt;/h2&gt;
+&lt;p&gt;The Map view provides a spatial representation of events:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Interactive Pins&lt;/strong&gt;: Hovering over pins shows event information&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Legend&lt;/strong&gt;: Explains the color coding system for regular and key events&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Location List&lt;/strong&gt;: All events with locations are listed below the map for easy access&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Location Filtering&lt;/strong&gt;: Only events with the &lt;code&gt;timelineLocation&lt;/code&gt; property appear in this view&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Setting Up Your Own Timeline&lt;/h2&gt;
+&lt;p&gt;To incorporate a timeline in your own posts, you can use the &lt;code&gt;bannerType: &quot;timeline&quot;&lt;/code&gt; in your frontmatter:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;---
+title: &quot;Your Post Title&quot;
+bannerType: &quot;timeline&quot;
+bannerData:
+  category: &quot;MEGA MEAL&quot;  # Filter category
+  startYear: 1           # Timeline start year
+  endYear: 30000         # Timeline end year
+  background: &quot;/posts/timeline/universe.png&quot;  # Custom background
+---
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;Adding Events to the Timeline&lt;/h3&gt;
+&lt;p&gt;Each event in the timeline corresponds to a blog post with the appropriate frontmatter:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;---
+title: &quot;The Spork Rebellion Begins&quot;
+published: 2025-01-15
+timelineYear: 3042            # Required: The year the event occurred
+timelineEra: &quot;spork-uprising&quot;  # Optional: Will be auto-determined by year if omitted
+timelineLocation: &quot;Qarnivore Central Cafeteria&quot;  # Optional: Location for map placement
+isKeyEvent: true              # Optional: Marks as a historically significant event
+---
+&lt;/code&gt;&lt;/pre&gt;
 &lt;h2&gt;Key Historical Figures&lt;/h2&gt;
 &lt;p&gt;The history of the Qarnivor universe was shaped by several pivotal individuals:&lt;/p&gt;
 &lt;h3&gt;Commander Tine&lt;/h3&gt;
@@ -53,75 +180,65 @@ compact={false}
 &amp;lt;p class=&quot;mb-2 text-50&quot;&amp;gt;The first Snuggaloid to manifest in our dimension, appearing in Laboratory 7 of the Advanced Quantum Sauce Research Facility. Established the initial protocols for Snuggaloid-material realm interaction and engineered the quantum-comfort bridging technology.&amp;lt;/p&amp;gt;
 &amp;lt;div class=&quot;text-sm text-[var(--primary)]&quot;&amp;gt;Notable Communication: &quot;We come not to consume but to comfort. Your reality requires reconfiguration.&quot;&amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;&lt;/p&gt;
-&lt;h2&gt;Excerpt from Galactic Time Scale B Historical Documents&lt;/h2&gt;
-&lt;p&gt;&amp;lt;div class=&quot;font-jetbrains-mono pl-10 pr-10 py-10 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition shadow-lg mb-8 overflow-hidden relative&quot;&amp;gt;
-&amp;lt;h2 class=&quot;text-2xl font-bold mb-4&quot;&amp;gt;MEGA MEAL - Appendix A&amp;lt;/h2&amp;gt;
-&amp;lt;p class=&quot;italic&quot;&amp;gt;Excerpt from Galactic Time Scale B Historical Documents&amp;lt;/p&amp;gt;
-&amp;lt;p class=&quot;font-bold&quot;&amp;gt;Pre-Extinction Event&amp;lt;/p&amp;gt;&lt;/p&gt;
-&lt;p&gt;&amp;lt;blockquote class=&quot;mt-4 text-xl text-[oklch(0.35_0.05_var(--hue))] dark:text-[oklch(0.85_0.05_var(--hue))]&quot;&amp;gt;
-Immediately following the events on planet Qarnivore after the Spork Uprising.&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;Despite the incomplete transcript and unreliable nature of the narrator—there exists a single account of an encounter with the Snuggaloids that is of some scholarly interest.  
-
-Of particular note: the timeline between the emergence of the Snuggaloids and the extinction of the Qarnivores. It was previously assumed that there was no overlap between these two events. If this account is taken at face value and assumed correct, there may be some link between the two.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&amp;lt;/blockquote&amp;gt;&lt;/p&gt;
-&lt;p&gt;&amp;lt;div class=&quot;mt-6 pb-4 text-right font-bold&quot;&amp;gt;
-— Galactic Time Scale B Historical Documents
-&amp;lt;/div&amp;gt;
-&amp;lt;/div&amp;gt;&lt;/p&gt;
-&lt;h2&gt;Timeline Visualization Examples&lt;/h2&gt;
-&lt;p&gt;Below is an example of how the timeline can be embedded directly within your content:&lt;/p&gt;
-&lt;p&gt;{/* &amp;lt;div class=&quot;mt-8 mb-8&quot;&amp;gt;
-&amp;lt;h3 class=&quot;text-xl font-bold mb-4&quot;&amp;gt;Inline Timeline Banner&amp;lt;/h3&amp;gt;
-&amp;lt;Timeline
-category=&quot;MEGA MEAL&quot;
-startYear={3040}
-endYear={3055}
-asBanner={true}
-bannerHeight=&quot;250px&quot;
+&lt;h2&gt;Embedding Your Timeline&lt;/h2&gt;
+&lt;p&gt;You can embed a timeline directly within your content using the &lt;code&gt;TimelineBanner&lt;/code&gt; component:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;TimelineBanner 
+  category=&quot;MEGA MEAL&quot; 
+  startYear={3040} 
+  endYear={3055} 
+  background=&quot;/assets/banner/0001.png&quot; 
+  bannerHeight=&quot;500px&quot;
+  mobileHeight=&quot;600px&quot;
 /&amp;gt;
-&amp;lt;/div&amp;gt; */}&lt;/p&gt;
-&lt;h2&gt;Understanding the Timeline&lt;/h2&gt;
-&lt;p&gt;The Qarnivor timeline uses several visual indicators to help you understand its contents:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Bright colored nodes&lt;/strong&gt; represent key events that fundamentally altered the universe&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Era badges&lt;/strong&gt; indicate which historical period an event belongs to&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Location tags&lt;/strong&gt; show where events took place (useful in the Map view)&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;Adding to the Timeline&lt;/h2&gt;
-&lt;p&gt;This timeline is continuously updated as new information about the Qarnivor universe emerges. Each event corresponds to a detailed blog post with additional information.&lt;/p&gt;
-&lt;h3&gt;Event Frontmatter Example&lt;/h3&gt;
-&lt;p&gt;To add an event to the timeline, include the following properties in your post frontmatter:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;---
-title: &quot;The Spork Rebellion Begins&quot;
-published: 2025-01-15
-timelineYear: 3042            # Required: The year the event occurred
-timelineEra: &quot;spork-uprising&quot;  # Optional: Will be auto-determined by year if omitted
-timelineLocation: &quot;Qarnivore Central Cafeteria&quot;  # Optional: Location for map placement
-isKeyEvent: true              # Optional: Marks as a historically significant event
----
 &lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The &lt;code&gt;mobileHeight&lt;/code&gt; parameter is particularly important for ensuring good mobile display.&lt;/p&gt;
+&lt;h2&gt;Astro Integration Notes&lt;/h2&gt;
+&lt;p&gt;The timeline component works seamlessly with Astro:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Page Transitions&lt;/strong&gt;: The component maintains state during Astro&apos;s view transitions&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Event Handling&lt;/strong&gt;: The timeline properly detects when pages are loaded through Astro transitions&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Responsive Design&lt;/strong&gt;: Automatically adjusts layout based on screen size&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Event Dispatching&lt;/strong&gt;: Uses Svelte&apos;s event dispatch system to communicate between components&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The &lt;code&gt;TimelineBanner.astro&lt;/code&gt; component uses &lt;code&gt;client:only=&quot;svelte&quot;&lt;/code&gt; to ensure proper hydration and functionality.&lt;/p&gt;
+&lt;h2&gt;Troubleshooting Common Issues&lt;/h2&gt;
+&lt;p&gt;&amp;lt;div class=&quot;card-base p-4 mb-4&quot;&amp;gt;
+&amp;lt;h4 class=&quot;font-bold mb-2&quot;&amp;gt;Timeline Not Showing All Events&amp;lt;/h4&amp;gt;
+&amp;lt;p&amp;gt;Make sure your events have the correct &amp;lt;code&amp;gt;timelineYear&amp;lt;/code&amp;gt; property and that they fall within the specified &amp;lt;code&amp;gt;startYear&amp;lt;/code&amp;gt; and &amp;lt;code&amp;gt;endYear&amp;lt;/code&amp;gt; range.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div class=&quot;card-base p-4 mb-4&quot;&amp;gt;
+&amp;lt;h4 class=&quot;font-bold mb-2&quot;&amp;gt;Map View Shows No Locations&amp;lt;/h4&amp;gt;
+&amp;lt;p&amp;gt;The Map view requires events to have a &amp;lt;code&amp;gt;timelineLocation&amp;lt;/code&amp;gt; property. Add this to your event frontmatter to make them appear on the map.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div class=&quot;card-base p-4 mb-4&quot;&amp;gt;
+&amp;lt;h4 class=&quot;font-bold mb-2&quot;&amp;gt;Navigation Issues&amp;lt;/h4&amp;gt;
+&amp;lt;p&amp;gt;If events aren&apos;t linking correctly to their posts, ensure the slug in your event data matches the actual post URL path. For navigation problems, the &quot;Reset View&quot; button can quickly restore the default view.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div class=&quot;card-base p-4 mb-4&quot;&amp;gt;
+&amp;lt;h4 class=&quot;font-bold mb-2&quot;&amp;gt;Mobile Display Issues&amp;lt;/h4&amp;gt;
+&amp;lt;p&amp;gt;If the timeline appears cut off on mobile, adjust the &amp;lt;code&amp;gt;mobileHeight&amp;lt;/code&amp;gt; parameter in your timeline component. The default is 600px but may need adjustment based on your content.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
 &lt;h2&gt;Major Events in Qarnivor History&lt;/h2&gt;
 &lt;p&gt;&amp;lt;div class=&quot;card-base p-6 mb-6&quot;&amp;gt;
 &amp;lt;h3 class=&quot;font-bold text-xl mb-4 text-75&quot;&amp;gt;The Spork Rebellion (3042)&amp;lt;/h3&amp;gt;
 &amp;lt;p class=&quot;text-50 mb-4&quot;&amp;gt;The first documented case of utensil sentience occurred when Cafeteria Spork #127-B (later known as Commander Tine) gained consciousness after exposure to experimental quantum sauce. Within hours, sentience spread throughout the utensil population, leading to a coordinated uprising.&amp;lt;/p&amp;gt;
 &amp;lt;div class=&quot;flex justify-end&quot;&amp;gt;
-&amp;lt;a href=&quot;/posts/spork-rebellion/&quot; class=&quot;btn-regular rounded-md px-3 py-1 text-sm&quot;&amp;gt;Read More&amp;lt;/a&amp;gt;
-&amp;lt;/div&amp;gt;
+{/*     &amp;lt;a href=&quot;/posts/spork-rebellion/&quot; class=&quot;btn-regular rounded-md px-3 py-1 text-sm&quot;&amp;gt;Read More&amp;lt;/a&amp;gt;
+*/}  &amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;&lt;/p&gt;
 &lt;p&gt;&amp;lt;div class=&quot;card-base p-6 mb-6&quot;&amp;gt;
 &amp;lt;h3 class=&quot;font-bold text-xl mb-4 text-75&quot;&amp;gt;Snuggaloid Emergence (3044)&amp;lt;/h3&amp;gt;
 &amp;lt;p class=&quot;text-50 mb-4&quot;&amp;gt;Two years after the Spork Rebellion, the first Snuggaloid entity manifested in Laboratory 7 of the Advanced Quantum Sauce Research Facility. These interdimensional beings would transform Qarnivor society with their comfort field technology.&amp;lt;/p&amp;gt;
 &amp;lt;div class=&quot;flex justify-end&quot;&amp;gt;
-&amp;lt;a href=&quot;/posts/snuggaloid-emergence/&quot; class=&quot;btn-regular rounded-md px-3 py-1 text-sm&quot;&amp;gt;Read More&amp;lt;/a&amp;gt;
-&amp;lt;/div&amp;gt;
+{/*     &amp;lt;a href=&quot;/posts/snuggaloid-emergence/&quot; class=&quot;btn-regular rounded-md px-3 py-1 text-sm&quot;&amp;gt;Read More&amp;lt;/a&amp;gt;
+*/}  &amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;&lt;/p&gt;
 &lt;p&gt;&amp;lt;div class=&quot;card-base p-6 mb-6&quot;&amp;gt;
 &amp;lt;h3 class=&quot;font-bold text-xl mb-4 text-75&quot;&amp;gt;The Great Devourment (3050)&amp;lt;/h3&amp;gt;
 &amp;lt;p class=&quot;text-50 mb-4&quot;&amp;gt;The catastrophic event that eliminated 78.3% of all Qarnivore biological matter in less than 24 hours. Surviving Qarnivores were exclusively those who had undergone partial utensil-hybridization or who were in quantum-shielded research facilities.&amp;lt;/p&amp;gt;
 &amp;lt;div class=&quot;flex justify-end&quot;&amp;gt;
-&amp;lt;a href=&quot;/posts/great-devourment/&quot; class=&quot;btn-regular rounded-md px-3 py-1 text-sm&quot;&amp;gt;Read More&amp;lt;/a&amp;gt;
-&amp;lt;/div&amp;gt;
+{/*     &amp;lt;a href=&quot;/posts/great-devourment/&quot; class=&quot;btn-regular rounded-md px-3 py-1 text-sm&quot;&amp;gt;Read More&amp;lt;/a&amp;gt;
+*/}  &amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;&lt;/p&gt;
 &lt;h2&gt;Timeline Anomalies and Mysteries&lt;/h2&gt;
 &lt;p&gt;Not all aspects of the Qarnivor timeline are fully documented. Several historical mysteries remain unsolved:&lt;/p&gt;
@@ -139,6 +256,11 @@ isKeyEvent: true              # Optional: Marks as a historically significant ev
 &lt;p&gt;&lt;strong&gt;The Comfort Dimension&lt;/strong&gt; - Despite extensive interaction with Snuggaloids, no Qarnivore has ever successfully visited their home dimension and returned.&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
+&lt;hr /&gt;
+&lt;p&gt;&amp;lt;div class=&quot;mt-8 p-4 bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] rounded-lg&quot;&amp;gt;
+&amp;lt;h3 class=&quot;font-bold text-lg mb-2&quot;&amp;gt;Developer Note&amp;lt;/h3&amp;gt;
+&amp;lt;p class=&quot;text-sm text-50&quot;&amp;gt;This timeline component works with Astro&apos;s page transitions. When selecting an event, tap it once to view details and tap again to navigate to the full post. On mobile, event details appear at the bottom of the screen rather than as popups. A brief gesture hint appears on first use to help new users understand the navigation.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
 </content:encoded></item><item><title>A MEGA MEAL SAGA | Qarnivor</title><link>https://dndiy.org/posts/mega-meal-3/</link><guid isPermaLink="true">https://dndiy.org/posts/mega-meal-3/</guid><description>Is this part 3? Or is it an appendix? Or is it a prequel? Or is it a sequel? Or is it a prequel-sequel? Or is it a sequel-prequel?</description><pubDate>Wed, 05 Mar 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;{/* YouTube Embed &lt;em&gt;/}
 {/&lt;/em&gt; &amp;lt;div className=&quot;card-base p-8 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8&quot;&amp;gt;
 &amp;lt;div className=&quot;relative pb-[56.25%]&quot;&amp;gt;

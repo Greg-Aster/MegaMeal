@@ -25,6 +25,8 @@
   let isNavigating = false; // Track if we're navigating to a new page
   let fadeOverlayVisible = true; // Start with fade overlay visible
   let isTouchActive = false;
+  let hoverTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  const hoverOutDelay = 300; // Delay in ms before hiding the card
   
   // Tweened stores with configurable durations
   const normalDuration = 300;
@@ -158,7 +160,7 @@
       }
     });
     
-    // Handle hover events
+    // Handle hover events with delay
     timelineContainer.addEventListener('mouseover', (e) => {
       const target = e.target as HTMLElement;
       const eventNode = target.closest('.event-node');
@@ -169,6 +171,12 @@
         
         const event = events.find(evt => evt.slug === slug);
         if (!event || (selectedEvent && selectedEvent.slug === slug)) return;
+        
+        // Cancel any pending hide timeout
+        if (hoverTimeoutId) {
+          clearTimeout(hoverTimeoutId);
+          hoverTimeoutId = null;
+        }
         
         hoveredEvent = event;
       }
@@ -183,7 +191,15 @@
         if (!slug) return;
         
         if (hoveredEvent && hoveredEvent.slug === slug) {
-          hoveredEvent = null;
+          // Set timeout to hide the card after delay
+          if (hoverTimeoutId) {
+            clearTimeout(hoverTimeoutId);
+          }
+          
+          hoverTimeoutId = setTimeout(() => {
+            hoveredEvent = null;
+            hoverTimeoutId = null;
+          }, hoverOutDelay);
         }
       }
     });
@@ -623,6 +639,12 @@
   onDestroy(() => {
     selectedEvent = null;
     hoveredEvent = null;
+    
+    // Clear any pending hover timeout
+    if (hoverTimeoutId) {
+      clearTimeout(hoverTimeoutId);
+      hoverTimeoutId = null;
+    }
   });
   
   // Update functions exposed to parent components
@@ -804,5 +826,10 @@
   /* Prevent outline on focus */
   .timeline-container:focus {
     outline: none;
+  }
+  
+  /* Add smooth transition for timeline cards (for hover delay) */
+  :global(.timeline-card) {
+    transition: opacity 0.2s ease-in, transform 0.25s ease-out;
   }
 </style>

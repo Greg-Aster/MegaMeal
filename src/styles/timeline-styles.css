@@ -1,6 +1,15 @@
 /* Timeline-specific styles to match your site's Tailwind theme */
 
-/* Add this file to your project styles directory */
+/* CSS variables for timeline colors */
+:root {
+  /* Timeline star node colors */
+  --timeline-blue: #3b82f6;
+  --timeline-purple: #8b5cf6;
+  --timeline-indigo: #6366f1;
+  --timeline-lavender: #a78bfa;
+  --timeline-light-blue: #60a5fa;
+  --timeline-cyan: #22d3ee;
+}
 
 /* Ensure rounded corners match site style */
 .timeline {
@@ -57,7 +66,27 @@
               opacity 0.3s ease;
 }
 
-/* Improved hover effects */
+/* Enhanced star node styling */
+.star-node {
+  filter: drop-shadow(0 0 8px var(--star-color, var(--primary))) !important;
+}
+
+.is-selected.star-node {
+  filter: drop-shadow(0 0 12px var(--star-color, var(--primary))) !important;
+}
+
+/* Make star effects more visible */
+.star-icon {
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+/* Ensure sparkles are visible */
+.sparkle-container {
+  z-index: 20;
+  filter: drop-shadow(0 0 5px var(--star-color, var(--primary)));
+}
+
+/* Improve timeline hover behaviors */
 .timeline-event:hover .star-icon {
   filter: drop-shadow(0 0 6px var(--primary));
 }
@@ -78,10 +107,6 @@
     filter: drop-shadow(0 0 6px var(--primary));
     transform: scale(1.15);
   }
-}
-
-.star-icon {
-  animation: starGlow var(--animation-duration, 4s) infinite alternate ease-in-out;
 }
 
 /* Add focus indicators for accessibility */
@@ -190,32 +215,32 @@
 
 /* Fixed mobile card container */
 .fixed-mobile-card-container {
-  position: fixed; /* Changed from absolute to fixed */
-  bottom: 70px; /* Position above bottom controls */
-  right: 10px; /* Position to the right instead of center */
-  left: auto; /* Reset the left positioning */
+  position: fixed;
+  bottom: 70px;
+  right: 10px;
+  left: auto;
   display: flex;
-  justify-content: flex-end; /* Align to the right */
-  align-items: flex-end; /* Align to the bottom */
-  z-index: 40; /* Ensure it's above other elements */
-  pointer-events: none; /* Let clicks pass through to the container */
-  width: auto; /* Let the card determine width */
-  max-width: 90%; /* Don't let it get too wide */
+  justify-content: flex-end;
+  align-items: flex-end;
+  z-index: 40;
+  pointer-events: none;
+  width: auto;
+  max-width: 90%;
 }
 
 /* For mobile timeline card in fixed container */
 .fixed-mobile-card-container .timeline-card {
-  pointer-events: auto; /* Allow interaction with the card itself */
+  pointer-events: auto;
   position: relative;
-  transform: none !important; /* Override any transform */
-  margin: 0; /* Remove auto margins */
-  max-width: 280px; /* Control max width */
-  width: auto; /* Let content determine width */
+  transform: none !important;
+  margin: 0;
+  max-width: 280px;
+  width: auto;
 }
 
 /* Ensure card pointer looks correct in fixed position */
 .fixed-mobile-card-container .card-pointer {
-  display: none; /* Hide the pointer since it doesn't point to anything */
+  display: none;
 }
 
 /* Better touch interaction settings */
@@ -223,7 +248,7 @@
   /* Applies to touch-screen devices */
   .timeline-container {
     /* Adjust the hit area for better touch interaction */
-    touch-action: none; /* Prevent browser handling of touch gestures */
+    touch-action: none;
   }
   
   /* Make buttons easier to tap on mobile */
@@ -234,7 +259,7 @@
   
   /* Increase the touch target size for star nodes */
   .event-node {
-    min-width: 44px; /* Apple's recommended minimum touch target size */
+    min-width: 44px;
     min-height: 44px;
   }
   
@@ -247,5 +272,21 @@
   .fixed-mobile-card-container .timeline-card {
     min-width: 250px;
     padding: 12px;
+  }
+}
+
+/* Mobile-specific enhancements */
+@media (max-width: 767px) {
+  .star-node {
+    transform: scale(1.2); /* Make stars slightly bigger on mobile */
+  }
+  
+  .star-glow {
+    opacity: 0.8; /* More visible glow on mobile */
+  }
+  
+  /* Make sure sparkles render properly on mobile */
+  .sparkle-container {
+    transform: translateZ(0); /* Force GPU acceleration */
   }
 }

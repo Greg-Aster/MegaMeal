@@ -322,7 +322,7 @@
       <!-- Left side: Era filter (moved from bottom) -->
       <div class="flex items-center">
         <div class="era-dropdown-container">
-          <span class="text-xs mr-2" style="color: white;">Era:</span>
+<!--           <span class="text-xs mr-2" style="color: white;">Era:</span> -->
           <select on:change={handleEraFilter}
                   class="bg-black/40 hover:bg-black/50 text-xs px-2 py-1 rounded-md border border-white/20 era-select"
                   style="color: white; background-color: rgba(0,0,0,0.4); font-size: 0.75rem;"
