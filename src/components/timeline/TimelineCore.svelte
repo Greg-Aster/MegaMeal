@@ -192,7 +192,7 @@
     // Wait for the fade-in animation to complete before navigating
     setTimeout(() => {
       window.location.href = `/posts/${slug}/`;
-    }, 400); // Match this to the CSS transition duration
+    }, 300); // Match this to the CSS transition duration
   }
   
   // Simple drag handling for panning
@@ -425,7 +425,7 @@
             if (selectedEvent && selectedEvent.slug === slug) {
               // Double tap/click detection - only navigate if we're tapping an already selected event
               // Allow 1000ms between taps for double-tap
-              if (currentTime - lastTapTime < 1000) {
+              if (currentTime - lastTapTime < 2000) {
                 console.log('Double-tap detected, navigating to:', slug);
                 navigateToPost(slug);
               }
