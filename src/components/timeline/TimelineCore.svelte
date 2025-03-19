@@ -22,6 +22,8 @@
   let containerHeight: number = 0;
   let padding = 15; // percentage padding on timeline edges
   let isMobile = false; // Track if we're in mobile view
+  let isNavigating = false; // Track if we're navigating to a new page
+  let fadeOverlayVisible = true; // Start with fade overlay visible
   
   // Svelte store for animated values
   const scale = tweened(1, {
@@ -136,7 +138,7 @@
         
         // If already selected, navigate to post
         if (selectedEvent && selectedEvent.slug === slug) {
-          window.location.href = `/posts/${slug}/`;
+          navigateToPost(slug);
         } else {
           // Otherwise, select this event
           selectedEvent = event;
@@ -181,8 +183,17 @@
     });
   }
   
-  // We removed this shared handler and implemented the logic directly
-  // in both the click event listener and touch end handler
+  // Navigate to a post with fade transition
+  function navigateToPost(slug: string) {
+    // Show the fade overlay
+    isNavigating = true;
+    fadeOverlayVisible = true;
+    
+    // Wait for the fade-in animation to complete before navigating
+    setTimeout(() => {
+      window.location.href = `/posts/${slug}/`;
+    }, 400); // Match this to the CSS transition duration
+  }
   
   // Simple drag handling for panning
   let isDragging = false;
@@ -416,7 +427,7 @@
               // Allow 1000ms between taps for double-tap
               if (currentTime - lastTapTime < 1000) {
                 console.log('Double-tap detected, navigating to:', slug);
-                window.location.href = `/posts/${slug}/`;
+                navigateToPost(slug);
               }
               
               // Update the last tap time even for single taps
@@ -483,6 +494,17 @@
       timelineContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
       timelineContainer.addEventListener('touchend', handleTouchEnd);
       timelineContainer.addEventListener('touchcancel', handleTouchEnd);
+      
+      // Add orientation change listener
+      window.addEventListener('orientationchange', () => {
+        // Show fade overlay during orientation change
+        fadeOverlayVisible = true;
+        
+        // After orientation change completes, hide overlay
+        setTimeout(() => {
+          fadeOverlayVisible = false;
+        }, 600); // Slightly longer than the CSS transition
+      });
     }
     
     // Check mobile view
@@ -510,12 +532,16 @@
       window.timelineControls.pan = pan;
     }
     
+    // Fade in the content after initial load
+    setTimeout(() => {
+      fadeOverlayVisible = false;
+    }, 300);
+    
     return () => {
-      // We don't need to remove a named handler function since we used an anonymous one
-      
       window.removeEventListener('mousemove', drag);
       window.removeEventListener('mouseup', endDrag);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', () => {});
       
       if (timelineContainer) {
         timelineContainer.removeEventListener('touchstart', handleTouchStart);
@@ -570,6 +596,12 @@
 <div class="card-base relative overflow-hidden {asBanner ? 'h-full rounded-none' : 'h-[300px] md:h-[300px]'} {compact ? 'compact-mode' : ''}" 
      data-start-year={startYear} 
      data-end-year={endYear}>
+
+  <!-- Fade overlay for transitions -->
+  {#if fadeOverlayVisible || isNavigating}
+    <div class="fade-overlay absolute inset-0 bg-black z-50 {fadeOverlayVisible ? 'opacity-100' : 'opacity-0'}" 
+         style="transition: opacity 400ms ease-in-out;"></div>
+  {/if}
 
   <!-- Background with parallax effect -->
   <div class="absolute inset-0 z-0 overflow-hidden">
