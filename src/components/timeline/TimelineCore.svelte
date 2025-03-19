@@ -106,16 +106,20 @@
       offsetPosition = (randomFactor * 2 - 1) * 100;
     } else {
       // In desktop: vertical distribution from the center line
-      offsetPosition = (randomFactor * 2 - 1) * 120;
+      offsetPosition = (randomFactor * 2 - 1) * 100; // Reduced from 120 to allow room for floating
     }
     
     // Ensure values stay within reasonable bounds
-    offsetPosition = Math.max(-120, Math.min(120, offsetPosition));
+    offsetPosition = Math.max(-100, Math.min(100, offsetPosition));
+    
+    // Assign one of the 5 float animation classes (based on hash of slug for consistency)
+    const floatClass = `floating-animation-${(seed % 5) + 1}`;
     
     return {
       event,
       timelinePosition: posPercentage, // % along the primary timeline axis
-      offsetPosition    // px offset from the timeline
+      offsetPosition,   // px offset from the timeline (initial position)
+      floatClass        // Animation class for floating effect
     };
   });
   
@@ -717,10 +721,10 @@
     <div class="timeline-end-marker absolute {isMobile ? 'bottom-[15%] h-[4px] left-[40%] right-[60%]' : 'right-[15%] w-[4px] top-[40%] bottom-[60%]'} bg-[oklch(0.7_0.2_var(--hue))] opacity-60 rounded-full"></div>
 
     <!-- Events -->
-    {#each eventPositions as { event, timelinePosition, offsetPosition }, i}
+    {#each eventPositions as { event, timelinePosition, offsetPosition, floatClass }, i}
       <!-- Event container with positioning for both desktop and mobile -->
       <div 
-        class="timeline-event absolute {isMobile ? 'timeline-event-mobile' : 'timeline-event-desktop'}"
+        class="timeline-event absolute {isMobile ? 'timeline-event-mobile' : 'timeline-event-desktop'} {!isMobile ? floatClass : ''}"
         style={isMobile ? 
           `top: ${timelinePosition}%; left: 50%; transform: translate(${offsetPosition}px, 0) scale(${1/$scale});` : 
           `left: ${timelinePosition}%; top: 50%; transform: translate(0, ${offsetPosition}px) scale(${1/$scale});`
@@ -831,5 +835,56 @@
   /* Add smooth transition for timeline cards (for hover delay) */
   :global(.timeline-card) {
     transition: opacity 0.2s ease-in, transform 0.25s ease-out;
+  }
+
+  /* Add floating animation classes */
+  .floating-animation-1 {
+    animation: float1 35s infinite ease-in-out;
+  }
+
+  .floating-animation-2 {
+    animation: float2 40s infinite ease-in-out;
+    animation-delay: -8s;
+  }
+
+  .floating-animation-3 {
+    animation: float3 45s infinite ease-in-out;
+    animation-delay: -15s;
+  }
+
+  .floating-animation-4 {
+    animation: float4 50s infinite ease-in-out;
+    animation-delay: -22s;
+  }
+
+  .floating-animation-5 {
+    animation: float5 55s infinite ease-in-out;
+    animation-delay: -30s;
+  }
+
+  /* Keyframes with larger Y movements */
+  @keyframes float1 {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(44px); }
+  }
+
+  @keyframes float2 {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-60px); }
+  }
+
+  @keyframes float3 {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(52px); }
+  }
+
+  @keyframes float4 {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-48px); }
+  }
+
+  @keyframes float5 {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(36px); }
   }
 </style>
