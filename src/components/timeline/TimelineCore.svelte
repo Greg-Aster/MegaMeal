@@ -1,9 +1,8 @@
 <script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
-  import { tweened } from 'svelte/motion';
-  import { cubicOut, linear } from 'svelte/easing';
   import StarNode from './StarNode.svelte';
   import TimelineCard from './TimelineCard.svelte';
+  import TimelineNavigation from './TimelineNavigation.svelte';
   import type { TimelineEvent } from '../../services/TimelineService.client';
 
   // Props
@@ -28,24 +27,13 @@
   let hoverTimeoutId: ReturnType<typeof setTimeout> | null = null;
   const hoverOutDelay = 300; // Delay in ms before hiding the card
   
-  // Tweened stores with configurable durations
-  const normalDuration = 300;
-  const touchDuration = 0;  // No animation during touch
+  // Navigation state bound from the TimelineNavigation component
+  let scale = 1;
+  let offsetX = 0;
+  let offsetY = 0;
   
-  const scale = tweened(1, {
-    duration: normalDuration, 
-    easing: cubicOut
-  });
-  
-  const offsetX = tweened(0, {
-    duration: normalDuration,
-    easing: cubicOut
-  });
-  
-  const offsetY = tweened(0, {
-    duration: normalDuration,
-    easing: cubicOut
-  });
+  // Component references
+  let navigation: TimelineNavigation;
   
   const dispatch = createEventDispatcher();
   
@@ -106,7 +94,7 @@
       offsetPosition = (randomFactor * 2 - 1) * 100;
     } else {
       // In desktop: vertical distribution from the center line
-      offsetPosition = (randomFactor * 2 - 1) * 100; // Reduced from 120 to allow room for floating
+      offsetPosition = (randomFactor * 2 - 1) * 100;
     }
     
     // Ensure values stay within reasonable bounds
@@ -221,36 +209,7 @@
     }, 300); // Match this to the CSS transition duration
   }
   
-  // Simple drag handling for panning
-  let isDragging = false;
-  let startDragX = 0;
-  let startDragY = 0;
-  let startOffsetX = 0;
-  let startOffsetY = 0;
-  
-  // Touch-specific state
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let lastTouchX = 0;
-  let lastTouchY = 0;
-  let touchDistance = 0;
-  let initialTouchDistance = 0;
-  let isTouching = false;
-  let isMultiTouch = false;
-  let touchStartTime = 0;
-  let touchMoved = false;
-  let touchTarget: HTMLElement | null = null;
-  let lastTapTime = 0; // Track time of last tap for double-tap detection
-  
-  // Helper function to update the animation duration
-  function setTouchMode(enabled: boolean) {
-    const duration = enabled ? touchDuration : normalDuration;
-    scale.update(s => s, { duration });
-    offsetX.update(x => x, { duration });
-    offsetY.update(y => y, { duration });
-    
-    isTouchActive = enabled; // Track touch state for CSS classes
-  }
+  // Event handlers for mouse/touch events that delegate to the navigation component
   
   function startDrag(e: MouseEvent) {
     // Ignore drags that start on event elements
@@ -258,38 +217,30 @@
       return;
     }
     
-    isDragging = true;
-    startDragX = e.clientX;
-    startDragY = e.clientY;
-    startOffsetX = $offsetX;
-    startOffsetY = $offsetY;
-    document.body.style.cursor = 'grabbing';
-    
-    // Add class for styling
-    if (timelineContainer) {
-      timelineContainer.classList.add('dragging');
+    const result = navigation.handleMouseDown(e.clientX, e.clientY);
+    if (result) {
+      document.body.style.cursor = 'grabbing';
+      
+      // Add class for styling
+      if (timelineContainer) {
+        timelineContainer.classList.add('dragging');
+      }
     }
   }
   
   function drag(e: MouseEvent) {
-    if (!isDragging) return;
-    
-    const deltaX = e.clientX - startDragX;
-    const deltaY = e.clientY - startDragY;
-    
-    offsetX.set(startOffsetX + deltaX);
-    offsetY.set(startOffsetY + deltaY);
+    navigation.handleMouseMove(e.clientX, e.clientY);
   }
   
   function endDrag() {
-    if (!isDragging) return;
-    
-    isDragging = false;
-    document.body.style.cursor = '';
-    
-    // Remove dragging class
-    if (timelineContainer) {
-      timelineContainer.classList.remove('dragging');
+    const result = navigation.handleMouseUp();
+    if (result) {
+      document.body.style.cursor = '';
+      
+      // Remove dragging class
+      if (timelineContainer) {
+        timelineContainer.classList.remove('dragging');
+      }
     }
   }
   
@@ -308,27 +259,13 @@
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
     
-    // Calculate the center point of the container
-    const centerX = containerWidth / 2;
-    const centerY = containerHeight / 2;
-    
-    // Calculate how far from center the click was
-    const deltaX = clickX - centerX;
-    const deltaY = clickY - centerY;
-    
-    // Zoom in
-    scale.update(s => Math.min(5, s + 0.5));
-    
-    // Adjust the offset to center on the click position
-    // The formula is complex because we need to account for the current scale and offset
-    offsetX.update(x => x - (deltaX / $scale) * 0.2);
-    offsetY.update(y => y - (deltaY / $scale) * 0.2);
+    navigation.handleDoubleClick(clickX, clickY);
   }
   
-  // Touch handlers for mobile navigation
+  // Touch handlers
   function handleTouchStart(e: TouchEvent) {
     // Store the target element
-    touchTarget = e.target as HTMLElement;
+    const touchTarget = e.target as HTMLElement;
     
     // Check if touch is on an event node
     const isOnEventNode = !!touchTarget.closest('.event-node');
@@ -338,149 +275,37 @@
       e.preventDefault();
     }
     
-    // Set to immediate animations during touch for smoothness
-    setTouchMode(true);
+    // Delegate to navigation
+    const touchActive = navigation.handleTouchStart(e.touches, isOnEventNode);
     
-    // Reset touch moved flag
-    touchMoved = false;
-    
-    // Store touch start time for tap detection
-    touchStartTime = Date.now();
-    
-    // Store the initial touch position
-    if (e.touches.length === 1) {
-      // Single touch - pan/drag
-      isTouching = true;
-      isMultiTouch = false;
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      lastTouchX = touchStartX;
-      lastTouchY = touchStartY;
-      startOffsetX = $offsetX;
-      startOffsetY = $offsetY;
-      
-      // Add dragging class only if not touching an event node
-      if (timelineContainer && !isOnEventNode) {
-        timelineContainer.classList.add('dragging');
-      }
-    } else if (e.touches.length === 2) {
-      // Two touches - pinch zoom
-      isTouching = true;
-      isMultiTouch = true;
-      
-      // Calculate the initial distance between two touches
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      initialTouchDistance = Math.hypot(
-        touch2.clientX - touch1.clientX,
-        touch2.clientY - touch1.clientY
-      );
-      touchDistance = initialTouchDistance;
-      
-      // Store the midpoint for panning while zooming
-      touchStartX = (touch1.clientX + touch2.clientX) / 2;
-      touchStartY = (touch1.clientY + touch2.clientY) / 2;
-      lastTouchX = touchStartX;
-      lastTouchY = touchStartY;
-      startOffsetX = $offsetX;
-      startOffsetY = $offsetY;
+    // Add dragging class only if not touching an event node
+    if (timelineContainer && !isOnEventNode && touchActive) {
+      timelineContainer.classList.add('dragging');
     }
   }
   
   function handleTouchMove(e: TouchEvent) {
-    // Check if touch started on an event node
-    const isOnEventNode = !!touchTarget?.closest('.event-node');
+    // Check if touch is on an event node
+    const touchTarget = e.target as HTMLElement;
+    const isOnEventNode = !!touchTarget.closest('.event-node');
     
     // Only prevent default if not on an event node
     if (!isOnEventNode) {
       e.preventDefault();
     }
     
-    if (!isTouching) return;
-    
-    // If we've moved more than a small threshold, mark as moved
-    if (e.touches.length === 1) {
-      const dx = e.touches[0].clientX - touchStartX;
-      const dy = e.touches[0].clientY - touchStartY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      // If moved more than 10px, consider it a drag not a tap
-      if (distance > 10) {
-        touchMoved = true;
-        
-        // Don't pan if we started on an event node
-        if (isOnEventNode) {
-          return;
-        }
-      }
-    }
-    
-    if (e.touches.length === 1 && !isMultiTouch && !isOnEventNode) {
-      // Single touch - pan/drag (only if not on an event node)
-      const touchX = e.touches[0].clientX;
-      const touchY = e.touches[0].clientY;
-      
-      // Calculate delta from last position
-      const deltaX = touchX - lastTouchX;
-      const deltaY = touchY - lastTouchY;
-      
-      // Update offsets without animation during touch
-      offsetX.set($offsetX + deltaX);
-      offsetY.set($offsetY + deltaY);
-      
-      // Store current touch position
-      lastTouchX = touchX;
-      lastTouchY = touchY;
-    } else if (e.touches.length === 2) {
-      touchMoved = true;
-      
-      // Two touches - pinch zoom
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      
-      // Calculate current distance
-      const currentDistance = Math.hypot(
-        touch2.clientX - touch1.clientX,
-        touch2.clientY - touch1.clientY
-      );
-      
-      // Calculate the zoom factor based on the change in distance
-      const zoomDelta = currentDistance / touchDistance;
-      
-      // Apply zoom with scaling limits
-      if (zoomDelta !== 1) {
-        const newScale = Math.max(0.5, Math.min(5, $scale * zoomDelta));
-        scale.set(newScale);
-        touchDistance = currentDistance;
-      }
-      
-      // Handle panning during pinch zoom
-      const currentMidX = (touch1.clientX + touch2.clientX) / 2;
-      const currentMidY = (touch1.clientY + touch2.clientY) / 2;
-      
-      // Calculate delta from last midpoint
-      const deltaX = currentMidX - lastTouchX;
-      const deltaY = currentMidY - lastTouchY;
-      
-      // Update offsets without animation during touch
-      offsetX.set($offsetX + deltaX);
-      offsetY.set($offsetY + deltaY);
-      
-      // Store current midpoint
-      lastTouchX = currentMidX;
-      lastTouchY = currentMidY;
-    }
+    // Delegate to navigation
+    navigation.handleTouchMove(e.touches, isOnEventNode);
   }
   
   function handleTouchEnd(e: TouchEvent) {
-    // Check if this was a tap (short duration, little movement)
-    const touchDuration = Date.now() - touchStartTime;
-    const wasTap = !touchMoved && touchDuration < 300;
-    const currentTime = Date.now();
+    // Delegate to navigation
+    const result = navigation.handleTouchEnd(e.touches);
     
-    // If it was a tap and we have a target, handle it
-    if (wasTap && touchTarget) {
+    // If it was a tap
+    if (result.wasTap) {
       // Check if we tapped on an event node
+      const touchTarget = e.target as HTMLElement;
       const eventNode = touchTarget.closest('.event-node');
       
       if (eventNode) {
@@ -494,28 +319,20 @@
             
             // Check if this is the same event that's already selected
             if (selectedEvent && selectedEvent.slug === slug) {
-              // Double tap/click detection - only navigate if we're tapping an already selected event
-              // Allow 1000ms between taps for double-tap
-              if (currentTime - lastTapTime < 2000) {
-                console.log('Double-tap detected, navigating to:', slug);
+              // Double tap detection
+              if (result.wasDoubleTap) {
                 navigateToPost(slug);
               }
-              
-              // Update the last tap time even for single taps
-              lastTapTime = currentTime;
             } else {
               // First tap on this event - just select it
-              console.log('First tap on event, selecting:', slug);
               selectedEvent = event;
               dispatch('select', { event });
-              lastTapTime = currentTime;
             }
           }
         }
       } else if (touchTarget === timelineContainer || touchTarget.classList.contains('timeline-container')) {
         // Tap on background - deselect current selection if any
         if (selectedEvent) {
-          console.log('Tap on background, deselecting');
           selectedEvent = null;
           hoveredEvent = null;
           dispatch('deselect');
@@ -523,39 +340,43 @@
       }
     }
     
-    // Reset touch target
-    touchTarget = null;
-    
-    // Check if there are still touches active
-    if (e.touches.length === 0) {
-      isTouching = false;
-      isMultiTouch = false;
-      
-      // Remove dragging class
-      if (timelineContainer) {
-        timelineContainer.classList.remove('dragging');
-      }
-      
-      // Restore normal animations with a slight delay
-      // This gives a nice smooth settling effect
-      setTimeout(() => {
-        setTouchMode(false);
-      }, 50);
-    } else if (e.touches.length === 1) {
-      // Transition from pinch to pan
-      isMultiTouch = false;
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      lastTouchX = touchStartX;
-      lastTouchY = touchStartY;
-      startOffsetX = $offsetX;
-      startOffsetY = $offsetY;
+    // Remove dragging class
+    if (timelineContainer) {
+      timelineContainer.classList.remove('dragging');
     }
+  }
+  
+  // Handle touch active state changes
+  function handleTouchActiveChange(e) {
+    isTouchActive = e.detail.isTouchActive;
   }
   
   // Check if we're in mobile view
   function checkMobileView() {
     isMobile = window.innerWidth < 768; // Standard mobile breakpoint
+    handleResize();
+  }
+  
+  // Define a named function for orientation change handling
+  function handleOrientationChange() {
+    // Show fade overlay during orientation change
+    fadeOverlayVisible = true;
+    
+    // Recalculate dimensions and update mobile state
+    checkMobileView();
+    handleResize();
+    
+    // After orientation change completes, hide overlay and update dimensions again
+    setTimeout(() => {
+      fadeOverlayVisible = false;
+      checkMobileView();
+      handleResize();
+    }, 600); // Slightly longer than the CSS transition
+  }
+  
+  // Define a named function for resize handling
+  function handleResizeEvent() {
+    checkMobileView();
     handleResize();
   }
   
@@ -573,16 +394,8 @@
       // Add double-click handler for desktop zoom
       timelineContainer.addEventListener('dblclick', handleDoubleClick);
       
-      // Add orientation change listener
-      window.addEventListener('orientationchange', () => {
-        // Show fade overlay during orientation change
-        fadeOverlayVisible = true;
-        
-        // After orientation change completes, hide overlay
-        setTimeout(() => {
-          fadeOverlayVisible = false;
-        }, 600); // Slightly longer than the CSS transition
-      });
+      // Add orientation change listener with named function
+      window.addEventListener('orientationchange', handleOrientationChange);
     }
     
     // Check mobile view
@@ -595,19 +408,19 @@
     // Initial resize
     handleResize();
     
-    // Handle resize events
-    window.addEventListener('resize', () => {
-      checkMobileView();
-      handleResize();
-    });
+    // Handle resize events with named function
+    window.addEventListener('resize', handleResizeEvent);
     
-    // Expose the control functions to the global scope
+    // Expose the control functions to the global scope via the navigation component
     if (typeof window !== 'undefined') {
       window.timelineControls = window.timelineControls || {};
-      window.timelineControls.zoomIn = zoomIn;
-      window.timelineControls.zoomOut = zoomOut;
-      window.timelineControls.resetView = resetView;
-      window.timelineControls.pan = pan;
+      window.timelineControls.zoomIn = () => navigation.zoomIn();
+      window.timelineControls.zoomOut = () => navigation.zoomOut();
+      window.timelineControls.resetView = () => {
+        navigation.resetView();
+        selectedEvent = null;
+      };
+      window.timelineControls.pan = (deltaX, deltaY) => navigation.pan(deltaX, deltaY);
     }
     
     // Fade in the content after initial load
@@ -616,10 +429,11 @@
     }, 300);
     
     return () => {
+      // Remove event listeners with proper references to the handler functions
       window.removeEventListener('mousemove', drag);
       window.removeEventListener('mouseup', endDrag);
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('orientationchange', () => {});
+      window.removeEventListener('resize', handleResizeEvent);
+      window.removeEventListener('orientationchange', handleOrientationChange);
       
       if (timelineContainer) {
         timelineContainer.removeEventListener('touchstart', handleTouchStart);
@@ -651,36 +465,43 @@
     }
   });
   
-  // Update functions exposed to parent components
+  // Public methods exposed to parent
   export function zoomIn() {
-    scale.update(s => Math.min(5, s + 0.2));
+    navigation.zoomIn();
   }
   
   export function zoomOut() {
-    scale.update(s => Math.max(0.5, s - 0.2));
+    navigation.zoomOut();
   }
   
   export function resetView() {
-    scale.set(1);
-    offsetX.set(0);
-    offsetY.set(0);
+    navigation.resetView();
     selectedEvent = null;
   }
   
   export function pan(deltaX: number, deltaY: number) {
-    offsetX.update(x => x + deltaX);
-    offsetY.update(y => y + deltaY);
+    navigation.pan(deltaX, deltaY);
   }
   
-  // Calculate background transform based on mobile state
-  $: backgroundTransform = isMobile 
-    ? `scale(${1.05 + 0.05 * $scale}) translate(${-$offsetX * 0.05}px, ${-$offsetY * 0.05}px) rotate(90deg) scale(1.5)` 
-    : `scale(${1.05 + 0.05 * $scale}) translate(${-$offsetX * 0.05}px, ${-$offsetY * 0.05}px)`;
+  // Calculate background transform using navigation helper
+  $: backgroundTransform = navigation ? navigation.getBackgroundTransform() : '';
 </script>
 
 <div class="card-base relative overflow-hidden {asBanner ? 'h-full rounded-none' : 'h-[300px] md:h-[300px]'} {compact ? 'compact-mode' : ''}" 
      data-start-year={startYear} 
      data-end-year={endYear}>
+
+  <!-- TimelineNavigation component (no UI) -->
+  <TimelineNavigation 
+    bind:this={navigation}
+    bind:scale
+    bind:offsetX
+    bind:offsetY
+    bind:isMobile
+    bind:containerWidth
+    bind:containerHeight
+    on:touchActiveChange={handleTouchActiveChange}
+  />
 
   <!-- Fade overlay for transitions -->
   {#if fadeOverlayVisible || isNavigating}
@@ -711,7 +532,7 @@
        role="application"
        aria-label="Interactive timeline visualization"
        tabindex="0"
-       style="transform: scale({$scale}) translate({$offsetX/$scale}px, {$offsetY/$scale}px);">
+       style="transform: scale({scale}) translate({offsetX/scale}px, {offsetY/scale}px);">
     
     <!-- Center line - horizontal for desktop, vertical for mobile -->
     <div class="timeline-center-line absolute {isMobile ? 'h-full w-[2px] left-1/2 bg-gradient-to-b' : 'w-full h-[2px] top-1/2 bg-gradient-to-r'} from-transparent via-[oklch(0.7_0.08_var(--hue))] to-transparent opacity-50"></div>
@@ -726,8 +547,8 @@
       <div 
         class="timeline-event absolute {isMobile ? 'timeline-event-mobile' : 'timeline-event-desktop'} {!isMobile ? floatClass : ''}"
         style={isMobile ? 
-          `top: ${timelinePosition}%; left: 50%; transform: translate(${offsetPosition}px, 0) scale(${1/$scale});` : 
-          `left: ${timelinePosition}%; top: 50%; transform: translate(0, ${offsetPosition}px) scale(${1/$scale});`
+          `top: ${timelinePosition}%; left: 50%; transform: translate(${offsetPosition}px, 0) scale(${1/scale});` : 
+          `left: ${timelinePosition}%; top: 50%; transform: translate(0, ${offsetPosition}px) scale(${1/scale});`
         }
       >
         <!-- Star node with data attributes for DOM event handling -->

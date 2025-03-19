@@ -142,8 +142,8 @@
   <!-- Star shape based on type -->
   <svg xmlns="http://www.w3.org/2000/svg" 
        viewBox="0 0 24 24" 
-       width={finalSize * 3}
-       height={finalSize * 3}
+       width={finalSize * 2}
+       height={finalSize * 2}
        class="star-shape">
     
     {#if starType === 'point'}
@@ -226,8 +226,8 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    width: calc(var(--star-size) * 3.5);
-    height: calc(var(--star-size) * 3.5);
+    width: calc(var(--star-size) * 2);
+    height: calc(var(--star-size) * 2);
     border-radius: 50%;
     transform: translate(-50%, -50%);
     background: radial-gradient(
