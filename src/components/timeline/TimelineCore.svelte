@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { tweened } from 'svelte/motion';
-  import { cubicOut } from 'svelte/easing';
+  import { cubicOut, linear } from 'svelte/easing';
   import StarNode from './StarNode.svelte';
   import TimelineCard from './TimelineCard.svelte';
   import type { TimelineEvent } from '../../services/TimelineService.client';
@@ -24,18 +24,24 @@
   let isMobile = false; // Track if we're in mobile view
   let isNavigating = false; // Track if we're navigating to a new page
   let fadeOverlayVisible = true; // Start with fade overlay visible
+  let isTouchActive = false;
   
-  // Svelte store for animated values
+  // Tweened stores with configurable durations
+  const normalDuration = 300;
+  const touchDuration = 0;  // No animation during touch
+  
   const scale = tweened(1, {
-    duration: 300,
+    duration: normalDuration, 
     easing: cubicOut
   });
+  
   const offsetX = tweened(0, {
-    duration: 300,
+    duration: normalDuration,
     easing: cubicOut
   });
+  
   const offsetY = tweened(0, {
-    duration: 300,
+    duration: normalDuration,
     easing: cubicOut
   });
   
@@ -216,6 +222,16 @@
   let touchTarget: HTMLElement | null = null;
   let lastTapTime = 0; // Track time of last tap for double-tap detection
   
+  // Helper function to update the animation duration
+  function setTouchMode(enabled: boolean) {
+    const duration = enabled ? touchDuration : normalDuration;
+    scale.update(s => s, { duration });
+    offsetX.update(x => x, { duration });
+    offsetY.update(y => y, { duration });
+    
+    isTouchActive = enabled; // Track touch state for CSS classes
+  }
+  
   function startDrag(e: MouseEvent) {
     // Ignore drags that start on event elements
     if ((e.target as HTMLElement).closest('.event-node')) {
@@ -302,6 +318,9 @@
       e.preventDefault();
     }
     
+    // Set to immediate animations during touch for smoothness
+    setTouchMode(true);
+    
     // Reset touch moved flag
     touchMoved = false;
     
@@ -385,7 +404,7 @@
       const deltaX = touchX - lastTouchX;
       const deltaY = touchY - lastTouchY;
       
-      // Update offsets
+      // Update offsets without animation during touch
       offsetX.set($offsetX + deltaX);
       offsetY.set($offsetY + deltaY);
       
@@ -423,7 +442,7 @@
       const deltaX = currentMidX - lastTouchX;
       const deltaY = currentMidY - lastTouchY;
       
-      // Update offsets
+      // Update offsets without animation during touch
       offsetX.set($offsetX + deltaX);
       offsetY.set($offsetY + deltaY);
       
@@ -484,7 +503,7 @@
       }
     }
     
-    // Reset touch target and state
+    // Reset touch target
     touchTarget = null;
     
     // Check if there are still touches active
@@ -496,6 +515,12 @@
       if (timelineContainer) {
         timelineContainer.classList.remove('dragging');
       }
+      
+      // Restore normal animations with a slight delay
+      // This gives a nice smooth settling effect
+      setTimeout(() => {
+        setTouchMode(false);
+      }, 50);
     } else if (e.touches.length === 1) {
       // Transition from pinch to pan
       isMultiTouch = false;
@@ -511,7 +536,6 @@
   // Check if we're in mobile view
   function checkMobileView() {
     isMobile = window.innerWidth < 768; // Standard mobile breakpoint
-    console.log("Mobile view:", isMobile); // Add this for debugging
     handleResize();
   }
   
@@ -655,7 +679,7 @@
   </div>
   
   <!-- Timeline container -->
-  <div class="timeline-container relative z-10 w-full h-full cursor-grab active:cursor-grabbing"
+  <div class="timeline-container relative z-10 w-full h-full cursor-grab active:cursor-grabbing {isTouchActive ? 'touch-active' : ''}"
        bind:this={timelineContainer}
        on:mousedown={startDrag}
        role="application"
@@ -749,3 +773,36 @@
     </div>
   {/if}
 </div>
+
+<style>
+  /* Optimization for mobile */
+  @media (max-width: 767px) {
+    .timeline-container {
+      will-change: transform;
+      backface-visibility: hidden;
+    }
+    
+    .timeline-event {
+      will-change: transform;
+    }
+    
+    /* Fix flickering on iOS */
+    .fixed-mobile-card-container {
+      transform: translateZ(0);
+    }
+  }
+  
+  /* During touch, make transitions immediate */
+  .touch-active {
+    transition: none !important;
+  }
+  
+  .touch-active * {
+    transition: none !important;
+  }
+  
+  /* Prevent outline on focus */
+  .timeline-container:focus {
+    outline: none;
+  }
+</style>
