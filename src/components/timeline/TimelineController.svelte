@@ -157,26 +157,40 @@
     };
   });
   
-  // Simple handler functions
+// In TimelineController.svelte - replace the current handleEraFilter function with this
 function handleEraFilter(e) {
   try {
     const value = e.target.value;
     
-    // Handle all options the same way for now
-    console.log(`Era filter changed to: ${value}`);
+    // Handle "all" or "all-time" options
+    if (value === 'all' || value === 'all-time') {
+      console.log(`Resetting view for "${value}" option`);
+      handleResetView();
+      return;
+    }
     
-    // Just reset the view for now
-    handleResetView();
-    
-    // Still send the era range to TimelineCore if available
-    if (value !== 'all' && eraConfig[value] && 
-        timelineCore && typeof timelineCore.navigateToEraRange === 'function') {
+    // For specific era selection
+    if (eraConfig[value]) {
       const startYear = eraConfig[value].startYear;
       const endYear = eraConfig[value].endYear;
-      timelineCore.navigateToEraRange(startYear, endYear);
+      
+      console.log(`Era selected: ${value} (${startYear}-${endYear})`);
+      
+      // Call the navigateToEraRange function if it exists
+      if (timelineCore && typeof timelineCore.navigateToEraRange === 'function') {
+        timelineCore.navigateToEraRange(startYear, endYear);
+      } else {
+        console.warn("timelineCore.navigateToEraRange function not available");
+        handleResetView(); // Fallback to reset view
+      }
+    } else {
+      console.warn(`Unknown era selected: ${value}`);
+      handleResetView(); // Fallback to reset view
     }
   } catch (err) {
     console.error("Error handling era filter:", err);
+    // Fallback to reset view on error
+    handleResetView();
   }
 }
   

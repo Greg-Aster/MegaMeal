@@ -290,3 +290,21 @@
     transform: translateZ(0); /* Force GPU acceleration */
   }
 }
+/* Add to the style section in TimelineCore.svelte */
+.card-wrapper {
+  position: absolute;
+  z-index: 30;
+  transform-origin: center;
+  transition: transform 0.3s ease;
+}
+
+/* Position the card wrapper properly */
+.timeline-event-desktop .card-wrapper {
+  left: 0;
+  top: 0;
+}
+
+/* During touch interactions, disable transitions for smoother feel */
+.touch-active .card-wrapper {
+  transition: none !important;
+}

@@ -732,19 +732,54 @@
   }
 }
 
-// In TimelineCore.svelte
 export function navigateToEraRange(eraStartYear: number, eraEndYear: number) {
   if (!eraStartYear || !eraEndYear) {
     console.warn("Invalid era range:", eraStartYear, eraEndYear);
     return;
   }
   
-  // Just log the era information
-  console.log(`Era range selected: ${eraStartYear}-${eraEndYear}`);
-  console.log("Automatic navigation disabled - please use manual controls");
+  // Calculate the middle of the era
+  const midYear = Math.floor((eraStartYear + eraEndYear) / 2);
+  console.log(`Navigating to era range: ${eraStartYear}-${eraEndYear}, midpoint: ${midYear}`);
   
-  // Simply reset to default view - no complex transformations
+  // Calculate a reasonable zoom level based on the era span
+  const eraSpan = eraEndYear - eraStartYear;
+  const fullTimespan = (endYear || 2100) - (startYear || 2000);
+  
+  // Zoom levels based on what portion of the timeline this era spans
+  const zoomRatio = fullTimespan / eraSpan;
+  let targetZoom;
+  
+  if (zoomRatio > 50) {
+    targetZoom = 4;       // Very small era (< 2% of timeline)
+  } else if (zoomRatio > 20) {
+    targetZoom = 3;       // Small era (2-5% of timeline)
+  } else if (zoomRatio > 10) {
+    targetZoom = 2.5;     // Medium era (5-10% of timeline)
+  } else if (zoomRatio > 4) {
+    targetZoom = 2;       // Larger era (10-25% of timeline)
+  } else if (zoomRatio > 2) {
+    targetZoom = 1.5;     // Large era (25-50% of timeline)
+  } else {
+    targetZoom = 1.2;     // Very large era (> 50% of timeline)
+  }
+  
+  // Clamp zoom to valid range
+  targetZoom = Math.max(1, Math.min(5, targetZoom));
+  
+  console.log(`Era spans ${eraSpan} years (${(eraSpan/fullTimespan*100).toFixed(2)}% of timeline). Zoom: ${targetZoom}`);
+  
+  // Reset view first for a clean start
   resetView();
+  
+  // Apply zoom and pan after a short delay to allow reset to complete
+  setTimeout(() => {
+    // Set zoom level
+    scale.set(targetZoom);
+    
+    // Then pan to the midpoint of the era
+    panToYear(midYear);
+  }, 300);
 }
     
 </script>
@@ -817,15 +852,17 @@ export function navigateToEraRange(eraStartYear: number, eraEndYear: number) {
       />
     </div>
         
-        <!-- Only show card if this event is selected or hovered AND NOT in mobile mode -->
+  <!-- Only show card if this event is selected or hovered AND NOT in mobile mode -->
         {#if (selectedEvent?.slug === event.slug || hoveredEvent?.slug === event.slug) && !isMobile}
-          <TimelineCard 
-            {event} 
-            isSelected={selectedEvent?.slug === event.slug}
-            compact={compact}
-            position={offsetPosition < 0 ? 'top' : 'bottom'}
-            isMobile={false}
-          />
+          <div class="card-wrapper" style="transform: scale({1/$scale});">
+            <TimelineCard 
+              {event} 
+              isSelected={selectedEvent?.slug === event.slug}
+              compact={compact}
+              position={offsetPosition < 0 ? 'top' : 'bottom'}
+              isMobile={false}
+            />
+          </div>
         {/if}
       </div>
     {/each}
@@ -834,6 +871,7 @@ export function navigateToEraRange(eraStartYear: number, eraEndYear: number) {
   <!-- Fixed mobile card container - now uses fixed positioning instead of being inside the scrollable area -->
   {#if isMobile && (selectedEvent || hoveredEvent)}
     <div class="fixed-mobile-card-container">
+      <!-- Note: No scale transform needed here since it's outside the zoomed container -->
       <TimelineCard 
         event={selectedEvent || hoveredEvent}
         isSelected={!!selectedEvent}
