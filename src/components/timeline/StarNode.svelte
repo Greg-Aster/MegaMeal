@@ -108,18 +108,16 @@
   let isInitialized = false;
   
   onMount(() => {
-    isInitialized = true;
-    
-    // Add sparkle effect
-    const interval = setInterval(() => {
-      if (isSelected || isKeyEvent || Math.random() < 0.15) {
-        showSparkle = true;
-        setTimeout(() => showSparkle = false, 900);
-      }
-    }, 2000 + Math.random() * 1500);
-    
-    return () => clearInterval(interval);
-  });
+  isInitialized = true;
+  
+  // No need for interval animation since the orbital is CSS-only
+  // You can remove this entire interval if not needed elsewhere
+  
+  return () => {
+    // Nothing to clean up
+  };
+});
+
 </script>
 
 <div 
@@ -199,15 +197,13 @@
     {/if}
   </svg>
   
-  <!-- Sparkle effect - using main color with different opacities -->
-  {#if showSparkle}
-    <div class="sparkles">
-      <div class="sparkle sparkle-1" style="background-color: {mainColor}; opacity: 0.9;"></div>
-      <div class="sparkle sparkle-2" style="background-color: {mainColor}; opacity: 0.7;"></div>
-      <div class="sparkle sparkle-3" style="background-color: {mainColor}; opacity: 0.8;"></div>
-      <div class="sparkle sparkle-4" style="background-color: {mainColor}; opacity: 0.6;"></div>
-    </div>
-  {/if}
+  <!-- orbital for selected events -->
+  {#if isSelected}
+  <div class="orbital-effect">
+    <div class="orbital-ring orbital-ring-1"></div>
+    <div class="orbital-ring orbital-ring-2"></div>
+  </div>
+{/if}
 </div>
 
 <style>
@@ -263,8 +259,8 @@
   
   .is-selected .star-glow {
     opacity: 0.8;
-    width: calc(var(--star-size) * 5);
-    height: calc(var(--star-size) * 5);
+    width: calc(var(--star-size) * 2);
+    height: calc(var(--star-size) * 2);
   }
   
   /* Hovered state */
@@ -280,50 +276,63 @@
       drop-shadow(0 0 3px var(--star-color));
   }
   
-  /* Sparkle effect */
-  .sparkles {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 20;
-    filter: drop-shadow(0 0 2px var(--star-color));
+/* Orbital effect for selected stars */
+.orbital-effect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.orbital-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 1px solid var(--star-color);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+
+.orbital-ring-1 {
+  width: calc(var(--star-size) * 3);
+  height: calc(var(--star-size) * 3);
+  animation: orbital-pulse 4s infinite ease-in-out;
+}
+
+.orbital-ring-2 {
+  width: calc(var(--star-size) * 5);
+  height: calc(var(--star-size) * 5);
+  animation: orbital-pulse 4s infinite ease-in-out;
+  animation-delay: 2s; /* Offset for second ring */
+}
+
+@keyframes orbital-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5) rotate(0deg);
+    opacity: 0;
+    border-width: 1px;
   }
-  
-  .sparkle {
-    position: absolute;
-    width: calc(var(--star-size) * 0.6);
-    height: calc(var(--star-size) * 0.6);
-    border-radius: 50%;
-    animation: sparkleAnimation 1.2s ease-out forwards;
-    filter: blur(1px);
+  20% {
+    transform: translate(-50%, -50%) scale(.75) rotate(45deg);
+    opacity: 0.8;
+    border-width: 1.5px;
   }
-  
-  .sparkle-1 {
-    top: 25%;
-    left: 25%;
-    animation-delay: 0.1s;
+  60% {
+    transform: translate(-50%, -50%) scale(1) rotate(135deg);
+    opacity: 0.4;
+    border-width: 1px;
   }
-  
-  .sparkle-2 {
-    top: 25%;
-    right: 25%;
-    animation-delay: 0.2s;
+  100% {
+    transform: translate(-50%, -50%) scale(1.125) rotate(180deg);
+    opacity: 0;
+    border-width: 0.5px;
   }
-  
-  .sparkle-3 {
-    bottom: 25%;
-    right: 25%;
-    animation-delay: 0.3s;
-  }
-  
-  .sparkle-4 {
-    bottom: 25%;
-    left: 25%;
-    animation-delay: 0.4s;
-  }
+}
+
   
   /* Refraction animation */
   .refraction-lines {

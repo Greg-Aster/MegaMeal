@@ -585,6 +585,24 @@
         }, 600); // Slightly longer than the CSS transition
       });
     }
+
+    setTimeout(() => {
+      if (events.length > 0 && typeof window !== 'undefined') {
+        const path = window.location.pathname;
+        if (path.includes('/posts/')) {
+          const slug = path.split('/posts/')[1].replace(/\/$/, '');
+          console.log(`Current page slug: ${slug}`);
+          
+          // Find matching event
+          const event = events.find(e => slug.includes(e.slug));
+          if (event) {
+            console.log(`Auto-selecting event: ${event.title}`);
+            selectedEvent = event;
+            dispatch('select', { event });
+          }
+        }
+      }
+    }, 500); // Short delay to ensure everything is loaded
     
     // Check mobile view
     checkMobileView();
@@ -730,6 +748,7 @@
     // Apply the offset (adjusted for scale)
     offsetX.set(requiredOffset / $scale);
   }
+
 }
 
 export function navigateToEraRange(eraStartYear: number, eraEndYear: number) {
@@ -780,6 +799,7 @@ export function navigateToEraRange(eraStartYear: number, eraEndYear: number) {
     // Then pan to the midpoint of the era
     panToYear(midYear);
   }, 300);
+  
 }
     
 </script>
