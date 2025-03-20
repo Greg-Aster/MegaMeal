@@ -60,11 +60,9 @@
     </div>
   {/if}
   
-  {#if event.era}
-    <div class="timeline-era-badge text-[0.65rem] mt-1 inline-block py-0.5 px-1.5 rounded-full {getEraBadgeClass(event.era)}">
-      {getEraDisplayName(event.era)}
-    </div>
-  {/if}
+  <a href="/posts/{event.slug}/#post-container" class="timeline-link text-[0.65rem] mt-1 inline-block py-0.5 px-1.5 rounded-full bg-[oklch(0.9_0.05_var(--hue))/0.1] dark:bg-[oklch(0.3_0.05_var(--hue))/0.2] text-[oklch(0.4_0.05_var(--hue))] dark:text-[oklch(0.9_0.05_var(--hue))]">
+    View Event →
+  </a>
   
   <!-- Card arrow/pointer (added by CSS) - only show for non-mobile -->
   {#if !isMobile}
@@ -193,7 +191,18 @@
   }
   
   /* Hover effect */
-  :global(.timeline-card:hover .timeline-era-badge) {
+  .timeline-link {
+    text-transform: capitalize;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .timeline-link:hover {
+    background-color: var(--primary) !important;
+    color: white !important;
+    text-decoration: none;
+  }
+  
+  :global(.timeline-card:hover .timeline-link) {
     background-color: var(--primary) !important;
     color: white !important;
   }

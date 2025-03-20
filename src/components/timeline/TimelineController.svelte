@@ -2,6 +2,7 @@
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { timelineStore, timelineActions, filteredEvents, selectedEvent } from '../../stores/timelineStore';
   import type { TimelineEvent } from '../../services/TimelineService.client';
+  import { extractEraConfig } from '../../services/TimelineService.client'; // Added this import
   
   // Components
   import TimelineCore from './TimelineCore.svelte';
@@ -127,11 +128,8 @@
       // Set initial events
       timelineActions.setInitialEvents(processedEvents);
       
-      // Extract era configuration - simplified version
-      const bannerEvents = processedEvents.filter(event => event.bannerData?.eraConfig);
-      if (bannerEvents.length > 0 && bannerEvents[0].bannerData?.eraConfig) {
-        eraConfig = bannerEvents[0].bannerData.eraConfig;
-      }
+      // Extract era configuration properly using the utility function
+      eraConfig = extractEraConfig(processedEvents);
       
       // Check for custom background
       const backgroundEvents = processedEvents.filter(event => event.bannerData?.background);
@@ -160,25 +158,27 @@
   });
   
   // Simple handler functions
-  function handleEraFilter(e) {
-    try {
-      const value = e.target.value;
-      const era = value === 'all' ? null : value;
-      
-      timelineActions.setEra(era);
-      
-      if (era && era !== 'all-time' && eraConfig[era]) {
-        timelineActions.setYearRange(
-          eraConfig[era].startYear || null,
-          eraConfig[era].endYear || null
-        );
-      } else if (era === 'all-time' || era === 'all') {
-        timelineActions.setYearRange(null, null);
-      }
-    } catch (err) {
-      console.error("Error handling era filter:", err);
+function handleEraFilter(e) {
+  try {
+    const value = e.target.value;
+    
+    // Handle all options the same way for now
+    console.log(`Era filter changed to: ${value}`);
+    
+    // Just reset the view for now
+    handleResetView();
+    
+    // Still send the era range to TimelineCore if available
+    if (value !== 'all' && eraConfig[value] && 
+        timelineCore && typeof timelineCore.navigateToEraRange === 'function') {
+      const startYear = eraConfig[value].startYear;
+      const endYear = eraConfig[value].endYear;
+      timelineCore.navigateToEraRange(startYear, endYear);
     }
+  } catch (err) {
+    console.error("Error handling era filter:", err);
   }
+}
   
   function handleResize() {
     // Simple resize handler
@@ -328,7 +328,8 @@
                   style="color: white; background-color: rgba(0,0,0,0.4); font-size: 0.75rem;"
                   aria-label="Select era">
             <option value="all">All Eras</option>
-            <option value="all-time">All Time</option>
+            <!-- Remove this redundant option -->
+            <!-- <option value="all-time">All Time</option> -->
             {#each Object.entries(eraConfig) as [value, config]}
               <option value={value}
                       data-start-year={config.startYear}
