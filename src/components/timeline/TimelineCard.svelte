@@ -40,12 +40,12 @@
   class:timeline-card-bottom={position === 'bottom' && !isMobile}
   class:timeline-card-left={position === 'left' && !isMobile}
   class:timeline-card-right={position === 'right' && !isMobile}
-  in:fly="{{ y: isMobile ? 20 : position === 'top' ? 10 : position === 'bottom' ? -10 : 0, 
-            x: isMobile ? 0 : position === 'left' ? 10 : position === 'right' ? -10 : 0, 
-            duration: 1000,
+  in:fly="{{ y: position === 'top' ? -10 : 10, 
+            x: 0, 
+            duration: 300,
             easing: cubicOut }}"
-  out:fly="{{ y: isMobile ? 20 : position === 'top' ? 10 : position === 'bottom' ? -10 : 0, 
-             x: isMobile ? 0 : position === 'left' ? 10 : position === 'right' ? -10 : 0, 
+  out:fly="{{ y: position === 'top' ? -10 : 10, 
+             x: 0, 
              duration: 200,
              easing: cubicOut }}"
 >
@@ -75,18 +75,7 @@
   .timeline-card {
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1), 0 0 5px rgba(var(--primary-rgb, 0 0 0), 0.3);
     border-radius: var(--radius-large, 12px);
-    /* Remove these two lines:
-    opacity: 0;
-    animation: fadeIn 0.3s forwards;
-    */
   }
-
-  /* And remove this keyframe definition: 
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  */
   
   .timeline-era-badge {
     text-transform: capitalize;

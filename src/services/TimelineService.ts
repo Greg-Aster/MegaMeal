@@ -59,7 +59,8 @@ export async function getTimelineEvents(options: {
           category: post.data.category,
           isKeyEvent: post.data.isKeyEvent || false,
           location: post.data.timelineLocation,
-          isDraft: post.data.draft || false
+          isDraft: post.data.draft || false,
+          yIndex: post.data.yIndex
         };
       } 
       // If post has bannerType: "timeline", extract data from bannerData
@@ -79,6 +80,7 @@ export async function getTimelineEvents(options: {
           isKeyEvent: post.data.isKeyEvent || false,
           location: post.data.timelineLocation,
           isDraft: post.data.draft || false,
+          yIndex: post.data.yIndex,  // Add this line to include the yIndex
           // Include banner-specific data
           bannerData: post.data.bannerData
         };

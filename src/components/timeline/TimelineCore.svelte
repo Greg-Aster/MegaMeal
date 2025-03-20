@@ -29,6 +29,10 @@
   let hoverTimeoutId: ReturnType<typeof setTimeout> | null = null;
   const hoverOutDelay = 300; // Delay in ms before hiding the card
   
+  // New state for tracking node positions
+  let selectedNodePosition = { x: 0, y: 0 }; 
+  let hoveredNodePosition = { x: 0, y: 0 };
+  
   // Tweened stores with configurable durations
   const normalDuration = 300;
   const touchDuration = 0;  // No animation during touch
@@ -92,37 +96,52 @@
     // For timeline position (horizontal in desktop, vertical in mobile)
     const posPercentage = getPositionPercentage(event.year);
     
-    // Create deterministic but varied vertical offset
-    // This ensures the same event always has the same position
+    // Create seed for deterministic randomization
     const seed = (event.slug.charCodeAt(0) + index) * 11 + event.year % 100;
-    const randomFactor = ((seed * 9301 + 49297) % 233280) / 233280;
     
-    // For mobile, distribute horizontally instead of vertically
-    // For desktop, distribute vertically from the center line
+    // Check if this event has a fixed yIndex specified
     let offsetPosition;
+    let shouldFloat = true;
     
-    if (isMobile) {
-      // In mobile: horizontal distribution across the width
-      // Distribute events to both sides of the center vertical line
-      offsetPosition = (randomFactor * 2 - 1) * 100;
+    if (event.yIndex !== undefined) {
+      // Use the fixed yIndex value provided in frontmatter
+      offsetPosition = event.yIndex;
+      shouldFloat = false; // Don't apply floating animation to fixed items
     } else {
-      // In desktop: vertical distribution from the center line
-      offsetPosition = (randomFactor * 2 - 1) * 100; // Reduced from 120 to allow room for floating
+      // Use random position as before
+      const randomFactor = ((seed * 9301 + 49297) % 233280) / 233280;
+      
+      // Calculate random offset (works for both mobile and desktop)
+      offsetPosition = (randomFactor * 2 - 1) * 100;
+      
+      // Ensure values stay within reasonable bounds
+      offsetPosition = Math.max(-100, Math.min(100, offsetPosition));
     }
     
-    // Ensure values stay within reasonable bounds
-    offsetPosition = Math.max(-100, Math.min(100, offsetPosition));
-    
-    // Assign one of the 5 float animation classes (based on hash of slug for consistency)
-    const floatClass = `floating-animation-${(seed % 5) + 1}`;
+    // Only assign float class if the event should float
+    const floatClass = shouldFloat ? `floating-animation-${(seed % 5) + 1}` : '';
     
     return {
       event,
       timelinePosition: posPercentage, // % along the primary timeline axis
-      offsetPosition,   // px offset from the timeline (initial position)
-      floatClass        // Animation class for floating effect
+      offsetPosition,   // px offset from the timeline
+      floatClass,       // Animation class (empty if fixed position)
+      shouldFloat       // Flag to track if it should float
     };
   });
+  
+  // Calculate the screen position of a node
+  function calculateNodeScreenPosition(eventNode: HTMLElement): { x: number, y: number } {
+    if (!eventNode || !timelineContainer) return { x: 0, y: 0 };
+    
+    const containerRect = timelineContainer.getBoundingClientRect();
+    const nodeRect = eventNode.getBoundingClientRect();
+    
+    return {
+      x: nodeRect.left + (nodeRect.width / 2),
+      y: nodeRect.top + (nodeRect.height / 2)
+    };
+  }
   
   // Setup direct event handlers
   function setupDirectEventHandlers() {
@@ -155,6 +174,7 @@
         } else {
           // Otherwise, select this event
           selectedEvent = event;
+          selectedNodePosition = calculateNodeScreenPosition(eventNode);
           dispatch('select', { event });
         }
       } else if (target === timelineContainer || target.classList.contains('timeline-container')) {
@@ -184,6 +204,7 @@
         }
         
         hoveredEvent = event;
+        hoveredNodePosition = calculateNodeScreenPosition(eventNode);
       }
     });
     
@@ -508,6 +529,7 @@
               // First tap on this event - just select it
               console.log('First tap on event, selecting:', slug);
               selectedEvent = event;
+              selectedNodePosition = calculateNodeScreenPosition(eventNode);
               dispatch('select', { event });
               lastTapTime = currentTime;
             }
@@ -558,6 +580,25 @@
   function checkMobileView() {
     isMobile = window.innerWidth < 768; // Standard mobile breakpoint
     handleResize();
+  }
+  
+  // Update positions when scale or offset changes
+  $: {
+    if (selectedEvent || hoveredEvent) {
+      requestAnimationFrame(() => {
+        // Find and update node positions
+        const nodes = timelineContainer?.querySelectorAll('.event-node') || [];
+        nodes.forEach(node => {
+          const slug = node.getAttribute('data-slug');
+          if (selectedEvent && slug === selectedEvent.slug) {
+            selectedNodePosition = calculateNodeScreenPosition(node as HTMLElement);
+          }
+          if (hoveredEvent && slug === hoveredEvent.slug) {
+            hoveredNodePosition = calculateNodeScreenPosition(node as HTMLElement);
+          }
+        });
+      });
+    }
   }
   
   // Set up and tear down event listeners
@@ -696,112 +737,109 @@
     ? `scale(${1.05 + 0.05 * $scale}) translate(${-$offsetX * 0.05}px, ${-$offsetY * 0.05}px) rotate(90deg) scale(1.5)` 
     : `scale(${1.05 + 0.05 * $scale}) translate(${-$offsetX * 0.05}px, ${-$offsetY * 0.05}px)`;
 
-    export function panToYear(targetYear: number) {
-  // Only proceed if we have valid dimensions and data
-  if (!containerWidth || !containerHeight || !timespan || timespan === 0) {
-    console.warn("Cannot pan: missing dimensions", { containerWidth, containerHeight, timespan });
-    return;
-  }
-  
-  // Calculate raw percentage (without any padding)
-  const rawPercentage = ((targetYear - (startYear || 0)) / timespan) * 100;
-  
-  console.log(`Panning to year ${targetYear}:`, {
-    rawPercentage: rawPercentage.toFixed(2) + "%",
-    timespan,
-    startYear,
-    endYear,
-    scale: $scale.toFixed(2)
-  });
-  
-  // In mobile mode (vertical timeline)
-  if (isMobile) {
-    // Use raw percentage directly instead of getPositionPercentage
-    const targetPosition = (containerHeight * rawPercentage) / 100;
-    const viewportCenter = containerHeight / 2;
-    const requiredOffset = viewportCenter - targetPosition;
+  export function panToYear(targetYear: number) {
+    // Only proceed if we have valid dimensions and data
+    if (!containerWidth || !containerHeight || !timespan || timespan === 0) {
+      console.warn("Cannot pan: missing dimensions", { containerWidth, containerHeight, timespan });
+      return;
+    }
     
-    console.log(`Mobile panning:`, {
-      targetPosition: targetPosition.toFixed(1) + "px",
-      viewportCenter: viewportCenter.toFixed(1) + "px",
-      requiredOffset: requiredOffset.toFixed(1) + "px",
-      scaledOffset: (requiredOffset / $scale).toFixed(1) + "px"
+    // Calculate raw percentage (without any padding)
+    const rawPercentage = ((targetYear - (startYear || 0)) / timespan) * 100;
+    
+    console.log(`Panning to year ${targetYear}:`, {
+      rawPercentage: rawPercentage.toFixed(2) + "%",
+      timespan,
+      startYear,
+      endYear,
+      scale: $scale.toFixed(2)
     });
     
-    // Apply the offset (adjusted for scale)
-    offsetY.set(requiredOffset / $scale);
-  } 
-  // In desktop mode (horizontal timeline)
-  else {
-    // Use raw percentage directly instead of getPositionPercentage
-    const targetPosition = (containerWidth * rawPercentage) / 100;
-    const viewportCenter = containerWidth / 2;
-    const requiredOffset = viewportCenter - targetPosition;
-    
-    console.log(`Desktop panning:`, {
-      targetPosition: targetPosition.toFixed(1) + "px",
-      viewportCenter: viewportCenter.toFixed(1) + "px",
-      requiredOffset: requiredOffset.toFixed(1) + "px",
-      scaledOffset: (requiredOffset / $scale).toFixed(1) + "px"
-    });
-    
-    // Apply the offset (adjusted for scale)
-    offsetX.set(requiredOffset / $scale);
+    // In mobile mode (vertical timeline)
+    if (isMobile) {
+      // Use raw percentage directly instead of getPositionPercentage
+      const targetPosition = (containerHeight * rawPercentage) / 100;
+      const viewportCenter = containerHeight / 2;
+      const requiredOffset = viewportCenter - targetPosition;
+      
+      console.log(`Mobile panning:`, {
+        targetPosition: targetPosition.toFixed(1) + "px",
+        viewportCenter: viewportCenter.toFixed(1) + "px",
+        requiredOffset: requiredOffset.toFixed(1) + "px",
+        scaledOffset: (requiredOffset / $scale).toFixed(1) + "px"
+      });
+      
+      // Apply the offset (adjusted for scale)
+      offsetY.set(requiredOffset / $scale);
+    } 
+    // In desktop mode (horizontal timeline)
+    else {
+      // Use raw percentage directly instead of getPositionPercentage
+      const targetPosition = (containerWidth * rawPercentage) / 100;
+      const viewportCenter = containerWidth / 2;
+      const requiredOffset = viewportCenter - targetPosition;
+      
+      console.log(`Desktop panning:`, {
+        targetPosition: targetPosition.toFixed(1) + "px",
+        viewportCenter: viewportCenter.toFixed(1) + "px",
+        requiredOffset: requiredOffset.toFixed(1) + "px",
+        scaledOffset: (requiredOffset / $scale).toFixed(1) + "px"
+      });
+      
+      // Apply the offset (adjusted for scale)
+      offsetX.set(requiredOffset / $scale);
+    }
   }
 
-}
-
-export function navigateToEraRange(eraStartYear: number, eraEndYear: number) {
-  if (!eraStartYear || !eraEndYear) {
-    console.warn("Invalid era range:", eraStartYear, eraEndYear);
-    return;
-  }
-  
-  // Calculate the middle of the era
-  const midYear = Math.floor((eraStartYear + eraEndYear) / 2);
-  console.log(`Navigating to era range: ${eraStartYear}-${eraEndYear}, midpoint: ${midYear}`);
-  
-  // Calculate a reasonable zoom level based on the era span
-  const eraSpan = eraEndYear - eraStartYear;
-  const fullTimespan = (endYear || 2100) - (startYear || 2000);
-  
-  // Zoom levels based on what portion of the timeline this era spans
-  const zoomRatio = fullTimespan / eraSpan;
-  let targetZoom;
-  
-  if (zoomRatio > 50) {
-    targetZoom = 4;       // Very small era (< 2% of timeline)
-  } else if (zoomRatio > 20) {
-    targetZoom = 3;       // Small era (2-5% of timeline)
-  } else if (zoomRatio > 10) {
-    targetZoom = 2.5;     // Medium era (5-10% of timeline)
-  } else if (zoomRatio > 4) {
-    targetZoom = 2;       // Larger era (10-25% of timeline)
-  } else if (zoomRatio > 2) {
-    targetZoom = 1.5;     // Large era (25-50% of timeline)
-  } else {
-    targetZoom = 1.2;     // Very large era (> 50% of timeline)
-  }
-  
-  // Clamp zoom to valid range
-  targetZoom = Math.max(1, Math.min(5, targetZoom));
-  
-  console.log(`Era spans ${eraSpan} years (${(eraSpan/fullTimespan*100).toFixed(2)}% of timeline). Zoom: ${targetZoom}`);
-  
-  // Reset view first for a clean start
-  resetView();
-  
-  // Apply zoom and pan after a short delay to allow reset to complete
-  setTimeout(() => {
-    // Set zoom level
-    scale.set(targetZoom);
+  export function navigateToEraRange(eraStartYear: number, eraEndYear: number) {
+    if (!eraStartYear || !eraEndYear) {
+      console.warn("Invalid era range:", eraStartYear, eraEndYear);
+      return;
+    }
     
-    // Then pan to the midpoint of the era
-    panToYear(midYear);
-  }, 300);
-  
-}
+    // Calculate the middle of the era
+    const midYear = Math.floor((eraStartYear + eraEndYear) / 2);
+    console.log(`Navigating to era range: ${eraStartYear}-${eraEndYear}, midpoint: ${midYear}`);
     
+    // Calculate a reasonable zoom level based on the era span
+    const eraSpan = eraEndYear - eraStartYear;
+    const fullTimespan = (endYear || 2100) - (startYear || 2000);
+    
+    // Zoom levels based on what portion of the timeline this era spans
+    const zoomRatio = fullTimespan / eraSpan;
+    let targetZoom;
+    
+    if (zoomRatio > 50) {
+      targetZoom = 4;       // Very small era (< 2% of timeline)
+    } else if (zoomRatio > 20) {
+      targetZoom = 3;       // Small era (2-5% of timeline)
+    } else if (zoomRatio > 10) {
+      targetZoom = 2.5;     // Medium era (5-10% of timeline)
+    } else if (zoomRatio > 4) {
+      targetZoom = 2;       // Larger era (10-25% of timeline)
+    } else if (zoomRatio > 2) {
+      targetZoom = 1.5;     // Large era (25-50% of timeline)
+    } else {
+      targetZoom = 1.2;     // Very large era (> 50% of timeline)
+    }
+    
+    // Clamp zoom to valid range
+    targetZoom = Math.max(1, Math.min(5, targetZoom));
+    
+    console.log(`Era spans ${eraSpan} years (${(eraSpan/fullTimespan*100).toFixed(2)}% of timeline). Zoom: ${targetZoom}`);
+    
+    // Reset view first for a clean start
+    resetView();
+    
+    // Apply zoom and pan after a short delay to allow reset to complete
+    setTimeout(() => {
+      // Set zoom level
+      scale.set(targetZoom);
+      
+      // Then pan to the midpoint of the era
+      panToYear(midYear);
+    }, 300);
+  }
 </script>
 
 <div class="card-base relative overflow-hidden {asBanner ? 'h-full rounded-none' : 'h-[300px] md:h-[300px]'} {compact ? 'compact-mode' : ''}" 
@@ -847,10 +885,9 @@ export function navigateToEraRange(eraStartYear: number, eraEndYear: number) {
     <div class="timeline-end-marker absolute {isMobile ? 'bottom-[15%] h-[4px] left-[40%] right-[60%]' : 'right-[15%] w-[4px] top-[40%] bottom-[60%]'} bg-[oklch(0.7_0.2_var(--hue))] opacity-60 rounded-full"></div>
 
     <!-- Events -->
-    {#each eventPositions as { event, timelinePosition, offsetPosition, floatClass }, i}
-      <!-- Event container with positioning for both desktop and mobile -->
+    {#each eventPositions as { event, timelinePosition, offsetPosition, floatClass, shouldFloat }, i}
       <div 
-        class="timeline-event absolute {isMobile ? 'timeline-event-mobile' : 'timeline-event-desktop'} {!isMobile ? floatClass : ''}"
+        class="timeline-event absolute {isMobile ? 'timeline-event-mobile' : 'timeline-event-desktop'} {!isMobile && shouldFloat ? floatClass : ''}"
         style={isMobile ? 
           `top: ${timelinePosition}%; left: 50%; transform: translate(${offsetPosition}px, 0) scale(${1/$scale});` : 
           `left: ${timelinePosition}%; top: 50%; transform: translate(0, ${offsetPosition}px) scale(${1/$scale});`
@@ -863,42 +900,42 @@ export function navigateToEraRange(eraStartYear: number, eraEndYear: number) {
           data-year={event.year}
           data-era={event.era}
         >
-        <StarNode 
-        era={event.era} 
-        isKeyEvent={event.isKeyEvent} 
-        isSelected={selectedEvent?.slug === event.slug}
-        isHovered={hoveredEvent?.slug === event.slug}
-        size={event.isKeyEvent ? 5 : 4}
-      />
-    </div>
-        
-  <!-- Only show card if this event is selected or hovered AND NOT in mobile mode -->
-        {#if (selectedEvent?.slug === event.slug || hoveredEvent?.slug === event.slug) && !isMobile}
-          <div class="card-wrapper" style="transform: scale({1/$scale});">
-            <TimelineCard 
-              {event} 
-              isSelected={selectedEvent?.slug === event.slug}
-              compact={compact}
-              position={offsetPosition < 0 ? 'top' : 'bottom'}
-              isMobile={false}
-            />
-          </div>
-        {/if}
+          <StarNode 
+            era={event.era} 
+            isKeyEvent={event.isKeyEvent} 
+            isSelected={selectedEvent?.slug === event.slug}
+            isHovered={hoveredEvent?.slug === event.slug}
+            size={event.isKeyEvent ? 5 : 4}
+          />
+        </div>
       </div>
     {/each}
   </div>
   
-  <!-- Fixed mobile card container - now uses fixed positioning instead of being inside the scrollable area -->
-  {#if isMobile && (selectedEvent || hoveredEvent)}
-    <div class="fixed-mobile-card-container">
-      <!-- Note: No scale transform needed here since it's outside the zoomed container -->
-      <TimelineCard 
-        event={selectedEvent || hoveredEvent}
-        isSelected={!!selectedEvent}
-        {compact}
-        position="bottom"
-        isMobile={true}
-      />
+  <!-- Fixed card container for both mobile and desktop views -->
+  {#if selectedEvent || hoveredEvent}
+    <div class="fixed-card-container {isMobile ? 'mobile-container' : 'desktop-container'}">
+      {#if selectedEvent}
+        <div class="absolute" style="left: {selectedNodePosition.x}px; top: {selectedNodePosition.y}px;">
+          <TimelineCard 
+            event={selectedEvent}
+            isSelected={true}
+            {compact}
+            position={selectedNodePosition.y > containerHeight/2 ? 'top' : 'bottom'}
+            isMobile={isMobile}
+          />
+        </div>
+      {:else if hoveredEvent}
+        <div class="absolute" style="left: {hoveredNodePosition.x}px; top: {hoveredNodePosition.y}px;">
+          <TimelineCard 
+            event={hoveredEvent}
+            isSelected={false}
+            {compact}
+            position={hoveredNodePosition.y > containerHeight/2 ? 'top' : 'bottom'}
+            isMobile={isMobile}
+          />
+        </div>
+      {/if}
     </div>
   {/if}
   
@@ -939,11 +976,6 @@ export function navigateToEraRange(eraStartYear: number, eraEndYear: number) {
     
     .timeline-event {
       will-change: transform;
-    }
-    
-    /* Fix flickering on iOS */
-    .fixed-mobile-card-container {
-      transform: translateZ(0);
     }
   }
   
@@ -1015,5 +1047,43 @@ export function navigateToEraRange(eraStartYear: number, eraEndYear: number) {
   @keyframes float5 {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(36px); }
+  }
+  
+  /* Fixed card container styles */
+  .fixed-card-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 40;
+  }
+
+  .fixed-card-container .timeline-card {
+    pointer-events: auto;
+    transform: translate(-50%, 0);
+  }
+
+  /* For top-positioned cards */
+  .fixed-card-container .timeline-card-top {
+    transform: translate(-50%, -100%);
+    margin-top: -20px;
+  }
+
+  /* For bottom-positioned cards */
+  .fixed-card-container .timeline-card-bottom {
+    transform: translate(-50%, 0);
+    margin-top: 20px;
+  }
+
+  /* Mobile-specific containers */
+  .mobile-container {
+    position: fixed;
+    bottom: 70px;
+    right: 10px;
+    left: auto;
+    width: auto;
+    max-width: 90%;
   }
 </style>

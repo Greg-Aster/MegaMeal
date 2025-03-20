@@ -108,16 +108,15 @@
   let isInitialized = false;
   
   onMount(() => {
-  isInitialized = true;
-  
-  // No need for interval animation since the orbital is CSS-only
-  // You can remove this entire interval if not needed elsewhere
-  
-  return () => {
-    // Nothing to clean up
-  };
-});
-
+    isInitialized = true;
+    
+    // No need for interval animation since the orbital is CSS-only
+    // You can remove this entire interval if not needed elsewhere
+    
+    return () => {
+      // Nothing to clean up
+    };
+  });
 </script>
 
 <div 
@@ -196,14 +195,18 @@
               class="inner-glow" />
     {/if}
   </svg>
-  
-  <!-- orbital for selected events -->
-  {#if isSelected}
+
+  <!-- Add orbital effects to all stars, with enhanced version for selected ones -->
   <div class="orbital-effect">
-    <div class="orbital-ring orbital-ring-1"></div>
-    <div class="orbital-ring orbital-ring-2"></div>
+    <!-- Base orbital rings (visible on all stars) -->
+    <div class="orbital-ring orbital-base orbital-ring-1"></div>
+    
+    <!-- Enhanced orbitals for selected events -->
+    {#if isSelected}
+      <div class="orbital-ring orbital-selected orbital-ring-1"></div>
+      <div class="orbital-ring orbital-selected orbital-ring-2"></div>
+    {/if}
   </div>
-{/if}
 </div>
 
 <style>
@@ -276,63 +279,93 @@
       drop-shadow(0 0 3px var(--star-color));
   }
   
-/* Orbital effect for selected stars */
-.orbital-effect {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 5;
-}
+  /* Orbital effect for all stars */
+  .orbital-effect {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+  }
 
-.orbital-ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  border-radius: 50%;
-  border: 1px solid var(--star-color);
-  transform: translate(-50%, -50%);
-  opacity: 0;
-}
-
-.orbital-ring-1 {
-  width: calc(var(--star-size) * 3);
-  height: calc(var(--star-size) * 3);
-  animation: orbital-pulse 4s infinite ease-in-out;
-}
-
-.orbital-ring-2 {
-  width: calc(var(--star-size) * 5);
-  height: calc(var(--star-size) * 5);
-  animation: orbital-pulse 4s infinite ease-in-out;
-  animation-delay: 2s; /* Offset for second ring */
-}
-
-@keyframes orbital-pulse {
-  0% {
-    transform: translate(-50%, -50%) scale(0.5) rotate(0deg);
+  .orbital-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 50%;
+    border: 1px solid var(--star-color);
+    transform: translate(-50%, -50%);
     opacity: 0;
-    border-width: 1px;
   }
-  20% {
-    transform: translate(-50%, -50%) scale(.75) rotate(45deg);
-    opacity: 0.8;
-    border-width: 1.5px;
-  }
-  60% {
-    transform: translate(-50%, -50%) scale(1) rotate(135deg);
-    opacity: 0.4;
-    border-width: 1px;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1.125) rotate(180deg);
-    opacity: 0;
-    border-width: 0.5px;
-  }
-}
 
+  /* Base orbital for all stars - smaller and slower */
+  .orbital-base {
+    width: calc(var(--star-size) * 1.5); /* Half the size */
+    height: calc(var(--star-size) * 1.5);
+    animation: orbital-pulse-base 8s infinite ease-in-out; /* Half the speed (8s vs 4s) */
+    opacity: 0;
+    border-color: var(--star-color);
+  }
+
+  /* Enhanced orbitals only for selected stars - larger and faster */
+  .orbital-selected.orbital-ring-1 {
+    width: calc(var(--star-size) * 3);
+    height: calc(var(--star-size) * 3);
+    animation: orbital-pulse 4s infinite ease-in-out;
+  }
+
+  .orbital-selected.orbital-ring-2 {
+    width: calc(var(--star-size) * 4.5);
+    height: calc(var(--star-size) * 4.5);
+    animation: orbital-pulse 4s infinite ease-in-out;
+    animation-delay: 2s; /* Offset for second ring */
+  }
+
+  /* Animation for base (non-selected) orbital - slower and more subtle */
+  @keyframes orbital-pulse-base {
+    0% {
+      transform: translate(-50%, -50%) scale(0.9) rotate(0deg);
+      opacity: 0;
+    }
+    20% {
+      transform: translate(-50%, -50%) scale(1) rotate(22.5deg);
+      opacity: 0.2; /* More subtle opacity */
+    }
+    60% {
+      transform: translate(-50%, -50%) scale(1.1) rotate(67.5deg);
+      opacity: 0.1;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1.2) rotate(90deg);
+      opacity: 0;
+    }
+  }
+
+  /* Animation for selected orbital - faster and more prominent */
+  @keyframes orbital-pulse {
+    0% {
+      transform: translate(-50%, -50%) scale(0.9) rotate(0deg);
+      opacity: 0;
+      border-width: 1px;
+    }
+    20% {
+      transform: translate(-50%, -50%) scale(1) rotate(45deg);
+      opacity: 0.8;
+      border-width: 1.5px;
+    }
+    60% {
+      transform: translate(-50%, -50%) scale(1.2) rotate(135deg);
+      opacity: 0.4;
+      border-width: 1px;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1.5) rotate(180deg);
+      opacity: 0;
+      border-width: 0.5px;
+    }
+  }
   
   /* Refraction animation */
   .refraction-lines {
@@ -426,14 +459,6 @@
     0% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.9); }
     50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.1); }
     100% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.9); }
-  }
-  
-  @keyframes sparkleAnimation {
-    0% { transform: scale(0); opacity: 0; }
-    20% { transform: scale(1.5); opacity: 0.9; }
-    40% { transform: scale(0.9); opacity: 0.7; }
-    70% { transform: scale(1.8); opacity: 0.5; }
-    100% { transform: scale(2.5); opacity: 0; }
   }
   
   @keyframes innerGlowPulse {

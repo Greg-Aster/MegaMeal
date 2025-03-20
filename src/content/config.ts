@@ -29,6 +29,8 @@ const postsCollection = defineCollection({
     timelineEra: z.string().optional(),
     timelineLocation: z.string().optional(),
     isKeyEvent: z.boolean().optional(),
+    yIndex: z.number().optional(),
+
 
     /* For internal use */
     prevTitle: z.string().default(''),

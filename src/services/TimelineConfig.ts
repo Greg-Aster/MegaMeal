@@ -11,6 +11,7 @@ export interface TimelineEvent {
     isKeyEvent: boolean;
     location?: string;
     isDraft?: boolean;
+    yIndex?: number; 
     bannerData?: {
       category?: string;
       startYear?: number;

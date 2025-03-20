@@ -87,6 +87,7 @@ export type LIGHT_DARK_MODE =
     description: string
     tags: string[]
     draft?: boolean
+    yIndex: number
     image?: string
     category?: string
     prevTitle?: string
