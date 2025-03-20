@@ -28,6 +28,7 @@
   let isTouchActive = false;
   let hoverTimeoutId: ReturnType<typeof setTimeout> | null = null;
   const hoverOutDelay = 300; // Delay in ms before hiding the card
+  let cardWidth = 200; // Default card width
   
   // New state for tracking node positions
   let selectedNodePosition = { x: 0, y: 0 }; 
@@ -174,7 +175,6 @@
         } else {
           // Otherwise, select this event
           selectedEvent = event;
-          selectedNodePosition = calculateNodeScreenPosition(eventNode);
           dispatch('select', { event });
         }
       } else if (target === timelineContainer || target.classList.contains('timeline-container')) {
@@ -204,7 +204,6 @@
         }
         
         hoveredEvent = event;
-        hoveredNodePosition = calculateNodeScreenPosition(eventNode);
       }
     });
     
@@ -529,7 +528,6 @@
               // First tap on this event - just select it
               console.log('First tap on event, selecting:', slug);
               selectedEvent = event;
-              selectedNodePosition = calculateNodeScreenPosition(eventNode);
               dispatch('select', { event });
               lastTapTime = currentTime;
             }
@@ -582,23 +580,15 @@
     handleResize();
   }
   
-  // Update positions when scale or offset changes
+  // Calculate card size based on container dimensions
   $: {
-    if (selectedEvent || hoveredEvent) {
-      requestAnimationFrame(() => {
-        // Find and update node positions
-        const nodes = timelineContainer?.querySelectorAll('.event-node') || [];
-        nodes.forEach(node => {
-          const slug = node.getAttribute('data-slug');
-          if (selectedEvent && slug === selectedEvent.slug) {
-            selectedNodePosition = calculateNodeScreenPosition(node as HTMLElement);
-          }
-          if (hoveredEvent && slug === hoveredEvent.slug) {
-            hoveredNodePosition = calculateNodeScreenPosition(node as HTMLElement);
-          }
-        });
-      });
+    // Update the CSS variable for current scale
+    if (timelineContainer) {
+      timelineContainer.style.setProperty('--current-scale', `${$scale}`);
     }
+    
+    // Calculate card width as percentage of container width
+    cardWidth = Math.max(140, Math.min(240, containerWidth * 0.18));
   }
   
   // Set up and tear down event listeners
@@ -696,6 +686,7 @@
     if (timelineContainer) {
       containerWidth = timelineContainer.offsetWidth;
       containerHeight = timelineContainer.offsetHeight;
+      // Card width is now calculated in the reactive statement using these values
     }
   }
   
@@ -875,7 +866,7 @@
        role="application"
        aria-label="Interactive timeline visualization"
        tabindex="0"
-       style="transform: scale({$scale}) translate({$offsetX/$scale}px, {$offsetY/$scale}px);">
+       style="transform: scale({$scale}) translate({$offsetX/$scale}px, {$offsetY/$scale}px); --current-scale: {$scale};">
     
     <!-- Center line - horizontal for desktop, vertical for mobile -->
     <div class="timeline-center-line absolute {isMobile ? 'h-full w-[2px] left-1/2 bg-gradient-to-b' : 'w-full h-[2px] top-1/2 bg-gradient-to-r'} from-transparent via-[oklch(0.7_0.08_var(--hue))] to-transparent opacity-50"></div>
@@ -910,34 +901,20 @@
         </div>
       </div>
     {/each}
+
+    <!-- Info panel in bottom right of the container -->
+    {#if selectedEvent || hoveredEvent}
+      <div class="container-info-panel" style="--card-width: {cardWidth}px;">
+        <TimelineCard 
+          event={selectedEvent || hoveredEvent}
+          isSelected={!!selectedEvent}
+          {compact}
+          cardWidth={cardWidth}
+          isMobile={isMobile}
+        />
+      </div>
+    {/if}
   </div>
-  
-  <!-- Fixed card container for both mobile and desktop views -->
-  {#if selectedEvent || hoveredEvent}
-    <div class="fixed-card-container {isMobile ? 'mobile-container' : 'desktop-container'}">
-      {#if selectedEvent}
-        <div class="absolute" style="left: {selectedNodePosition.x}px; top: {selectedNodePosition.y}px;">
-          <TimelineCard 
-            event={selectedEvent}
-            isSelected={true}
-            {compact}
-            position={selectedNodePosition.y > containerHeight/2 ? 'top' : 'bottom'}
-            isMobile={isMobile}
-          />
-        </div>
-      {:else if hoveredEvent}
-        <div class="absolute" style="left: {hoveredNodePosition.x}px; top: {hoveredNodePosition.y}px;">
-          <TimelineCard 
-            event={hoveredEvent}
-            isSelected={false}
-            {compact}
-            position={hoveredNodePosition.y > containerHeight/2 ? 'top' : 'bottom'}
-            isMobile={isMobile}
-          />
-        </div>
-      {/if}
-    </div>
-  {/if}
   
   <!-- Empty state -->
   {#if events.length === 0}
@@ -1049,32 +1026,33 @@
     50% { transform: translateY(36px); }
   }
   
-  /* Fixed card container styles */
-  .fixed-card-container {
+  /* Container-relative info panel styles */
+  .container-info-panel {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    z-index: 40;
+    bottom: 50px;
+    right: 20px;
+    z-index: 100;
+    opacity: 0.95;
+    transition: opacity 0.3s ease;
+    animation: slideIn 0.3s ease-out forwards;
+    /* Make sure it doesn't get affected by the container's transform */
+    transform: scale(calc(1 / var(--current-scale, 1)));
+    transform-origin: bottom right;
   }
-
-  .fixed-card-container .timeline-card {
-    pointer-events: auto;
-    transform: translate(-50%, 0);
+  
+  .container-info-panel:hover {
+    opacity: 1;
   }
-
-  /* For top-positioned cards */
-  .fixed-card-container .timeline-card-top {
-    transform: translate(-50%, -100%);
-    margin-top: -20px;
-  }
-
-  /* For bottom-positioned cards */
-  .fixed-card-container .timeline-card-bottom {
-    transform: translate(-50%, 0);
-    margin-top: 20px;
+  
+  @keyframes slideIn {
+    from { 
+      transform: translateY(20px) scale(calc(1 / var(--current-scale, 1)));
+      opacity: 0;
+    }
+    to { 
+      transform: translateY(0) scale(calc(1 / var(--current-scale, 1)));
+      opacity: 0.95;
+    }
   }
 
   /* Mobile-specific containers */
