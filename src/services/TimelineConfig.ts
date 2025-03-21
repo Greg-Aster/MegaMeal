@@ -11,7 +11,6 @@ export interface TimelineEvent {
     isKeyEvent: boolean;
     location?: string;
     isDraft?: boolean;
-    yIndex?: number; 
     bannerData?: {
       category?: string;
       startYear?: number;
@@ -64,7 +63,7 @@ export interface TimelineEvent {
     },
     'spork-uprising': {
       displayName: 'Spork Uprising',
-      startYear: 3042,
+      startYear: 3021,
       endYear: 3044
     },
     'snuggaloid': {

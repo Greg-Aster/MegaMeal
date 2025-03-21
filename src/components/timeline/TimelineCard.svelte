@@ -51,7 +51,7 @@
 >
   <!-- Card content -->
   <div class="font-bold text-75 text-sm mb-1 card-title">
-    {event.year}: {event.title}
+    <!-- {event.year}: --> {event.title}
   </div>
   
   {#if !compact || isMobile}
