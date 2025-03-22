@@ -3,18 +3,21 @@ import { getSortedPosts } from '../utils/content-utils';
 import { 
   defaultEraConfig,
   defaultEraDisplayNames,
+  defaultTimelineViewConfig,
   getEraFromYear,
   getEraDisplayName,
   getEraClasses,
   extractEraConfig,
   groupEventsByEra,
-  getTimelineStatistics
+  getTimelineStatistics,
+  getEraConfigForYear
 } from './TimelineConfig';
 // Use 'import type' for types and interfaces
 import type { 
   TimelineEvent,
   EraConfig,
-  EraConfigMap
+  EraConfigMap,
+  TimelineViewConfig
 } from './TimelineConfig';
 
 // Modified getTimelineEvents function to include banner posts
@@ -127,17 +130,20 @@ export async function getTimelineEvents(options: {
 export {
   defaultEraConfig,
   defaultEraDisplayNames,
+  defaultTimelineViewConfig,
   getEraFromYear,
   getEraDisplayName,
   getEraClasses,
   extractEraConfig,
   groupEventsByEra,
-  getTimelineStatistics
+  getTimelineStatistics,
+  getEraConfigForYear
 };
 
 // Re-export types
 export type {
   TimelineEvent,
   EraConfig,
-  EraConfigMap
+  EraConfigMap,
+  TimelineViewConfig
 };

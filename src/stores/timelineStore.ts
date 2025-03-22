@@ -31,6 +31,12 @@ interface TimelineViewState {
 
   // Events data
   events: TimelineEvent[];
+  
+  // Position memory
+  lastEra: string | null; // Store the last selected era
+  lastEraScale: number | null; // Store the zoom level for the era
+  lastEraOffsetX: number | null; // Store the X offset for the era
+  lastEraOffsetY: number | null; // Store the Y offset for the era
 }
 
 // Initial state
@@ -48,7 +54,11 @@ const initialState: TimelineViewState = {
   endYear: null,
   showOnlyKeyEvents: false,
   background: '/assets/banner/0001.png',
-  events: []
+  events: [],
+  lastEra: null,
+  lastEraScale: null,
+  lastEraOffsetX: null,
+  lastEraOffsetY: null
 };
 
 // Try to load saved preferences from localStorage if available
@@ -57,14 +67,42 @@ function loadSavedPreferences(): Partial<TimelineViewState> {
   
   try {
     if (typeof window !== 'undefined') { // Check if we're in a browser
+      // Load view mode preference
       const savedViewMode = localStorage.getItem('timeline-view-preference');
       if (savedViewMode && ['timeline', 'list', 'tree', 'map'].includes(savedViewMode)) {
         savedPrefs.viewMode = savedViewMode as any;
       }
       
+      // Load compact mode preference
       const savedCompact = localStorage.getItem('timeline-compact-mode');
       if (savedCompact) {
         savedPrefs.compact = savedCompact === 'true';
+      }
+      
+      // Load last selected era
+      const savedEra = localStorage.getItem('timeline-last-era');
+      if (savedEra) {
+        savedPrefs.lastEra = savedEra;
+        savedPrefs.era = savedEra; // Also set as current era
+      }
+      
+      // Load navigation state for the era
+      const savedScale = localStorage.getItem('timeline-last-era-scale');
+      if (savedScale) {
+        savedPrefs.lastEraScale = parseFloat(savedScale);
+        savedPrefs.scale = parseFloat(savedScale);
+      }
+      
+      const savedOffsetX = localStorage.getItem('timeline-last-era-offset-x');
+      if (savedOffsetX) {
+        savedPrefs.lastEraOffsetX = parseFloat(savedOffsetX);
+        savedPrefs.offsetX = parseFloat(savedOffsetX);
+      }
+      
+      const savedOffsetY = localStorage.getItem('timeline-last-era-offset-y');
+      if (savedOffsetY) {
+        savedPrefs.lastEraOffsetY = parseFloat(savedOffsetY);
+        savedPrefs.offsetY = parseFloat(savedOffsetY);
       }
     }
   } catch (e) {
@@ -73,6 +111,32 @@ function loadSavedPreferences(): Partial<TimelineViewState> {
   }
   
   return savedPrefs;
+}
+
+// Save current view state to localStorage
+function saveViewState(state: TimelineViewState) {
+  try {
+    if (typeof window !== 'undefined') {
+      // Save view mode
+      localStorage.setItem('timeline-view-preference', state.viewMode);
+      
+      // Save compact mode
+      localStorage.setItem('timeline-compact-mode', String(state.compact));
+      
+      // Save current era if set
+      if (state.era) {
+        localStorage.setItem('timeline-last-era', state.era);
+      }
+      
+      // Save navigation state
+      localStorage.setItem('timeline-last-era-scale', String(state.scale));
+      localStorage.setItem('timeline-last-era-offset-x', String(state.offsetX));
+      localStorage.setItem('timeline-last-era-offset-y', String(state.offsetY));
+    }
+  } catch (e) {
+    // Ignore localStorage errors
+    console.log('Unable to save timeline preferences to localStorage', e);
+  }
 }
 
 // Create the main store with merged preferences
@@ -93,28 +157,19 @@ const actions = {
   
   // Set view mode
   setViewMode: (mode: 'timeline' | 'list' | 'tree' | 'map') => {
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('timeline-view-preference', mode);
-      }
-    } catch (e) {
-      // Ignore localStorage errors
-    }
-    return baseStore.update(state => ({ ...state, viewMode: mode }));
+    return baseStore.update(state => {
+      const newState = { ...state, viewMode: mode };
+      saveViewState(newState);
+      return newState;
+    });
   },
   
   // Toggle compact mode
   toggleCompact: () => {
     return baseStore.update(state => {
-      const newCompact = !state.compact;
-      try {
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('timeline-compact-mode', String(newCompact));
-        }
-      } catch (e) {
-        // Ignore localStorage errors
-      }
-      return { ...state, compact: newCompact };
+      const newState = { ...state, compact: !state.compact };
+      saveViewState(newState);
+      return newState;
     });
   },
   
@@ -124,25 +179,41 @@ const actions = {
   
   // Navigation controls
   zoomIn: () => 
-    baseStore.update(state => ({ ...state, scale: Math.min(5, state.scale + 0.2) })),
+    baseStore.update(state => {
+      const newState = { ...state, scale: Math.min(5, state.scale + 0.2) };
+      saveViewState(newState);
+      return newState;
+    }),
   
   zoomOut: () => 
-    baseStore.update(state => ({ ...state, scale: Math.max(0.5, state.scale - 0.2) })),
+    baseStore.update(state => {
+      const newState = { ...state, scale: Math.max(0.5, state.scale - 0.2) };
+      saveViewState(newState);
+      return newState;
+    }),
   
   pan: (deltaX: number, deltaY: number) => 
-    baseStore.update(state => ({ 
-      ...state, 
-      offsetX: state.offsetX + deltaX,
-      offsetY: state.offsetY + deltaY
-    })),
+    baseStore.update(state => {
+      const newState = { 
+        ...state, 
+        offsetX: state.offsetX + deltaX,
+        offsetY: state.offsetY + deltaY
+      };
+      saveViewState(newState);
+      return newState;
+    }),
   
   resetView: () => 
-    baseStore.update(state => ({ 
-      ...state, 
-      scale: 1,
-      offsetX: 0,
-      offsetY: 0
-    })),
+    baseStore.update(state => {
+      const newState = { 
+        ...state, 
+        scale: 1,
+        offsetX: 0,
+        offsetY: 0
+      };
+      saveViewState(newState);
+      return newState;
+    }),
   
   // Selection
   selectEvent: (eventId: string | null) => 
@@ -153,7 +224,11 @@ const actions = {
     baseStore.update(state => ({ ...state, category })),
   
   setEra: (era: string | null) => 
-    baseStore.update(state => ({ ...state, era })),
+    baseStore.update(state => {
+      const newState = { ...state, era, lastEra: era };
+      saveViewState(newState);
+      return newState;
+    }),
   
   setYearRange: (startYear: number | null, endYear: number | null) => 
     baseStore.update(state => ({ ...state, startYear, endYear })),
@@ -162,7 +237,25 @@ const actions = {
     baseStore.update(state => ({ ...state, showOnlyKeyEvents: !state.showOnlyKeyEvents })),
   
   setBackground: (background: string) => 
-    baseStore.update(state => ({ ...state, background }))
+    baseStore.update(state => ({ ...state, background })),
+    
+  // Save the current position for the current era
+  saveEraPosition: (scale: number, offsetX: number, offsetY: number) =>
+    baseStore.update(state => {
+      if (!state.era) return state;
+      
+      const newState = {
+        ...state,
+        scale,
+        offsetX,
+        offsetY,
+        lastEraScale: scale,
+        lastEraOffsetX: offsetX,
+        lastEraOffsetY: offsetY
+      };
+      saveViewState(newState);
+      return newState;
+    })
 };
 
 // Export a combined store with both the writable store methods and our action methods

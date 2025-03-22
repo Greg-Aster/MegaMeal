@@ -2,18 +2,21 @@
 import { 
   defaultEraConfig,
   defaultEraDisplayNames,
+  defaultTimelineViewConfig,
   getEraFromYear,
   getEraDisplayName,
   getEraClasses,
   extractEraConfig,
   groupEventsByEra,
-  getTimelineStatistics
+  getTimelineStatistics,
+  getEraConfigForYear
 } from './TimelineConfig';
 // Use 'import type' for types and interfaces
 import type { 
   TimelineEvent,
   EraConfig,
-  EraConfigMap
+  EraConfigMap,
+  TimelineViewConfig
 } from './TimelineConfig';
 
 // Function to safely handle date serialization issues (client-specific)
@@ -93,17 +96,20 @@ export function processTimelineEvents(
 export {
   defaultEraConfig,
   defaultEraDisplayNames,
+  defaultTimelineViewConfig,
   getEraFromYear,
   getEraDisplayName,
   getEraClasses,
   extractEraConfig,
   groupEventsByEra,
-  getTimelineStatistics
+  getTimelineStatistics,
+  getEraConfigForYear
 };
 
 // Re-export types
 export type {
   TimelineEvent,
   EraConfig,
-  EraConfigMap
+  EraConfigMap,
+  TimelineViewConfig
 };

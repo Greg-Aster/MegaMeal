@@ -7,6 +7,8 @@
   export let isSelected: boolean = false;
   export let isHovered: boolean = false;
   export let size: number = 8;
+  // Add this new prop for a unique identifier (slug, id, etc.)
+  export let identifier: string = Math.random().toString(36).substring(2, 10);
   
   // Era color mapping 
   const eraColorMap = {
@@ -55,11 +57,8 @@
     return Math.abs(hash);
   }
   
-  // Get a color based on era or random from spectrum
+  // Get a color from the color spectrum (without using era colors)
   function getStarColor(id: string): string {
-    if (era && eraColorMap[era]) {
-      return eraColorMap[era];
-    }
     const hash = hashCode(id);
     return colorSpectrum[hash % colorSpectrum.length];
   }
@@ -92,8 +91,8 @@
     return 4 + (hash % 5); // 4-8 second duration
   }
   
-  // Create unique ID
-  $: uniqueId = `${era || 'default'}-${isKeyEvent ? 'key' : 'normal'}-${size}`;
+  // Create unique ID - no longer use era, use the identifier instead
+  $: uniqueId = `star-${identifier}-${isKeyEvent ? 'key' : 'normal'}`;
   
   // Set reactive variables
   $: starType = getStarType(uniqueId);

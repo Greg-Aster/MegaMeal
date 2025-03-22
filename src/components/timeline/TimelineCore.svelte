@@ -5,7 +5,12 @@
   import StarNode from './StarNode.svelte';
   import TimelineCard from './TimelineCard.svelte';
   import type { TimelineEvent } from '../../services/TimelineService.client';
-
+  import { 
+    defaultTimelineViewConfig, 
+    extractEraConfig,
+    getEraConfigForYear,
+    type EraConfigMap 
+  } from '../../services/TimelineConfig';
 
   // Props
   export let events: TimelineEvent[] = [];
@@ -21,7 +26,7 @@
   let hoveredEvent: TimelineEvent | null = null;
   let containerWidth: number = 0;
   let containerHeight: number = 0;
-  let padding = 15; // percentage padding on timeline edges
+  let padding = defaultTimelineViewConfig.padding; // Get padding from config
   let isMobile = false; // Track if we're in mobile view
   let isNavigating = false; // Track if we're navigating to a new page
   let fadeOverlayVisible = true; // Start with fade overlay visible
@@ -33,7 +38,7 @@
   const normalDuration = 300;
   const touchDuration = 0;  // No animation during touch
   
-  const scale = tweened(1, {
+  const scale = tweened(defaultTimelineViewConfig.defaultZoom, {
     duration: normalDuration, 
     easing: cubicOut
   });
@@ -74,8 +79,11 @@
   $: timespan = Math.max(1, (endYear || 2100) - (startYear || 2000));
   
   // Calculate horizontal/vertical position for each event
-  function getPositionPercentage(year: number): number {
+  function getPositionPercentage(year: number, customPadding?: number): number {
     if (timespan === 0) return 50;
+    
+    // Use custom padding if provided, otherwise use default
+    const paddingToUse = customPadding !== undefined ? customPadding : padding;
     
     // Clamp year to our display range
     const clampedYear = Math.max(startYear || 0, Math.min(endYear || 3000, year));
@@ -84,37 +92,42 @@
     const basePercentage = ((clampedYear - (startYear || 0)) / timespan) * 100;
     
     // Apply padding to spread events away from edges
-    return padding + (basePercentage * (100 - (2 * padding)) / 100);
+    return paddingToUse + (basePercentage * (100 - (2 * paddingToUse)) / 100);
   }
   
-// Generate positions for events on the timeline - NO YINDEX SYSTEM
-$: eventPositions = events.map((event, index) => {
-  // For timeline position (horizontal in desktop, vertical in mobile)
-  const posPercentage = getPositionPercentage(event.year);
-  
-  // Create seed for deterministic randomization
-  const seed = (event.slug.charCodeAt(0) + index) * 11 + event.year % 100;
-  
-  // Always use random position - no yIndex check
-  const randomFactor = ((seed * 9301 + 49297) % 233280) / 233280;
-  
-  // Calculate random offset (works for both mobile and desktop)
-  const offsetPosition = (randomFactor * 2 - 1) * 100;
-  
-  // Ensure values stay within reasonable bounds
-  const clampedOffset = Math.max(-100, Math.min(100, offsetPosition));
-  
-  // Always use floating animation
-  const floatClass = `floating-animation-${(seed % 5) + 1}`;
-  
-  return {
-    event,
-    timelinePosition: posPercentage, // % along the primary timeline axis
-    offsetPosition: clampedOffset,   // px offset from the timeline
-    floatClass,       // Animation class for floating
-    shouldFloat: true  // Always float
-  };
-});
+  // Generate positions for events on the timeline
+  $: eventPositions = events.map((event, index) => {
+    // Get era configuration to check for custom padding
+    const eraConfigs = extractEraConfig(events);
+    const eraConfig = event.era && eraConfigs[event.era] ? eraConfigs[event.era] : null;
+    const customPadding = eraConfig?.customPadding;
+    
+    // For timeline position (horizontal in desktop, vertical in mobile)
+    const posPercentage = getPositionPercentage(event.year, customPadding);
+    
+    // Create seed for deterministic randomization
+    const seed = (event.slug.charCodeAt(0) + index) * 11 + event.year % 100;
+    
+    // Always use random position - no yIndex check
+    const randomFactor = ((seed * 9301 + 49297) % 233280) / 233280;
+    
+    // Calculate random offset (works for both mobile and desktop)
+    const offsetPosition = (randomFactor * 2 - 1) * 100;
+    
+    // Ensure values stay within reasonable bounds
+    const clampedOffset = Math.max(-100, Math.min(100, offsetPosition));
+    
+    // Always use floating animation
+    const floatClass = `floating-animation-${(seed % 5) + 1}`;
+    
+    return {
+      event,
+      timelinePosition: posPercentage, // % along the primary timeline axis
+      offsetPosition: clampedOffset,   // px offset from the timeline
+      floatClass,       // Animation class for floating
+      shouldFloat: true  // Always float
+    };
+  });
   
   // Setup direct event handlers
   function setupDirectEventHandlers() {
@@ -202,7 +215,7 @@ $: eventPositions = events.map((event, index) => {
     });
   }
   
-  // Navigate to a post with fade transition
+  // Updated navigateToPost function for TimelineCore.svelte
   function navigateToPost(slug: string) {
     // Show the fade overlay
     isNavigating = true;
@@ -210,7 +223,8 @@ $: eventPositions = events.map((event, index) => {
     
     // Wait for the fade-in animation to complete before navigating
     setTimeout(() => {
-      window.location.href = `/posts/${slug}/`;
+      // Updated to include #post-container fragment, matching the TimelineCard link behavior
+      window.location.href = `/posts/${slug}/#post-container`;
     }, 300); // Match this to the CSS transition duration
   }
   
@@ -309,8 +323,8 @@ $: eventPositions = events.map((event, index) => {
     const deltaX = clickX - centerX;
     const deltaY = clickY - centerY;
     
-    // Zoom in
-    scale.update(s => Math.min(5, s + 0.5));
+    // Zoom in, using max zoom from config
+    scale.update(s => Math.min(defaultTimelineViewConfig.maxZoom, s + 0.5));
     
     // Adjust the offset to center on the click position
     // The formula is complex because we need to account for the current scale and offset
@@ -440,9 +454,12 @@ $: eventPositions = events.map((event, index) => {
       // Calculate the zoom factor based on the change in distance
       const zoomDelta = currentDistance / touchDistance;
       
-      // Apply zoom with scaling limits
+      // Apply zoom with scaling limits from config
       if (zoomDelta !== 1) {
-        const newScale = Math.max(0.5, Math.min(5, $scale * zoomDelta));
+        const newScale = Math.max(
+          defaultTimelineViewConfig.minZoom, 
+          Math.min(defaultTimelineViewConfig.maxZoom, $scale * zoomDelta)
+        );
         scale.set(newScale);
         touchDistance = currentDistance;
       }
@@ -662,17 +679,23 @@ $: eventPositions = events.map((event, index) => {
     }
   });
   
-  // Update functions exposed to parent components
+  // Update functions exposed to parent components with config values
   export function zoomIn() {
-    scale.update(s => Math.min(5, s + 0.2));
+    scale.update(s => Math.min(
+      defaultTimelineViewConfig.maxZoom, 
+      s + defaultTimelineViewConfig.zoomStep
+    ));
   }
   
   export function zoomOut() {
-    scale.update(s => Math.max(0.5, s - 0.2));
+    scale.update(s => Math.max(
+      defaultTimelineViewConfig.minZoom, 
+      s - defaultTimelineViewConfig.zoomStep
+    ));
   }
   
   export function resetView() {
-    scale.set(1);
+    scale.set(defaultTimelineViewConfig.defaultZoom);
     offsetX.set(0);
     offsetY.set(0);
     selectedEvent = null;
@@ -682,118 +705,187 @@ $: eventPositions = events.map((event, index) => {
     offsetX.update(x => x + deltaX);
     offsetY.update(y => y + deltaY);
   }
+
+  // Export getter methods to access the current state
+  export function getCurrentScale(): number {
+    return $scale;
+  }
+
+  export function getCurrentOffsetX(): number {
+    return $offsetX;
+  }
+
+  export function getCurrentOffsetY(): number {
+    return $offsetY;
+  }
   
   // Calculate background transform based on mobile state
   $: backgroundTransform = isMobile 
   ? `scale(${1.05 + 0.05 * $scale}) translate(${-$offsetX * 0.05}px, ${-$offsetY * 0.05}px) rotate(90deg) scale(1.2)` 
   : `scale(${1.05 + 0.05 * $scale}) translate(${-$offsetX * 0.05}px, ${-$offsetY * 0.05}px)`;
 
-    export function panToYear(targetYear: number) {
-  // Only proceed if we have valid dimensions and data
-  if (!containerWidth || !containerHeight || !timespan || timespan === 0) {
-    console.warn("Cannot pan: missing dimensions", { containerWidth, containerHeight, timespan });
-    return;
-  }
-  
-  // Calculate raw percentage (without any padding)
-  const rawPercentage = ((targetYear - (startYear || 0)) / timespan) * 100;
-  
-  console.log(`Panning to year ${targetYear}:`, {
-    rawPercentage: rawPercentage.toFixed(2) + "%",
-    timespan,
-    startYear,
-    endYear,
-    scale: $scale.toFixed(2)
-  });
-  
-  // In mobile mode (vertical timeline)
-  if (isMobile) {
-    // Use raw percentage directly instead of getPositionPercentage
-    const targetPosition = (containerHeight * rawPercentage) / 100;
-    const viewportCenter = containerHeight / 2;
-    const requiredOffset = viewportCenter - targetPosition;
+  export function panToYear(targetYear: number) {
+    // Only proceed if we have valid dimensions and data
+    if (!containerWidth || !containerHeight || !timespan || timespan === 0) {
+      console.warn("Cannot pan: missing dimensions", { containerWidth, containerHeight, timespan });
+      return;
+    }
     
-    console.log(`Mobile panning:`, {
-      targetPosition: targetPosition.toFixed(1) + "px",
-      viewportCenter: viewportCenter.toFixed(1) + "px",
-      requiredOffset: requiredOffset.toFixed(1) + "px",
-      scaledOffset: (requiredOffset / $scale).toFixed(1) + "px"
+    // Calculate raw percentage (without any padding)
+    const rawPercentage = ((targetYear - (startYear || 0)) / timespan) * 100;
+    
+    console.log(`Panning to year ${targetYear}:`, {
+      rawPercentage: rawPercentage.toFixed(2) + "%",
+      timespan,
+      startYear,
+      endYear,
+      scale: $scale.toFixed(2)
     });
     
-    // Apply the offset (adjusted for scale)
-    offsetY.set(requiredOffset / $scale);
-  } 
-  // In desktop mode (horizontal timeline)
-  else {
-    // Use raw percentage directly instead of getPositionPercentage
-    const targetPosition = (containerWidth * rawPercentage) / 100;
-    const viewportCenter = containerWidth / 2;
-    const requiredOffset = viewportCenter - targetPosition;
+    // In mobile mode (vertical timeline)
+    if (isMobile) {
+      // Use raw percentage directly instead of getPositionPercentage
+      const targetPosition = (containerHeight * rawPercentage) / 100;
+      const viewportCenter = containerHeight / 2;
+      const requiredOffset = viewportCenter - targetPosition;
+      
+      console.log(`Mobile panning:`, {
+        targetPosition: targetPosition.toFixed(1) + "px",
+        viewportCenter: viewportCenter.toFixed(1) + "px",
+        requiredOffset: requiredOffset.toFixed(1) + "px",
+        scaledOffset: (requiredOffset / $scale).toFixed(1) + "px"
+      });
+      
+      // Apply the offset (adjusted for scale)
+      offsetY.set(requiredOffset / $scale);
+    } 
+    // In desktop mode (horizontal timeline)
+    else {
+      // Use raw percentage directly instead of getPositionPercentage
+      const targetPosition = (containerWidth * rawPercentage) / 100;
+      const viewportCenter = containerWidth / 2;
+      const requiredOffset = viewportCenter - targetPosition;
+      
+      console.log(`Desktop panning:`, {
+        targetPosition: targetPosition.toFixed(1) + "px",
+        viewportCenter: viewportCenter.toFixed(1) + "px",
+        requiredOffset: requiredOffset.toFixed(1) + "px",
+        scaledOffset: (requiredOffset / $scale).toFixed(1) + "px"
+      });
+      
+      // Apply the offset (adjusted for scale)
+      offsetX.set(requiredOffset / $scale);
+    }
+  }
+
+  // Method to set position directly (used for restoring saved positions)
+  export function setPosition(newScale: number, newOffsetX: number, newOffsetY: number) {
+    // Validate input values to avoid invalid states
+    if (isNaN(newScale) || isNaN(newOffsetX) || isNaN(newOffsetY)) {
+      console.error("Invalid position values:", { newScale, newOffsetX, newOffsetY });
+      return;
+    }
     
-    console.log(`Desktop panning:`, {
-      targetPosition: targetPosition.toFixed(1) + "px",
-      viewportCenter: viewportCenter.toFixed(1) + "px",
-      requiredOffset: requiredOffset.toFixed(1) + "px",
-      scaledOffset: (requiredOffset / $scale).toFixed(1) + "px"
+    // Clamp scale to valid range 
+    const clampedScale = Math.max(0.5, Math.min(5, newScale));
+    
+    // Apply values
+    scale.set(clampedScale);
+    offsetX.set(newOffsetX);
+    offsetY.set(newOffsetY);
+    
+    console.log("Position set to:", { 
+      scale: clampedScale, 
+      offsetX: newOffsetX, 
+      offsetY: newOffsetY 
     });
-    
-    // Apply the offset (adjusted for scale)
-    offsetX.set(requiredOffset / $scale);
   }
 
-}
-
-export function navigateToEraRange(eraStartYear: number, eraEndYear: number) {
-  if (!eraStartYear || !eraEndYear) {
-    console.warn("Invalid era range:", eraStartYear, eraEndYear);
-    return;
-  }
-  
-  // Calculate the middle of the era
-  const midYear = Math.floor((eraStartYear + eraEndYear) / 2);
-  console.log(`Navigating to era range: ${eraStartYear}-${eraEndYear}, midpoint: ${midYear}`);
-  
-  // Calculate a reasonable zoom level based on the era span
-  const eraSpan = eraEndYear - eraStartYear;
-  const fullTimespan = (endYear || 2100) - (startYear || 2000);
-  
-  // Zoom levels based on what portion of the timeline this era spans
-  const zoomRatio = fullTimespan / eraSpan;
-  let targetZoom;
-  
-  if (zoomRatio > 50) {
-    targetZoom = 4;       // Very small era (< 2% of timeline)
-  } else if (zoomRatio > 20) {
-    targetZoom = 3;       // Small era (2-5% of timeline)
-  } else if (zoomRatio > 10) {
-    targetZoom = 2.5;     // Medium era (5-10% of timeline)
-  } else if (zoomRatio > 4) {
-    targetZoom = 2;       // Larger era (10-25% of timeline)
-  } else if (zoomRatio > 2) {
-    targetZoom = 1.5;     // Large era (25-50% of timeline)
-  } else {
-    targetZoom = 1.2;     // Very large era (> 50% of timeline)
-  }
-  
-  // Clamp zoom to valid range
-  targetZoom = Math.max(1, Math.min(5, targetZoom));
-  
-  console.log(`Era spans ${eraSpan} years (${(eraSpan/fullTimespan*100).toFixed(2)}% of timeline). Zoom: ${targetZoom}`);
-  
-  // Reset view first for a clean start
-  resetView();
-  
-  // Apply zoom and pan after a short delay to allow reset to complete
-  setTimeout(() => {
-    // Set zoom level
-    scale.set(targetZoom);
+  export function navigateToEraRange(eraStartYear: number, eraEndYear: number) {
+    if (!eraStartYear || !eraEndYear) {
+      console.warn("Invalid era range:", eraStartYear, eraEndYear);
+      return;
+    }
     
-    // Then pan to the midpoint of the era
-    panToYear(midYear);
-  }, 300);
-  
-}
+    // Find the era configuration for the given range
+    let eraConfig = null;
+    const eraConfigs = extractEraConfig(events);
     
+    // Look for an era that matches these exact start/end years
+    for (const [eraKey, config] of Object.entries(eraConfigs)) {
+      if (config.startYear === eraStartYear && config.endYear === eraEndYear) {
+        eraConfig = config;
+        console.log(`Found exact era config for ${eraKey}:`, eraConfig);
+        break;
+      }
+    }
+    
+    // If we didn't find an exact match, do a second pass to find a containing era
+    if (!eraConfig) {
+      for (const [eraKey, config] of Object.entries(eraConfigs)) {
+        if (eraStartYear >= config.startYear && eraEndYear <= config.endYear) {
+          eraConfig = config;
+          console.log(`Found containing era config for ${eraKey}:`, eraConfig);
+          break;
+        }
+      }
+    }
+    
+    // Calculate the middle of the era as default focus point
+    const midYear = Math.floor((eraStartYear + eraEndYear) / 2);
+    console.log(`Era range: ${eraStartYear}-${eraEndYear}, midpoint: ${midYear}`);
+    
+    // Determine zoom level - use configuration if available
+    let targetZoom;
+    const yearToCenter = eraConfig?.panToYear || midYear;
+    
+    if (eraConfig?.zoomLevel !== undefined) {
+      // Use the custom zoom level from config
+      targetZoom = eraConfig.zoomLevel;
+      console.log(`Using configured zoom level: ${targetZoom}`);
+    } else {
+      // Calculate based on general rules using thresholds from config
+      const viewConfig = defaultTimelineViewConfig;
+      const eraSpan = eraEndYear - eraStartYear;
+      const fullTimespan = (endYear || 2100) - (startYear || 2000);
+      const zoomRatio = fullTimespan / eraSpan;
+      
+      // Determine zoom level based on thresholds
+      if (zoomRatio > viewConfig.zoomRatioThresholds.verySmall) {
+        targetZoom = viewConfig.zoomLevels.verySmall;
+      } else if (zoomRatio > viewConfig.zoomRatioThresholds.small) {
+        targetZoom = viewConfig.zoomLevels.small;
+      } else if (zoomRatio > viewConfig.zoomRatioThresholds.medium) {
+        targetZoom = viewConfig.zoomLevels.medium;
+      } else if (zoomRatio > viewConfig.zoomRatioThresholds.large) {
+        targetZoom = viewConfig.zoomLevels.large;
+      } else if (zoomRatio > viewConfig.zoomRatioThresholds.veryLarge) {
+        targetZoom = viewConfig.zoomLevels.veryLarge;
+      } else {
+        targetZoom = viewConfig.zoomLevels.full;
+      }
+      
+      console.log(`Calculated zoom level: ${targetZoom} (ratio: ${zoomRatio.toFixed(2)})`);
+    }
+    
+    // Clamp zoom to valid range
+    targetZoom = Math.max(defaultTimelineViewConfig.minZoom, 
+                         Math.min(defaultTimelineViewConfig.maxZoom, targetZoom));
+    
+    // Reset view first for a clean start
+    resetView();
+    
+    // Apply zoom and pan after a short delay to allow reset to complete
+    setTimeout(() => {
+      // Set zoom level
+      scale.set(targetZoom);
+      
+      // Then pan to the specified year or midpoint
+      panToYear(yearToCenter);
+      
+      console.log(`Timeline positioned at year ${yearToCenter} with zoom ${targetZoom}`);
+    }, 300);
+  }
 </script>
 
 <div class="card-base relative overflow-hidden {asBanner ? 'h-full rounded-none' : 'h-[300px] md:h-[300px]'} {compact ? 'compact-mode' : ''}" 
@@ -854,12 +946,14 @@ export function navigateToEraRange(eraStartYear: number, eraEndYear: number) {
           data-year={event.year}
           data-era={event.era}
         >
-        <StarNode 
+      <!-- Find this section in TimelineCore.svelte where StarNode is rendered -->
+      <StarNode 
         era={event.era} 
         isKeyEvent={event.isKeyEvent} 
         isSelected={selectedEvent?.slug === event.slug}
         isHovered={hoveredEvent?.slug === event.slug}
         size={event.isKeyEvent ? 5 : 4}
+        identifier={event.slug}
       />
     </div>
         

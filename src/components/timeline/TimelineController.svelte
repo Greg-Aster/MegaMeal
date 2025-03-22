@@ -90,6 +90,46 @@
     
     // Avoid double initialization
     if (isInitialized) return;
+
+    // Initialize with saved era and position if available
+    setTimeout(() => {
+      // Check if we have a saved era
+      if ($timelineStore.lastEra && eraConfig[$timelineStore.lastEra]) {
+        console.log(`Restoring saved era: ${$timelineStore.lastEra}`);
+        
+        // Update the era dropdown to reflect the saved era
+        const eraSelect = document.querySelector('.era-select') as HTMLSelectElement;
+        if (eraSelect) {
+          eraSelect.value = $timelineStore.lastEra;
+        }
+        
+        // Set initial state based on saved values
+        if (timelineCore) {
+          // If we have saved position data, set it directly
+          if ($timelineStore.lastEraScale !== null && 
+              $timelineStore.lastEraOffsetX !== null && 
+              $timelineStore.lastEraOffsetY !== null) {
+            console.log('Restoring saved position', {
+              scale: $timelineStore.lastEraScale,
+              offsetX: $timelineStore.lastEraOffsetX,
+              offsetY: $timelineStore.lastEraOffsetY
+            });
+            
+            // Apply saved position
+            timelineCore.setPosition(
+              $timelineStore.lastEraScale,
+              $timelineStore.lastEraOffsetX,
+              $timelineStore.lastEraOffsetY
+            );
+          } else {
+            // Otherwise navigate to the era's range
+            const startYear = eraConfig[$timelineStore.lastEra].startYear;
+            const endYear = eraConfig[$timelineStore.lastEra].endYear;
+            timelineCore.navigateToEraRange(startYear, endYear);
+          }
+        }
+      }
+    }, 500); // Small delay to ensure the timeline is fully initialized
     
     try {
       // Parse events first
@@ -162,6 +202,9 @@ function handleEraFilter(e) {
   try {
     const value = e.target.value;
     
+    // Update the era in the store (this will now persist to localStorage)
+    timelineActions.setEra(value === 'all' || value === 'all-time' ? null : value);
+    
     // Handle "all" or "all-time" options
     if (value === 'all' || value === 'all-time') {
       console.log(`Resetting view for "${value}" option`);
@@ -179,6 +222,19 @@ function handleEraFilter(e) {
       // Call the navigateToEraRange function if it exists
       if (timelineCore && typeof timelineCore.navigateToEraRange === 'function') {
         timelineCore.navigateToEraRange(startYear, endYear);
+        
+        // After navigation is complete, save the position for this era
+        // We'll add a small delay to ensure the animation has time to complete
+        setTimeout(() => {
+          if (timelineCore) {
+            // Save the current position for this era
+            timelineActions.saveEraPosition(
+              timelineCore.getCurrentScale(), 
+              timelineCore.getCurrentOffsetX(), 
+              timelineCore.getCurrentOffsetY()
+            );
+          }
+        }, 500);
       } else {
         console.warn("timelineCore.navigateToEraRange function not available");
         handleResetView(); // Fallback to reset view
@@ -204,6 +260,17 @@ function handleEraFilter(e) {
     timelineActions.zoomIn();
     if (timelineCore && typeof timelineCore.zoomIn === 'function') {
       timelineCore.zoomIn();
+      
+      // Save position after zoom
+      setTimeout(() => {
+        if (timelineCore && $timelineStore.era) {
+          timelineActions.saveEraPosition(
+            timelineCore.getCurrentScale(),
+            timelineCore.getCurrentOffsetX(),
+            timelineCore.getCurrentOffsetY()
+          );
+        }
+      }, 300);
     }
   }
   
@@ -211,6 +278,17 @@ function handleEraFilter(e) {
     timelineActions.zoomOut();
     if (timelineCore && typeof timelineCore.zoomOut === 'function') {
       timelineCore.zoomOut();
+      
+      // Save position after zoom
+      setTimeout(() => {
+        if (timelineCore && $timelineStore.era) {
+          timelineActions.saveEraPosition(
+            timelineCore.getCurrentScale(),
+            timelineCore.getCurrentOffsetX(),
+            timelineCore.getCurrentOffsetY()
+          );
+        }
+      }, 300);
     }
   }
   
@@ -218,6 +296,17 @@ function handleEraFilter(e) {
     timelineActions.pan(x, y);
     if (timelineCore && typeof timelineCore.pan === 'function') {
       timelineCore.pan(x, y);
+      
+      // Save position after pan
+      setTimeout(() => {
+        if (timelineCore && $timelineStore.era) {
+          timelineActions.saveEraPosition(
+            timelineCore.getCurrentScale(),
+            timelineCore.getCurrentOffsetX(),
+            timelineCore.getCurrentOffsetY()
+          );
+        }
+      }, 300);
     }
   }
   
@@ -551,5 +640,34 @@ function handleEraFilter(e) {
     transform-origin: bottom;
     background-color: #333 !important;
     color: white !important;
+  }
+
+  /* Mobile gesture hint styles */
+  .timeline-gesture-hint {
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .timeline-gesture-hint.visible {
+    opacity: 1;
+    animation: hintPulse 3s ease-in-out 1 forwards;
+  }
+
+  @keyframes hintPulse {
+    0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
   }
 </style>
