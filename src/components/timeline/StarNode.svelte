@@ -106,12 +106,16 @@
   // For sparkle effect
   let showSparkle = false;
   let isInitialized = false;
+  let showInitAnimation = false;
   
   onMount(() => {
     isInitialized = true;
+    showInitAnimation = true;
     
-    // No need for interval animation since the orbital is CSS-only
-    // You can remove this entire interval if not needed elsewhere
+    // Remove initialization effect after it finishes
+    setTimeout(() => {
+      showInitAnimation = false;
+    }, 3000); // Match this to the animation duration
     
     return () => {
       // Nothing to clean up
@@ -205,6 +209,11 @@
     {#if isSelected}
       <div class="orbital-ring orbital-selected orbital-ring-1"></div>
       <div class="orbital-ring orbital-selected orbital-ring-2"></div>
+    {/if}
+    
+    <!-- Initialization orbital effect -->
+    {#if showInitAnimation}
+      <div class="orbital-ring orbital-init"></div>
     {/if}
   </div>
 </div>
@@ -322,6 +331,15 @@
     animation: orbital-pulse 4s infinite ease-in-out;
     animation-delay: 2s; /* Offset for second ring */
   }
+  
+  /* Initialization orbital effect */
+  .orbital-init {
+    width: calc(var(--star-size) * 5);
+    height: calc(var(--star-size) * 5);
+    animation: orbital-init 3s ease-out forwards;
+    border-color: var(--star-color);
+    border-width: 2px;
+  }
 
   /* Animation for base (non-selected) orbital - slower and more subtle */
   @keyframes orbital-pulse-base {
@@ -364,6 +382,22 @@
       transform: translate(-50%, -50%) scale(1.5) rotate(180deg);
       opacity: 0;
       border-width: 0.5px;
+    }
+  }
+  
+  /* Animation for initialization effect */
+  @keyframes orbital-init {
+    0% {
+      transform: translate(-50%, -50%) scale(0.2);
+      opacity: 0.9;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.5);
+      opacity: 0.7;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(3);
+      opacity: 0;
     }
   }
   

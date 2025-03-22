@@ -685,8 +685,8 @@ $: eventPositions = events.map((event, index) => {
   
   // Calculate background transform based on mobile state
   $: backgroundTransform = isMobile 
-    ? `scale(${1.05 + 0.05 * $scale}) translate(${-$offsetX * 0.05}px, ${-$offsetY * 0.05}px) rotate(90deg) scale(1.1)` 
-    : `scale(${1.05 + 0.05 * $scale}) translate(${-$offsetX * 0.05}px, ${-$offsetY * 0.05}px)`;
+  ? `scale(${1.05 + 0.05 * $scale}) translate(${-$offsetX * 0.05}px, ${-$offsetY * 0.05}px) rotate(90deg) scale(1.2)` 
+  : `scale(${1.05 + 0.05 * $scale}) translate(${-$offsetX * 0.05}px, ${-$offsetY * 0.05}px)`;
 
     export function panToYear(targetYear: number) {
   // Only proceed if we have valid dimensions and data
