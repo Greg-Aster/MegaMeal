@@ -76,10 +76,13 @@ export const defaultTimelineViewConfig: TimelineViewConfig = {
 
 // Define era display names with ability to customize
 export const defaultEraDisplayNames: { [key: string]: string } = {
-  'pre-spork': 'Pre-Spork Era',
-  'corporate-empire': 'Corporate Empire',
-  'snuggaloid': 'Snuggaloid Emergence',
-  'post-extinction': 'Post-Extinction Recovery',
+  'ancient-epoch': 'The Ancient Epoch',
+  'awakening-era': 'The Awakening Era',
+  'golden-age': 'The Golden Age of Qarnivor',
+  'conflict-epoch': 'The Conflict Epoch',
+  'singularity-conflict': 'Transtemporal Singularity Conflict',
+  'transcendent-age': 'The Transcendent Age',
+  'final-epoch': 'The Final Epoch',
   'unknown': 'Unknown Era'
 };
 
@@ -108,35 +111,64 @@ export const defaultEraConfig: EraConfigMap = {
     startYear: 1,
     endYear: 50000,
     zoomLevel: 1,
-    panToYear: 5000  // Center on year 5000 when viewing all time
+    panToYear: 25000  // Center on year 25000 when viewing all time
   },
-  'pre-spork': {
-    displayName: 'Pre-Spork Era',
+  'all-eras': {
+    displayName: 'All-Eras',
     startYear: 1,
-    endYear: 10000,
-    zoomLevel: 3,  // Custom zoom level
-    panToYear: -5100  // Focus on year 1500 within this era
+    endYear: 50000,
+    zoomLevel: 1.3,
+    panToYear: 25000  // Center on year 25000 when viewing all time
   },
-  'corporate-empire': {
-    displayName: 'Corporate Empire',
-    startYear: 10000,
+  'ancient-epoch': {
+    displayName: 'The Ancient Epoch',
+    startYear: 1,
+    endYear: 5000,
+    zoomLevel: 3.5,
+    panToYear: 2500
+  },
+  'awakening-era': {
+    displayName: 'The Awakening Era',
+    startYear: 5001,
     endYear: 15000,
-    zoomLevel: 4,
-    panToYear: -1000
+    zoomLevel: 3,
+    panToYear: 1000
   },
+  'golden-age': {
+    displayName: 'The Golden Age of Qarnivor',
+    startYear: 15001,
+    endYear: 25000,
+    zoomLevel: 3,
+    panToYear: 20000
+  },
+  'conflict-epoch': {
+    displayName: 'The Conflict Epoch',
+    startYear: 25001,
+    endYear: 35000,
+    zoomLevel: 3,
+    panToYear: 30000
+  },
+  // Overlapping era - spans multiple epochs
   'singularity-conflict': {
-    displayName: 'Singularity Conflict',
-    startYear: 3044,
-    endYear: 3050,
-    zoomLevel: 3,     // Higher zoom for this short but important era
-    panToYear: 3047
+    displayName: 'Transtemporal Singularity Conflict',
+    startYear: 15000,
+    endYear: 48000,
+    zoomLevel: 2,
+    panToYear: 30000
   },
-  'post-extinction': {
-    displayName: 'Post-Extinction Recovery',
-    startYear: 3050,
-    endYear: 20000,
-    zoomLevel: 1.8,
-    panToYear: 6000
+  'transcendent-age': {
+    displayName: 'The Transcendent Age',
+    startYear: 35001,
+    endYear: 45000,
+    zoomLevel: 3,
+    panToYear: 40000
+  },
+  'final-epoch': {
+    displayName: 'The Final Epoch',
+    startYear: 45001,
+    endYear: 50000,
+    zoomLevel: 3.5,
+    panToYear: 47500
   },
   'unknown': {
     displayName: 'Unknown Era',
@@ -168,6 +200,14 @@ export function getEraFromYear(year: number, eraConfig?: {[key: string]: [number
   // Find which era contains this year
   for (const [era, [startYear, endYear]] of Object.entries(config)) {
     if (year >= startYear && year < endYear) {
+      // Singularity conflict is a special case, priority given to main epoch eras
+      if (era === 'singularity-conflict') {
+        // Check if year also belongs to one of the main epochs
+        if (year >= defaultRanges['conflict-epoch'][0] && year < defaultRanges['conflict-epoch'][1]) {
+          // Let the event decide its era - do not automatically assign to singularity-conflict
+          continue;
+        }
+      }
       return era;
     }
   }
@@ -186,14 +226,43 @@ export function getEraConfigForYear(
   year: number, 
   eraConfigs: EraConfigMap
 ): {key: string, config: EraConfig} | null {
-  for (const [eraKey, config] of Object.entries(eraConfigs)) {
-    if (year >= config.startYear && year <= config.endYear) {
+  // First check main epochs
+  const mainEpochs = ['ancient-epoch', 'awakening-era', 'golden-age', 
+                     'conflict-epoch', 'transcendent-age', 'final-epoch'];
+  
+  for (const eraKey of mainEpochs) {
+    const config = eraConfigs[eraKey];
+    if (config && year >= config.startYear && year <= config.endYear) {
       return {
         key: eraKey,
         config: config
       };
     }
   }
+  
+  // Then check overlapping eras
+  for (const [eraKey, config] of Object.entries(eraConfigs)) {
+    if (!mainEpochs.includes(eraKey) && 
+        eraKey !== 'all-time' && 
+        eraKey !== 'unknown' &&
+        year >= config.startYear && year <= config.endYear) {
+      return {
+        key: eraKey,
+        config: config
+      };
+    }
+  }
+  
+  // Fall back to unknown or all-time
+  if (eraConfigs['all-time'] && 
+      year >= eraConfigs['all-time'].startYear && 
+      year <= eraConfigs['all-time'].endYear) {
+    return {
+      key: 'all-time',
+      config: eraConfigs['all-time']
+    };
+  }
+  
   return null;
 }
 
@@ -217,14 +286,20 @@ export function getEraClasses(era: string, customConfig?: EraConfigMap): string 
   
   // Default styling based on era
   switch(era) {
-    case 'pre-spork':
+    case 'ancient-epoch':
       return 'bg-[oklch(0.8_0.1_var(--hue))/0.1] dark:bg-[oklch(0.8_0.1_var(--hue))/0.2] text-[oklch(0.3_0.1_var(--hue))] dark:text-[oklch(0.8_0.1_var(--hue))]';
-    case 'spork-uprising':
+    case 'awakening-era':
       return 'bg-[oklch(0.7_0.2_var(--hue))/0.1] dark:bg-[oklch(0.7_0.2_var(--hue))/0.2] text-[oklch(0.3_0.2_var(--hue))] dark:text-[oklch(0.7_0.2_var(--hue))]';
-    case 'snuggaloid':
+    case 'golden-age':
       return 'bg-[oklch(0.6_0.3_var(--hue))/0.1] dark:bg-[oklch(0.6_0.3_var(--hue))/0.2] text-[oklch(0.3_0.3_var(--hue))] dark:text-[oklch(0.6_0.3_var(--hue))]';
-    case 'post-extinction':
+    case 'conflict-epoch':
       return 'bg-[oklch(0.5_0.1_var(--hue))/0.1] dark:bg-[oklch(0.5_0.1_var(--hue))/0.2] text-[oklch(0.2_0.1_var(--hue))] dark:text-[oklch(0.5_0.1_var(--hue))]';
+    case 'singularity-conflict':
+      return 'bg-[oklch(0.4_0.3_var(--hue))/0.1] dark:bg-[oklch(0.4_0.3_var(--hue))/0.2] text-[oklch(0.2_0.3_var(--hue))] dark:text-[oklch(0.4_0.3_var(--hue))]';
+    case 'transcendent-age':
+      return 'bg-[oklch(0.4_0.2_var(--hue))/0.1] dark:bg-[oklch(0.4_0.2_var(--hue))/0.2] text-[oklch(0.2_0.2_var(--hue))] dark:text-[oklch(0.4_0.2_var(--hue))]';
+    case 'final-epoch':
+      return 'bg-[oklch(0.3_0.3_var(--hue))/0.1] dark:bg-[oklch(0.3_0.3_var(--hue))/0.2] text-[oklch(0.1_0.3_var(--hue))] dark:text-[oklch(0.3_0.3_var(--hue))]';
     default:
       return 'bg-[oklch(0.9_0.05_var(--hue))/0.1] dark:bg-[oklch(0.3_0.05_var(--hue))/0.2] text-[oklch(0.4_0.05_var(--hue))] dark:text-[oklch(0.9_0.05_var(--hue))]';
   }
@@ -283,8 +358,8 @@ export function groupEventsByEra(events: TimelineEvent[]): { [era: string]: Time
   const sortedGrouped: { [era: string]: TimelineEvent[] } = {};
   Object.keys(grouped)
     .sort((a, b) => {
-      const aFirstYear = grouped[a][0].year;
-      const bFirstYear = grouped[b][0].year;
+      const aFirstYear = Math.min(...grouped[a].map(e => e.year));
+      const bFirstYear = Math.min(...grouped[b].map(e => e.year));
       return aFirstYear - bFirstYear;
     })
     .forEach(era => {

@@ -19,7 +19,8 @@
   export let background: string = '/assets/banner/0001.png';
   export let compact: boolean = false;
   export let asBanner: boolean = false;
-  
+  export let useEraColors: boolean = false;
+    
   // Internal state
   let timelineContainer: HTMLElement;
   let selectedEvent: TimelineEvent | null = null;
@@ -802,6 +803,7 @@
   }
 
   export function navigateToEraRange(eraStartYear: number, eraEndYear: number) {
+    const jitter = Math.random() * 0.05;
     if (!eraStartYear || !eraEndYear) {
       console.warn("Invalid era range:", eraStartYear, eraEndYear);
       return;
@@ -878,7 +880,7 @@
     // Apply zoom and pan after a short delay to allow reset to complete
     setTimeout(() => {
       // Set zoom level
-      scale.set(targetZoom);
+      scale.set(targetZoom + (eraStartYear === 1 ? jitter : 0));
       
       // Then pan to the specified year or midpoint
       panToYear(yearToCenter);
@@ -931,12 +933,12 @@
     <div class="timeline-end-marker absolute {isMobile ? 'bottom-[15%] h-[4px] left-[40%] right-[60%]' : 'right-[15%] w-[4px] top-[40%] bottom-[60%]'} bg-[oklch(0.7_0.2_var(--hue))] opacity-60 rounded-full"></div>
 
     <!-- Events -->
-      {#each eventPositions as { event, timelinePosition, offsetPosition, floatClass, shouldFloat }, i}
-      <div 
-        class="timeline-event absolute {isMobile ? 'timeline-event-mobile' : 'timeline-event-desktop'} {!isMobile && shouldFloat ? floatClass : ''}"
-        style={isMobile ? 
-          `top: ${timelinePosition}%; left: 50%; transform: translate(${offsetPosition}px, 0) scale(${1/$scale});` : 
-          `left: ${timelinePosition}%; top: 50%; transform: translate(0, ${offsetPosition}px) scale(${1/$scale});`
+    {#each eventPositions as { event, timelinePosition, offsetPosition, floatClass, shouldFloat }, i (event.slug + '-' + useEraColors)}
+    <div 
+      class="timeline-event absolute {isMobile ? 'timeline-event-mobile' : 'timeline-event-desktop'} {!isMobile && shouldFloat ? floatClass : ''}"
+      style={isMobile ? 
+        `top: ${timelinePosition}%; left: 50%; transform: translate(${offsetPosition}px, 0) scale(${1/$scale});` : 
+        `left: ${timelinePosition}%; top: 50%; transform: translate(0, ${offsetPosition}px) scale(${1/$scale});`
         }
       >
         <!-- Star node with data attributes for DOM event handling -->
@@ -947,14 +949,16 @@
           data-era={event.era}
         >
       <!-- Find this section in TimelineCore.svelte where StarNode is rendered -->
-      <StarNode 
-        era={event.era} 
-        isKeyEvent={event.isKeyEvent} 
-        isSelected={selectedEvent?.slug === event.slug}
-        isHovered={hoveredEvent?.slug === event.slug}
-        size={event.isKeyEvent ? 5 : 4}
-        identifier={event.slug}
-      />
+    <!-- In TimelineCore.svelte, find where StarNode is rendered (around line 850) -->
+    <StarNode 
+      era={event.era} 
+      isKeyEvent={event.isKeyEvent} 
+      isSelected={selectedEvent?.slug === event.slug}
+      isHovered={hoveredEvent?.slug === event.slug}
+      size={event.isKeyEvent ? 5 : 4}
+      identifier={event.slug}
+      {useEraColors}
+    />
     </div>
         
   <!-- Only show card if this event is selected or hovered AND NOT in mobile mode -->

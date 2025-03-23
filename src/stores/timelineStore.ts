@@ -67,16 +67,20 @@ function loadSavedPreferences(): Partial<TimelineViewState> {
   
   try {
     if (typeof window !== 'undefined') { // Check if we're in a browser
+      console.log("Loading timeline preferences from localStorage");
+      
       // Load view mode preference
       const savedViewMode = localStorage.getItem('timeline-view-preference');
       if (savedViewMode && ['timeline', 'list', 'tree', 'map'].includes(savedViewMode)) {
         savedPrefs.viewMode = savedViewMode as any;
+        console.log(`Loaded view mode: ${savedViewMode}`);
       }
       
       // Load compact mode preference
       const savedCompact = localStorage.getItem('timeline-compact-mode');
       if (savedCompact) {
         savedPrefs.compact = savedCompact === 'true';
+        console.log(`Loaded compact mode: ${savedCompact}`);
       }
       
       // Load last selected era
@@ -84,39 +88,69 @@ function loadSavedPreferences(): Partial<TimelineViewState> {
       if (savedEra) {
         savedPrefs.lastEra = savedEra;
         savedPrefs.era = savedEra; // Also set as current era
+        console.log(`Loaded era: ${savedEra}`);
+      } else {
+        // Explicit default: no era selected (all time view)
+        console.log("No saved era found, defaulting to null (all time)");
+        savedPrefs.lastEra = null;
+        savedPrefs.era = null;
       }
       
       // Load navigation state for the era
       const savedScale = localStorage.getItem('timeline-last-era-scale');
       if (savedScale) {
-        savedPrefs.lastEraScale = parseFloat(savedScale);
-        savedPrefs.scale = parseFloat(savedScale);
+        const scale = parseFloat(savedScale);
+        if (!isNaN(scale) && isFinite(scale) && scale > 0) {
+          savedPrefs.lastEraScale = scale;
+          savedPrefs.scale = scale;
+          console.log(`Loaded scale: ${scale}`);
+        } else {
+          console.warn(`Invalid saved scale: ${savedScale}`);
+        }
       }
       
       const savedOffsetX = localStorage.getItem('timeline-last-era-offset-x');
       if (savedOffsetX) {
-        savedPrefs.lastEraOffsetX = parseFloat(savedOffsetX);
-        savedPrefs.offsetX = parseFloat(savedOffsetX);
+        const offsetX = parseFloat(savedOffsetX);
+        if (!isNaN(offsetX) && isFinite(offsetX)) {
+          savedPrefs.lastEraOffsetX = offsetX;
+          savedPrefs.offsetX = offsetX;
+          console.log(`Loaded offsetX: ${offsetX}`);
+        } else {
+          console.warn(`Invalid saved offsetX: ${savedOffsetX}`);
+        }
       }
       
       const savedOffsetY = localStorage.getItem('timeline-last-era-offset-y');
       if (savedOffsetY) {
-        savedPrefs.lastEraOffsetY = parseFloat(savedOffsetY);
-        savedPrefs.offsetY = parseFloat(savedOffsetY);
+        const offsetY = parseFloat(savedOffsetY);
+        if (!isNaN(offsetY) && isFinite(offsetY)) {
+          savedPrefs.lastEraOffsetY = offsetY;
+          savedPrefs.offsetY = offsetY;
+          console.log(`Loaded offsetY: ${offsetY}`);
+        } else {
+          console.warn(`Invalid saved offsetY: ${savedOffsetY}`);
+        }
       }
     }
   } catch (e) {
     // Ignore localStorage errors (happens in incognito or when storage is disabled)
-    console.log('Unable to load timeline preferences from localStorage');
+    console.log('Unable to load timeline preferences from localStorage:', e);
+    
+    // Set defaults on error
+    savedPrefs.lastEra = null;
+    savedPrefs.era = null;
   }
   
   return savedPrefs;
 }
 
-// Save current view state to localStorage
+// Save current view state to localStorage with better validation
 function saveViewState(state: TimelineViewState) {
   try {
     if (typeof window !== 'undefined') {
+      console.log("Saving timeline preferences to localStorage");
+      
       // Save view mode
       localStorage.setItem('timeline-view-preference', state.viewMode);
       
@@ -125,13 +159,35 @@ function saveViewState(state: TimelineViewState) {
       
       // Save current era if set
       if (state.era) {
+        console.log(`Saving era to localStorage: ${state.era}`);
         localStorage.setItem('timeline-last-era', state.era);
+      } else if (state.lastEra) {
+        // If we're setting era to null but have a lastEra, make sure we don't lose it
+        console.log(`Maintaining lastEra in localStorage: ${state.lastEra}`);
+      } else {
+        // If no era is selected, clear the saved era
+        console.log("Clearing saved era (setting to null)");
+        localStorage.removeItem('timeline-last-era');
       }
       
-      // Save navigation state
-      localStorage.setItem('timeline-last-era-scale', String(state.scale));
-      localStorage.setItem('timeline-last-era-offset-x', String(state.offsetX));
-      localStorage.setItem('timeline-last-era-offset-y', String(state.offsetY));
+      // Save navigation state only if we have valid numbers
+      if (isFinite(state.scale) && state.scale > 0) {
+        localStorage.setItem('timeline-last-era-scale', String(state.scale));
+      } else {
+        console.warn(`Not saving invalid scale: ${state.scale}`);
+      }
+      
+      if (isFinite(state.offsetX)) {
+        localStorage.setItem('timeline-last-era-offset-x', String(state.offsetX));
+      } else {
+        console.warn(`Not saving invalid offsetX: ${state.offsetX}`);
+      }
+      
+      if (isFinite(state.offsetY)) {
+        localStorage.setItem('timeline-last-era-offset-y', String(state.offsetY));
+      } else {
+        console.warn(`Not saving invalid offsetY: ${state.offsetY}`);
+      }
     }
   } catch (e) {
     // Ignore localStorage errors
@@ -180,14 +236,16 @@ const actions = {
   // Navigation controls
   zoomIn: () => 
     baseStore.update(state => {
-      const newState = { ...state, scale: Math.min(5, state.scale + 0.2) };
+      const newScale = Math.min(5, state.scale + 0.2);
+      const newState = { ...state, scale: newScale };
       saveViewState(newState);
       return newState;
     }),
   
   zoomOut: () => 
     baseStore.update(state => {
-      const newState = { ...state, scale: Math.max(0.5, state.scale - 0.2) };
+      const newScale = Math.max(0.5, state.scale - 0.2);
+      const newState = { ...state, scale: newScale };
       saveViewState(newState);
       return newState;
     }),
@@ -225,6 +283,7 @@ const actions = {
   
   setEra: (era: string | null) => 
     baseStore.update(state => {
+      console.log(`Setting era in store: ${era}`);
       const newState = { ...state, era, lastEra: era };
       saveViewState(newState);
       return newState;
@@ -242,7 +301,19 @@ const actions = {
   // Save the current position for the current era
   saveEraPosition: (scale: number, offsetX: number, offsetY: number) =>
     baseStore.update(state => {
-      if (!state.era) return state;
+      // Validate inputs to avoid NaN or infinite values
+      if (!isFinite(scale) || !isFinite(offsetX) || !isFinite(offsetY)) {
+        console.warn("Invalid position values:", { scale, offsetX, offsetY });
+        return state;
+      }
+      
+      // Only update if we have a valid era
+      if (!state.era) {
+        console.log("Not saving position - no era selected");
+        return state;
+      }
+      
+      console.log(`Saving position for era ${state.era}:`, { scale, offsetX, offsetY });
       
       const newState = {
         ...state,
@@ -276,7 +347,7 @@ export const filteredEvents = derived(baseStore, ($store, set) => {
     category: $store.category || undefined,
     startYear: $store.startYear || undefined,
     endYear: $store.endYear || undefined,
-    era: $store.era || undefined,
+    era: $store.era === 'all-eras' || $store.era === 'all-time' ? undefined : $store.era,
     onlyKeyEvents: $store.showOnlyKeyEvents
   });
   

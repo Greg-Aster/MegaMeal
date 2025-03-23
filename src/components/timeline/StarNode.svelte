@@ -7,16 +7,21 @@
   export let isSelected: boolean = false;
   export let isHovered: boolean = false;
   export let size: number = 8;
-  // Add this new prop for a unique identifier (slug, id, etc.)
   export let identifier: string = Math.random().toString(36).substring(2, 10);
+  export let useEraColors: boolean = false;
+
   
-  // Era color mapping 
-  const eraColorMap = {
-    'pre-spork': '#3b82f6',      // Blue
-    'spork-uprising': '#8b5cf6', // Purple
-    'snuggaloid': '#ec4899',     // Pink
-    'post-extinction': '#14b8a6' // Teal
-  };
+// Era color mapping 
+const eraColorMap = {
+  'ancient-epoch': '#3b82f6',        // Blue
+  'awakening-era': '#8b5cf6',        // Purple
+  'golden-age': '#f59e0b',           // Orange
+  'conflict-epoch': '#ec4899',       // Pink
+  'singularity-conflict': '#ef4444', // Red
+  'transcendent-age': '#14b8a6',     // Teal
+  'final-epoch': '#22c55e',          // Green
+  'unknown': '#6366f1'               // Indigo
+};
   
   // Full color spectrum with direct color values
   const colorSpectrum = [
@@ -58,7 +63,13 @@
   }
   
   // Get a color from the color spectrum (without using era colors)
-  function getStarColor(id: string): string {
+    function getStarColor(id: string): string {
+    // If useEraColors is true and we have a valid era, use the era color
+    if (useEraColors && era && eraColorMap[era]) {
+      return eraColorMap[era];
+    }
+    
+    // Otherwise use the original random color based on id
     const hash = hashCode(id);
     return colorSpectrum[hash % colorSpectrum.length];
   }
@@ -319,8 +330,8 @@
 
   /* Enhanced orbitals only for selected stars - larger and faster */
   .orbital-selected.orbital-ring-1 {
-    width: calc(var(--star-size) * 3);
-    height: calc(var(--star-size) * 3);
+    width: calc(var(--star-size) * 5);
+    height: calc(var(--star-size) * 5);
     animation: orbital-pulse 4s infinite ease-in-out;
   }
 

@@ -74,8 +74,64 @@
     }, 3000) as unknown as number;
   }
   
+  // New function to initialize timeline with saved era
+  function initializeTimeline() {
+    // 1. Get the current configuration
+    const availableEras = Object.keys(eraConfig);
+    const savedEra = $timelineStore.era || $timelineStore.lastEra;
+    
+    console.log("Available eras:", availableEras);
+    console.log("Saved era:", savedEra);
+    
+    // 2. Validate the era
+    const isValidEra = savedEra && availableEras.includes(savedEra);
+    
+    // 3. Set the dropdown value (UI state)
+    const eraSelect = document.querySelector('.era-select') as HTMLSelectElement;
+    if (eraSelect) {
+      eraSelect.value = isValidEra ? savedEra : 'all';
+    }
+    
+    // 4. Apply the navigation
+    if (isValidEra && timelineCore) {
+      // If we have saved position data for this era, use it
+      if ($timelineStore.lastEraScale !== null && 
+          $timelineStore.lastEraOffsetX !== null && 
+          $timelineStore.lastEraOffsetY !== null) {
+        console.log('Restoring saved position', {
+          scale: $timelineStore.lastEraScale,
+          offsetX: $timelineStore.lastEraOffsetX,
+          offsetY: $timelineStore.lastEraOffsetY
+        });
+        timelineCore.setPosition(
+          $timelineStore.lastEraScale, 
+          $timelineStore.lastEraOffsetX, 
+          $timelineStore.lastEraOffsetY
+        );
+      } else {
+        // Otherwise navigate to the era's range
+        const config = eraConfig[savedEra];
+        console.log(`Navigating to era range: ${config.startYear}-${config.endYear}`);
+        timelineCore.navigateToEraRange(config.startYear, config.endYear);
+      }
+    } else {
+      // Default to 'all' view
+      console.log("No valid era found, using default 'all' view");
+      if (timelineCore) {
+        timelineCore.resetView();
+      }
+      // Update the store if needed
+      if (savedEra && !isValidEra) {
+        console.log(`Clearing invalid era: ${savedEra}`);
+        timelineActions.setEra(null);
+      }
+    }
+  }
+  
   // Initialize the component only after mounting
   onMount(() => {
+    console.log("Timeline controller mounting");
+    
     // Check for mobile view
     checkMobileView();
     
@@ -91,46 +147,6 @@
     // Avoid double initialization
     if (isInitialized) return;
 
-    // Initialize with saved era and position if available
-    setTimeout(() => {
-      // Check if we have a saved era
-      if ($timelineStore.lastEra && eraConfig[$timelineStore.lastEra]) {
-        console.log(`Restoring saved era: ${$timelineStore.lastEra}`);
-        
-        // Update the era dropdown to reflect the saved era
-        const eraSelect = document.querySelector('.era-select') as HTMLSelectElement;
-        if (eraSelect) {
-          eraSelect.value = $timelineStore.lastEra;
-        }
-        
-        // Set initial state based on saved values
-        if (timelineCore) {
-          // If we have saved position data, set it directly
-          if ($timelineStore.lastEraScale !== null && 
-              $timelineStore.lastEraOffsetX !== null && 
-              $timelineStore.lastEraOffsetY !== null) {
-            console.log('Restoring saved position', {
-              scale: $timelineStore.lastEraScale,
-              offsetX: $timelineStore.lastEraOffsetX,
-              offsetY: $timelineStore.lastEraOffsetY
-            });
-            
-            // Apply saved position
-            timelineCore.setPosition(
-              $timelineStore.lastEraScale,
-              $timelineStore.lastEraOffsetX,
-              $timelineStore.lastEraOffsetY
-            );
-          } else {
-            // Otherwise navigate to the era's range
-            const startYear = eraConfig[$timelineStore.lastEra].startYear;
-            const endYear = eraConfig[$timelineStore.lastEra].endYear;
-            timelineCore.navigateToEraRange(startYear, endYear);
-          }
-        }
-      }
-    }, 500); // Small delay to ensure the timeline is fully initialized
-    
     try {
       // Parse events first
       const events = parseEvents(initialEvents);
@@ -180,6 +196,28 @@
       // Mark as initialized
       isInitialized = true;
       
+      // Initialize timeline with proper era after a short delay
+      // to ensure timelineCore is ready
+      setTimeout(() => {
+        if (timelineCore) {
+          console.log("TimelineCore is ready, initializing timeline");
+          initializeTimeline();
+        } else {
+          console.log("TimelineCore not ready yet, setting up interval check");
+          // If timeline core isn't ready yet, wait for it
+          const checkInterval = setInterval(() => {
+            if (timelineCore) {
+              console.log("TimelineCore is now ready, initializing timeline");
+              initializeTimeline();
+              clearInterval(checkInterval);
+            }
+          }, 100);
+          
+          // Clear interval after max 2 seconds to prevent infinite loop
+          setTimeout(() => clearInterval(checkInterval), 2000);
+        }
+      }, 100);
+      
     } catch (e) {
       console.error("Error initializing timeline:", e);
       error = "Failed to initialize timeline";
@@ -197,56 +235,71 @@
     };
   });
   
-// In TimelineController.svelte - replace the current handleEraFilter function with this
-function handleEraFilter(e) {
-  try {
+  // Improved handleEraFilter function with clear validation and logging
+  function handleEraFilter(e) {
     const value = e.target.value;
+    console.log(`Era selected from dropdown: ${value}`);
     
-    // Update the era in the store (this will now persist to localStorage)
-    timelineActions.setEra(value === 'all' || value === 'all-time' ? null : value);
+  // Handle "all" or "all-time" options more directly
+  if (value === 'all') {
+    console.log(`Setting view for "All Eras" option`);
+    timelineActions.setEra('all-eras');
     
-    // Handle "all" or "all-time" options
-    if (value === 'all' || value === 'all-time') {
-      console.log(`Resetting view for "${value}" option`);
-      handleResetView();
-      return;
-    }
-    
-    // For specific era selection
-    if (eraConfig[value]) {
-      const startYear = eraConfig[value].startYear;
-      const endYear = eraConfig[value].endYear;
-      
-      console.log(`Era selected: ${value} (${startYear}-${endYear})`);
-      
-      // Call the navigateToEraRange function if it exists
-      if (timelineCore && typeof timelineCore.navigateToEraRange === 'function') {
-        timelineCore.navigateToEraRange(startYear, endYear);
-        
-        // After navigation is complete, save the position for this era
-        // We'll add a small delay to ensure the animation has time to complete
-        setTimeout(() => {
-          if (timelineCore) {
-            // Save the current position for this era
-            timelineActions.saveEraPosition(
-              timelineCore.getCurrentScale(), 
-              timelineCore.getCurrentOffsetX(), 
-              timelineCore.getCurrentOffsetY()
-            );
-          }
-        }, 500);
-      } else {
-        console.warn("timelineCore.navigateToEraRange function not available");
-        handleResetView(); // Fallback to reset view
-      }
+    if (timelineCore && typeof timelineCore.navigateToEraRange === 'function') {
+      timelineCore.navigateToEraRange(eraConfig['all-eras'].startYear, eraConfig['all-eras'].endYear);
     } else {
-      console.warn(`Unknown era selected: ${value}`);
-      handleResetView(); // Fallback to reset view
+      handleResetView();
     }
-  } catch (err) {
-    console.error("Error handling era filter:", err);
-    // Fallback to reset view on error
+    return;
+  } else if (value === 'all-time') {
+    console.log(`Setting view for "All Time" option`);
+    timelineActions.setEra('all-time');
+    
+    if (timelineCore && typeof timelineCore.navigateToEraRange === 'function') {
+      timelineCore.navigateToEraRange(eraConfig['all-time'].startYear, eraConfig['all-time'].endYear);
+    } else {
+      handleResetView();
+    }
+    return;
+  }
+  
+  // Validate era exists in config
+  if (!eraConfig[value]) {
+    console.warn(`Invalid era selected: ${value}`);
+    e.target.value = 'all'; // Reset dropdown to "all"
+    timelineActions.setEra(null);
     handleResetView();
+    return;
+  }
+  
+  // For specific era selection
+  const startYear = eraConfig[value].startYear;
+  const endYear = eraConfig[value].endYear;
+  
+  console.log(`Era selected: ${value} (${startYear}-${endYear})`);
+  
+  // Update the era in the store (this will persist to localStorage)
+  timelineActions.setEra(value);
+  
+  // Call the navigateToEraRange function if it exists
+  if (timelineCore && typeof timelineCore.navigateToEraRange === 'function') {
+    timelineCore.navigateToEraRange(startYear, endYear);
+    
+    // After navigation is complete, save the position for this era
+    // We'll add a delay to ensure the animation has time to complete
+    setTimeout(() => {
+      if (timelineCore) {
+        // Save the current position for this era
+        timelineActions.saveEraPosition(
+          timelineCore.getCurrentScale(), 
+          timelineCore.getCurrentOffsetX(), 
+          timelineCore.getCurrentOffsetY()
+        );
+      }
+    }, 500);
+  } else {
+    console.warn("timelineCore.navigateToEraRange function not available");
+    handleResetView(); // Fallback to reset view
   }
 }
   
@@ -338,6 +391,9 @@ function handleEraFilter(e) {
   
   // Define currentHeight as a reactive variable
   $: currentHeight = asBanner ? (isMobile ? '600px' : bannerHeight) : "500px";
+  $: useEraColors = $timelineStore.era === 'all-eras';
+
+
 </script>
 
 <div class="timeline-wrapper relative w-full overflow-hidden {asBanner ? 'timeline-banner-mode' : ''}" 
@@ -373,20 +429,21 @@ function handleEraFilter(e) {
         </div>
       {/if}
       
-      <!-- Timeline View -->
-      <div class="w-full h-full {$timelineStore.viewMode !== 'timeline' ? 'hidden' : ''}">
-        <TimelineCore
-        bind:this={timelineCore}
-        events={$filteredEvents}
-        {startYear}
-        {endYear}
-        background={$timelineStore.background}
-        compact={$timelineStore.compact}
-        {asBanner}
-        on:select={handleSelectEvent}
-        on:deselect={handleDeselectEvent}
-        />
-      </div>
+    <!-- Timeline View -->
+    <div class="w-full h-full {$timelineStore.viewMode !== 'timeline' ? 'hidden' : ''}">
+      <TimelineCore
+      bind:this={timelineCore}
+      events={$filteredEvents}
+      {startYear}
+      {endYear}
+      background={$timelineStore.background}
+      compact={$timelineStore.compact}
+      {asBanner}
+      {useEraColors}
+      on:select={handleSelectEvent}
+      on:deselect={handleDeselectEvent}
+    />
+    </div>
       
       <!-- List View -->
       <div class="timeline-view pt-4 relative {$timelineStore.viewMode !== 'list' ? 'hidden' : ''}">
@@ -426,21 +483,20 @@ function handleEraFilter(e) {
       <div class="flex items-center">
         <div class="era-dropdown-container">
 <!--           <span class="text-xs mr-2" style="color: white;">Era:</span> -->
-          <select on:change={handleEraFilter}
-                  class="bg-black/40 hover:bg-black/50 text-xs px-2 py-1 rounded-md border border-white/20 era-select"
-                  style="color: white; background-color: rgba(0,0,0,0.4); font-size: 0.75rem;"
-                  aria-label="Select era">
-            <option value="all">All Eras</option>
-            <!-- Remove this redundant option -->
-            <!-- <option value="all-time">All Time</option> -->
-            {#each Object.entries(eraConfig) as [value, config]}
-              <option value={value}
-                      data-start-year={config.startYear}
-                      data-end-year={config.endYear}>
-                {config.displayName}
-              </option>
-            {/each}
-          </select>
+      <select on:change={handleEraFilter}
+              class="bg-black/40 hover:bg-black/50 text-xs px-2 py-1 rounded-md border border-white/20 era-select"
+              style="color: white; background-color: rgba(0,0,0,0.4); font-size: 0.75rem;"
+              aria-label="Select era">
+        <option value="all-eras">All Eras</option>
+        <option value="all-time">All Time</option>
+        {#each Object.entries(eraConfig).filter(([key]) => !['all-eras', 'all-time'].includes(key)) as [value, config]}
+          <option value={value}
+                  data-start-year={config.startYear}
+                  data-end-year={config.endYear}>
+            {config.displayName}
+          </option>
+        {/each}
+      </select>
         </div>
       </div>
         

@@ -79,11 +79,13 @@ export function processTimelineEvents(
   });
   
   // Apply filters
+  // In processTimelineEvents function, modify the filter to handle special cases
   processedEvents = processedEvents.filter((event: TimelineEvent) => {
     if (category && event.category !== category) return false;
     if (startYear && event.year < startYear) return false;
     if (endYear && event.year > endYear) return false;
-    if (era && event.era !== era) return false;
+    // Special case for all-eras and all-time - don't filter by era
+    if (era && era !== 'all-eras' && era !== 'all-time' && event.era !== era) return false;
     if (onlyKeyEvents && !event.isKeyEvent) return false;
     return true;
   });
