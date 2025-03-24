@@ -44,12 +44,12 @@ export const navBarConfig: NavBarConfig = {
     LinkPreset.Home,
     {
       name: 'Projects',
-      url: '/archive/category/Projects/', // Main projects page
+      url: '/archive/', // Main projects page
       dropdown: [
         {
           name: 'Mega Meal',
-          url: 'https://www.youtube.com/playlist?list=PLLmfUsn8D20UZeZQHgXfn_m4Yv_zxTb2O',
-          external: true,
+          url: '/posts/timeline/',
+          //external: false,
         },
         {
           name: 'Various',
@@ -62,7 +62,7 @@ export const navBarConfig: NavBarConfig = {
           external: true,
         },
         {
-          name: 'Escape Prime',
+          name: 'Escape Earth',
           url: 'https://youtu.be/YBo0yp5xe6k?feature=shared',
           external: true,
         },
