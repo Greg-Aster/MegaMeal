@@ -3,7 +3,7 @@ import ImageWrapper from '../misc/ImageWrapper.astro'
 import { Icon } from 'astro-icon/components'
 import { profileConfig } from '../../config'
 import { url } from '../../utils/url-utils'
-import { Image } from 'astro:assets'; // Import the Image component
+import { Image } from 'astro:assets';
 
 // Import avatar images
 import avatar from 'src/assets/avatar/avatar.png';
@@ -13,7 +13,7 @@ import avatar4 from 'src/assets/avatar/avatar4.png';
 import avatar5 from 'src/assets/avatar/avatar5.png';
 import avatar6 from 'src/assets/avatar/avatar6.png';
 
-// Update your avatarList to use the imported images
+// Define avatar list directly in this component
 const avatarList = [
   avatar,
   avatar2,
@@ -23,6 +23,43 @@ const avatarList = [
   avatar6,
 ];
 
+// Determine avatar index from post slug if no custom avatar is specified
+function getAvatarIndexFromSlug(slug: string = ''): number {
+  if (!slug) return 0; // Default to first avatar if no slug
+  
+  // Simple hash function to get consistent avatar for each slug
+  let hash = 0;
+  for (let i = 0; i < slug.length; i++) {
+    hash = ((hash << 5) - hash) + slug.charCodeAt(i);
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  
+  // Ensure positive index and map to available avatars
+  return Math.abs(hash) % avatarList.length;
+}
+
+interface Props {
+  slug?: string;           // Post slug to determine avatar
+  customAvatar?: string;   // Custom avatar path from frontmatter
+  customName?: string;     // Custom author name from frontmatter
+  customBio?: string;      // Custom author bio from frontmatter
+}
+
+const { 
+  slug = '', 
+  customAvatar = '',
+  customName = '',
+  customBio = '' 
+} = Astro.props;
+
+const useDefaultAvatars = !customAvatar;
+const activeAvatarIndex = useDefaultAvatars ? getAvatarIndexFromSlug(slug) : 0;
+
+// Use custom name/bio or fall back to config defaults
+const displayName = customName || profileConfig.name;
+const displayBio = customBio || profileConfig.bio;
+
+// Get social links from config
 const config = profileConfig;
 ---
 <div class="card-base p-3">
@@ -39,25 +76,38 @@ const config = profileConfig;
     </div>
     <!-- Image container with relative positioning -->
     <div class="relative w-full aspect-square">
-      {avatarList.map((src, index) => (
-        <Image
-          src={src}
-          alt="Profile Image of the Author"
-          width={512} 
-          height={512}
-          fetchpriority={index === 0 ? 'high' : undefined}
-          loading={index === 0 ? 'eager' : 'lazy'}
-          class={`avatar-image absolute inset-0 w-full h-full object-contain transition-opacity duration-1000 ${
-            index === 0 ? 'opacity-100' : 'opacity-0'
-          }`}
-        />
-      ))}
+      {useDefaultAvatars ? (
+        // Show default avatar list with the active one visible
+        avatarList.map((src, index) => (
+          <Image
+            src={src}
+            alt="Profile Image of the Author"
+            width={512} 
+            height={512}
+            fetchpriority={index === activeAvatarIndex ? 'high' : undefined}
+            loading={index === activeAvatarIndex ? 'eager' : 'lazy'}
+            class={`avatar-image absolute inset-0 w-full h-full object-contain transition-opacity duration-1000 ${
+              index === activeAvatarIndex ? 'opacity-100' : 'opacity-0'
+            }`}
+            id={`avatar-${index}`}
+          />
+        ))
+      ) : (
+        // Show custom avatar from frontmatter
+        <div class="avatar-image absolute inset-0 w-full h-full object-contain opacity-100">
+          <ImageWrapper
+            src={customAvatar}
+            alt={`Profile Image of ${displayName}`}
+            class="w-full h-full object-contain"
+          />
+        </div>
+      )}
     </div>
   </a>
   <div class="px-2">
-    <div class="font-bold text-xl text-center mb-1 dark:text-neutral-50 transition">{config.name}</div>
+    <div class="font-bold text-xl text-center mb-1 dark:text-neutral-50 transition">{displayName}</div>
     <div class="h-1 w-5 bg-[var(--primary)] mx-auto rounded-full mb-2 transition"></div>
-    <div class="text-center text-neutral-400 mb-2.5 transition">{config.bio}</div>
+    <div class="text-center text-neutral-400 mb-2.5 transition">{displayBio}</div>
     <div class="flex gap-2 justify-center mb-1">
       {config.links.length > 1 &&
         config.links.map((item) => (
@@ -89,8 +139,22 @@ const config = profileConfig;
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  // Only run avatar rotation if using the default avatars
+  const customAvatar = document.querySelector('.avatar-image:not([id])');
+  if (customAvatar) return; // Don't animate if using custom avatar
+  
   const avatarImages = document.querySelectorAll('.avatar-image');
-  let currentIndex = 0;
+  if (!avatarImages.length) return;
+  
+  // Get the active avatar index from the first visible avatar
+  let currentIndex = Array.from(avatarImages).findIndex(
+    img => (img as HTMLImageElement).style.opacity === '1' || 
+           (img as HTMLImageElement).classList.contains('opacity-100')
+  );
+  
+  // If no visible avatar found, default to first one
+  if (currentIndex === -1) currentIndex = 0;
+  
   let direction = 1; // 1 = downward, -1 = upward
 
   function animateAvatar() {

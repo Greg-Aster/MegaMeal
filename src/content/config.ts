@@ -9,20 +9,24 @@ const postsCollection = defineCollection({
     draft: z.boolean().optional().default(false),
     description: z.string().optional().default(''),
     image: z.string().optional().default(''),
+    // Custom author profile fields
+    avatarImage: z.string().optional(), // Custom path to avatar image
+    authorName: z.string().optional(),  // Custom author name 
+    authorBio: z.string().optional(),   // Custom author bio
     tags: z.array(z.string()).optional().default([]),
     category: z.string().optional().default(''),
     lang: z.string().optional().default(''),
     showImageOnPost: z.boolean().optional(),
     
-    // New fields for video banner
-  bannerType: z.enum(['image', 'video', 'timeline']).optional(),
-  bannerData: z.object({
-    videoId: z.string().optional(), // Change this from required to optional
-    category: z.string().optional(), // For timeline banners
-    startYear: z.number().optional(), // For timeline banners
-    endYear: z.number().optional(), // For timeline banners
-    background: z.string().optional(), // For timeline banners
-}).optional(),
+    // Banner types
+    bannerType: z.enum(['image', 'video', 'timeline']).optional(),
+    bannerData: z.object({
+      videoId: z.string().optional(),
+      category: z.string().optional(),
+      startYear: z.number().optional(),
+      endYear: z.number().optional(),
+      background: z.string().optional(),
+    }).optional(),
 
     // Timeline properties
     timelineYear: z.number().optional(),
@@ -30,7 +34,6 @@ const postsCollection = defineCollection({
     timelineLocation: z.string().optional(),
     isKeyEvent: z.boolean().optional(),
     yIndex: z.number().optional(),
-
 
     /* For internal use */
     prevTitle: z.string().default(''),
@@ -40,7 +43,7 @@ const postsCollection = defineCollection({
   }),
 });
 
-// Define the 'spec' collection
+// Rest of your collections
 const specCollection = defineCollection({
   schema: z.object({
     title: z.string(),
@@ -48,7 +51,6 @@ const specCollection = defineCollection({
   }),
 });
 
-// Define the 'team' collection
 const teamCollection = defineCollection({
   schema: z.object({
     name: z.string(),

@@ -2,7 +2,11 @@
 title: "Ouroboros: A Taste of Self-Discovery"
 published: 2025-03-22
 description: "Renowned culinary explorer A. Boudin Noir ventures into Ouroboros, the controversial establishment where patrons consume portions of their own body in an elegant dining experience that redefines the concept of 'local' ingredients."
-image: "/posts/restaurant-reviews/ouroboros-exterior.jpg"
+image: "/posts/timeline/Ouroboros.png"
+# Custom author profile fields
+avatarImage: "/posts/timeline/boudin1.png"
+authorName: "A. Boudin Noir"
+authorBio: "Culinary Explorer & Food Critic"
 showImageOnPost: true
 tags: [Restaurant Review, Culinary Exploration, Fine Dining, Body Modification]
 category: "MEGA MEAL"
@@ -31,7 +35,7 @@ import ImageWrapper from '../../../components/misc/ImageWrapper.astro';
 
 <div className="card-base p-10 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition shadow-lg mb-8 overflow-hidden relative">
   <p className="text-lg text-gray-700 dark:text-neutral-300 italic mb-4">
-    "The serpent eats its tail, the diner eats their thumb. At Ouroboros, the cycle of consumption folds back upon itself in an elegant dance of knives, cauterization, and white tablecloths stained with the only blood that's truly yours to spill."
+    "The serpent eats its tail, the diner becomes the feast. At Ouroboros, the cycle of consumption folds back upon itself in an elegant dance of knives and white tablecloths stained with the only blood that's truly yours to spill."
   </p>
   <div className="text-right">
     <p className="text-lg text-gray-700 dark:text-neutral-300 font-bold">— A. Boudin Noir</p>
@@ -39,11 +43,13 @@ import ImageWrapper from '../../../components/misc/ImageWrapper.astro';
 </div>
 
 <div className="card-base p-8 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
-  <div className="relative pb-[56.25%]">
-    {/* Image will be inserted here */}
-    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-800">
-      <span className="text-gray-500 dark:text-gray-400">Ouroboros Restaurant Interior - The main dining hall with its signature golden serpent emblem</span>
-    </div>
+  <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+    <ImageWrapper
+      src="content/posts/timelines/boudin-noir-restaurant-review/culinary-cosmos.png"
+      alt="Oroboros Logo"
+      class="w-full h-full object-cover brightness-100 dark:brightness-100 transition"
+      style={{ filter: 'hue-rotate(var(--hue, 0deg))' }}
+    />
   </div>
 </div>
 
@@ -51,24 +57,31 @@ In the relentless void of endless food trends, molecular gastronomy foams, and "
 
 This existential fatigue is what brought me to **Ouroboros**, that controversial establishment nestled in the upper echelons of the city's financial district, where the golden serpent consuming its own tail rotates slowly above the entrance, hypnotic and vaguely threatening—much like the concept it represents.
 
-## The Space
+<div className="card-base p-8 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
+  <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+    <ImageWrapper
+      src="content/posts/timelines/boudin-noir-restaurant-review/OuroborosInt.png"
+      alt="Ouroboros Restaurant Exterior - The golden serpent emblem rotates above the entrance"
+      class="w-full h-full object-cover brightness-100 dark:brightness-100 transition"
+    />
+  </div>
+</div>
 
 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
   <div className="card-base p-4">
     <p className="text-lg text-gray-700 dark:text-neutral-300">
-      The dining room at Ouroboros presents an immediately disorienting dichotomy. It's plush, elegant, and restrained—all dark woods, ambient lighting, and tables spaced far enough apart to ensure privacy. Classical music plays at a respectful volume. The chairs are comfortable, upholstered in rich burgundy leather that feels, somewhat uncomfortably, like human skin.
+      The dining room at Ouroboros presents an immediately disorienting dichotomy. It's plush, elegant, and restrained—all dark woods, ambient lighting, and tables spaced far enough apart to ensure privacy. Classical music plays at a respectful volume. The chairs are comfortable, upholstered in rich burgundy leather that feels, somewhat uncomfortably, like skin warmed by body heat.
     </p>
     <p className="text-lg text-gray-700 dark:text-neutral-300 mt-4">
-      And yet, against this backdrop of refined luxury, there are the medical stations—stainless steel carts equipped with surgical implements, cauterization tools, and local anesthetics, all arranged with the same meticulous care as the silverware.
+      And yet, Notably absent: any form of silverware or napkins. When I inquired about this unusual omission, my server merely smiled. "At Ouroboros, we believe in direct communion with what sustains us."
     </p>
   </div>
-  
   <div className="card-base p-4">
     <p className="text-lg text-gray-700 dark:text-neutral-300">
-      The restrooms are immaculate, which is a blessing considering you may need to visit them to vomit—not from disgust at what's happening around you, but from the cocktail of sedatives, painkillers, and aperitifs designed to prepare your body for what's to come.
+      The restrooms are immaculate, which is a blessing considering you may need to visit them to collect yourself before and after the intense dining experience that lies ahead.
     </p>
     <p className="text-lg text-gray-700 dark:text-neutral-300 mt-4">
-      The walls are adorned with Renaissance-style paintings depicting various historical figures seemingly in the act of auto-cannibalism, their faces expressing not pain but transcendent ecstasy. Socrates gnaws thoughtfully on his pinky. Cleopatra samples the flesh of her forearm with the delicacy of a woman eating grapes.
+      The walls are adorned with Renaissance-style paintings depicting various historical figures in states of self-contemplation that border on the uncanny. Socrates gazes into a mirror that shows not his face but something beneath it. Cleopatra examines her reflection in a pool of water that ripples with impossible geometries. It's as if the restaurant itself is conditioning you for the strange intimacy to come.
     </p>
   </div>
 </div>
@@ -84,23 +97,34 @@ This glib statement belies both the philosophical complexity and the technologic
 The restaurant asks only that you arrive with an open mind and sign their notoriously comprehensive non-disclosure agreements with clauses that seem to exist partially outside conventional spacetime. Upon arrival, you're escorted to what they call a "resonance chamber"—a small, elegant room with walls of polished obsidian that seem to ripple slightly when viewed from the corner of your eye.
 
 <div className="card-base p-8 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
-  <div className="relative pb-[56.25%]">
-    {/* Image will be inserted here */}
-    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-800">
-      <span className="text-gray-500 dark:text-gray-400">The Resonance Chamber - A place of elegant mystery with walls of rippling obsidian</span>
-    </div>
+  <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+    <ImageWrapper
+      src="content/posts/timelines/boudin-noir-restaurant-review/Chamber.png"
+      alt="The Resonance Chamber - A place of elegant mystery with walls of rippling obsidian"
+      class="w-full h-full object-cover brightness-100 dark:brightness-100 transition"
+    />
   </div>
 </div>
+
+## The Process
+
+I won't describe my time in the resonance chamber in detail—partly out of respect for the restaurant's insistence on secrecy, partly because words fail to capture the experience adequately, and partly because what I witnessed bent reality in ways my mind refuses to fully reconstruct.
+
+What I can say is that it involved no discomfort, no sense of physical intrusion, and was conducted with the same ritualistic formality as a Japanese tea ceremony. There was a moment of intense vibration, a brief sensation of existing in multiple places simultaneously, a flash of blue-violet light that seemed to emanate from within me rather than from any external source, and then... completion.
+
+The chef himself appeared at the conclusion, bowing slightly before departing with nothing visible in his hands—yet somehow I knew, on a molecular level, that he carried something essential of me with him.
+
+While waiting for my main course (which appeared with remarkable speed), I was served a palate cleanser—a simple lemon sorbet that helped ground me in the familiar before facing the utterly bizarre.
 
 ## The Service
 
 The staff at Ouroboros move with the precision of dancers—or perhaps more accurately, like physicists conducting delicate experiments at the boundaries of quantum reality. Your server seems to anticipate your needs seconds before you recognize them yourself, the sommelier appears to know your palate better than you do, and the maître d' occasionally glances at you as if seeing multiple versions of you superimposed in your chair.
 
-After being seated, my server, Johanna, a severe woman with eyes that seemed to focus on points slightly adjacent to conventional reality and the demeanor of someone who has witnessed the birth and death of universes, presented me with a menu. The dishes were described simply by body part and preparation method, no prices listed—those had been settled in advance.
+After being seated, my server, a severe woman with eyes that seemed to focus on points slightly adjacent to conventional reality and the demeanor of someone who has witnessed the birth and death of universes, presented me with a menu. The dishes were described simply by body part and preparation method, no prices listed—those had been settled in advance.
 
 "The earlobe carpaccio is quite popular," she informed me, her tone suggesting that choosing otherwise would reveal a disappointing lack of sophistication on my part. "Though the abdominal tissue provides a more substantial main course experience." I noted with interest that she didn't specify how these parts of "me" would be obtained.
 
-<div className="font-jetbrains-mono pl-10 pr-10 py-10 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition shadow-lg mb-8 overflow-hidden relative">
+<div className="font-jetbrains-mono p-10 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition shadow-lg mb-8 overflow-hidden relative">
   <h2 className="text-2xl font-bold mb-4 text-gray-700 dark:text-neutral-400">MENU SELECTION</h2>
   
   <blockquote className="mt-4 text-xl text-[oklch(0.35_0.05_var(--hue))] dark:text-[oklch(0.85_0.05_var(--hue))]">
@@ -125,16 +149,6 @@ After being seated, my server, Johanna, a severe woman with eyes that seemed to 
   </div>
 </div>
 
-## The Process
-
-I won't describe my time in the resonance chamber in detail—partly out of respect for the restaurant's insistence on secrecy, partly because words fail to capture the experience adequately, and partly because what I witnessed bent reality in ways my mind refuses to fully reconstruct.
-
-What I can say is that it involved no discomfort, no sense of physical intrusion, and was conducted with the same ritualistic formality as a Japanese tea ceremony. There was a moment of intense vibration, a brief sensation of existing in multiple places simultaneously, a flash of blue-violet light that seemed to emanate from within me rather than from any external source, and then... completion.
-
-The chef himself appeared at the conclusion, bowing slightly before departing with nothing visible in his hands—yet somehow I knew, on a molecular level, that he carried something essential of me with him.
-
-While waiting for my main course (which appeared with remarkable speed), I was served a palate cleanser—a simple lemon sorbet that helped ground me in the familiar before facing the utterly bizarre.
-
 ## The Food
 
 When my dish arrived—"Pan-Seared Self with Caramelized Shallots and Truffle Jus"—I experienced a moment of absolute cosmic dissociation. Here I was, fork in hand, preparing to eat... myself? But how?
@@ -142,11 +156,12 @@ When my dish arrived—"Pan-Seared Self with Caramelized Shallots and Truffle Ju
 The plate was beautifully composed, the meat treated with the same respect as Kobe beef or bluefin tuna. It was sliced thin, cooked medium-rare (as recommended by the chef), and arranged in an artful spiral—an echo of the Ouroboros symbol itself.
 
 <div className="card-base p-8 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
-  <div className="relative pb-[56.25%]">
-    {/* Image will be inserted here */}
-    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-800">
-      <span className="text-gray-500 dark:text-gray-400">The Main Course - Pan-Seared Self with Caramelized Shallots and Truffle Jus</span>
-    </div>
+  <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+    <ImageWrapper
+      src="content/posts/timelines/boudin-noir-restaurant-review/Main.png"
+      alt="The Main Course - Pan-Seared Self with Caramelized Shallots and Truffle Jus"
+      class="w-full h-full object-cover brightness-100 dark:brightness-100 transition"
+    />
   </div>
 </div>
 
@@ -167,7 +182,7 @@ After the meal, diners are escorted to a contemplation lounge where attendants d
 I left feeling neither lighter nor heavier, neither diminished nor duplicated, but somehow transformed in ways I still struggle to articulate. The meal had closed a circle I hadn't realized was open, completing a loop of consumption that perhaps has always existed.
 
 <div className="card-base p-6 mb-6">
-  <h3 className="font-bold text-xl mb-4 text-75">Final Thoughts</h3>
+  <h3 className="font-bold text-xl mb-4 text-gray-700 dark:text-neutral-400">Final Thoughts</h3>
   <p className="text-lg text-gray-700 dark:text-neutral-300 mb-4">Ouroboros is not for everyone. It's expensive, philosophically destabilizing, and operates in a legal grey area that seems to bend jurisdictional boundaries as easily as it apparently bends the laws of physics. The concept teeters on the edge of pretentiousness, saved only by the undeniable technical excellence of the kitchen and the profound metaphysical questions the experience raises.</p>
   
   <p className="text-lg text-gray-700 dark:text-neutral-300 mb-4">Is it worth it? That depends on what you're looking for. If you want a meal that will fundamentally alter your relationship with food, with your body, and with the very concept of reality itself—then yes, Ouroboros delivers. It forces us to confront the possibility that identity is fluid, that our understanding of physics is woefully incomplete, and that the boundaries we perceive between ourselves and the universe may be more permeable than we care to admit.</p>
@@ -190,7 +205,7 @@ I don't have the answers. But I can tell you this: When you taste yourself—tru
 </div>
 
 <div className="card-base p-6 mb-6">
-  <h3 className="font-bold text-xl mb-4 text-75">Practical Information</h3>
+  <h3 className="font-bold text-xl mb-4 text-gray-700 dark:text-neutral-400">Practical Information</h3>
   <div className="text-lg text-gray-700 dark:text-neutral-300">
     <p><strong>Location:</strong> Upper Financial District, 39th Floor, Obsidian Tower (though some diners report the restaurant appearing to occupy different floors or even buildings entirely)</p>
     <p><strong>Hours:</strong> By appointment only</p>

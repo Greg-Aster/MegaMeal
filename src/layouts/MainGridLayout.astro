@@ -47,6 +47,13 @@ const {
   post
 } = Astro.props
 
+// Get the post slug if available
+const postSlug = post?.slug || '';
+// Get custom avatar from post data if available
+const customAvatar = post?.data?.avatarImage || '';
+const customName = post?.data?.authorName || '';
+const customBio = post?.data?.authorBio || '';
+
 // Update the banner config to be more responsive
 const BANNER_HEIGHT = 50; // vh
 const BANNER_OVERLAP = 3.5; // rem
@@ -203,7 +210,14 @@ style={isStandardPage
 <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-[17.5rem_auto] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
    mx-auto gap-4 px-0 md:px-4">
    
- <SideBar class="mb-4 row-start-2 row-end-3 col-span-2 lg:row-start-1 lg:row-end-2 lg:col-span-1 lg:max-w-[17.5rem] onload-animation" headings={headings}></SideBar>
+   <SideBar 
+   class="mb-4 row-start-2 row-end-3 col-span-2 lg:row-start-1 lg:row-end-2 lg:col-span-1 lg:max-w-[17.5rem] onload-animation" 
+   headings={headings}
+   postSlug={postSlug}
+   customAvatar={customAvatar}
+   customName={customName}
+   customBio={customBio}
+ ></SideBar>
  
  <main id="main" class="transition-swup-fade col-span-2 lg:col-span-1 overflow-hidden">
    <div id="main-content-wrapper" class="onload-animation">
