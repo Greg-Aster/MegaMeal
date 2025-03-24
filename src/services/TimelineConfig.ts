@@ -167,8 +167,8 @@ export const defaultEraConfig: EraConfigMap = {
     displayName: 'The Final Epoch',
     startYear: 45001,
     endYear: 50000,
-    zoomLevel: 3.5,
-    panToYear: 47500
+    zoomLevel: 2.5,
+    panToYear: 50000
   },
   'unknown': {
     displayName: 'Unknown Era',

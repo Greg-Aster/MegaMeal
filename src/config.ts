@@ -62,7 +62,7 @@ export const navBarConfig: NavBarConfig = {
           external: true,
         },
         {
-          name: 'Escape Earth',
+          name: 'Escape Prime',
           url: 'https://youtu.be/YBo0yp5xe6k?feature=shared',
           external: true,
         },
