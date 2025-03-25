@@ -926,7 +926,7 @@
        style="transform: scale({$scale}) translate({$offsetX/$scale}px, {$offsetY/$scale}px);">
     
     <!-- Center line - horizontal for desktop, vertical for mobile -->
-    <div class="timeline-center-line absolute {isMobile ? 'h-full w-[2px] left-1/2 bg-gradient-to-b' : 'w-full h-[2px] top-1/2 bg-gradient-to-r'} from-transparent via-[oklch(0.7_0.08_var(--hue))] to-transparent opacity-50"></div>
+    <div class="timeline-center-line absolute {isMobile ? 'h-full w-[2px] left-1/2 bg-gradient-to-b' : 'w-full h-[2px] top-1/2 bg-gradient-to-r'} from-transparent via-[oklch(0.7_0.08_var(--hue))] to-transparent opacity-10"></div>
     
     <!-- Year markers -->
     <div class="timeline-start-marker absolute {isMobile ? 'top-[15%] h-[4px] left-[40%] right-[60%]' : 'left-[15%] w-[4px] top-[40%] bottom-[60%]'} bg-[oklch(0.7_0.2_var(--hue))] opacity-60 rounded-full"></div>
