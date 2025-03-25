@@ -97,6 +97,7 @@ export interface EraConfig {
   zoomLevel?: number;        // Custom zoom level for this era
   panToYear?: number;        // Specific year to center on when viewing this era
   customPadding?: number;    // Custom padding percentage for this era's view
+  backgroundImage?: string;  // Background image for this era
 }
 
 // Era configuration type mapping
@@ -111,42 +112,48 @@ export const defaultEraConfig: EraConfigMap = {
     startYear: 1,
     endYear: 50000,
     zoomLevel: 1,
-    panToYear: 25000  // Center on year 25000 when viewing all time
+    panToYear: 25000,
+    backgroundImage: '/posts/timeline/universe.png'
   },
   'all-eras': {
     displayName: 'All-Eras',
     startYear: 1,
     endYear: 50000,
     zoomLevel: 1.3,
-    panToYear: 25000  // Center on year 25000 when viewing all time
+    panToYear: 25000,
+    backgroundImage: '/posts/timeline/universe.png'
   },
   'ancient-epoch': {
     displayName: 'The Ancient Epoch',
     startYear: 1,
     endYear: 5000,
     zoomLevel: 3.5,
-    panToYear: 2500
+    panToYear: 2500,
+    backgroundImage: '/posts/timeline/singularity-conflict.png'
   },
   'awakening-era': {
     displayName: 'The Awakening Era',
     startYear: 5001,
     endYear: 15000,
     zoomLevel: 3,
-    panToYear: 1000
+    panToYear: 1000,
+    backgroundImage: '/posts/timeline/awakening-era.png'
   },
   'golden-age': {
     displayName: 'The Golden Age of Qarnivor',
     startYear: 15001,
     endYear: 25000,
     zoomLevel: 3,
-    panToYear: 20000
+    panToYear: 20000,
+    backgroundImage: '/posts/timeline/golden-era.png'
   },
   'conflict-epoch': {
     displayName: 'The Conflict Epoch',
     startYear: 25001,
     endYear: 35000,
     zoomLevel: 3,
-    panToYear: 30000
+    panToYear: 30000,
+    backgroundImage: '/posts/timeline/conflict-era.png'
   },
   // Overlapping era - spans multiple epochs
   'singularity-conflict': {
@@ -154,27 +161,31 @@ export const defaultEraConfig: EraConfigMap = {
     startYear: 15000,
     endYear: 48000,
     zoomLevel: 2,
-    panToYear: 30000
+    panToYear: 30000,
+    backgroundImage: '/posts/timeline/singularity-conflict.png'
   },
   'transcendent-age': {
     displayName: 'The Transcendent Age',
     startYear: 35001,
     endYear: 45000,
     zoomLevel: 3,
-    panToYear: 40000
+    panToYear: 40000,
+    backgroundImage: '/posts/timeline/singularity-conflict.png'
   },
   'final-epoch': {
     displayName: 'The Final Epoch',
     startYear: 45001,
     endYear: 50000,
     zoomLevel: 2.5,
-    panToYear: 50000
+    panToYear: 50000,
+    backgroundImage: '/posts/timeline/singularity-conflict.png'
   },
   'unknown': {
     displayName: 'Unknown Era',
     startYear: -Infinity,
     endYear: Infinity,
-    zoomLevel: 1
+    zoomLevel: 1,
+    backgroundImage: '/posts/timeline/singularity-conflict.png'
   }
 };
 

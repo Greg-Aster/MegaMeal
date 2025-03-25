@@ -128,122 +128,145 @@
     }
   }
   
-  // Initialize the component only after mounting
-  onMount(() => {
-    console.log("Timeline controller mounting");
+// Initialize the component only after mounting
+onMount(() => {
+  console.log("Timeline controller mounting");
+  
+  // Check for mobile view
+  checkMobileView();
+  
+  // Listen for window resize to update mobile state
+  window.addEventListener('resize', checkMobileView);
+  
+  // Show gesture hint for mobile users
+  if (isMobile) {
+    // Show gesture hint with a slight delay to ensure it appears after the component is visible
+    setTimeout(showTouchGestureHint, 1000);
+  }
+  
+  // Avoid double initialization
+  if (isInitialized) return;
+
+  try {
+    // Parse events first
+    const events = parseEvents(initialEvents);
     
-    // Check for mobile view
-    checkMobileView();
+    // Process events (ensure year is a number)
+    const processedEvents = events.map(event => ({
+      ...event,
+      year: typeof event.year === 'string' ? parseInt(event.year, 10) : event.year
+    }));
     
-    // Listen for window resize to update mobile state
-    window.addEventListener('resize', checkMobileView);
-    
-    // Show gesture hint for mobile users
-    if (isMobile) {
-      // Show gesture hint with a slight delay to ensure it appears after the component is visible
-      setTimeout(showTouchGestureHint, 1000);
+    // Initialize store props
+    if (category) {
+      timelineActions.setCategory(category);
     }
     
-    // Avoid double initialization
-    if (isInitialized) return;
-
-    try {
-      // Parse events first
-      const events = parseEvents(initialEvents);
-      
-      // Process events (ensure year is a number)
-      const processedEvents = events.map(event => ({
-        ...event,
-        year: typeof event.year === 'string' ? parseInt(event.year, 10) : event.year
-      }));
-      
-      // Initialize store props
-      if (category) {
-        timelineActions.setCategory(category);
-      }
-      
-      if (asBanner) {
-        timelineActions.setBannerMode(true);
-      }
-      
-      if (background) {
-        timelineActions.setBackground(background);
-      }
-      
-      if (startYear || endYear) {
-        timelineActions.setYearRange(
-          startYear || null,
-          endYear || null
-        );
-      }
-      
-      if (compact) {
-        timelineActions.toggleCompact();
-      }
-      
-      // Set initial events
-      timelineActions.setInitialEvents(processedEvents);
-      
-      // Extract era configuration properly using the utility function
-      eraConfig = extractEraConfig(processedEvents);
-      
-      // Check for custom background
+    if (asBanner) {
+      timelineActions.setBannerMode(true);
+    }
+    
+    if (startYear || endYear) {
+      timelineActions.setYearRange(
+        startYear || null,
+        endYear || null
+      );
+    }
+    
+    if (compact) {
+      timelineActions.toggleCompact();
+    }
+    
+    // Set initial events
+    timelineActions.setInitialEvents(processedEvents);
+    
+    // Extract era configuration properly using the utility function
+    eraConfig = extractEraConfig(processedEvents);
+    
+    // Create a function to determine the appropriate background based on priority
+    function determineBackground() {
+      // First priority: Check for event-specific backgrounds from blog posts
       const backgroundEvents = processedEvents.filter(event => event.bannerData?.background);
       if (backgroundEvents.length > 0 && backgroundEvents[0].bannerData?.background) {
-        timelineActions.setBackground(backgroundEvents[0].bannerData.background);
+        console.log("Using banner post background:", backgroundEvents[0].bannerData.background);
+        return backgroundEvents[0].bannerData.background;
       }
       
-      // Mark as initialized
-      isInitialized = true;
+      // Second priority: Use the current era's background
+      const currentEra = $timelineStore.era || $timelineStore.lastEra || 'all-eras';
+      if (eraConfig[currentEra]?.backgroundImage) {
+        console.log("Using era background:", eraConfig[currentEra].backgroundImage);
+        return eraConfig[currentEra].backgroundImage;
+      }
       
-      // Initialize timeline with proper era after a short delay
-      // to ensure timelineCore is ready
-      setTimeout(() => {
-        if (timelineCore) {
-          console.log("TimelineCore is ready, initializing timeline");
-          initializeTimeline();
-        } else {
-          console.log("TimelineCore not ready yet, setting up interval check");
-          // If timeline core isn't ready yet, wait for it
-          const checkInterval = setInterval(() => {
-            if (timelineCore) {
-              console.log("TimelineCore is now ready, initializing timeline");
-              initializeTimeline();
-              clearInterval(checkInterval);
-            }
-          }, 100);
-          
-          // Clear interval after max 2 seconds to prevent infinite loop
-          setTimeout(() => clearInterval(checkInterval), 2000);
-        }
-      }, 100);
-      
-    } catch (e) {
-      console.error("Error initializing timeline:", e);
-      error = "Failed to initialize timeline";
-    } finally {
-      // Always set loading to false, even if there's an error
-      loading = false;
+      // Fallback: Use the default background
+      console.log("Using default background:", background);
+      return background; // this is the prop from the component
     }
+
+    // Set the background based on priority
+    const selectedBackground = determineBackground();
+    timelineActions.setBackground(selectedBackground);
     
-    // Return cleanup function
-    return () => {
-      window.removeEventListener('resize', checkMobileView);
-      if (gestureHintTimer) {
-        clearTimeout(gestureHintTimer);
+    // Mark as initialized
+    isInitialized = true;
+    
+    // Initialize timeline with proper era after a short delay
+    // to ensure timelineCore is ready
+    setTimeout(() => {
+      if (timelineCore) {
+        console.log("TimelineCore is ready, initializing timeline");
+        initializeTimeline();
+      } else {
+        console.log("TimelineCore not ready yet, setting up interval check");
+        // If timeline core isn't ready yet, wait for it
+        const checkInterval = setInterval(() => {
+          if (timelineCore) {
+            console.log("TimelineCore is now ready, initializing timeline");
+            initializeTimeline();
+            clearInterval(checkInterval);
+          }
+        }, 100);
+        
+        // Clear interval after max 2 seconds to prevent infinite loop
+        setTimeout(() => clearInterval(checkInterval), 2000);
       }
-    };
-  });
-  
-  // Improved handleEraFilter function with clear validation and logging
-  function handleEraFilter(e) {
-    const value = e.target.value;
-    console.log(`Era selected from dropdown: ${value}`);
+    }, 100);
     
+  } catch (e) {
+    console.error("Error initializing timeline:", e);
+    error = "Failed to initialize timeline";
+  } finally {
+    // Always set loading to false, even if there's an error
+    loading = false;
+  }
+  
+  // Return cleanup function
+  return () => {
+    window.removeEventListener('resize', checkMobileView);
+    if (gestureHintTimer) {
+      clearTimeout(gestureHintTimer);
+    }
+  };
+});
+  
+// Improved handleEraFilter function with background handling
+function handleEraFilter(e) {
+  const value = e.target.value;
+  console.log(`Era selected from dropdown: ${value}`);
+  
   // Handle "all" or "all-time" options more directly
   if (value === 'all') {
     console.log(`Setting view for "All Eras" option`);
     timelineActions.setEra('all-eras');
+    
+    // Set the background for all-eras (with improved handling)
+    if (eraConfig['all-eras'] && eraConfig['all-eras'].backgroundImage) {
+      // Update the store
+      timelineActions.setBackground(eraConfig['all-eras'].backgroundImage);
+      // Force update on TimelineCore by directly updating the prop
+      if (timelineCore) timelineCore.updateBackground(eraConfig['all-eras'].backgroundImage);
+    }
     
     if (timelineCore && typeof timelineCore.navigateToEraRange === 'function') {
       timelineCore.navigateToEraRange(eraConfig['all-eras'].startYear, eraConfig['all-eras'].endYear);
@@ -254,6 +277,14 @@
   } else if (value === 'all-time') {
     console.log(`Setting view for "All Time" option`);
     timelineActions.setEra('all-time');
+    
+    // Set the background for all-time (with improved handling)
+    if (eraConfig['all-time'] && eraConfig['all-time'].backgroundImage) {
+      // Update the store
+      timelineActions.setBackground(eraConfig['all-time'].backgroundImage);
+      // Force update on TimelineCore by directly updating the prop
+      if (timelineCore) timelineCore.updateBackground(eraConfig['all-time'].backgroundImage);
+    }
     
     if (timelineCore && typeof timelineCore.navigateToEraRange === 'function') {
       timelineCore.navigateToEraRange(eraConfig['all-time'].startYear, eraConfig['all-time'].endYear);
@@ -280,6 +311,30 @@
   
   // Update the era in the store (this will persist to localStorage)
   timelineActions.setEra(value);
+  
+  // Check if we should update the background
+  let shouldUpdateBackground = true;
+  
+  // Check if any event has a specific background (higher priority)
+  const eventsInEra = $filteredEvents.filter(e => 
+    e.year >= startYear && e.year <= endYear && e.bannerData?.background
+  );
+  
+  if (eventsInEra.length > 0 && eventsInEra[0].bannerData?.background) {
+    // If an event has a specific background, use it
+    const eventBackground = eventsInEra[0].bannerData.background;
+    console.log(`Using event-specific background: ${eventBackground}`);
+    timelineActions.setBackground(eventBackground);
+    if (timelineCore) timelineCore.updateBackground(eventBackground);
+    shouldUpdateBackground = false;
+  }
+  
+  // Only use era background if no event-specific background was found
+  if (shouldUpdateBackground && eraConfig[value].backgroundImage) {
+    console.log(`Setting era background image: ${eraConfig[value].backgroundImage}`);
+    timelineActions.setBackground(eraConfig[value].backgroundImage);
+    if (timelineCore) timelineCore.updateBackground(eraConfig[value].backgroundImage);
+  }
   
   // Call the navigateToEraRange function if it exists
   if (timelineCore && typeof timelineCore.navigateToEraRange === 'function') {
@@ -393,6 +448,11 @@
   $: currentHeight = asBanner ? (isMobile ? '600px' : bannerHeight) : "500px";
   $: useEraColors = $timelineStore.era === 'all-eras';
 
+  // (like $: currentHeight = asBanner ? ... and $: useEraColors = ...)
+$: if (timelineCore && $timelineStore.background) {
+  // Ensure the TimelineCore background stays in sync with the store
+  timelineCore.updateBackground($timelineStore.background);
+}
 
 </script>
 

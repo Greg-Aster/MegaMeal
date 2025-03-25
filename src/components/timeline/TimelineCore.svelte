@@ -35,6 +35,12 @@
   let hoverTimeoutId: ReturnType<typeof setTimeout> | null = null;
   const hoverOutDelay = 300; // Delay in ms before hiding the card
   
+  // For background transition
+  let previousBackground: string = background;
+  let isTransitioning: boolean = false;
+  let transitionTimer: ReturnType<typeof setTimeout> | null = null;
+  let isInitialized: boolean = false;
+  
   // Tweened stores with configurable durations
   const normalDuration = 300;
   const touchDuration = 0;  // No animation during touch
@@ -571,6 +577,8 @@
   
   // Set up and tear down event listeners
   onMount(() => {
+    isInitialized = true;
+    
     if (timelineContainer) {
       // Set up direct DOM event handlers
       setupDirectEventHandlers();
@@ -677,6 +685,11 @@
       clearTimeout(hoverTimeoutId);
       hoverTimeoutId = null;
     }
+    
+    // Clear transition timer if it exists
+    if (transitionTimer) {
+      clearTimeout(transitionTimer);
+    }
   });
   
   // Update functions exposed to parent components with config values
@@ -692,6 +705,35 @@
       defaultTimelineViewConfig.minZoom, 
       s - defaultTimelineViewConfig.zoomStep
     ));
+  }
+  
+  export function updateBackground(newBackground: string) {
+    // Don't transition if it's the same background or initial load
+    if (newBackground === background || !isInitialized) {
+      background = newBackground;
+      previousBackground = newBackground;
+      return;
+    }
+    
+    // Store previous background for transition
+    previousBackground = background;
+    background = newBackground;
+    
+    // Start transition
+    isTransitioning = true;
+    
+    // Clear any existing transition timer
+    if (transitionTimer) {
+      clearTimeout(transitionTimer);
+    }
+    
+    // End transition after animation completes
+    transitionTimer = setTimeout(() => {
+      isTransitioning = false;
+      transitionTimer = null;
+    }, 800); // Match this to the CSS transition duration
+    
+    console.log(`Background transition: ${previousBackground} -> ${background}`);
   }
   
   export function resetView() {
@@ -877,14 +919,26 @@
          style="transition: opacity 400ms ease-in-out;"></div>
   {/if}
 
-  <!-- Background with parallax effect -->
+  <!-- Background with fade transition effect -->
   <div class="absolute inset-0 z-0 overflow-hidden">
+    <!-- Current background -->
     <img 
       src={background} 
       alt="Timeline background" 
-      class="w-full h-full object-cover transition-transform duration-300 ease-out"
-      style="transform: {backgroundTransform};"
+      class="w-full h-full object-cover transition-transform transition-opacity duration-800 ease-out absolute inset-0"
+      style="transform: {backgroundTransform}; opacity: 1;"
     />
+    
+    <!-- Previous background (for transition) -->
+    {#if isTransitioning && previousBackground !== background}
+      <img 
+        src={previousBackground} 
+        alt="Previous timeline background" 
+        class="w-full h-full object-cover transition-opacity duration-800 ease-out absolute inset-0 fade-out"
+        style="transform: {backgroundTransform};"
+      />
+    {/if}
+    
     <div class="absolute inset-0 bg-gradient-to-r from-[oklch(0.25_0.05_var(--hue))] to-[oklch(0.15_0.05_var(--hue))] opacity-20 dark:opacity-20 backdrop-blur-[2px]"></div>
   </div>
   
@@ -1054,6 +1108,17 @@
   .floating-animation-5 {
     animation: float5 55s infinite ease-in-out;
     animation-delay: -30s;
+  }
+
+  /* Background transition styles */
+  img.fade-out {
+    opacity: 0;
+  }
+
+  /* Ensure smoother transitions */
+  img {
+    transition: opacity 800ms ease-in-out, transform 300ms ease-out;
+    will-change: opacity, transform;
   }
 
   /* Keyframes with larger Y movements */
