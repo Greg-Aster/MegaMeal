@@ -217,10 +217,10 @@
 .fixed-mobile-card-container {
   position: fixed;
   bottom: 70px;
-  right: 10px;
-  left: auto;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   align-items: flex-end;
   z-index: 40;
   pointer-events: none;

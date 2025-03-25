@@ -720,10 +720,8 @@
     return $offsetY;
   }
   
-  // Calculate background transform based on mobile state
-  $: backgroundTransform = isMobile 
-  ? `scale(${1.05 + 0.05 * $scale}) translate(${-$offsetX * 0.05}px, ${-$offsetY * 0.05}px) rotate(90deg) scale(1.2)` 
-  : `scale(${1.05 + 0.05 * $scale}) translate(${-$offsetX * 0.05}px, ${-$offsetY * 0.05}px)`;
+  $: backgroundTransform = `scale(${1.05 + 0.05 * $scale}) translate(${-$offsetX * 0.05}px, ${-$offsetY * 0.05}px) ${isMobile ? 'scale(1.2)' : ''}`;
+
 
   export function panToYear(targetYear: number) {
     // Only proceed if we have valid dimensions and data
@@ -743,40 +741,20 @@
       scale: $scale.toFixed(2)
     });
     
-    // In mobile mode (vertical timeline)
-    if (isMobile) {
-      // Use raw percentage directly instead of getPositionPercentage
-      const targetPosition = (containerHeight * rawPercentage) / 100;
-      const viewportCenter = containerHeight / 2;
-      const requiredOffset = viewportCenter - targetPosition;
-      
-      console.log(`Mobile panning:`, {
-        targetPosition: targetPosition.toFixed(1) + "px",
-        viewportCenter: viewportCenter.toFixed(1) + "px",
-        requiredOffset: requiredOffset.toFixed(1) + "px",
-        scaledOffset: (requiredOffset / $scale).toFixed(1) + "px"
-      });
-      
-      // Apply the offset (adjusted for scale)
-      offsetY.set(requiredOffset / $scale);
-    } 
-    // In desktop mode (horizontal timeline)
-    else {
-      // Use raw percentage directly instead of getPositionPercentage
-      const targetPosition = (containerWidth * rawPercentage) / 100;
-      const viewportCenter = containerWidth / 2;
-      const requiredOffset = viewportCenter - targetPosition;
-      
-      console.log(`Desktop panning:`, {
-        targetPosition: targetPosition.toFixed(1) + "px",
-        viewportCenter: viewportCenter.toFixed(1) + "px",
-        requiredOffset: requiredOffset.toFixed(1) + "px",
-        scaledOffset: (requiredOffset / $scale).toFixed(1) + "px"
-      });
-      
-      // Apply the offset (adjusted for scale)
-      offsetX.set(requiredOffset / $scale);
-    }
+    // Simply remove the entire if/else structure and just keep the horizontal panning code:
+    const targetPosition = (containerWidth * rawPercentage) / 100;
+    const viewportCenter = containerWidth / 2;
+    const requiredOffset = viewportCenter - targetPosition;
+
+    console.log(`Panning:`, {
+      targetPosition: targetPosition.toFixed(1) + "px",
+      viewportCenter: viewportCenter.toFixed(1) + "px",
+      requiredOffset: requiredOffset.toFixed(1) + "px",
+      scaledOffset: (requiredOffset / $scale).toFixed(1) + "px"
+    });
+
+    // Apply the offset (adjusted for scale)
+    offsetX.set(requiredOffset / $scale);
   }
 
   // Method to set position directly (used for restoring saved positions)
@@ -926,20 +904,19 @@
        style="transform: scale({$scale}) translate({$offsetX/$scale}px, {$offsetY/$scale}px);">
     
     <!-- Center line - horizontal for desktop, vertical for mobile -->
-    <div class="timeline-center-line absolute {isMobile ? 'h-full w-[2px] left-1/2 bg-gradient-to-b' : 'w-full h-[2px] top-1/2 bg-gradient-to-r'} from-transparent via-[oklch(0.7_0.08_var(--hue))] to-transparent opacity-10"></div>
+    <div class="timeline-center-line absolute w-full h-[2px] top-1/2 bg-gradient-to-r from-transparent via-[oklch(0.7_0.08_var(--hue))] to-transparent opacity-10"></div>
     
     <!-- Year markers -->
-    <div class="timeline-start-marker absolute {isMobile ? 'top-[15%] h-[4px] left-[40%] right-[60%]' : 'left-[15%] w-[4px] top-[40%] bottom-[60%]'} bg-[oklch(0.7_0.2_var(--hue))] opacity-60 rounded-full"></div>
-    <div class="timeline-end-marker absolute {isMobile ? 'bottom-[15%] h-[4px] left-[40%] right-[60%]' : 'right-[15%] w-[4px] top-[40%] bottom-[60%]'} bg-[oklch(0.7_0.2_var(--hue))] opacity-60 rounded-full"></div>
+    <div class="timeline-start-marker absolute left-[15%] w-[4px] top-[40%] bottom-[60%] bg-[oklch(0.7_0.2_var(--hue))] opacity-60 rounded-full"></div>
+    <div class="timeline-end-marker absolute right-[15%] w-[4px] top-[40%] bottom-[60%] bg-[oklch(0.7_0.2_var(--hue))] opacity-60 rounded-full"></div>
 
     <!-- Events -->
     {#each eventPositions as { event, timelinePosition, offsetPosition, floatClass, shouldFloat }, i (event.slug + '-' + useEraColors)}
     <div 
       class="timeline-event absolute {isMobile ? 'timeline-event-mobile' : 'timeline-event-desktop'} {!isMobile && shouldFloat ? floatClass : ''}"
-      style={isMobile ? 
-        `top: ${timelinePosition}%; left: 50%; transform: translate(${offsetPosition}px, 0) scale(${1/$scale});` : 
-        `left: ${timelinePosition}%; top: 50%; transform: translate(0, ${offsetPosition}px) scale(${1/$scale});`
-        }
+
+        style={`left: ${timelinePosition}%; top: 50%; transform: translate(0, ${offsetPosition}px) scale(${1/$scale});`}
+
       >
         <!-- Star node with data attributes for DOM event handling -->
         <div 
@@ -980,7 +957,7 @@
   <!-- Fixed mobile card container - now uses fixed positioning instead of being inside the scrollable area -->
   {#if isMobile && (selectedEvent || hoveredEvent)}
     <div class="fixed-mobile-card-container">
-      <!-- Note: No scale transform needed here since it's outside the zoomed container -->
+      <!-- Keep mobile card but position it below the timeline point -->
       <TimelineCard 
         event={selectedEvent || hoveredEvent}
         isSelected={!!selectedEvent}
