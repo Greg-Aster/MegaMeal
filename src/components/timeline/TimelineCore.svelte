@@ -216,18 +216,17 @@
     });
   }
   
-  // Updated navigateToPost function for TimelineCore.svelte
   function navigateToPost(slug: string) {
-    // Show the fade overlay
-    isNavigating = true;
-    fadeOverlayVisible = true;
-    
-    // Wait for the fade-in animation to complete before navigating
-    setTimeout(() => {
-      // Updated to include #post-container fragment, matching the TimelineCard link behavior
-      window.location.href = `/posts/${slug}/#post-container`;
-    }, 300); // Match this to the CSS transition duration
-  }
+  // Show the fade overlay
+  isNavigating = true;
+  fadeOverlayVisible = true;
+  
+  // Wait for the fade-in animation to complete before navigating
+  setTimeout(() => {
+    // Remove the fragment identifier to prevent automatic scrolling
+    window.location.href = `/posts/${slug}/`;
+  }, 300); // Match this to the CSS transition duration
+}
   
   // Simple drag handling for panning
   let isDragging = false;
