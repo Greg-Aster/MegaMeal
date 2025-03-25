@@ -442,7 +442,6 @@
       {useEraColors}
       on:select={handleSelectEvent}
       on:deselect={handleDeselectEvent}
-      on:backgroundChange={handleBackgroundChange}
     />
     </div>
       
