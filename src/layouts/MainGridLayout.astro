@@ -101,12 +101,14 @@ const MAX_BANNER_WIDTH = 1920; // px
 
 <!-- Unified Banner Container - handles all banner types -->
 <div id="banner-container" 
-class={`z-10 w-full overflow-hidden transition-all duration-500 ${isStandardPage ? 'absolute h-[50vh]' : 'relative'}`} 
+class={`z-10 w-full ${hasTimelineBanner ? '' : 'overflow-hidden'} transition-all duration-500 ${isStandardPage ? 'absolute h-[50vh]' : 'relative'}`} 
 style={isStandardPage 
   ? '' 
   : hasVideoBanner
     ? 'margin-top: calc(var(--navbar-height) - 3.5rem);' // Less space for video banner
-    : 'margin-top: var(--navbar-height);' // Normal space for image banner
+    : hasTimelineBanner
+      ? 'margin-top: 1rem;' // Add 2rem space for timeline banners
+      : 'margin-top: var(--navbar-height);' // Normal space for image banner
 }>
 
 <!-- Video Banner Content -->
