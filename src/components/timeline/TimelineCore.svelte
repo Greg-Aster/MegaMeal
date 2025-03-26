@@ -35,12 +35,6 @@
   let hoverTimeoutId: ReturnType<typeof setTimeout> | null = null;
   const hoverOutDelay = 300; // Delay in ms before hiding the card
   
-  // For background transition
-  let previousBackground: string = background;
-  let isTransitioning: boolean = false;
-  let transitionTimer: ReturnType<typeof setTimeout> | null = null;
-  let isInitialized: boolean = false;
-  
   // Tweened stores with configurable durations
   const normalDuration = 300;
   const touchDuration = 0;  // No animation during touch
@@ -577,8 +571,6 @@
   
   // Set up and tear down event listeners
   onMount(() => {
-    isInitialized = true;
-    
     if (timelineContainer) {
       // Set up direct DOM event handlers
       setupDirectEventHandlers();
@@ -685,11 +677,6 @@
       clearTimeout(hoverTimeoutId);
       hoverTimeoutId = null;
     }
-    
-    // Clear transition timer if it exists
-    if (transitionTimer) {
-      clearTimeout(transitionTimer);
-    }
   });
   
   // Update functions exposed to parent components with config values
@@ -707,33 +694,12 @@
     ));
   }
   
+  // Simplified background update function
   export function updateBackground(newBackground: string) {
-    // Don't transition if it's the same background or initial load
-    if (newBackground === background || !isInitialized) {
+    if (newBackground && newBackground !== background) {
+      console.log(`Background changed to: ${newBackground}`);
       background = newBackground;
-      previousBackground = newBackground;
-      return;
     }
-    
-    // Store previous background for transition
-    previousBackground = background;
-    background = newBackground;
-    
-    // Start transition
-    isTransitioning = true;
-    
-    // Clear any existing transition timer
-    if (transitionTimer) {
-      clearTimeout(transitionTimer);
-    }
-    
-    // End transition after animation completes
-    transitionTimer = setTimeout(() => {
-      isTransitioning = false;
-      transitionTimer = null;
-    }, 800); // Match this to the CSS transition duration
-    
-    console.log(`Background transition: ${previousBackground} -> ${background}`);
   }
   
   export function resetView() {
@@ -919,26 +885,14 @@
          style="transition: opacity 400ms ease-in-out;"></div>
   {/if}
 
-  <!-- Background with fade transition effect -->
+  <!-- Simple background without any transition logic -->
   <div class="absolute inset-0 z-0 overflow-hidden">
-    <!-- Current background -->
     <img 
       src={background} 
       alt="Timeline background" 
-      class="w-full h-full object-cover transition-transform transition-opacity duration-800 ease-out absolute inset-0"
-      style="transform: {backgroundTransform}; opacity: 1;"
+      class="w-full h-full object-cover"
+      style="transform: {backgroundTransform};"
     />
-    
-    <!-- Previous background (for transition) -->
-    {#if isTransitioning && previousBackground !== background}
-      <img 
-        src={previousBackground} 
-        alt="Previous timeline background" 
-        class="w-full h-full object-cover transition-opacity duration-800 ease-out absolute inset-0 fade-out"
-        style="transform: {backgroundTransform};"
-      />
-    {/if}
-    
     <div class="absolute inset-0 bg-gradient-to-r from-[oklch(0.25_0.05_var(--hue))] to-[oklch(0.15_0.05_var(--hue))] opacity-20 dark:opacity-20 backdrop-blur-[2px]"></div>
   </div>
   
@@ -967,10 +921,8 @@
     {#each eventPositions as { event, timelinePosition, offsetPosition, floatClass, shouldFloat }, i (event.slug + '-' + useEraColors)}
     <div 
       class="timeline-event absolute {isMobile ? 'timeline-event-mobile' : 'timeline-event-desktop'} {!isMobile && shouldFloat ? floatClass : ''}"
-
-        style={`left: ${timelinePosition}%; top: 50%; transform: translate(0, ${offsetPosition}px) scale(${1/$scale});`}
-
-      >
+      style={`left: ${timelinePosition}%; top: 50%; transform: translate(0, ${offsetPosition}px) scale(${1/$scale});`}
+    >
         <!-- Star node with data attributes for DOM event handling -->
         <div 
           class="event-node absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
@@ -978,20 +930,18 @@
           data-year={event.year}
           data-era={event.era}
         >
-      <!-- Find this section in TimelineCore.svelte where StarNode is rendered -->
-    <!-- In TimelineCore.svelte, find where StarNode is rendered (around line 850) -->
-    <StarNode 
-      era={event.era} 
-      isKeyEvent={event.isKeyEvent} 
-      isSelected={selectedEvent?.slug === event.slug}
-      isHovered={hoveredEvent?.slug === event.slug}
-      size={event.isKeyEvent ? 5 : 4}
-      identifier={event.slug}
-      {useEraColors}
-    />
-    </div>
+          <StarNode 
+            era={event.era} 
+            isKeyEvent={event.isKeyEvent} 
+            isSelected={selectedEvent?.slug === event.slug}
+            isHovered={hoveredEvent?.slug === event.slug}
+            size={event.isKeyEvent ? 5 : 4}
+            identifier={event.slug}
+            {useEraColors}
+          />
+        </div>
         
-  <!-- Only show card if this event is selected or hovered AND NOT in mobile mode -->
+        <!-- Only show card if this event is selected or hovered AND NOT in mobile mode -->
         {#if (selectedEvent?.slug === event.slug || hoveredEvent?.slug === event.slug) && !isMobile}
           <div class="card-wrapper" style="transform: scale({1/$scale});">
             <TimelineCard 
@@ -1108,17 +1058,6 @@
   .floating-animation-5 {
     animation: float5 55s infinite ease-in-out;
     animation-delay: -30s;
-  }
-
-  /* Background transition styles */
-  img.fade-out {
-    opacity: 0;
-  }
-
-  /* Ensure smoother transitions */
-  img {
-    transition: opacity 800ms ease-in-out, transform 300ms ease-out;
-    will-change: opacity, transform;
   }
 
   /* Keyframes with larger Y movements */

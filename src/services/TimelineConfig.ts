@@ -78,7 +78,7 @@ export const defaultTimelineViewConfig: TimelineViewConfig = {
 export const defaultEraDisplayNames: { [key: string]: string } = {
   'ancient-epoch': 'The Ancient Epoch',
   'awakening-era': 'The Awakening Era',
-  'golden-age': 'The Golden Age of Qarnivor',
+  'golden-age': 'The Corporate Golden Age',
   'conflict-epoch': 'The Conflict Epoch',
   'singularity-conflict': 'Transtemporal Singularity Conflict',
   'transcendent-age': 'The Transcendent Age',
@@ -135,25 +135,33 @@ export const defaultEraConfig: EraConfigMap = {
     displayName: 'The Awakening Era',
     startYear: 5001,
     endYear: 15000,
-    zoomLevel: 3,
+    zoomLevel: 2.75,
     panToYear: 1000,
     backgroundImage: '/posts/timeline/awakening-era.png'
   },
   'golden-age': {
-    displayName: 'The Golden Age of Qarnivor',
+    displayName: 'The Corporate Golden Age',
     startYear: 15001,
     endYear: 25000,
-    zoomLevel: 3,
+    zoomLevel: 2.75,
     panToYear: 20000,
     backgroundImage: '/posts/timeline/golden-era.png'
   },
   'conflict-epoch': {
-    displayName: 'The Conflict Epoch',
+    displayName: 'Extinction Epoch',
     startYear: 25001,
     endYear: 35000,
-    zoomLevel: 3,
+    zoomLevel: 2.75,
     panToYear: 30000,
     backgroundImage: '/posts/timeline/conflict-era.png'
+  },
+  'transcendent-age': {
+    displayName: 'The Transcendent Age',
+    startYear: 35001,
+    endYear: 45000,
+    zoomLevel: 2.75,
+    panToYear: 40000,
+    backgroundImage: '/posts/timeline/singularity-conflict.png'
   },
   // Overlapping era - spans multiple epochs
   'singularity-conflict': {
@@ -162,14 +170,6 @@ export const defaultEraConfig: EraConfigMap = {
     endYear: 48000,
     zoomLevel: 2,
     panToYear: 30000,
-    backgroundImage: '/posts/timeline/singularity-conflict.png'
-  },
-  'transcendent-age': {
-    displayName: 'The Transcendent Age',
-    startYear: 35001,
-    endYear: 45000,
-    zoomLevel: 3,
-    panToYear: 40000,
     backgroundImage: '/posts/timeline/singularity-conflict.png'
   },
   'final-epoch': {
