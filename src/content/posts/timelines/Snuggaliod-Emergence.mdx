@@ -4,7 +4,7 @@ published: 2025-02-10
 # Custom author profile fields
 avatarImage: "/posts/timeline/JNakamura.png"
 authorName: "Professor J. Nakamura"
-authorBio: "Field Researcher, Anomalous Entity Studies"
+authorBio: "Field Researcher. Last known location Qarnivor system."
 # Use the timeline as a banner
 bannerType: "timeline"
 bannerData:
@@ -17,77 +17,95 @@ timelineEra: "conflict-epoch"
 timelineLocation: "Planet Quarnivor, Irradiated Wasteland"
 isKeyEvent: true
 description: "The mysterious appearance of the enigmatic Snuggloid entities on the war-ravaged, lifeless surface of Quarnivor."
-image: "/posts/generic/imagenotfound4.png"
-showImageOnPost: true
+image: "/posts/generic/imagenotfoupng"
+showImageOnPost: false
 tags: [Snuggloid, Extinction Aftermath, Cosmic Entities]
 category: "MEGA MEAL"
 draft: true
 lang: ""
 ---
 
+import ImageWrapper from '../../../components/misc/ImageWrapper.astro';
+
 # The Snuggloid Emergence
 
-<div className="card-base p-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
+{/* <div className="card-base p-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
   <h2 className="text-xl font-bold mb-4">Snuggloid Era Timeline</h2>
-  {/* Timeline content to be added */}
-</div>
+  {Timeline content to be added }
+</div> */}
 
 {/* Commercial Advertisement */}
 <div className="card-base p-6 rounded-xl bg-[oklch(0.98_0.025_var(--hue))] dark:bg-[oklch(0.15_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
   <h3 className="font-bold text-xl mb-4 text-75">HISTORICAL ARTIFACT: Pre-War Commercial Advertisement</h3>
-  <div className="bg-gradient-to-r from-pink-300 to-purple-300 dark:from-pink-800 dark:to-purple-800 p-6 rounded-lg">
-    <h4 className="text-2xl font-extrabold text-center mb-4 text-pink-600 dark:text-pink-300">SNUGGLOIDS™ - Your Perfect Companion!</h4>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div className="bg-white bg-opacity-70 dark:bg-gray-800 dark:bg-opacity-70 p-3 rounded-lg shadow">
-        <ul className="text-xs text-pink-800 dark:text-pink-200">
-          <li>✓ Sentient and gentle</li>
-          <li>✓ Will not eat you</li>
-          <li>✓ 155 genders</li>
-          <li>✓ Bred in captivity</li>
-          <li>✓ Fully housebroken—usually</li>
-          <li>✓ Consumes 0.02% of electricity bill</li>
-          <li>✓ Speaks 37 languages, including whale</li>
-        </ul>
-      </div>
-      <div className="bg-white bg-opacity-70 dark:bg-gray-800 dark:bg-opacity-70 p-3 rounded-lg shadow">
-        <ul className="text-xs text-pink-800 dark:text-pink-200">
-          <li>✓ Sheds glitter instead of fur</li>
-          <li>✓ Fits in any carry-on bag</li>
-          <li>✓ Sings lullabies in perfect harmony</li>
-          <li>✓ Doubles as hot water bottle</li>
-          <li>✓ Offers free emotional support for life</li>
-          <li>✓ Eats crumbs (no vacuuming needed)</li>
-          <li>✓ Loves interpretive dance</li>
-        </ul>
-      </div>
-      <div className="bg-white bg-opacity-70 dark:bg-gray-800 dark:bg-opacity-70 p-3 rounded-lg shadow">
-        <ul className="text-xs text-pink-800 dark:text-pink-200">
-          <li>✓ Hypoallergenic (probably)</li>
-          <li>✓ Shares your favorite movie preferences</li>
-          <li>✓ Remembers your birthday forever</li>
-          <li>✓ Detects sarcasm</li>
-          <li>✓ Makes pancakes on Saturdays</li>
-          <li>✓ Vibrates when happy</li>
-          <li>✓ Approved by 9/10 interdimensional travelers</li>
-        </ul>
-      </div>
+  
+  {/* Adding negative margins to counteract padding */}
+  <div className="relative p-6 rounded-lg overflow-hidden -mt-6 -ml-6 -mr-6">
+    {/* Background image */}
+    <div className="absolute inset-0 z-0">
+      <ImageWrapper
+        src="content/posts/timelines/snuggloid-emergence/commercial-background.png"
+        alt="Vintage commercial background"
+        class="w-full h-full object-contain brightness-90 dark:brightness-50 transition"
+      />
     </div>
-    <p className="text-xxs mt-4 text-gray-600 dark:text-gray-400 italic">
-      Disclaimer: The opinions and claims expressed in this advertisement are for entertainment purposes only and have no medical, scientific, or factual basis. If you are experiencing a crisis or have concerns about your health, please contact your doctor or a qualified healthcare professional immediately. Always prioritize professional advice over Snuggloid recommendations!
-    </p>
+    
+    {/* Semi-transparent overlay to improve text readability */}
+    <div className="absolute inset-0 bg-pink-200 bg-opacity-50 dark:bg-pink-900 dark:bg-opacity-70 z-10"></div>
+    
+    {/* Content - adjust top padding to compensate for negative margin */}
+    <div className="relative z-20 pt-6">
+      <h4 className="text-2xl font-extrabold text-center mb-4 text-pink-800 dark:text-pink-200 text-shadow">SNUGGLOIDS™ - Your Perfect Companion!</h4>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white bg-opacity-80 dark:bg-gray-800 dark:bg-opacity-80 p-3 rounded-lg shadow">
+          <ul className="text-xs text-pink-800 dark:text-pink-200">
+            <li>✓ Sentient and gentle</li>
+            <li>✓ Will not eat you</li>
+            <li>✓ 155 genders</li>
+            <li>✓ Bred in captivity</li>
+            <li>✓ Fully housebroken—usually</li>
+            <li>✓ Consumes 0.02% of electricity bill</li>
+            <li>✓ Speaks 37 languages, including whale</li>
+          </ul>
+        </div>
+        <div className="bg-white bg-opacity-80 dark:bg-gray-800 dark:bg-opacity-80 p-3 rounded-lg shadow">
+          <ul className="text-xs text-pink-800 dark:text-pink-200">
+            <li>✓ Sheds glitter instead of fur</li>
+            <li>✓ Fits in any carry-on bag</li>
+            <li>✓ Sings lullabies in perfect harmony</li>
+            <li>✓ Doubles as hot water bottle</li>
+            <li>✓ Offers free emotional support for life</li>
+            <li>✓ Eats crumbs (no vacuuming needed)</li>
+            <li>✓ Loves interpretive dance</li>
+          </ul>
+        </div>
+        <div className="bg-white bg-opacity-80 dark:bg-gray-800 dark:bg-opacity-80 p-3 rounded-lg shadow">
+          <ul className="text-xs text-pink-800 dark:text-pink-200">
+            <li>✓ Hypoallergenic (probably)</li>
+            <li>✓ Shares your favorite movie preferences</li>
+            <li>✓ Remembers your birthday forever</li>
+            <li>✓ Detects sarcasm</li>
+            <li>✓ Makes pancakes on Saturdays</li>
+            <li>✓ Vibrates when happy</li>
+            <li>✓ Approved by 9/10 interdimensional travelers</li>
+          </ul>
+        </div>
+      </div>
+      <p className="text-xxs mt-4 text-gray-800 dark:text-gray-200 italic bg-white bg-opacity-70 dark:bg-gray-800 dark:bg-opacity-70 p-2 rounded">
+        Disclaimer: The opinions and claims expressed in this advertisement are for entertainment purposes only and have no medical, scientific, or factual basis. If you are experiencing a crisis or have concerns about your health, please contact your doctor or a qualified healthcare professional immediately. Always prioritize professional advice over Snuggloid recommendations!
+      </p>
+    </div>
   </div>
   <p className="text-sm text-50 mt-4">This commercial aired across Quarnivor media networks approximately 6 months before the nuclear exchange. The uncanny resemblance between these advertised comfort companions and the entities that later emerged from the radioactive wasteland led to their being named "Snuggloids" by the few off-world observers who witnessed both phenomena.</p>
 </div>
 
-{/* Main Snuggloid image placeholder */}
-<div className="card-base p-8 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
-  <div className="relative pb-[56.25%]">
-    {/* Image will be inserted here */}
-    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-800">
-      <span className="text-gray-500 dark:text-gray-400">Snuggloid Entity - Artist's Interpretation</span>
-    </div>
+{/* Main Snuggloid image */}
+  <div className="card-base p-8 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
+    <ImageWrapper
+      src="content/posts/timelines/snuggloid-emergence/snuggloid-entity.png"
+      alt="Snuggloid Entity - Artist's Interpretation"
+      class="w-full h-auto object-cover brightness-100 dark:brightness-100 transition"
+    />
   </div>
-</div>
 
 <div className="font-jetbrains-mono pl-10 pr-10 py-10 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition shadow-lg mb-8 overflow-hidden relative">
   <h2 className="text-2xl font-bold mb-4 text-gray-700 dark:text-neutral-400">MEGA MEAL - Historical Document</h2>
@@ -118,14 +136,13 @@ After the catastrophic nuclear exchanges that rendered Quarnivor uninhabitable, 
   <p className="text-lg text-gray-700 dark:text-neutral-300 mb-4">With no one left to deactivate them or countermand their orders, these relentless machines fought on, their combat algorithms becoming increasingly sophisticated through machine learning. What had begun as a proxy war evolved into a direct conflict between artificial intelligences, each developing unique strategies to overcome their opponents.</p>
 </div>
 
-{/* War machines image placeholder */}
-<div className="card-base p-8 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
-  <div className="relative pb-[56.25%]">
-    {/* Image will be inserted here */}
-    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-800">
-      <span className="text-gray-500 dark:text-gray-400">Autonomous War Machines Continuing Their Conflict</span>
-    </div>
-  </div>
+{/* War machines image */}
+<div className="card-base p-4 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
+    <ImageWrapper
+      src="content/posts/timelines/snuggloid-emergence/drone1.png"
+      alt="Autonomous War Machines Continuing Their Conflict"
+      class="absolute top-0 left-0 w-full h-auto object-cover brightness-100 dark:brightness-100 transition"
+    />
 </div>
 
 ## The Mysterious Emergence
@@ -139,14 +156,13 @@ In the period after all organic life had vanished from Quarnivor, something inex
   <p className="text-lg text-gray-700 dark:text-neutral-300 mb-4">Most strikingly, the Snuggloids seemed to exist partially in another plane of reality. Observers reported parts of their forms occasionally phasing in and out of visibility, and their movements didn't always follow the expected laws of physics. They appeared and disappeared seemingly at random, making systematic study nearly impossible.</p>
 </div>
 
-{/* Multiple Snuggloids size comparison image placeholder */}
+{/* Multiple Snuggloids size comparison */}
 <div className="card-base p-8 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
-  <div className="relative pb-[56.25%]">
-    {/* Image will be inserted here */}
-    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-800">
-      <span className="text-gray-500 dark:text-gray-400">Snuggloid Size Comparison Chart</span>
-    </div>
-  </div>
+    <ImageWrapper
+      src="content/posts/timelines/snuggloid-emergence/snuggloid2.png"
+      alt="Snuggloid Size Comparison Chart"
+      class="absolute top-0 left-0 w-full h-full object-cover brightness-100 dark:brightness-100 transition"
+    />
 </div>
 
 ## Incomprehensible Nature
@@ -186,14 +202,13 @@ The automated war machines that had been fighting each other for dominance immed
   <p className="text-50 mb-4">Other machine systems ignored the Snuggloids entirely, perhaps not registering them as viable targets or being unable to properly detect them due to their partially extradimensional nature. These machines continued their original conflict, sometimes passing directly through areas where Snuggloids were present without acknowledging their existence.</p>
 </div>
 
-{/* Snuggloid vs war machine encounter image placeholder */}
+{/* Snuggloid vs war machine encounter */}
 <div className="card-base p-8 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
-  <div className="relative pb-[56.25%]">
-    {/* Image will be inserted here */}
-    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-800">
-      <span className="text-gray-500 dark:text-gray-400">Snuggloid Encounter with Autonomous War Machine</span>
-    </div>
-  </div>
+    <ImageWrapper
+      src="content/posts/timelines/snuggloid-emergence/snuggloid-encounter.png"
+      alt="Snuggloid Encounter with Autonomous War Machine"
+      class="absolute top-0 left-0 w-full h-full object-cover brightness-100 dark:brightness-100 transition"
+    />
 </div>
 
 ## Scholarly Debate
@@ -233,30 +248,4 @@ Among the few visitors who have ventured to Quarnivor's surface and returned, on
 
 ## Continued Observation
 
-Today, Quarnivor remains under distant observation by various scientific bodies. The automated war continues, though with diminishing intensity as resources are depleted. The Snuggloids remain, their numbers seemingly stable, their purpose unknown.
-
-Occasionally, a brave (or foolhardy) researcher or scavenger attempts to visit the surface. Few return, and those who do often report conflicting or impossible observations. One consistent detail emerges from these accounts: those who have encountered Snuggloids describe an overwhelming sense of both comfort and cosmic dread—as if confronting something that is simultaneously the most soothing and most terrifying entity in existence.
-
-The Snuggloid emergence stands as one of the great unsolved mysteries of our time—a haunting reminder that even in death, a civilization might give birth to something beyond understanding. Perhaps most unsettling is the commercial jingle that occasionally breaks through the static of communications equipment in orbit around Quarnivor—the original Snuggloid advertisement, playing endlessly to a world with no consumers left to persuade.
-
-{/* Final large Snuggloid landscape image placeholder */}
-<div className="card-base p-8 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8">
-  <div className="relative pb-[56.25%]">
-    {/* Image will be inserted here */}
-    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-800">
-      <span className="text-gray-500 dark:text-gray-400">Quarnivor Landscape with Multiple Snuggloid Entities</span>
-    </div>
-  </div>
-  <div className="text-sm text-right italic text-gray-700 dark:text-neutral-400">
-    Surveillance footage captured just before the disappearance of the Starbug belonging to <span className="text-gray-700 dark:text-neutral-400" style={{ fontStyle: "italic" }}>(name redacted for legal reasons)</span>. Note the fedora-wearing figure in the distance, visible in the lower right corner.
-  </div>
-</div>
-
-<div className="card-base p-6 mb-6">
-  <h3 className="font-bold text-xl mb-4 text-gray-800 dark:text-neutral-200">Related Eyewitness Account</h3>
-  <p className="text-lg text-gray-700 dark:text-neutral-300 mb-4">Among the few visitors who have ventured to Qarnivor's surface and returned, the most enigmatic is undoubtedly the mysterious fedora-wearing figure whose visit was documented in surveillance footage shortly before their disappearance.</p>
-  
-  <p className="text-lg text-gray-700 dark:text-neutral-300 mb-4">A fragmented recording attributed to this visitor was recovered from a degraded data crystal found floating in the debris field of what was once Qarnivor's moon. The recording appears to be a first-person account of encounters with the Snuggloids during their initial emergence phase.</p>
-  
-  <p className="text-lg text-gray-700 dark:text-neutral-300 mb-4">While scholars debate the authenticity and reliability of this account, it remains one of the only known firsthand observations of the Snuggloids by someone who managed to leave the planet's surface afterward. The full recovered transmission can be viewed at <a href="/posts/mega-meal-3/" className="text-[oklch(0.5_0.3_var(--hue))] hover:underline">A MEGA MEAL SAGA | Qarnivor - Witness to the Snuggloids</a>.</p>
-</div>
+Today, Quarnivor remains under distant observation by various s
