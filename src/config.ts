@@ -47,7 +47,7 @@ export const navBarConfig: NavBarConfig = {
       url: '/archive/', // Main projects page
       dropdown: [
         {
-          name: 'Mega Meal',
+          name: 'Mega Meal Timeline',
           url: '/posts/timeline/',
           //external: false,
         },
