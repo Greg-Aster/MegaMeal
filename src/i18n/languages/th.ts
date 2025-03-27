@@ -7,6 +7,10 @@ export const th: Translation = {
   [Key.archive]: 'คลัง',
   [Key.community]: 'ชุมชน',
   [Key.search]: 'ค้นหา',
+  
+  [Key.configs]: 'การตั้งค่า',
+  [Key.friends]: 'เพื่อน',
+  [Key.newPost]: 'โพสต์ใหม่',
 
   [Key.tags]: 'ป้ายกำกับ',
   [Key.categories]: 'หมวดหมู่',

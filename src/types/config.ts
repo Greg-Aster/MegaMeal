@@ -40,6 +40,9 @@ export enum LinkPreset {
   About = 2,
   Community = 3,
   Projects = 4,
+  Configs = 5,
+  Friends = 6,
+  NewPost = 7,
 }
 
 //extend NavBarLink type to support dropdown menus

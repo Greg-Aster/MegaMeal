@@ -8,6 +8,8 @@ import Search from './Search.svelte'
 import { LinkPresets } from '../constants/link-presets'
 import LightDarkSwitch from './LightDarkSwitch.svelte'
 import { url } from '../utils/url-utils'
+import AdminNavbar from './svelte/admin/AdminNavbar.svelte'
+
 const className = Astro.props.class
 
 let links: NavBarLink[] = navBarConfig.links.map(
@@ -18,19 +20,22 @@ let links: NavBarLink[] = navBarConfig.links.map(
     return item
   },
 )
+
+// Check authentication status from cookies
+const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false;
 ---
+
 <div id="navbar" class="z-50 onload-animation">
     <div class="absolute h-8 left-0 right-0 -top-8 bg-[var(--card-bg)] transition"></div> <!-- used for onload animation -->
     <div class:list={[
         className,
         "card-base !overflow-visible max-w-[var(--page-width)] h-[4.5rem] !rounded-t-none mx-auto flex items-center justify-between px-4"]}>
-        <a href={url('/')} class="btn-plain scale-animation rounded-lg h-[3.25rem] px-5 font-bold active:scale-95">
-            <div class="flex flex-row text-[var(--primary)] items-center text-md">
-                <Icon name="material-symbols:home-outline-rounded" class="text-[1.75rem] mb-1 mr-2" />
-                {siteConfig.title}
-            </div>
-        </a>
-        <div class="hidden md:flex">
+        
+        <!-- Admin Navbar Component (handles login, settings toggle, etc.) -->
+        <AdminNavbar client:load siteTitle={siteConfig.title} />
+        
+        <!-- Regular Navigation Links (hidden when in admin mode) -->
+        <div id="standard-nav" class:list={["hidden md:flex", {"hidden": isAuthenticated}]}>
             {links.map((l) => {
                 return l.dropdown ? (
                     <div class="relative group">
@@ -70,6 +75,7 @@ let links: NavBarLink[] = navBarConfig.links.map(
                 );
             })}
         </div>
+        
         <div class="flex">
             <!--<SearchPanel client:load>-->
             <Search client:only="svelte"></Search>
@@ -83,7 +89,8 @@ let links: NavBarLink[] = navBarConfig.links.map(
                 <Icon name="material-symbols:menu-rounded" class="text-[1.25rem]"></Icon>
             </button>
         </div>
-        <NavMenuPanel links={links}></NavMenuPanel>
+        
+        <NavMenuPanel links={links} isAuthenticated={isAuthenticated}></NavMenuPanel>
         <DisplaySettings client:only="svelte"></DisplaySettings>
     </div>
 </div>
@@ -100,13 +107,15 @@ function switchTheme() {
 }
 
 function loadButtonScript() {
+    // Theme switch
     let switchBtn = document.getElementById("scheme-switch");
     if (switchBtn) {
         switchBtn.addEventListener("click", function () {
-            switchTheme()
+            switchTheme();
         });
     }
 
+    // Display settings button
     let settingBtn = document.getElementById("display-settings-switch");
     if (settingBtn) {
         settingBtn.addEventListener("click", function () {
@@ -117,6 +126,7 @@ function loadButtonScript() {
         });
     }
 
+    // Nav menu button
     let menuBtn = document.getElementById("nav-menu-switch");
     if (menuBtn) {
         menuBtn.addEventListener("click", function () {

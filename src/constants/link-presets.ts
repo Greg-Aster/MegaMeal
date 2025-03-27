@@ -19,4 +19,16 @@ export const LinkPresets: { [key in LinkPreset]: NavBarLink } = {
     name: i18n(I18nKey.community),
     url: '/community/',
   },
+  [LinkPreset.Configs]: {
+    name: i18n(I18nKey.configs),
+    url: '/configs/',
+  },
+  [LinkPreset.Friends]: {
+    name: i18n(I18nKey.friends),
+    url: '/friends/',
+  },
+  [LinkPreset.NewPost]: {
+    name: i18n(I18nKey.newPost),
+    url: '/new-post/',
+  },
 }
