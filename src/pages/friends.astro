@@ -1,6 +1,7 @@
 ---
 import MainGridLayout from '../layouts/MainGridLayout.astro';
 import { Icon } from 'astro-icon/components';
+import FriendManager from '../components/svelte/friends/FriendManager.svelte';
 ---
 
 <MainGridLayout title="Content Sharing" description="Share and manage blog content with friends">
@@ -181,40 +182,8 @@ import { Icon } from 'astro-icon/components';
           Blogs you're connected with for automatic content sharing and updates.
         </p>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <!-- Friend Card Template (Empty State) -->
-          <div id="no-friends" class="col-span-1 md:col-span-2 p-8 text-center bg-neutral-50 dark:bg-neutral-800/20 rounded-lg">
-            <Icon name="mdi:account-group-outline" class="w-12 h-12 mx-auto text-neutral-400 dark:text-neutral-600 mb-3" />
-            <h3 class="text-lg font-medium text-neutral-700 dark:text-neutral-300 mb-2">No Connections Yet</h3>
-            <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-4">Import content from other blogs to automatically add them as connections.</p>
-          </div>
-          
-          <!-- Friend Card (Will be populated by JavaScript) -->
-          <div id="friend-template" class="friend-card hidden flex items-start p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:border-[var(--primary)] transition-colors">
-            <div class="w-12 h-12 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden mr-4 flex-shrink-0">
-              <img src="" alt="Profile" class="w-full h-full object-cover" />
-            </div>
-            <div class="flex-1">
-              <h3 class="text-lg font-medium text-black/80 dark:text-white/80 mb-1 friend-name">Friend Name</h3>
-              <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-2 friend-bio">Friend bio description goes here</p>
-              <div class="flex items-center text-xs text-neutral-500 dark:text-neutral-400">
-                <span class="flex items-center mr-3">
-                  <Icon name="mdi:note-outline" class="w-4 h-4 mr-1" />
-                  <span class="friend-posts">12 Posts</span>
-                </span>
-                <span class="flex items-center">
-                  <Icon name="mdi:clock-outline" class="w-4 h-4 mr-1" />
-                  <span class="friend-updated">Last updated 2 days ago</span>
-                </span>
-              </div>
-            </div>
-            <div class="flex-shrink-0 ml-2">
-              <button class="friend-sync p-2 text-[var(--primary)] hover:bg-[var(--primary)] hover:bg-opacity-10 rounded-full">
-                <Icon name="mdi:sync" class="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
+        <!-- Friend Manager Component -->
+        <FriendManager client:load />
       </div>
     </div>
   </div>
@@ -235,7 +204,6 @@ import { Icon } from 'astro-icon/components';
     if (isAuthenticated) {
       // Already authenticated - show content
       adminContent.classList.remove('hidden');
-      initializeAdminPage();
     } else {
       // Not authenticated - show login
       authCheck.classList.remove('hidden');
@@ -251,147 +219,117 @@ import { Icon } from 'astro-icon/components';
           localStorage.setItem('isAuthenticated', 'true');
           authCheck.classList.add('hidden');
           adminContent.classList.remove('hidden');
-          initializeAdminPage();
         } else {
           alert('Invalid credentials. Please try again.');
         }
       });
     }
     
-    function initializeAdminPage() {
-      // Create Package Button
-      document.getElementById('create-package-button')?.addEventListener('click', () => {
-        const includePosts = document.getElementById('share-posts').checked;
-        const includeTimeline = document.getElementById('share-timeline').checked;
-        const includeConfig = document.getElementById('share-config').checked;
-        const includeAssets = document.getElementById('share-assets').checked;
+    // Create Package Button
+    document.getElementById('create-package-button')?.addEventListener('click', () => {
+      const includePosts = document.getElementById('share-posts').checked;
+      const includeTimeline = document.getElementById('share-timeline').checked;
+      const includeConfig = document.getElementById('share-config').checked;
+      const includeAssets = document.getElementById('share-assets').checked;
+      
+      // Create a sample package content with site metadata for friends to connect back
+      const packageContent = {
+        metadata: {
+          created: new Date().toISOString(),
+          version: "1.0.0",
+          generator: "Static Site Admin",
+          siteInfo: {
+            name: document.title.split('|')[0].trim() || "My Blog",
+            url: window.location.origin,
+            bio: "Content shared from my blog",
+            avatar: "/favicon.png"
+          }
+        },
+        options: {
+          includePosts,
+          includeTimeline,
+          includeConfig,
+          includeAssets
+        },
+        content: {
+          posts: includePosts ? [
+            { id: "1", title: "Sample Post 1", content: "This is a sample post content" },
+            { id: "2", title: "Sample Post 2", content: "This is another sample post" }
+          ] : [],
+          timeline: includeTimeline ? [
+            { date: "2023-01-01", title: "Sample Event 1", description: "Event description" },
+            { date: "2023-02-15", title: "Sample Event 2", description: "Another event" }
+          ] : [],
+          config: includeConfig ? { 
+            sample: "This would contain your site configuration" 
+          } : null,
+          assets: includeAssets ? [
+            { name: "image1.jpg", type: "image/jpeg", url: "/images/sample.jpg" }
+          ] : []
+        }
+      };
+      
+      // Convert to JSON and download
+      const packageString = JSON.stringify(packageContent, null, 2);
+      downloadTextFile(`content-package-${new Date().toISOString().slice(0,10)}.json`, packageString);
+    });
+    
+    // File Upload Handling
+    const fileInput = document.getElementById('package-file');
+    fileInput?.addEventListener('change', (event) => {
+      const files = event.target.files;
+      
+      if (files.length > 0) {
+        const fileName = files[0].name;
+        const fileNameElement = document.getElementById('file-name');
+        fileNameElement.textContent = fileName;
+        fileNameElement.classList.remove('hidden');
         
-        // Create a sample package content
-        const packageContent = {
-          metadata: {
-            created: new Date().toISOString(),
-            version: "1.0.0",
-            generator: "Static Site Admin",
-          },
-          options: {
-            includePosts,
-            includeTimeline,
-            includeConfig,
-            includeAssets
-          },
-          content: {
-            posts: includePosts ? [
-              { id: "1", title: "Sample Post 1", content: "This is a sample post content" },
-              { id: "2", title: "Sample Post 2", content: "This is another sample post" }
-            ] : [],
-            timeline: includeTimeline ? [
-              { date: "2023-01-01", title: "Sample Event 1", description: "Event description" },
-              { date: "2023-02-15", title: "Sample Event 2", description: "Another event" }
-            ] : [],
-            config: includeConfig ? { 
-              sample: "This would contain your site configuration" 
-            } : null,
-            assets: includeAssets ? [
-              { name: "image1.jpg", type: "image/jpeg", url: "/images/sample.jpg" }
-            ] : []
+        // Show import options
+        document.getElementById('import-options')?.classList.remove('hidden');
+        
+        // Read the file and extract friend data if available
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const packageData = JSON.parse(e.target.result);
+            
+            // You could use this data to pre-populate the friend form
+            console.log('Package data:', packageData);
+          } catch (error) {
+            console.error('Error parsing package:', error);
           }
         };
         
-        // Convert to JSON and download
-        const packageString = JSON.stringify(packageContent, null, 2);
-        downloadTextFile(`content-package-${new Date().toISOString().slice(0,10)}.json`, packageString);
-        
-        // Add a mock friend for demo purposes
-        setTimeout(() => {
-          addMockFriend();
-        }, 500);
-      });
-      
-      // File Upload Handling
-      const fileInput = document.getElementById('package-file');
-      fileInput?.addEventListener('change', (event) => {
-        const files = event.target.files;
-        
-        if (files.length > 0) {
-          const fileName = files[0].name;
-          const fileNameElement = document.getElementById('file-name');
-          fileNameElement.textContent = fileName;
-          fileNameElement.classList.remove('hidden');
-          
-          // Show import options
-          document.getElementById('import-options')?.classList.remove('hidden');
-        }
-      });
-      
-      // Import Package Button
-      document.getElementById('import-package-button')?.addEventListener('click', () => {
-        const importPosts = document.getElementById('import-posts').checked;
-        const importTimeline = document.getElementById('import-timeline').checked;
-        const importConfig = document.getElementById('import-config').checked;
-        const importAssets = document.getElementById('import-assets').checked;
-        
-        // For demo purposes only - simulate an import
-        console.log('Importing package with options:', { importPosts, importTimeline, importConfig, importAssets });
-        
-        // Show success alert
-        alert('Content successfully imported!');
-        
-        // Add a mock friend to demonstrate
-        addMockFriend();
-      });
-      
-      // Add a mock friend for demo purposes
-      function addMockFriend() {
-        // Hide empty state
-        document.getElementById('no-friends')?.classList.add('hidden');
-        
-        // Clone the template
-        const template = document.getElementById('friend-template');
-        const clone = template.cloneNode(true);
-        clone.id = 'friend-' + Math.random().toString(36).substring(7);
-        clone.classList.remove('hidden');
-        
-        // Set friend details
-        clone.querySelector('.friend-name').textContent = 'Jane Creative';
-        clone.querySelector('.friend-bio').textContent = 'Digital artist and sci-fi writer';
-        clone.querySelector('.friend-posts').textContent = '18 Posts';
-        clone.querySelector('.friend-updated').textContent = 'Last updated today';
-        clone.querySelector('img').src = '/api/placeholder/48/48';
-        
-        // Add sync event with client-side visual feedback
-        clone.querySelector('.friend-sync').addEventListener('click', (e) => {
-          e.preventDefault();
-          const syncButton = e.currentTarget;
-          const originalIcon = syncButton.innerHTML;
-          
-          // Simulate syncing (animate the icon)
-          syncButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>';
-          
-          setTimeout(() => {
-            syncButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>';
-            
-            setTimeout(() => {
-              syncButton.innerHTML = originalIcon;
-            }, 2000);
-          }, 1500);
-        });
-        
-        // Add to the grid
-        template.parentNode.appendChild(clone);
+        reader.readAsText(files[0]);
       }
+    });
+    
+    // Import Package Button
+    document.getElementById('import-package-button')?.addEventListener('click', () => {
+      const importPosts = document.getElementById('import-posts').checked;
+      const importTimeline = document.getElementById('import-timeline').checked;
+      const importConfig = document.getElementById('import-config').checked;
+      const importAssets = document.getElementById('import-assets').checked;
       
-      // Helper function to download a text file
-      function downloadTextFile(filename, content) {
-        const blob = new Blob([content], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }
-    }
+      // For demo purposes only - simulate an import
+      console.log('Importing package with options:', { importPosts, importTimeline, importConfig, importAssets });
+      
+      // Show success alert
+      alert('Content successfully imported!');
+    });
   });
+  
+  // Helper function to download a text file
+  function downloadTextFile(filename, content) {
+    const blob = new Blob([content], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
 </script>
