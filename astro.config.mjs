@@ -132,7 +132,7 @@ window.loadRSSCORS = function(url, callback) {
 
 // Base path and site URL configuration
 let basePath = '/';
-let siteUrl = 'https://temporalflow.org'; // Default fallback
+let siteUrl = 'https://megameal.org'; // Default fallback
 
 // Get current directory properly in ES module context
 const __filename = fileURLToPath(import.meta.url);
