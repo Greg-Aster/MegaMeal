@@ -1,0 +1,36 @@
+<script>
+  import { initCollapsibles } from '../scripts/collapsible.js';
+  
+  // Ensure initialization happens after DOM is ready
+  function safeInitialize() {
+    try {
+      initCollapsibles();
+    } catch (error) {
+      console.error('Collapsible initialization error:', error);
+    }
+  }
+  
+  // Multiple ways to ensure initialization
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', safeInitialize);
+  } else {
+    safeInitialize();
+  }
+  
+  // Optional: Lightweight MutationObserver for dynamic content
+  const observer = new MutationObserver((mutations) => {
+    if (mutations.some(mutation => 
+      Array.from(mutation.addedNodes).some(node => 
+        node instanceof HTMLElement && 
+        (node.classList.contains('collapsible-header') || node.querySelector?.('.collapsible-header'))
+      )
+    )) {
+      safeInitialize();
+    }
+  });
+  
+  observer.observe(document.body, { 
+    childList: true, 
+    subtree: true 
+  });
+</script>
