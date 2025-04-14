@@ -30,15 +30,47 @@ import banner6 from 'src/assets/banner/0006.png'
 import banner7 from 'src/assets/banner/0007.png'
 import banner8 from 'src/assets/banner/0008.png'
 
+// Banner type definitions
+export type BannerType = 'standard' | 'video' | 'image' | 'timeline';
+
+// Banner data type for each banner type
+export interface StandardBannerData {
+  // No additional data needed for standard banner
+}
+
+export interface VideoBannerData {
+  videoId: string;
+}
+
+export interface ImageBannerData {
+  imageUrl: string;
+}
+
+export interface TimelineBannerData {
+  category: string;
+  title?: string;
+  startYear?: number;
+  endYear?: number;
+  background?: string;
+  compact?: boolean;
+  height?: string;
+}
+
 // Define the banner configuration type
 export interface BannerConfig {
-  // List of banner images for animation
+  // Default banner type for main pages
+  defaultBannerType: BannerType;
+  
+  // Default banner data (differs based on banner type)
+  defaultBannerData: StandardBannerData | VideoBannerData | ImageBannerData | TimelineBannerData;
+  
+  // List of banner images for animation (used for standard banner type)
   bannerList: ImageMetadata[]
   
-  // Default banner for static usage
+  // Default banner for static usage (used for standard banner type)
   defaultBanner: ImageMetadata
   
-  // Animation settings
+  // Animation settings (used for standard banner type)
   animation: {
     enabled: boolean
     interval: number            // Milliseconds between transitions
@@ -74,13 +106,30 @@ export interface BannerConfig {
     type: 'color' | 'gradient'
     value: string              // CSS color or gradient
   }
+  
+  // Navbar spacing settings
+  navbarSpacing: {
+    standard: string         // For standard animated banner
+    timeline: string         // For timeline banner
+    video: string            // For video banner
+    image: string            // For image banner
+  }
 }
 
 /**
  * Banner configuration for the site
  * Controls which images are used for the animated banner
  */
-export const bannerConfig: BannerConfig = ${JSON.stringify(bannerConfig, null, 2)
+export const bannerConfig: BannerConfig = ${JSON.stringify({
+      ...bannerConfig,
+      // Ensure navbarSpacing exists even if it's not in the current config
+      navbarSpacing: bannerConfig.navbarSpacing || {
+        standard: '0',
+        timeline: '4.5rem',
+        video: '4.5rem',
+        image: '4.5rem'
+      }
+    }, null, 2)
       .replace(/"([^"]+)":/g, '$1:')
       .replace(/"forward"/g, "'forward'")
       .replace(/"reverse"/g, "'reverse'")
@@ -136,6 +185,21 @@ export function getBannerAnimationSettings(): {
     transitionDuration: bannerConfig.animation.transitionDuration,
     direction: bannerConfig.animation.direction
   };
+}
+
+/**
+ * Helper function to determine if the default banner data is for a specific banner type
+ */
+export function isVideoBannerData(data: any): data is VideoBannerData {
+  return data && 'videoId' in data && typeof data.videoId === 'string';
+}
+
+export function isImageBannerData(data: any): data is ImageBannerData {
+  return data && 'imageUrl' in data && typeof data.imageUrl === 'string';
+}
+
+export function isTimelineBannerData(data: any): data is TimelineBannerData {
+  return data && 'category' in data && typeof data.category === 'string';
 }`;
     
     return bannerConfigContent;

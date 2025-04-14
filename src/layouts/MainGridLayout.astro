@@ -16,7 +16,14 @@ import TimelineController from '../components/timeline/TimelineBanner.astro';
 import '../styles/timeline-styles.css';
 
 // Import banner configuration
-import { bannerConfig, getResponsiveBannerDimensions, getFallbackBannerCSS } from '../config/banner.config';
+import { 
+  bannerConfig, 
+  getResponsiveBannerDimensions, 
+  getFallbackBannerCSS,
+  isVideoBannerData,
+  isImageBannerData,
+  isTimelineBannerData
+} from '../config/banner.config';
 
 interface Props {
   title?: string
@@ -51,11 +58,37 @@ const { height: BANNER_HEIGHT, overlap: BANNER_OVERLAP } = getResponsiveBannerDi
 const NAVBAR_HEIGHT = 4.5; // rem (72px ≈ 4.5rem at 16px base font size)
 const NAVBAR_HEIGHT_MOBILE = 3.5; // rem (56px ≈ 3.5rem)
 
-// Check banner types
-const hasTimelineBanner = post?.data?.bannerType === "timeline" && post?.data?.bannerData?.category;
-const hasVideoBanner = post?.data?.bannerType === "video" && post?.data?.bannerData?.videoId;
-const hasImageBanner = (post?.data?.image || (post?.data?.bannerType === "image" && post?.data?.bannerData?.imageUrl)) && !hasVideoBanner && !hasTimelineBanner;const isPostWithBanner = hasVideoBanner || hasImageBanner || hasTimelineBanner;
-const isStandardPage = !isPostWithBanner;
+// Check if post has a specific banner type
+const hasPostTimelineBanner = post?.data?.bannerType === "timeline" && post?.data?.bannerData?.category;
+const hasPostVideoBanner = post?.data?.bannerType === "video" && post?.data?.bannerData?.videoId;
+const hasPostImageBanner = (post?.data?.image || (post?.data?.bannerType === "image" && post?.data?.bannerData?.imageUrl)) && !hasPostVideoBanner && !hasPostTimelineBanner;
+const hasPostBanner = hasPostVideoBanner || hasPostImageBanner || hasPostTimelineBanner;
+
+// Determine which banner type to use for standard pages
+const useDefaultVideo = !hasPostBanner && bannerConfig.defaultBannerType === 'video' && isVideoBannerData(bannerConfig.defaultBannerData);
+const useDefaultImage = !hasPostBanner && bannerConfig.defaultBannerType === 'image' && isImageBannerData(bannerConfig.defaultBannerData);
+const useDefaultTimeline = !hasPostBanner && bannerConfig.defaultBannerType === 'timeline' && isTimelineBannerData(bannerConfig.defaultBannerData);
+const useDefaultStandard = !hasPostBanner && (bannerConfig.defaultBannerType === 'standard' || (!useDefaultVideo && !useDefaultImage && !useDefaultTimeline));
+
+// Master flag to determine which banner type to use
+const hasTimelineBanner = hasPostTimelineBanner || useDefaultTimeline;
+const hasVideoBanner = hasPostVideoBanner || useDefaultVideo;
+const hasImageBanner = hasPostImageBanner || useDefaultImage;
+const hasStandardBanner = useDefaultStandard;
+const isStandardPage = !hasPostBanner;
+
+// Get banner data based on source (post or default config)
+const videoBannerData = hasPostVideoBanner 
+  ? post.data.bannerData
+  : useDefaultVideo ? bannerConfig.defaultBannerData : null;
+
+const imageBannerData = hasPostImageBanner 
+  ? { imageUrl: post.data.bannerData?.imageUrl || post.data.image }
+  : useDefaultImage ? bannerConfig.defaultBannerData : null;
+
+const timelineBannerData = hasPostTimelineBanner 
+  ? post.data.bannerData
+  : useDefaultTimeline ? bannerConfig.defaultBannerData : null;
 
 // Update the mainPanelTop calculation to be responsive
 const mainPanelTop = hasVideoBanner 
@@ -68,6 +101,16 @@ const mainPanelTop = hasVideoBanner
 const bannerList = bannerConfig.bannerList;
 
 const MAX_BANNER_WIDTH = bannerConfig.layout.maxWidth; // px
+
+// Get navbar spacing based on banner type
+const getBannerNavbarSpacing = () => {
+  if (hasTimelineBanner) return bannerConfig.navbarSpacing.timeline;
+  if (hasVideoBanner) return bannerConfig.navbarSpacing.video;
+  if (hasImageBanner) return bannerConfig.navbarSpacing.image;
+  return bannerConfig.navbarSpacing.standard;
+};
+
+const navbarSpacing = getBannerNavbarSpacing();
 ---
 
 <Layout 
@@ -89,14 +132,17 @@ const MAX_BANNER_WIDTH = bannerConfig.layout.maxWidth; // px
 
 <!-- Unified Banner Container - handles all banner types -->
 <div id="banner-container" 
-class={`z-10 w-full ${hasTimelineBanner ? '' : 'overflow-hidden'} transition-all duration-500 ${isStandardPage ? 'absolute h-[' + bannerConfig.layout.height.desktop + ']' : 'relative'}`} 
+class={`z-10 w-full 
+  ${hasTimelineBanner ? 'has-timeline-banner' : ''} 
+  ${hasVideoBanner ? 'has-video-banner' : ''} 
+  ${hasImageBanner ? 'has-image-banner' : ''} 
+  ${hasStandardBanner ? 'has-standard-banner' : ''} 
+  ${hasTimelineBanner ? '' : 'overflow-hidden'} 
+  transition-all duration-500 
+  ${isStandardPage ? 'absolute h-[' + bannerConfig.layout.height.desktop + ']' : 'relative'}`} 
 style={isStandardPage 
   ? '' 
-  : hasVideoBanner
-    ? 'margin-top: calc(var(--navbar-height) - 3.5rem);' // Less space for video banner
-    : hasTimelineBanner
-      ? 'margin-top: 1rem;' // Add 2rem space for timeline banners
-      : 'margin-top: 1rem;' // Reduced space for image banner
+  : `margin-top: ${navbarSpacing};`
 }>
 
 <!-- Video Banner Content -->
@@ -104,7 +150,7 @@ style={isStandardPage
   <div class="video-banner-content max-w-screen-2xl mx-auto px-4">
     <div class="relative w-full pb-[56.25%] bg-black overflow-hidden shadow-lg rounded-lg">
       <iframe
-        src={`https://www.youtube.com/embed/${post.data.bannerData.videoId}?autoplay=0&mute=0&controls=1`}
+        src={`https://www.youtube.com/embed/${hasPostVideoBanner ? post.data.bannerData.videoId : videoBannerData.videoId}?autoplay=0&mute=0&controls=1`}
         title="YouTube video player"
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;"
@@ -120,16 +166,16 @@ style={isStandardPage
     <div class="timeline-banner-container">
       <div class="timeline-banner-inner">
         <TimelineController 
-          title={post.data.bannerData.title || post.data.title}
-          category={post.data.bannerData.category}
-          startYear={post.data.bannerData.startYear}
-          endYear={post.data.bannerData.endYear}
-          background={post.data.bannerData.background || "/public/posts/timeline/universe.png"}
+          title={hasPostTimelineBanner ? (post.data.bannerData.title || post.data.title) : (timelineBannerData.title || title || "Timeline")}
+          category={hasPostTimelineBanner ? post.data.bannerData.category : timelineBannerData.category}
+          startYear={hasPostTimelineBanner ? post.data.bannerData.startYear : timelineBannerData.startYear}
+          endYear={hasPostTimelineBanner ? post.data.bannerData.endYear : timelineBannerData.endYear}
+          background={hasPostTimelineBanner ? (post.data.bannerData.background || "/public/posts/timeline/universe.png") : (timelineBannerData.background || "/public/posts/timeline/universe.png")}
           isCollapsed={false}
-          compact={post.data.bannerData.compact || false}
+          compact={hasPostTimelineBanner ? (post.data.bannerData.compact || false) : (timelineBannerData.compact || false)}
           class="timeline-banner-controller"
           asBanner={true}
-          bannerHeight={post.data.bannerData.height || "70vh"}
+          bannerHeight={hasPostTimelineBanner ? (post.data.bannerData.height || "70vh") : (timelineBannerData.height || "70vh")}
         />
       </div>
     </div>
@@ -141,16 +187,16 @@ style={isStandardPage
   <div class="image-banner-content max-w-screen-2xl mx-auto px-0">
     <div class="relative w-full overflow-hidden shadow-lg rounded-lg">
       <img 
-        src={post.data.bannerData?.imageUrl || post.data.image}
-        alt={post.data.title || "Post banner image"}
+        src={hasPostImageBanner ? (post.data.bannerData?.imageUrl || post.data.image) : imageBannerData.imageUrl}
+        alt={hasPostImageBanner ? (post.data.title || "Post banner image") : (title || "Banner image")}
         class="w-full object-cover"
       />
     </div>
   </div>
 )}
 
-<!-- This section needs to ensure it always renders something -->
-{isStandardPage && (
+<!-- Standard Animated Banner (only show if none of the above banner types are used) -->
+{hasStandardBanner && (
   <div class="animated-banner-content max-w-screen-2xl mx-auto h-full relative">
    {bannerList.length > 0 ? bannerList.map((src, index) => (
      <Image
@@ -194,9 +240,7 @@ style={isStandardPage
 <div class={`w-full z-30 pointer-events-none ${isStandardPage ? 'absolute' : 'relative'}`} 
 style={isStandardPage 
   ? `top: calc(${bannerConfig.layout.height.desktop} - ${bannerConfig.layout.overlap.desktop});` 
-  : hasVideoBanner 
-    ? 'margin-top: 1.0rem;' // Smaller gap for video banner
-    : 'margin-top: 1rem;'}>
+  : 'margin-top: 1rem;'}>
 <div class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto">
 <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-[17.5rem_auto] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
    mx-auto gap-4 px-0 md:px-4">
@@ -255,7 +299,11 @@ style={isStandardPage
   'banner-overlap': bannerConfig.layout.overlap.desktop,
   'banner-overlap-mobile': bannerConfig.layout.overlap.mobile,
   'navbar-height': `${NAVBAR_HEIGHT}rem`,
-  'navbar-height-mobile': `${NAVBAR_HEIGHT_MOBILE}rem`
+  'navbar-height-mobile': `${NAVBAR_HEIGHT_MOBILE}rem`,
+  'standard-navbar-spacing': bannerConfig.navbarSpacing.standard,
+  'timeline-navbar-spacing': bannerConfig.navbarSpacing.timeline,
+  'video-navbar-spacing': bannerConfig.navbarSpacing.video,
+  'image-navbar-spacing': bannerConfig.navbarSpacing.image
 }}>
   /* Banner styles */
   #banner-container, #animated-banner {
@@ -265,6 +313,23 @@ style={isStandardPage
   #banner-container.absolute, #animated-banner {
     top: 0;
     height: var(--banner-height);
+  }
+  
+  /* Banner type-specific spacing */
+  .has-standard-banner {
+    margin-top: var(--standard-navbar-spacing) !important;
+  }
+  
+  .has-timeline-banner {
+    margin-top: var(--timeline-navbar-spacing) !important;
+  }
+  
+  .has-video-banner {
+    margin-top: var(--video-navbar-spacing) !important;
+  }
+  
+  .has-image-banner {
+    margin-top: var(--image-navbar-spacing) !important;
   }
   
   /* Video banner specifics */

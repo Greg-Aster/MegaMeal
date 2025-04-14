@@ -12,15 +12,47 @@ import banner6 from 'src/assets/banner/0006.png'
 import banner7 from 'src/assets/banner/0007.png'
 import banner8 from 'src/assets/banner/0008.png'
 
+// Banner type definitions
+export type BannerType = 'standard' | 'video' | 'image' | 'timeline';
+
+// Banner data type for each banner type
+export interface StandardBannerData {
+  // No additional data needed for standard banner
+}
+
+export interface VideoBannerData {
+  videoId: string;
+}
+
+export interface ImageBannerData {
+  imageUrl: string;
+}
+
+export interface TimelineBannerData {
+  category: string;
+  title?: string;
+  startYear?: number;
+  endYear?: number;
+  background?: string;
+  compact?: boolean;
+  height?: string;
+}
+
 // Define the banner configuration type
 export interface BannerConfig {
-  // List of banner images for animation
+  // Default banner type for main pages
+  defaultBannerType: BannerType;
+  
+  // Default banner data (differs based on banner type)
+  defaultBannerData: StandardBannerData | VideoBannerData | ImageBannerData | TimelineBannerData;
+  
+  // List of banner images for animation (used for standard banner type)
   bannerList: ImageMetadata[]
   
-  // Default banner for static usage
+  // Default banner for static usage (used for standard banner type)
   defaultBanner: ImageMetadata
   
-  // Animation settings
+  // Animation settings (used for standard banner type)
   animation: {
     enabled: boolean
     interval: number            // Milliseconds between transitions
@@ -56,6 +88,14 @@ export interface BannerConfig {
     type: 'color' | 'gradient'
     value: string              // CSS color or gradient
   }
+  
+  // Navbar spacing settings
+  navbarSpacing: {
+    standard: string         // For standard animated banner
+    timeline: string         // For timeline banner
+    video: string            // For video banner
+    image: string            // For image banner
+  }
 }
 
 /**
@@ -63,6 +103,20 @@ export interface BannerConfig {
  * Controls which images are used for the animated banner
  */
 export const bannerConfig: BannerConfig = {
+  // Default banner type for main pages
+  defaultBannerType: 'timeline',
+  
+  // Default banner data for timeline
+  defaultBannerData: {
+    category: "history", // This is required for timeline banner
+    title: "Site Timeline", // Optional but recommended
+    startYear: 2000, // Optional 
+    endYear: 2025, // Optional
+    background: "/public/posts/timeline/universe.png", // Optional
+    compact: false, // Optional
+    height: "90vh" // Optional
+  },
+  
   // List of all banner images for animation
   bannerList: [
     banner1,
@@ -89,14 +143,14 @@ export const bannerConfig: BannerConfig = {
   // Layout settings
   layout: {
     height: {
-      desktop: '50vh',         // 50% of viewport height on desktop
-      mobile: '30vh'           // 30% of viewport height on mobile
+      desktop: '100vh',         // 100% of viewport height on desktop
+      mobile: '100vh'           // 100% of viewport height on mobile
     },
     overlap: {
-      desktop: '3.5rem',       // Content overlap on desktop
-      mobile: '2rem'           // Content overlap on mobile
+      desktop: '0rem',          // Content overlap on desktop
+      mobile: '0rem'            // Content overlap on mobile
     },
-    maxWidth: 1920             // Max banner width in pixels
+    maxWidth: 1920              // Max banner width in pixels
   },
   
   // Visual settings
@@ -113,6 +167,14 @@ export const bannerConfig: BannerConfig = {
     enabled: true,
     type: 'gradient',
     value: 'linear-gradient(to bottom, var(--color-primary-light), var(--color-primary))'
+  },
+  
+  // Navbar spacing settings
+  navbarSpacing: {
+    standard: '0',           // Standard banner starts at top of page
+    timeline: '4.5rem',      // Timeline needs space for navbar
+    video: '4.5rem',         // Video also needs space
+    image: '4.5rem'          // Image also needs space
   }
 }
 
@@ -158,4 +220,19 @@ export function getBannerAnimationSettings(): {
     transitionDuration: bannerConfig.animation.transitionDuration,
     direction: bannerConfig.animation.direction
   };
+}
+
+/**
+ * Helper function to determine if the default banner data is for a specific banner type
+ */
+export function isVideoBannerData(data: any): data is VideoBannerData {
+  return data && 'videoId' in data && typeof data.videoId === 'string';
+}
+
+export function isImageBannerData(data: any): data is ImageBannerData {
+  return data && 'imageUrl' in data && typeof data.imageUrl === 'string';
+}
+
+export function isTimelineBannerData(data: any): data is TimelineBannerData {
+  return data && 'category' in data && typeof data.category === 'string';
 }

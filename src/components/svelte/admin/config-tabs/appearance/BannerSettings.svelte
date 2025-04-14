@@ -3,6 +3,16 @@
   
   // Props
   export let bannerConfig;
+
+  // Initialize navbarSpacing if it doesn't exist
+  if (!bannerConfig.navbarSpacing) {
+    bannerConfig.navbarSpacing = {
+      standard: '0',
+      timeline: '4.5rem',
+      video: '4.5rem',
+      image: '4.5rem'
+    };
+  }
   
   // Local state
   let isBannerSequence = false;
@@ -64,6 +74,26 @@
         }
       }
     }
+    
+    // Initialize default banner type if it doesn't exist
+    if (!bannerConfig.defaultBannerType) {
+      bannerConfig.defaultBannerType = 'standard';
+    }
+    
+    // Initialize default banner data if it doesn't exist
+    if (!bannerConfig.defaultBannerData) {
+      bannerConfig.defaultBannerData = {};
+    }
+    
+    // Initialize navbar spacing if it doesn't exist
+    if (!bannerConfig.navbarSpacing) {
+      bannerConfig.navbarSpacing = {
+        standard: '0',
+        timeline: '4.5rem',
+        video: '4.5rem',
+        image: '4.5rem'
+      };
+    }
   });
   
   // Function to toggle banner type
@@ -112,14 +142,248 @@
     bannerCount = bannerConfig.bannerList.length;
     handleChange();
   }
+  
+  // Function to handle default banner type change
+  function handleDefaultBannerTypeChange(event) {
+    const newType = event.target.value;
+    bannerConfig.defaultBannerType = newType;
+    
+    // Reset banner data when type changes
+    if (newType === 'standard') {
+      bannerConfig.defaultBannerData = {};
+    } else if (newType === 'video') {
+      bannerConfig.defaultBannerData = { videoId: '' };
+    } else if (newType === 'image') {
+      bannerConfig.defaultBannerData = { imageUrl: '' };
+    } else if (newType === 'timeline') {
+      bannerConfig.defaultBannerData = { 
+        category: '', 
+        title: '', 
+        startYear: null, 
+        endYear: null,
+        background: '/public/posts/timeline/universe.png',
+        compact: false,
+        height: '70vh'
+      };
+    }
+    
+    handleChange();
+  }
 </script>
 
 <!-- Banner Settings -->
 <div class="bg-neutral-50 dark:bg-neutral-800/50 p-5 rounded-lg border border-neutral-200 dark:border-neutral-700 mb-8">
   <h3 class="text-lg font-medium text-black/80 dark:text-white/80 mb-3">Banner Settings</h3>
   
+  <!-- Default Banner Type Selection -->
+  <div class="mb-6 pt-0 pb-4 border-b border-neutral-200 dark:border-neutral-700">
+    <h4 class="text-md font-medium text-black/80 dark:text-white/80 mb-3">Default Banner Type</h4>
+    
+    <div class="space-y-4">
+      <div>
+        <label for="default-banner-type" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+          Choose the banner type for the main page
+        </label>
+        <select 
+            id="default-banner-type" 
+            bind:value={bannerConfig.defaultBannerType}
+            on:change={handleDefaultBannerTypeChange}
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-900 dark:text-neutral-100"
+          >
+            <option value="standard">Standard (Animated images)</option>
+            <option value="video">Video</option>
+            <option value="image">Single Image</option>
+            <option value="timeline">Timeline</option>
+        </select>
+        <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          This banner type will be used on the main page and any page that doesn't specify its own banner.
+        </p>
+      </div>
+      
+      <!-- Video Banner Settings (only show if video type is selected) -->
+      {#if bannerConfig.defaultBannerType === 'video'}
+        <div class="p-4 bg-neutral-100 dark:bg-neutral-700/30 rounded-md">
+          <h5 class="text-sm font-medium text-black/80 dark:text-white/80 mb-3">Video Banner Settings</h5>
+          
+          <div>
+            <label for="video-id" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              YouTube Video ID
+            </label>
+            <input 
+              type="text" 
+              id="video-id" 
+              bind:value={bannerConfig.defaultBannerData.videoId}
+              on:input={handleChange}
+              class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
+              placeholder="e.g., dQw4w9WgXcQ"
+            />
+            <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+              Enter the YouTube video ID (the part after ?v= in the YouTube URL)
+            </p>
+          </div>
+        </div>
+      {/if}
+      
+      <!-- Image Banner Settings (only show if image type is selected) -->
+      {#if bannerConfig.defaultBannerType === 'image'}
+        <div class="p-4 bg-neutral-100 dark:bg-neutral-700/30 rounded-md">
+          <h5 class="text-sm font-medium text-black/80 dark:text-white/80 mb-3">Image Banner Settings</h5>
+          
+          <div>
+            <label for="image-url" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              Image URL
+            </label>
+            <select 
+                id="image-url" 
+                bind:value={bannerConfig.defaultBannerData.imageUrl}
+                on:change={handleChange}
+                class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
+              >
+                <option value="" class="text-neutral-900 dark:text-neutral-100">Select an image</option>
+                <option value="/src/assets/banner/0001.png" class="text-neutral-900 dark:text-neutral-100">0001.png</option>
+                <option value="/src/assets/banner/0002.png" class="text-neutral-900 dark:text-neutral-100">0002.png</option>
+                <option value="/src/assets/banner/0003.png" class="text-neutral-900 dark:text-neutral-100">0003.png</option>
+                <option value="/src/assets/banner/0004.png" class="text-neutral-900 dark:text-neutral-100">0004.png</option>
+                <option value="/src/assets/banner/0005.png" class="text-neutral-900 dark:text-neutral-100">0005.png</option>
+                <option value="/src/assets/banner/0006.png" class="text-neutral-900 dark:text-neutral-100">0006.png</option>
+                <option value="/src/assets/banner/0007.png" class="text-neutral-900 dark:text-neutral-100">0007.png</option>
+                <option value="/src/assets/banner/0008.png" class="text-neutral-900 dark:text-neutral-100">0008.png</option>
+            </select>
+            <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+              Select the image to use for the banner
+            </p>
+          </div>
+        </div>
+      {/if}
+      
+      <!-- Timeline Banner Settings (only show if timeline type is selected) -->
+      {#if bannerConfig.defaultBannerType === 'timeline'}
+        <div class="p-4 bg-neutral-100 dark:bg-neutral-700/30 rounded-md">
+          <h5 class="text-sm font-medium text-black/80 dark:text-white/80 mb-3">Timeline Banner Settings</h5>
+          
+          <div class="space-y-4">
+            <div>
+              <label for="timeline-category" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Category
+              </label>
+              <input 
+                type="text" 
+                id="timeline-category" 
+                bind:value={bannerConfig.defaultBannerData.category}
+                on:input={handleChange}
+                class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
+                placeholder="e.g., history, science, etc."
+                required
+              />
+              <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                Category is required for timeline banners
+              </p>
+            </div>
+            
+            <div>
+              <label for="timeline-title" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Title (optional)
+              </label>
+              <input 
+                type="text" 
+                id="timeline-title" 
+                bind:value={bannerConfig.defaultBannerData.title}
+                on:input={handleChange}
+                class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
+                placeholder="Timeline title"
+              />
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="timeline-start-year" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                  Start Year
+                </label>
+                <input 
+                  type="number" 
+                  id="timeline-start-year" 
+                  bind:value={bannerConfig.defaultBannerData.startYear}
+                  on:input={handleChange}
+                  class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
+                  placeholder="e.g., 1900"
+                />
+              </div>
+              
+              <div>
+                <label for="timeline-end-year" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                  End Year
+                </label>
+                <input 
+                  type="number" 
+                  id="timeline-end-year" 
+                  bind:value={bannerConfig.defaultBannerData.endYear}
+                  on:input={handleChange}
+                  class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
+                  placeholder="e.g., 2023"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label for="timeline-background" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Background Image (optional)
+              </label>
+              <input 
+                type="text" 
+                id="timeline-background" 
+                bind:value={bannerConfig.defaultBannerData.background}
+                on:input={handleChange}
+                class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
+                placeholder="/public/posts/timeline/universe.png"
+              />
+              <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                Path to the background image for the timeline
+              </p>
+            </div>
+            
+            <div class="flex items-center">
+              <input 
+                type="checkbox" 
+                id="timeline-compact" 
+                bind:checked={bannerConfig.defaultBannerData.compact}
+                on:change={handleChange}
+                class="h-4 w-4 text-[var(--primary)] border-neutral-300 dark:border-neutral-600 rounded" 
+              />
+              <label for="timeline-compact" class="ml-2 block text-sm text-neutral-700 dark:text-neutral-300">
+                Compact Mode
+              </label>
+            </div>
+            
+            <div>
+              <label for="timeline-height" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Timeline Height
+              </label>
+              <input 
+                type="text" 
+                id="timeline-height" 
+                bind:value={bannerConfig.defaultBannerData.height}
+                on:input={handleChange}
+                class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
+                placeholder="70vh"
+              />
+              <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                CSS value for timeline height (vh units recommended)
+              </p>
+            </div>
+          </div>
+        </div>
+      {/if}
+      
+      <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md text-sm text-blue-800 dark:text-blue-200">
+        <p>The selected banner type will be used for the main page and pages without a specific banner. Post pages can still override this with their own banner settings.</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Standard Banner Settings Section -->
+  {#if bannerConfig.defaultBannerType === 'standard'}
   <div class="space-y-6">
-    <!-- Banner Image Selection -->
+    <!-- Standard Banner Image Selection (only show for standard banner type) -->
     <div>
       <h4 class="text-md font-medium text-black/80 dark:text-white/80 mb-3">Banner Images</h4>
       
@@ -275,7 +539,7 @@
       </div>
     </div>
     
-    <!-- Animation Settings -->
+    <!-- Animation Settings (only for standard banner type) -->
     <div>
       <h4 class="text-md font-medium text-black/80 dark:text-white/80 mb-3">Animation Settings</h4>
       
@@ -374,86 +638,7 @@
       </div>
     </div>
     
-    <!-- Layout Settings -->
-    <div>
-      <h4 class="text-md font-medium text-black/80 dark:text-white/80 mb-3">Layout Settings</h4>
-      
-      <div class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label for="banner-height-desktop" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-              Desktop Height
-            </label>
-            <input 
-              type="text" 
-              id="banner-height-desktop" 
-              bind:value={bannerConfig.layout.height.desktop}
-              on:input={handleChange}
-  class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
-              placeholder="e.g., 50vh"
-            />
-          </div>
-          <div>
-            <label for="banner-height-mobile" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-              Mobile Height
-            </label>
-            <input 
-              type="text" 
-              id="banner-height-mobile" 
-              bind:value={bannerConfig.layout.height.mobile}
-              on:input={handleChange}
-  class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
-              placeholder="e.g., 30vh"
-            />
-          </div>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label for="banner-overlap-desktop" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-              Desktop Content Overlap
-            </label>
-            <input 
-              type="text" 
-              id="banner-overlap-desktop" 
-              bind:value={bannerConfig.layout.overlap.desktop}
-              on:input={handleChange}
-  class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
-              placeholder="e.g., 3.5rem"
-            />
-          </div>
-          <div>
-            <label for="banner-overlap-mobile" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-              Mobile Content Overlap
-            </label>
-            <input 
-              type="text" 
-              id="banner-overlap-mobile" 
-              bind:value={bannerConfig.layout.overlap.mobile}
-              on:input={handleChange}
-  class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
-              placeholder="e.g., 2rem"
-            />
-          </div>
-        </div>
-        
-        <div>
-          <label for="banner-max-width" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-            Maximum Width (px)
-          </label>
-          <input 
-            type="number" 
-            id="banner-max-width" 
-            bind:value={bannerConfig.layout.maxWidth}
-            on:input={handleChange}
-              class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
-            placeholder="e.g., 1920"
-          />
-        </div>
-      </div>
-    </div>
-    
-    <!-- Visual Settings -->
+    <!-- Visual Settings (only for standard and image banner types) -->
     <div>
       <h4 class="text-md font-medium text-black/80 dark:text-white/80 mb-3">Visual Settings</h4>
       
@@ -532,7 +717,7 @@
       </div>
     </div>
     
-    <!-- Fallback Settings -->
+    <!-- Fallback Settings (only for standard banner type) -->
     <div>
       <h4 class="text-md font-medium text-black/80 dark:text-white/80 mb-3">Fallback Settings</h4>
       
@@ -580,6 +765,167 @@
             disabled={!bannerConfig.fallback.enabled}
           />
         </div>
+      </div>
+    </div>
+  </div>
+  {/if}
+  
+  <!-- Layout Settings (for all banner types) -->
+  <div class="space-y-4 pt-6 mt-6 border-t border-neutral-200 dark:border-neutral-700">
+    <h4 class="text-md font-medium text-black/80 dark:text-white/80 mb-3">Layout Settings</h4>
+    
+    <div class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="banner-height-desktop" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+            Desktop Height
+          </label>
+          <input 
+            type="text" 
+            id="banner-height-desktop" 
+            bind:value={bannerConfig.layout.height.desktop}
+            on:input={handleChange}
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
+            placeholder="e.g., 50vh"
+          />
+        </div>
+        <div>
+          <label for="banner-height-mobile" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+            Mobile Height
+          </label>
+          <input 
+            type="text" 
+            id="banner-height-mobile" 
+            bind:value={bannerConfig.layout.height.mobile}
+            on:input={handleChange}
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
+            placeholder="e.g., 30vh"
+          />
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="banner-overlap-desktop" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+            Desktop Content Overlap
+          </label>
+          <input 
+            type="text" 
+            id="banner-overlap-desktop" 
+            bind:value={bannerConfig.layout.overlap.desktop}
+            on:input={handleChange}
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
+            placeholder="e.g., 3.5rem"
+          />
+        </div>
+        <div>
+          <label for="banner-overlap-mobile" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+            Mobile Content Overlap
+          </label>
+          <input 
+            type="text" 
+            id="banner-overlap-mobile" 
+            bind:value={bannerConfig.layout.overlap.mobile}
+            on:input={handleChange}
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
+            placeholder="e.g., 2rem"
+          />
+        </div>
+      </div>
+      
+      <div>
+        <label for="banner-max-width" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+          Maximum Width (px)
+        </label>
+        <input 
+          type="number" 
+          id="banner-max-width" 
+          bind:value={bannerConfig.layout.maxWidth}
+          on:input={handleChange}
+          class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
+          placeholder="e.g., 1920"
+        />
+      </div>
+    </div>
+  </div>
+  
+  <!-- Navbar Spacing Settings (for all banner types) -->
+  <div class="space-y-4 pt-6 mt-6 border-t border-neutral-200 dark:border-neutral-700">
+    <h4 class="text-md font-medium text-black/80 dark:text-white/80 mb-3">Navbar Spacing</h4>
+    
+    <div class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="navbar-spacing-standard" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+            Standard Banner Spacing
+          </label>
+          <input 
+            type="text" 
+            id="navbar-spacing-standard" 
+            bind:value={bannerConfig.navbarSpacing.standard}
+            on:input={handleChange}
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
+            placeholder="e.g., 0"
+          />
+          <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            Space between navbar and standard banner
+          </p>
+        </div>
+        <div>
+          <label for="navbar-spacing-timeline" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+            Timeline Banner Spacing
+          </label>
+          <input 
+            type="text" 
+            id="navbar-spacing-timeline" 
+            bind:value={bannerConfig.navbarSpacing.timeline}
+            on:input={handleChange}
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
+            placeholder="e.g., 4.5rem"
+          />
+          <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            Space between navbar and timeline banner
+          </p>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="navbar-spacing-video" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+            Video Banner Spacing
+          </label>
+          <input 
+            type="text" 
+            id="navbar-spacing-video" 
+            bind:value={bannerConfig.navbarSpacing.video}
+            on:input={handleChange}
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
+            placeholder="e.g., 4.5rem"
+          />
+          <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            Space between navbar and video banner
+          </p>
+        </div>
+        <div>
+          <label for="navbar-spacing-image" class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+            Image Banner Spacing
+          </label>
+          <input 
+            type="text" 
+            id="navbar-spacing-image" 
+            bind:value={bannerConfig.navbarSpacing.image}
+            on:input={handleChange}
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm text-neutral-800 dark:text-neutral-200"
+            placeholder="e.g., 4.5rem"
+          />
+          <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            Space between navbar and image banner
+          </p>
+        </div>
+      </div>
+      
+      <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md text-sm text-blue-800 dark:text-blue-200">
+        <p>These settings control the space between your navbar and different banner types. Increase values to add more space below the navbar.</p>
       </div>
     </div>
   </div>
