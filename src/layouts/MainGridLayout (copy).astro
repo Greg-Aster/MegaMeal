@@ -167,7 +167,7 @@ style={isStandardPage
       <div class="timeline-banner-inner">
         <TimelineController 
           title={hasPostTimelineBanner ? (post.data.bannerData.title || post.data.title) : (timelineBannerData.title || title || "Timeline")}
-          category={hasPostTimelineBanner ? post.data.bannerData.category : (timelineBannerData?.category || "MEGA MEAL")}
+          category="MEGA MEAL" <!-- Always use MEGA MEAL -->
           startYear={hasPostTimelineBanner ? post.data.bannerData.startYear : timelineBannerData?.startYear}
           endYear={hasPostTimelineBanner ? post.data.bannerData.endYear : timelineBannerData?.endYear}
           background={hasPostTimelineBanner ? (post.data.bannerData.background || "/posts/timeline/universe.png") : (timelineBannerData?.background || "/posts/timeline/universe.png")}

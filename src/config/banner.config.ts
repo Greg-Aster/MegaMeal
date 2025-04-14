@@ -108,13 +108,13 @@ export const bannerConfig: BannerConfig = {
   
   // Default banner data for timeline
   defaultBannerData: {
-    category: "history", // This is required for timeline banner
+    category: "MEGA MEAL", // This is required for timeline banner
     title: "Site Timeline", // Optional but recommended
-    startYear: 2000, // Optional 
-    endYear: 2025, // Optional
+    startYear: 1, // Optional 
+    endYear: 50000, // Optional
     background: "/public/posts/timeline/universe.png", // Optional
     compact: false, // Optional
-    height: "90vh" // Optional
+    height: "70vh" // Optional
   },
   
   // List of all banner images for animation
@@ -143,8 +143,8 @@ export const bannerConfig: BannerConfig = {
   // Layout settings
   layout: {
     height: {
-      desktop: '100vh',         // 100% of viewport height on desktop
-      mobile: '100vh'           // 100% of viewport height on mobile
+      desktop: '80vh',         // 100% of viewport height on desktop
+      mobile: '80vh'           // 100% of viewport height on mobile
     },
     overlap: {
       desktop: '0rem',          // Content overlap on desktop
