@@ -4,6 +4,7 @@
   import BannerSettings from './appearance/BannerSettings.svelte';
   import PostCardSettings from './appearance/PostCardSettings.svelte';
   import FaviconSettings from './appearance/FaviconSettings.svelte';
+  import TransparencySettings from './appearance/TransparencySettings.svelte';
   
   // Props
   export let siteConfig;
@@ -32,6 +33,12 @@
   <AppearanceThemeSettings 
     bind:siteConfig={siteConfig} 
     on:change={handleChange} 
+  />
+  
+  <!-- Transparency Settings Section -->
+  <TransparencySettings
+    bind:siteConfig={siteConfig}
+    on:change={handleChange}
   />
   
   <!-- Banner Settings Section -->

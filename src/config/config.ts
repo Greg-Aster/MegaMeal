@@ -9,21 +9,22 @@ import { AUTO_MODE, DARK_MODE, LIGHT_MODE } from '@constants/constants.ts'
 
 
 export const siteConfig: SiteConfig = {
-  title: "Temporal Flow",
-  subtitle: "A Decentralized Content Platform",
+  title: "MEGA MEAL SAGA",
+  subtitle: "Consuming Time Itself Since 3042",
   lang: "en",
   themeColor: {
-    hue: 0,
+    hue: 320, // Purple-red hue reminiscent of the Purple Force
     fixed: false
   },
-  defaultTheme: LIGHT_MODE,
+  transparency: 0.5, // Single value from 0 to 1
+  defaultTheme: DARK_MODE, // Dark mode fits the cosmic horror vibe
   banner: {
-    enable: false,
-    src: "/assets/banner/0001.png",
+    enable: true,
+    src: "/posts/timeline/golden-era.png", // Using one of your timeline backgrounds
     position: "center",
     credit: {
       enable: true,
-      text: "",
+      text: "Corporate Archives Division",
       url: ""
     }
   },
@@ -38,29 +39,29 @@ export const navBarConfig: NavBarConfig = {
   links: [
     0,
     {
-      name: "Projects",
+      name: "Temporal Archive",
       url: "/archive/",
       dropdown: [
         {
-          name: "Timeline Example",
+          name: "Complete Timeline",
           url: "/posts/timeline/"
         },
         {
-          name: "Project One",
-          url: "/projects/project-one/"
+          name: "Corporate Empire",
+          url: "/posts/timeline/corporate-empire/"
         },
         {
-          name: "Project Two",
-          url: "/projects/project-two/"
+          name: "The Perfect Mary",
+          url: "/posts/timeline/miranda-bloody-mary/"
         },
         {
-          name: "Project Three",
-          url: "/projects/project-three/"
+          name: "Snuggloid Emergence",
+          url: "/posts/timeline/spork-uprising/"
         },
         {
-          name: "External Project",
-          url: "https://example.com/project",
-          external: true
+          name: "Culinary Cosmos",
+          url: "/posts/timeline/boudin-noir-restaurant-review/",
+          external: false
         }
       ]
     },
@@ -72,23 +73,23 @@ export const navBarConfig: NavBarConfig = {
 
 export const profileConfig: ProfileConfig = {
   avatar: "/src/content/avatar/avatar.png",
-  name: "Site Owner",
-  bio: "Content Creator & Digital Storyteller",
+  name: "Mysterious Witness",
+  bio: "Observer of extinction events, time traveler, and collector of perfect recipes across the multiverse.",
   links: [
     {
-      name: "Discord",
+      name: "Interdimensional Transit",
       icon: "fa6-brands:discord",
-      url: "https://discord.gg/example"
+      url: "https://discord.gg/megameal"
     },
     {
-      name: "GitHub",
+      name: "Temporal Archives",
       icon: "fa6-brands:github",
-      url: "https://github.com/example"
+      url: "https://github.com/megameal"
     },
     {
-      name: "BlueSky",
+      name: "Quantum Communications",
       icon: "fa6-brands:bluesky",
-      url: "https://bsky.app/profile/"
+      url: "https://bsky.app/profile/megameal"
     }
   ],
   avatarFilename: "ComfyUI_0003.png"
@@ -96,6 +97,6 @@ export const profileConfig: ProfileConfig = {
 
 export const licenseConfig: LicenseConfig = {
   enable: true,
-  name: "CC BY-NC-SA 4.0",
+  name: "Corporate Holdings Act 3042-B",
   url: "https://creativecommons.org/licenses/by-nc-sa/4.0/"
 }
