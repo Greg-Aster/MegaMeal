@@ -13,7 +13,7 @@ export const siteConfig: SiteConfig = {
   subtitle: "Consuming Time Itself Since 3042",
   lang: "en",
   themeColor: {
-    hue: 320, // Purple-red hue reminiscent of the Purple Force
+    hue: 220, // Blue hue for cosmic horror
     fixed: false
   },
   transparency: 0.5, // Single value from 0 to 1

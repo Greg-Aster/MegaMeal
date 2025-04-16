@@ -96,6 +96,31 @@ export interface BannerConfig {
     video: string            // For video banner
     image: string            // For image banner
   }
+
+  // Navbar height settings (previously hardcoded in MainGridLayout.astro)
+  navbar: {
+    height: {
+      desktop: string        // CSS value (e.g., '4.5rem')
+      mobile: string         // CSS value (e.g., '3.5rem')
+    }
+  }
+
+  // Panel positioning (previously calculated in MainGridLayout.astro)
+  panel: {
+    top: {
+      video: string          // CSS value for video banner type
+      image: string          // CSS value for image banner type
+      timeline: string       // CSS value for timeline banner type
+      standard: string       // CSS value for standard banner type
+    }
+  }
+
+  // Parallax effect settings
+  parallax: {
+    enabled: boolean
+    scrollFactor: number     // How much the parallax moves (e.g., -0.05)
+    easingFactor: number     // Smooth motion factor (e.g., 0.1)
+  }
 }
 
 /**
@@ -143,14 +168,14 @@ export const bannerConfig: BannerConfig = {
   // Layout settings
   layout: {
     height: {
-      desktop: '80vh',         // 100% of viewport height on desktop
-      mobile: '80vh'           // 100% of viewport height on mobile
+      desktop: '80vh',         // 80% of viewport height on desktop
+      mobile: '80vh'           // 80% of viewport height on mobile
     },
     overlap: {
-      desktop: '0rem',          // Content overlap on desktop
-      mobile: '0rem'            // Content overlap on mobile
+      desktop: '-1rem',        // Content overlap on desktop
+      mobile: '-1rem'          // Content overlap on mobile
     },
-    maxWidth: 1920              // Max banner width in pixels
+    maxWidth: 1920             // Max banner width in pixels
   },
   
   // Visual settings
@@ -171,10 +196,35 @@ export const bannerConfig: BannerConfig = {
   
   // Navbar spacing settings
   navbarSpacing: {
-    standard: '0',           // Standard banner starts at top of page
-    timeline: '4.5rem',      // Timeline needs space for navbar
-    video: '4.5rem',         // Video also needs space
-    image: '4.5rem'          // Image also needs space
+    standard: "0",
+    timeline: "5.5rem",       // Adjust to exact navbar height
+    video: "5.5rem",
+    image: "0"                // Set to 0 for navbar overlap
+  },
+
+  // Navbar height settings (moved from MainGridLayout.astro)
+  navbar: {
+    height: {
+      desktop: '4.5rem',      // 72px at 16px base font size
+      mobile: '3.5rem'        // 56px at 16px base font size
+    }
+  },
+
+  // Panel positioning (moved from MainGridLayout calculations)
+  panel: {
+    top: {
+      video: "0",             // For video banner: no overlap needed
+      image: "calc(var(--navbar-height) + 1rem)", // For image banner: navbar + spacing
+      timeline: "0",          // For timeline banner
+      standard: "calc(var(--banner-height) - var(--banner-overlap))" // For standard banner
+    }
+  },
+
+  // Parallax effect settings
+  parallax: {
+    enabled: true,
+    scrollFactor: -0.02,      // How much the background moves (-0.05 = 5% opposite of scroll)
+    easingFactor: 0.1         // Smooth motion factor (0.1 = 10% of the gap each frame)
   }
 }
 
@@ -220,6 +270,29 @@ export function getBannerAnimationSettings(): {
     transitionDuration: bannerConfig.animation.transitionDuration,
     direction: bannerConfig.animation.direction
   };
+}
+
+/**
+ * Get panel top position based on banner type
+ * @param bannerType The type of banner being used
+ * @returns CSS value for top position
+ */
+export function getPanelTopPosition(bannerType: BannerType): string {
+  switch(bannerType) {
+    case 'video': return bannerConfig.panel.top.video;
+    case 'image': return bannerConfig.panel.top.image;
+    case 'timeline': return bannerConfig.panel.top.timeline;
+    default: return bannerConfig.panel.top.standard;
+  }
+}
+
+/**
+ * Get navbar height based on screen size
+ * @param isMobile Whether to get mobile height
+ * @returns CSS value for navbar height
+ */
+export function getNavbarHeight(isMobile: boolean = false): string {
+  return isMobile ? bannerConfig.navbar.height.mobile : bannerConfig.navbar.height.desktop;
 }
 
 /**

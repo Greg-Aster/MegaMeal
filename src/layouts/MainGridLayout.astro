@@ -15,14 +15,17 @@ import { getDir } from '../utils/url-utils';
 import TimelineController from '../components/timeline/TimelineBanner.astro';
 import '../styles/timeline-styles.css';
 
-// Import banner configuration
+// Import banner configuration and helper functions
 import { 
   bannerConfig, 
   getResponsiveBannerDimensions, 
   getFallbackBannerCSS,
   isVideoBannerData,
   isImageBannerData,
-  isTimelineBannerData
+  isTimelineBannerData,
+  getPanelTopPosition,
+  getNavbarHeight,
+  getBannerAnimationSettings
 } from '../config/banner.config';
 
 interface Props {
@@ -53,10 +56,10 @@ const customAvatar = post?.data?.avatarImage || '';
 const customName = post?.data?.authorName || '';
 const customBio = post?.data?.authorBio || '';
 
-// Get banner dimensions from config
+// Use the config helper functions for dimensions
 const { height: BANNER_HEIGHT, overlap: BANNER_OVERLAP } = getResponsiveBannerDimensions(false);
-const NAVBAR_HEIGHT = 4.5; // rem (72px ≈ 4.5rem at 16px base font size)
-const NAVBAR_HEIGHT_MOBILE = 3.5; // rem (56px ≈ 3.5rem)
+const NAVBAR_HEIGHT = getNavbarHeight(false);
+const NAVBAR_HEIGHT_MOBILE = getNavbarHeight(true);
 
 // Check if post has a specific banner type
 const hasPostTimelineBanner = post?.data?.bannerType === "timeline" && post?.data?.bannerData?.category;
@@ -90,16 +93,19 @@ const timelineBannerData = hasPostTimelineBanner
   ? post.data.bannerData
   : useDefaultTimeline ? bannerConfig.defaultBannerData : null;
 
-// Update the mainPanelTop calculation to be responsive
-const mainPanelTop = hasVideoBanner 
-  ? "0" // For video banner: no overlap needed
+// Use centralized config for panel position
+const currentBannerType = hasVideoBanner 
+  ? 'video' 
   : hasImageBanner 
-    ? "calc(var(--navbar-height) + 1rem)" // For image banner: navbar + spacing
-    : `calc(${BANNER_HEIGHT} - ${BANNER_OVERLAP})`; // For animated banner: allow overlap
+    ? 'image' 
+    : hasTimelineBanner 
+      ? 'timeline' 
+      : 'standard';
+
+const mainPanelTop = getPanelTopPosition(currentBannerType);
 
 // Use bannerList from config
 const bannerList = bannerConfig.bannerList;
-
 const MAX_BANNER_WIDTH = bannerConfig.layout.maxWidth; // px
 
 // Get navbar spacing based on banner type
@@ -123,7 +129,7 @@ const navbarSpacing = getBannerNavbarSpacing();
 >
 
   <!-- Parallax Background (if enabled) -->
-  {siteConfig.banner.enable && 
+  {siteConfig.banner.enable && bannerConfig.parallax.enabled && 
     <div id="parallax-banner" class="fixed top-0 left-0 w-full h-screen z-[-1] overflow-hidden">
       <ImageWrapper 
         id="parallax-image" 
@@ -308,8 +314,8 @@ style={isStandardPage
   'banner-height-mobile': bannerConfig.layout.height.mobile,
   'banner-overlap': bannerConfig.layout.overlap.desktop,
   'banner-overlap-mobile': bannerConfig.layout.overlap.mobile,
-  'navbar-height': `${NAVBAR_HEIGHT}rem`,
-  'navbar-height-mobile': `${NAVBAR_HEIGHT_MOBILE}rem`,
+  'navbar-height': bannerConfig.navbar.height.desktop,
+  'navbar-height-mobile': bannerConfig.navbar.height.mobile,
   'standard-navbar-spacing': bannerConfig.navbarSpacing.standard,
   'timeline-navbar-spacing': bannerConfig.navbarSpacing.timeline,
   'video-navbar-spacing': bannerConfig.navbarSpacing.video,
@@ -530,15 +536,20 @@ style={isStandardPage
     let ticking = false;
     let lastScrollY = window.scrollY;
     let currentOffset = 0;
+    let isInitialized = false;
     
     function updateParallax() {
       const scrollY = window.scrollY;
       
       // Calculate the parallax offset with smoother motion
-      const targetOffset = scrollY * 0.03; // Reduced for subtler movement
+      // Use the scroll factor from config (or default if not available)
+      const scrollFactor = (window.bannerConfig?.parallax?.scrollFactor) || -0.05;
+      const easingFactor = (window.bannerConfig?.parallax?.easingFactor) || 0.1;
+      
+      const targetOffset = scrollY * scrollFactor;
       
       // Simple easing - move only part of the way to the target each frame
-      currentOffset += (targetOffset - currentOffset) * 0.1; 
+      currentOffset += (targetOffset - currentOffset) * easingFactor; 
       
       // Update the CSS variable
       document.documentElement.style.setProperty('--parallax-offset', `${currentOffset}px`);
@@ -559,12 +570,17 @@ style={isStandardPage
       }
     });
     
-    // Initial position
-    updateParallax();
+    // Delay initial parallax setup to prevent shuddering
+    setTimeout(() => {
+      isInitialized = true;
+      // Set initial position with a clean starting point
+      document.documentElement.style.setProperty('--parallax-offset', '0px');
+      updateParallax();
+    }, 300);
   }
 
-    // Apply background opacity from config if available
-    document.addEventListener('DOMContentLoaded', () => {
+  // Apply background opacity from config if available
+  document.addEventListener('DOMContentLoaded', () => {
     if (window.siteConfig && window.siteConfig.transparency) {
       document.documentElement.style.setProperty('--bg-opacity', window.siteConfig.transparency);
     }
@@ -609,23 +625,4 @@ style={isStandardPage
     }
   }
   
-  // Swup transitions handler
-  function setupSwupTransitions() {
-    if (!window.swup?.hooks) return;
-    
-    window.swup.hooks.on('page:view', () => {
-      updateNavbarHeight();
-      initializeAnimations();
-      setupBannerAnimation();
-      setupEfficientParallax();
-    });
-  }
-  
-  // Initialize Swup if available
-  if (window.swup?.hooks) {
-    setupSwupTransitions();
-  } else {
-    document.addEventListener('swup:enable', setupSwupTransitions);
-  }
 </script>
-
