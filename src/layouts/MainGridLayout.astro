@@ -36,6 +36,7 @@ interface Props {
   setOGTypeArticle?: boolean
   headings?: MarkdownHeading[]
   post?: any 
+  bannerLink?: string
 }
 
 // Update the Props destructuring in MainGridLayout.astro
@@ -46,8 +47,14 @@ const {
   lang, 
   setOGTypeArticle, 
   headings = [], 
-  post
+  post,
+  bannerLink = ''
 } = Astro.props
+
+// Get the banner link from post data if available (for cases where post data is passed directly)
+const bannerLinkFromPost = post?.data?.bannerLink || '';
+// Use bannerLinkFromPost as priority, then fall back to the prop
+const finalBannerLink = bannerLinkFromPost || bannerLink;
 
 // Get the post slug if available
 const postSlug = post?.slug || '';
@@ -212,15 +219,35 @@ style={isStandardPage
   </div>
 )}
 
-{/* Image Banner Content */}
+<!-- Image Banner Content -->
 {hasImageBanner && (
   <div class="image-banner-content max-w-screen-2xl mx-auto px-0">
     <div class="relative w-full overflow-hidden shadow-lg rounded-lg">
-      <img 
-        src={hasPostImageBanner ? (post.data.bannerData?.imageUrl || post.data.image) : imageBannerData.imageUrl}
-        alt={hasPostImageBanner ? (post.data.title || "Post banner image") : (title || "Banner image")}
-        class="w-full object-cover"
-      />
+      {post?.data?.bannerLink || bannerLink ? (
+        <a 
+          href={post?.data?.bannerLink || bannerLink} 
+          aria-label="Banner Link" 
+          class="group block relative"
+        >
+          <div class="absolute transition pointer-events-none group-hover:bg-black/30 group-active:bg-black/50 w-full h-full z-50 flex items-center justify-center">
+            <Icon
+              name="fa6-solid:link"
+              class="transition opacity-0 scale-90 group-hover:scale-100 group-hover:opacity-100 text-white text-5xl"
+            ></Icon>
+          </div>
+          <img 
+            src={hasPostImageBanner ? (post.data.bannerData?.imageUrl || post.data.image) : imageBannerData.imageUrl}
+            alt={hasPostImageBanner ? (post.data.title || "Post banner image") : (title || "Banner image")}
+            class="w-full object-cover"
+          />
+        </a>
+      ) : (
+        <img 
+          src={hasPostImageBanner ? (post.data.bannerData?.imageUrl || post.data.image) : imageBannerData.imageUrl}
+          alt={hasPostImageBanner ? (post.data.title || "Post banner image") : (title || "Banner image")}
+          class="w-full object-cover"
+        />
+      )}
     </div>
   </div>
 )}
@@ -365,19 +392,6 @@ style={isStandardPage
       background: linear-gradient(to right, rgba(0,0,0,0.15), transparent 10%, transparent 90%, rgba(0,0,0,0.15));
       z-index: 1;
     }
-  }
-  
-  /* Parallax styles */
-  .parallax-bg {
-    transform: translateZ(0);
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 120vh;
-    will-change: transform;
-    transform: translate3d(0, var(--parallax-offset, 0), 0);
-    transition: transform 0.15s ease-out;
   }
   
   /* Mobile responsiveness */
@@ -526,58 +540,72 @@ style={isStandardPage
     }
   }
   
-  // Efficient parallax scrolling with CSS variables
   function setupEfficientParallax() {
     // Check if we have the parallax banner
     const parallaxBanner = document.getElementById('parallax-banner');
     if (!parallaxBanner) return;
     
-    // Uses CSS custom properties for better performance
-    let ticking = false;
-    let lastScrollY = window.scrollY;
-    let currentOffset = 0;
-    let isInitialized = false;
+    // Get the parallax image
+    const parallaxImage = document.getElementById('parallax-image');
+    if (!parallaxImage) return;
     
-    function updateParallax() {
-      const scrollY = window.scrollY;
-      
-      // Calculate the parallax offset with smoother motion
-      // Use the scroll factor from config (or default if not available)
-      const scrollFactor = (window.bannerConfig?.parallax?.scrollFactor) || -0.05;
-      const easingFactor = (window.bannerConfig?.parallax?.easingFactor) || 0.1;
-      
-      const targetOffset = scrollY * scrollFactor;
-      
-      // Simple easing - move only part of the way to the target each frame
-      currentOffset += (targetOffset - currentOffset) * easingFactor; 
-      
-      // Update the CSS variable
-      document.documentElement.style.setProperty('--parallax-offset', `${currentOffset}px`);
-      
-      // Continue animation if still moving
-      if (Math.abs(targetOffset - currentOffset) > 0.1) {
-        requestAnimationFrame(updateParallax);
-      } else {
-        ticking = false;
-      }
-    }
+    // Calculate initial position based on current scroll BEFORE anything is visible
+    const initialScrollY = window.scrollY;
+    const scrollFactor = (window.bannerConfig?.parallax?.scrollFactor) || -0.05;
+    const initialOffset = initialScrollY * scrollFactor;
     
-    // Handle scroll events efficiently
-    window.addEventListener('scroll', () => {
-      if (!ticking) {
-        requestAnimationFrame(updateParallax);
-        ticking = true;
-      }
+    // Set the initial transform directly on the element
+    parallaxImage.style.transform = `translate3d(0, ${initialOffset}px, 0)`;
+    
+    // After everything is ready and positioned correctly, fade in the container
+    window.addEventListener('load', () => {
+      // Wait a tiny bit to make sure all calculations are done
+      setTimeout(() => {
+        // Show the container now that everything is positioned
+        parallaxBanner.classList.add('loaded');
+        
+        // Now add the smooth transition (AFTER initial positioning)
+        setTimeout(() => {
+          // Add smooth transition now that everything is stable
+          parallaxImage.style.transition = "transform 0.3s cubic-bezier(0.1, 0.7, 0.1, 1)";
+        }, 500);
+        
+        // Setup the scroll handling for parallax effect
+        let ticking = false;
+        let lastScrollY = window.scrollY;
+        let currentOffset = initialOffset;
+        
+        function updateParallax() {
+          const scrollY = window.scrollY;
+          const targetOffset = scrollY * scrollFactor;
+          
+          // Add easing for smoother movement
+          currentOffset += (targetOffset - currentOffset) * 0.1;
+          
+          // Apply the transform with easing
+          parallaxImage.style.transform = `translate3d(0, ${currentOffset}px, 0)`;
+          
+          // Continue animation if still moving significantly
+          if (Math.abs(targetOffset - currentOffset) > 0.1) {
+            requestAnimationFrame(updateParallax);
+          } else {
+            ticking = false;
+          }
+        }
+        
+        // Handle scroll events efficiently
+        window.addEventListener('scroll', () => {
+          if (!ticking) {
+            requestAnimationFrame(updateParallax);
+            ticking = true;
+          }
+        });
+      }, 100);
     });
-    
-    // Delay initial parallax setup to prevent shuddering
-    setTimeout(() => {
-      isInitialized = true;
-      // Set initial position with a clean starting point
-      document.documentElement.style.setProperty('--parallax-offset', '0px');
-      updateParallax();
-    }, 300);
   }
+
+// Call this function when the DOM is ready
+document.addEventListener('DOMContentLoaded', setupEfficientParallax);
 
   // Apply background opacity from config if available
   document.addEventListener('DOMContentLoaded', () => {

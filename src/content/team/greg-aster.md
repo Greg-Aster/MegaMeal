@@ -1,6 +1,10 @@
 ---
-title: "About DNDIY"
-description: "Learn more about our project and team."
+name: "Gregory Aster"
+role: "Experimental Videographer & Cosmic Storyteller"
+image: "/assets/avatar/avatar.png" 
+email: "greg@dndiy.org"
+featured: true
+order: 1
 ---
 
 ## **Gregory Aster**
@@ -59,9 +63,9 @@ description: "Learn more about our project and team."
 
 - **Mega Meal:** Chronicles a dystopian future where sentient fast-food mascots guard dark secrets. Will the protagonist, *(redacted)*, uncover the truth?  
 - **Untitled:** A Cosmic Horror  blend of timelines, sirens, and symbolic visuals exploring loss and destiny.  
-- **DNDIY:** Short for do-not-do-it-yourself, its the original vintage series Greg held the mantle for, and the proving ground of his skills today. 
+- **DNDIY:** Short for do-not-do-it-yourself, its the original vintage series Greg held the mantle for. The proving ground. 
 - **Merkin’s Alternate Universe:** Experimental website theme inspired by a cosmic entity - unlock dark realities with a mere mode switch.  
-- **Dystopian IRL Building of Things:** The ongoing battle against decay and existential dread.
+- **Dystopian IRL Building:** The ongoing battle against decay and existential dread.
 
 ---
 
@@ -102,6 +106,6 @@ description: "Learn more about our project and team."
 
 Looking to collaborate on storytelling ventures or explore the multiverse together?
 
-Contact below.
+Contact me!
 
 ---

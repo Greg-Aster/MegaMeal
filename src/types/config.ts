@@ -10,8 +10,10 @@ export type SiteConfig = {
     hue: number
     fixed: boolean
   }
+
     // Add transparency configuration
     transparency?: number;
+
     
   defaultTheme: LIGHT_DARK_MODE 
   banner: {
@@ -109,6 +111,8 @@ export type LIGHT_DARK_MODE =
     prevSlug?: string
     nextTitle?: string
     nextSlug?: string
+    bannerLink?: string
+
     // Timeline-specific fields
     timelineYear?: string
     timelineEra?: string

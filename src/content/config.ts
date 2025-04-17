@@ -18,13 +18,15 @@ const postsCollection = defineCollection({
     lang: z.string().optional().default(''),
     showImageOnPost: z.boolean().optional(),
     
-    // Add bannerType field here
+    // Add bannerType field
     bannerType: z.enum(['image', 'video', 'timeline']).optional(),
-    
+    bannerLink: z.string().optional(),// for image banners link
+
+
     // Banner data
     bannerData: z.object({
       videoId: z.string().optional(),
-      imageUrl: z.string().optional(), // Add this line for image banners
+      imageUrl: z.string().optional(), // for image banners
       category: z.string().optional(),
       startYear: z.number().optional(),
       endYear: z.number().optional(),
@@ -49,7 +51,7 @@ const postsCollection = defineCollection({
   }),
 });
 
-// Rest of your collections
+// Rest of collections
 const specCollection = defineCollection({
   schema: z.object({
     title: z.string(),
