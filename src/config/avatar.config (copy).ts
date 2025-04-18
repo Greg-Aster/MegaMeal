@@ -19,24 +19,16 @@ export interface AvatarConfig {
 /**
  * Avatar configuration for the site
  * Controls which avatars are used for the home page and posts
- * 
- * SINGLE AVATAR MODE:
- * - Set homeAvatar to your chosen avatar
- * - Make avatarList only contain that same avatar
- * 
- * SEQUENCE MODE:
- * - Set homeAvatar to your default avatar
- * - Include all desired avatars in avatarList
  */
 export const avatarConfig: AvatarConfig = {
   // List of all available avatars for post pages and rotation
   avatarList: [
     avatar1,
-/*     avatar2,
+    avatar2,
     avatar3,
     avatar4,
     avatar5,
-    avatar6 */
+    avatar6
   ],
   
   // Avatar to use on the home page (site owner)

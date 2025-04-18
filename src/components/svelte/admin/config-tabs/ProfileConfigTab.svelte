@@ -145,11 +145,16 @@
   }
   
   // Function to toggle avatar type
-  function toggleAvatarType() {
+    function toggleAvatarType() {
     isAvatarSequence = !isAvatarSequence;
     if (!isAvatarSequence) {
-      // If switching to single avatar, set avatarList to just the home avatar
+      // Make sure homeAvatar is set
+      if (!avatarConfig.homeAvatar && avatarConfig.avatarList.length > 0) {
+        avatarConfig.homeAvatar = avatarConfig.avatarList[0];
+      }
+      // Set avatarList to just contain the homeAvatar
       avatarConfig.avatarList = [avatarConfig.homeAvatar];
+      dispatch('avatarChange', avatarConfig);
     }
   }
   

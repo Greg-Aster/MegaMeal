@@ -392,7 +392,7 @@
               desktop: "3.5rem",
               mobile: "2rem"
             },
-            maxWidth: 1920
+            maxWidth: 3840
           },
           visual: {
             objectFit: "cover",

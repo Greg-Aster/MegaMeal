@@ -175,7 +175,7 @@ export const bannerConfig: BannerConfig = {
       desktop: '-1rem',        // Content overlap on desktop
       mobile: '-1rem'          // Content overlap on mobile
     },
-    maxWidth: 1920             // Max banner width in pixels
+    maxWidth: 3840             // Max banner width in pixels
   },
   
   // Visual settings
