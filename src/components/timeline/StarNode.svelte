@@ -15,7 +15,8 @@
 const eraColorMap = {
   'ancient-epoch': '#3b82f6',        // Blue
   'awakening-era': '#8b5cf6',        // Purple
-  'golden-age': '#f59e0b',           // Orange
+  //'golden-age': '#f59e0b',           // Orange
+  'golden-age': '#6366f1',           // Orange
   'conflict-epoch': '#ec4899',       // Pink
   'singularity-conflict': '#ef4444', // Red
   'transcendent-age': '#14b8a6',     // Teal
@@ -150,6 +151,9 @@ const eraColorMap = {
   <!-- Glow effect -->
   <div class="star-glow"></div>
   
+  <!-- New: Light rays effect -->
+  <div class="star-rays"></div>
+  
   <!-- Star shape based on type -->
   <svg xmlns="http://www.w3.org/2000/svg" 
        viewBox="0 0 24 24" 
@@ -235,7 +239,9 @@ const eraColorMap = {
     display: flex;
     align-items: center;
     justify-content: center;
-    filter: drop-shadow(0 0 5px var(--star-color));
+    filter: 
+      drop-shadow(0 0 3px var(--star-color))
+      drop-shadow(0 0 8px color-mix(in oklch, var(--star-color), transparent 50%));
     transition: transform 0.3s ease, filter 0.3s ease;
   }
   
@@ -244,8 +250,8 @@ const eraColorMap = {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: calc(var(--star-size) * 2);
-    height: calc(var(--star-size) * 2);
+    width: calc(var(--star-size) * 2.5);
+    height: calc(var(--star-size) * 2.5);
     border-radius: 50%;
     transform: translate(-50%, -50%);
     background: radial-gradient(
@@ -253,16 +259,101 @@ const eraColorMap = {
       var(--star-color) 0%,
       rgba(255,255,255,0) 70%
     );
-    opacity: 0.5; /* Reduced opacity */
-    animation: glowPulse var(--animation-duration, 4s) infinite alternate ease-in-out;
+    opacity: 0.5;
+    animation: colorShiftGlow var(--animation-duration, 4s) infinite alternate ease-in-out;
     pointer-events: none;
+    mix-blend-mode: screen;
   }
   
-  /* Star shape */
+  /* New animation with color shifting */
+  @keyframes colorShiftGlow {
+    0% { 
+      opacity: 0.4; 
+      transform: translate(-50%, -50%) scale(0.9); 
+      filter: hue-rotate(0deg) brightness(1);
+    }
+    25% { 
+      opacity: 0.6; 
+      transform: translate(-50%, -50%) scale(1.0); 
+      filter: hue-rotate(15deg) brightness(1.1);
+    }
+    50% { 
+      opacity: 0.7; 
+      transform: translate(-50%, -50%) scale(1.1); 
+      filter: hue-rotate(30deg) brightness(1.2);
+    }
+    75% { 
+      opacity: 0.6; 
+      transform: translate(-50%, -50%) scale(1.0); 
+      filter: hue-rotate(15deg) brightness(1.1);
+    }
+    100% { 
+      opacity: 0.4; 
+      transform: translate(-50%, -50%) scale(0.9); 
+      filter: hue-rotate(0deg) brightness(1);
+    }
+  }
+  
+  /* New light rays effect */
+  .star-rays {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(var(--star-size) * 6);
+    height: calc(var(--star-size) * 6);
+    transform: translate(-50%, -50%);
+    background-image: 
+      repeating-conic-gradient(
+        var(--star-color) 0deg,
+        transparent 1.5deg,
+        transparent 18deg,
+        var(--star-color) 20deg
+      );
+    opacity: 0.15;
+    border-radius: 50%;
+    pointer-events: none;
+    display: none; /* Hidden by default */
+    animation: rotateRays 12s linear infinite;
+    z-index: 1;
+  }
+  
+  /* Show rays for important stars */
+  .is-key-event .star-rays {
+    display: block;
+    opacity: 0.2;
+  }
+  
+  .is-selected .star-rays {
+    display: block;
+    opacity: 0.3;
+    animation-duration: 8s; /* Faster rotation when selected */
+  }
+  
+  .is-hovered .star-rays {
+    display: block;
+    opacity: 0.18;
+  }
+  
+  @keyframes rotateRays {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+  
+  /* Star shape with added shimmer */
   .star-shape {
     position: relative;
     z-index: 2;
     filter: drop-shadow(0 0 1px var(--star-color));
+    animation: starShimmer calc(var(--animation-duration) * 0.8) infinite ease-in-out;
+  }
+  
+  @keyframes starShimmer {
+    0%, 100% { 
+      filter: drop-shadow(0 0 1px var(--star-color)) brightness(1);
+    }
+    50% { 
+      filter: drop-shadow(0 0 2px var(--star-color)) brightness(1.3);
+    }
   }
   
   /* Inner glow animation */
@@ -270,13 +361,14 @@ const eraColorMap = {
     animation: innerGlowPulse var(--animation-duration, 3s) infinite alternate ease-in-out;
   }
   
-  /* Selected state */
+  /* Enhanced selected state */
   .is-selected {
     filter: 
+      drop-shadow(0 0 5px var(--star-color))
       drop-shadow(0 0 10px var(--star-color))
-      drop-shadow(0 0 4px var(--star-color)) !important;
+      drop-shadow(0 0 15px color-mix(in oklch, var(--star-color), white 30%)) !important;
     z-index: 10;
-    transform: scale(1.15);
+    transform: scale(1.25);
   }
   
   .is-selected .star-glow {
@@ -285,20 +377,22 @@ const eraColorMap = {
     height: calc(var(--star-size) * 2);
   }
   
-  /* Hovered state */
+  /* Enhanced hovered state */
   .is-hovered {
-    filter: drop-shadow(0 0 8px var(--star-color));
+    filter: 
+      drop-shadow(0 0 4px var(--star-color))
+      drop-shadow(0 0 10px color-mix(in oklch, var(--star-color), transparent 40%));
     z-index: 5;
   }
   
-  /* Key event state */
+  /* Enhanced key event state */
   .is-key-event {
     filter: 
-      drop-shadow(0 0 7px var(--star-color))
-      drop-shadow(0 0 3px var(--star-color));
+      drop-shadow(0 0 4px var(--star-color))
+      drop-shadow(0 0 12px color-mix(in oklch, var(--star-color), transparent 30%));
   }
   
-  /* Orbital effect for all stars */
+  /* Improved orbital effects */
   .orbital-effect {
     position: absolute;
     top: 0;
@@ -317,28 +411,29 @@ const eraColorMap = {
     border: 1px solid var(--star-color);
     transform: translate(-50%, -50%);
     opacity: 0;
+    box-shadow: 0 0 2px var(--star-color);
   }
 
-  /* Base orbital for all stars - smaller and slower */
+  /* Base orbital for all stars - more visible */
   .orbital-base {
-    width: calc(var(--star-size) * 1.5); /* Half the size */
+    width: calc(var(--star-size) * 1.5);
     height: calc(var(--star-size) * 1.5);
-    animation: orbital-pulse-base 8s infinite ease-in-out; /* Half the speed (8s vs 4s) */
-    opacity: 0;
+    animation: orbital-pulse-enhanced 8s infinite ease-in-out;
+    opacity: 0.1; /* Start with some visibility */
     border-color: var(--star-color);
   }
 
-  /* Enhanced orbitals only for selected stars - larger and faster */
+  /* Enhanced orbitals only for selected stars */
   .orbital-selected.orbital-ring-1 {
     width: calc(var(--star-size) * 5);
     height: calc(var(--star-size) * 5);
-    animation: orbital-pulse 4s infinite ease-in-out;
+    animation: orbital-pulse-enhanced 4s infinite ease-in-out;
   }
 
   .orbital-selected.orbital-ring-2 {
     width: calc(var(--star-size) * 4.5);
     height: calc(var(--star-size) * 4.5);
-    animation: orbital-pulse 4s infinite ease-in-out;
+    animation: orbital-pulse-enhanced 4s infinite ease-in-out;
     animation-delay: 2s; /* Offset for second ring */
   }
   
@@ -349,34 +444,41 @@ const eraColorMap = {
     animation: orbital-init 3s ease-out forwards;
     border-color: var(--star-color);
     border-width: 2px;
+    box-shadow: 0 0 3px var(--star-color);
   }
 
-  /* Animation for base (non-selected) orbital - slower and more subtle */
-  @keyframes orbital-pulse-base {
+  /* Enhanced animation for base orbital */
+  @keyframes orbital-pulse-enhanced {
     0% {
       transform: translate(-50%, -50%) scale(0.9) rotate(0deg);
-      opacity: 0;
+      opacity: 0.1;
+      border-width: 1px;
     }
     20% {
       transform: translate(-50%, -50%) scale(1) rotate(22.5deg);
-      opacity: 0.2; /* More subtle opacity */
+      opacity: 0.3;
+      border-width: 1.5px;
+      box-shadow: 0 0 3px var(--star-color);
     }
     60% {
       transform: translate(-50%, -50%) scale(1.1) rotate(67.5deg);
-      opacity: 0.1;
+      opacity: 0.2;
+      border-width: 1px;
     }
     100% {
       transform: translate(-50%, -50%) scale(1.2) rotate(90deg);
-      opacity: 0;
+      opacity: 0.1;
+      border-width: 0.5px;
     }
   }
-
-  /* Animation for selected orbital - faster and more prominent */
+  
+  /* Animation for selected orbital - using enhanced version */
   @keyframes orbital-pulse {
     0% {
       transform: translate(-50%, -50%) scale(0.9) rotate(0deg);
-      opacity: 0;
-      border-width: 1px;
+      opacity: 0.3;
+      border-width: 1.5px;
+      box-shadow: 0 0 3px color-mix(in oklch, var(--star-color), white 20%);
     }
     20% {
       transform: translate(-50%, -50%) scale(1) rotate(45deg);
@@ -395,19 +497,22 @@ const eraColorMap = {
     }
   }
   
-  /* Animation for initialization effect */
+  /* Enhanced initialization animation */
   @keyframes orbital-init {
     0% {
       transform: translate(-50%, -50%) scale(0.2);
       opacity: 0.9;
+      box-shadow: 0 0 4px var(--star-color);
     }
     50% {
       transform: translate(-50%, -50%) scale(1.5);
       opacity: 0.7;
+      box-shadow: 0 0 2px var(--star-color);
     }
     100% {
       transform: translate(-50%, -50%) scale(3);
       opacity: 0;
+      box-shadow: 0 0 1px var(--star-color);
     }
   }
   
