@@ -50,7 +50,7 @@ const perfectMaryAvatar = perfectMaryFrontmatter.avatarImage;
       ----
     </div>
 
-    <div id="keypadMessage" class="h-6 mb-2 text-sm text-red-500 dark:text-red-400">
+    <div id="keypadMessage" class="h-auto min-h-[1.5rem] mb-2 text-sm text-red-500 dark:text-red-400">
       &nbsp;
     </div>
 
@@ -126,10 +126,14 @@ const perfectMaryAvatar = perfectMaryFrontmatter.avatarImage;
         } else {
           display.textContent = currentInput.padEnd(4, '-');
         }
-        if (messageEl) messageEl.innerHTML = "&nbsp;";
       }
 
       function handleKeyPress(value: string) {
+        if (messageEl && messageEl.textContent?.trim() !== "") {
+          messageEl.innerHTML = "&nbsp;";
+          // Reset to default styling if it was an error/success message
+          messageEl.className = "h-auto min-h-[1.5rem] mb-2 text-sm text-red-500 dark:text-red-400";
+        }
         if (!unlockedDocs || unlockedDocs.classList.contains('hidden') === false) return;
         if (currentInput.length < 4) {
           currentInput += value;
@@ -142,7 +146,11 @@ const perfectMaryAvatar = perfectMaryFrontmatter.avatarImage;
         currentInput = "";
         attempts = 0;
         updateDisplay();
-        if (messageEl) messageEl.innerHTML = "&nbsp;";
+        if (messageEl) {
+          messageEl.innerHTML = "&nbsp;";
+          // Reset to default styling
+           messageEl.className = "h-auto min-h-[1.5rem] mb-2 text-sm text-red-500 dark:text-red-400";
+        }
         // Re-enable buttons if they were locked
         if (htmlKeypadGrid) {
             Array.from(htmlKeypadGrid.querySelectorAll('.keypad-html-btn')).forEach(btn => {
@@ -156,7 +164,7 @@ const perfectMaryAvatar = perfectMaryFrontmatter.avatarImage;
 
         if (currentInput === correctCode) {
           messageEl.textContent = "Access Granted!";
-          messageEl.className = "h-6 mb-2 text-sm text-green-500 dark:text-green-400";
+          messageEl.className = "h-auto min-h-[1.5rem] mb-2 text-lg text-green-500 dark:text-green-400 font-bold"; // Made success message bolder and slightly larger
           unlockedDocs.classList.remove('hidden');
           
           if (display) display.style.display = 'none';
@@ -169,20 +177,29 @@ const perfectMaryAvatar = perfectMaryFrontmatter.avatarImage;
 
         } else {
           attempts++;
-          if (attempts >= maxAttempts) {
-            messageEl.textContent = "MAX ATTEMPTS REACHED. LOCKED.";
-            messageEl.className = "h-6 mb-2 text-sm text-red-500 dark:text-red-400";
+          // Base classes for error messages, h-auto and min-height are key
+          messageEl.className = "h-auto min-h-[1.5rem] mb-2 text-red-500 dark:text-red-400";
+
+          if (attempts === 1) {
+            messageEl.textContent = `ACCESS DENIED. Temporal lock holding. ${maxAttempts - attempts} attempts remaining.`;
+            messageEl.classList.add("text-md", "font-semibold");
+          } else if (attempts === 2) {
+            messageEl.textContent = `WARNING: Further incorrect attempts may destabilize local causality. ${maxAttempts - attempts} attempt remaining.`;
+            // Ensure previous size/weight classes are removed before adding new ones
+            messageEl.classList.remove("text-md", "font-semibold");
+            messageEl.classList.add("text-lg", "font-bold", "text-orange-500", "dark:text-orange-400"); // More urgent color
+          } else if (attempts >= maxAttempts) {
+            messageEl.textContent = "MAX ATTEMPTS REACHED. SYSTEM LOCKED. TEMPORAL ANOMALY DETECTED.";
+            // Explicitly set all classes for the final dramatic message
+            messageEl.className = "h-auto min-h-[1.5rem] mb-2 text-2xl font-extrabold text-red-700 dark:text-red-500 uppercase tracking-wider";
             if (htmlKeypadGrid) {
               Array.from(htmlKeypadGrid.querySelectorAll('.keypad-html-btn')).forEach(btn => {
                 (btn as HTMLButtonElement).disabled = true;
               });
             }
-          } else {
-            messageEl.textContent = `Incorrect Code. ${maxAttempts - attempts} attempts left.`;
-            messageEl.className = "h-6 mb-2 text-sm text-red-500 dark:text-red-400";
-            currentInput = "";
-            updateDisplay();
           }
+          currentInput = ""; // Clear input after any incorrect attempt
+          updateDisplay(); // Update display to show cleared input
         }
       }
       
