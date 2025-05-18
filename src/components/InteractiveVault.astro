@@ -8,13 +8,13 @@
     <div 
       id="interactiveKeypadArea" 
       class="relative mb-4 mx-auto" 
-      style="max-width: 600px; width: 100%;" {/* Adjust width as needed, max-width for larger screens */}
+      style="max-width: 600px; width: 100%;"
     >
       <img 
         id="vaultKeypadImage" 
         src="/posts/timeline/vault-keypad.png" 
         alt="Vault Keypad" 
-        class="block w-full h-auto" {/* Image takes full width of its container */}
+        class="block w-full h-auto"
       />
       
       {/* Overlay Button Grid - You will need to adjust top, left, width, height and button styles */}
@@ -57,15 +57,15 @@
 
 
     <div id="unlockedDocuments" class="hidden mt-6 w-full">
-      <h3 class="text-xl font-bold mb-4 text-center text-gray-800 dark:text-gray-200">Access Granted. Documents Unsealed:</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="card-base p-4">
+      <h3 class="text-4xl font-extrabold mb-8 text-center text-green-500 dark:text-green-400 uppercase tracking-wider">Access Granted. Documents Unsealed:</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6"> {/* Increased gap slightly */}
+        <div class="card-base p-6 rounded-lg border border-[oklch(0.8_0.03_var(--hue))] dark:border-[oklch(0.4_0.03_var(--hue))] bg-[oklch(0.98_0.01_var(--hue))] dark:bg-[oklch(0.2_0.01_var(--hue))] shadow-md hover:shadow-xl hover:scale-[1.02] transform transition-all duration-300 ease-in-out">
           <h3 class="font-bold text-lg mb-2 text-[oklch(0.8_0.1_var(--hue))]">
             <a href="/posts/timelines/miranda-bloody-mary/" class="text-[oklch(0.5_0.3_var(--hue))] hover:underline">The Miranda System Anomaly</a>
           </h3>
           <p class="text-lg text-gray-700 dark:text-neutral-300">The most comprehensive scientific analysis of what might have happened. I've read it seventeen times now and still can't decide if it's established physics or fringe speculation. The implications for causality theory are... troubling.</p>
         </div>
-        <div class="card-base p-4">
+        <div class="card-base p-6 rounded-lg border border-[oklch(0.8_0.03_var(--hue))] dark:border-[oklch(0.4_0.03_var(--hue))] bg-[oklch(0.98_0.01_var(--hue))] dark:bg-[oklch(0.2_0.01_var(--hue))] shadow-md hover:shadow-xl hover:scale-[1.02] transform transition-all duration-300 ease-in-out">
           <h3 class="font-bold text-lg mb-2 text-[oklch(0.7_0.2_var(--hue))]">
             <a href="/posts/timelines/perfect-mary-recipe/" class="text-[oklch(0.5_0.3_var(--hue))] hover:underline">The Perfect Miranda Bloody Mary</a>
           </h3>
