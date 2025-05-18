@@ -1,0 +1,199 @@
+---
+// No server-side JavaScript needed for this component's core logic
+---
+<div id="vaultContainerRoot">
+  <div id="vaultContainer" class="card-base p-6 mb-8 flex flex-col items-center">
+    <p class="text-lg text-gray-700 dark:text-neutral-300 mb-4">Input access code to view recovered documents.</p>
+    
+    <div 
+      id="interactiveKeypadArea" 
+      class="relative mb-4 mx-auto" 
+      style="max-width: 600px; width: 100%;" {/* Adjust width as needed, max-width for larger screens */}
+    >
+      <img 
+        id="vaultKeypadImage" 
+        src="/posts/timeline/vault-keypad.png" 
+        alt="Vault Keypad" 
+        class="block w-full h-auto" {/* Image takes full width of its container */}
+      />
+      
+      {/* Overlay Button Grid - You will need to adjust top, left, width, height and button styles */}
+      <div 
+        id="htmlKeypadGrid"
+        class="absolute grid grid-cols-3 gap-1 p-1" 
+        style="
+          top: 33%; /* Example: Adjust to position over keypad numbers */
+          left: 37%; /* Example: Adjust */
+          width: 25%; /* Example: Adjust */
+          height: 41%; /* Example: Adjust */
+          /* background: rgba(0, 0, 255, 0.1); */ /* Optional: for positioning aid */
+        "
+      >
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 'CLR', 0, 'ENT'].map(item => {
+          if (typeof item === 'number') {
+            return <button data-value={item.toString()} class="keypad-html-btn aspect-square bg-transparent hover:bg-white/10 text-transparent rounded flex items-center justify-center">{item}</button>;
+          } else if (item === 'CLR') {
+            return <button data-action="clear" class="keypad-html-btn aspect-square bg-transparent hover:bg-white/10 text-transparent rounded flex items-center justify-center">CLR</button>;
+          } else if (item === 'ENT') {
+            return <button data-action="enter" class="keypad-html-btn aspect-square bg-transparent hover:bg-white/10 text-transparent rounded flex items-center justify-center">ENT</button>;
+          }
+          return null;
+        })}
+      </div>
+    </div>
+
+    <div id="keypadDisplay" class="w-48 h-12 bg-gray-200 dark:bg-gray-800 border border-gray-400 dark:border-gray-600 rounded mb-4 text-2xl flex items-center justify-center text-gray-800 dark:text-gray-200 tracking-widest">
+      ----
+    </div>
+
+    <div id="keypadMessage" class="h-6 mb-2 text-sm text-red-500 dark:text-red-400">
+      &nbsp;
+    </div>
+
+    {/* CLR and ENT buttons if not part of the overlay, or keep this div empty if they are */}
+    <div class="flex gap-2 w-48 control-buttons-grid-separate">
+        {/* Intentionally left blank if CLR/ENT are in the overlay grid now */}
+    </div>
+
+
+    <div id="unlockedDocuments" class="hidden mt-6 w-full">
+      <h3 class="text-xl font-bold mb-4 text-center text-gray-800 dark:text-gray-200">Access Granted. Documents Unsealed:</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="card-base p-4">
+          <h3 class="font-bold text-lg mb-2 text-[oklch(0.8_0.1_var(--hue))]">
+            <a href="/posts/timelines/miranda-bloody-mary/" class="text-[oklch(0.5_0.3_var(--hue))] hover:underline">The Miranda System Anomaly</a>
+          </h3>
+          <p class="text-lg text-gray-700 dark:text-neutral-300">The most comprehensive scientific analysis of what might have happened. I've read it seventeen times now and still can't decide if it's established physics or fringe speculation. The implications for causality theory are... troubling.</p>
+        </div>
+        <div class="card-base p-4">
+          <h3 class="font-bold text-lg mb-2 text-[oklch(0.7_0.2_var(--hue))]">
+            <a href="/posts/timelines/perfect-mary-recipe/" class="text-[oklch(0.5_0.3_var(--hue))] hover:underline">The Perfect Miranda Bloody Mary</a>
+          </h3>
+          <p class="text-lg text-gray-700 dark:text-neutral-300">A varaition on the Miranda Bloody Mary that has been making circulation in the deep web. Some knowledge is too dangerous, especially recipes that allegedly broke time itself. The warnings about pickles are oddly specific.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .keypad-html-btn {
+    /* Make button text invisible but keep button clickable */
+    color: transparent; 
+    user-select: none; /* Prevent text selection */
+    /* Add any other base styling for the overlay buttons here */
+    /* e.g., border: 1px solid rgba(255,255,255,0.2); for visual aid during positioning */
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const vaultComponentRoot = document.getElementById('vaultContainerRoot');
+
+    if (vaultComponentRoot) {
+      const display = vaultComponentRoot.querySelector('#keypadDisplay') as HTMLDivElement | null;
+      const messageEl = vaultComponentRoot.querySelector('#keypadMessage') as HTMLDivElement | null;
+      const unlockedDocs = vaultComponentRoot.querySelector('#unlockedDocuments') as HTMLDivElement | null;
+      const vaultContainer = vaultComponentRoot.querySelector('#vaultContainer') as HTMLDivElement | null;
+      const vaultKeypadImageEl = vaultComponentRoot.querySelector('#vaultKeypadImage') as HTMLImageElement | null;
+      const htmlKeypadGrid = vaultComponentRoot.querySelector('#htmlKeypadGrid') as HTMLDivElement | null;
+      // const controlButtonsGridSeparate = vaultComponentRoot.querySelector('.control-buttons-grid-separate') as HTMLDivElement | null;
+      const vaultIntroP = vaultContainer?.querySelector('p.text-lg') as HTMLParagraphElement | null;
+      
+      const correctCode = "1342";
+      let currentInput = "";
+      let attempts = 0;
+      const maxAttempts = 3;
+
+      function updateDisplay() {
+        if (!display) return;
+        if (currentInput.length === 0) {
+          display.textContent = "----";
+        } else {
+          display.textContent = currentInput.padEnd(4, '-');
+        }
+        if (messageEl) messageEl.innerHTML = "&nbsp;";
+      }
+
+      function handleKeyPress(value: string) {
+        if (!unlockedDocs || unlockedDocs.classList.contains('hidden') === false) return;
+        if (currentInput.length < 4) {
+          currentInput += value;
+          updateDisplay();
+        }
+      }
+
+      function handleClear() {
+        if (!unlockedDocs || unlockedDocs.classList.contains('hidden') === false) return;
+        currentInput = "";
+        attempts = 0;
+        updateDisplay();
+        if (messageEl) messageEl.innerHTML = "&nbsp;";
+        // Re-enable buttons if they were locked
+        if (htmlKeypadGrid) {
+            Array.from(htmlKeypadGrid.querySelectorAll('.keypad-html-btn')).forEach(btn => {
+            (btn as HTMLButtonElement).disabled = false;
+          });
+        }
+      }
+
+      function handleEnter() {
+        if (!unlockedDocs || !messageEl || unlockedDocs.classList.contains('hidden') === false) return;
+
+        if (currentInput === correctCode) {
+          messageEl.textContent = "Access Granted!";
+          messageEl.className = "h-6 mb-2 text-sm text-green-500 dark:text-green-400";
+          unlockedDocs.classList.remove('hidden');
+          
+          if (display) display.style.display = 'none';
+          if (htmlKeypadGrid) htmlKeypadGrid.style.display = 'none';
+          if (vaultKeypadImageEl) vaultKeypadImageEl.style.display = 'none';
+          // if (controlButtonsGridSeparate) controlButtonsGridSeparate.style.display = 'none';
+
+
+          if (vaultIntroP) vaultIntroP.textContent = 'Vault Archives Unsealed:';
+
+        } else {
+          attempts++;
+          if (attempts >= maxAttempts) {
+            messageEl.textContent = "MAX ATTEMPTS REACHED. LOCKED.";
+            messageEl.className = "h-6 mb-2 text-sm text-red-500 dark:text-red-400";
+            if (htmlKeypadGrid) {
+              Array.from(htmlKeypadGrid.querySelectorAll('.keypad-html-btn')).forEach(btn => {
+                (btn as HTMLButtonElement).disabled = true;
+              });
+            }
+          } else {
+            messageEl.textContent = `Incorrect Code. ${maxAttempts - attempts} attempts left.`;
+            messageEl.className = "h-6 mb-2 text-sm text-red-500 dark:text-red-400";
+            currentInput = "";
+            updateDisplay();
+          }
+        }
+      }
+      
+      if (htmlKeypadGrid) {
+        const keypadHtmlButtons = htmlKeypadGrid.querySelectorAll('.keypad-html-btn');
+        keypadHtmlButtons.forEach(button => {
+          button.addEventListener('click', () => {
+            const btnElement = button as HTMLButtonElement;
+            if (btnElement.disabled) return; 
+
+            const value = btnElement.dataset.value;
+            const action = btnElement.dataset.action;
+
+            if (value !== undefined) {
+              handleKeyPress(value);
+            } else if (action === 'clear') {
+              handleClear();
+            } else if (action === 'enter') {
+              handleEnter();
+            }
+          });
+        });
+      }
+      
+      updateDisplay(); 
+    }
+  });
+</script>
