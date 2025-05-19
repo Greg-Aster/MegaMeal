@@ -185,7 +185,7 @@ style={isStandardPage
 <!-- Video Banner Content -->
 {hasVideoBanner && (
   <div class="video-banner-content max-w-screen-2xl mx-auto px-4">
-    <div class="relative w-full pb-[56.25%] bg-black overflow-hidden shadow-lg rounded-lg">
+    <div class="relative w-full pb-[56.25%] bg-black overflow-hidden shadow-lg rounded-lg border-2 border-[var(--primary-dimmed)]">
       <iframe
         src={`https://www.youtube.com/embed/${hasPostVideoBanner ? post.data.bannerData.videoId : videoBannerData.videoId}?autoplay=0&mute=0&controls=1`}
         title="YouTube video player"
