@@ -705,7 +705,7 @@ export async function fetchFriendContent(friendUrl: string): Promise<FriendPost[
         console.log(`Found ${elementsWithDates.length} elements with data-post-date attributes`);
         
         // Get all post cards with direct date attributes
-        let postElements = Array.from(doc.querySelectorAll('.card-base, .local-post, [class*="post-card"], [data-post-date]'));
+        let postElements = Array.from(doc.querySelectorAll('.card-base2, .local-post, [class*="post-card"], [data-post-date]'));
         
         // Fallback to generic article selectors if needed
         if (postElements.length === 0) {

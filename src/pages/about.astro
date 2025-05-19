@@ -33,7 +33,7 @@ const processedTeamMembers = await Promise.all(
 );
 
 // Helper function to get avatar shape class
-function getAvatarShapeClass(shape) {
+function getAvatarShapeClass(shape: 'circle' | 'rounded' | 'square' | string) {
   switch(shape) {
     case 'circle':
       return 'rounded-full';
@@ -48,7 +48,7 @@ function getAvatarShapeClass(shape) {
 
 <MainGridLayout 
   title={i18n(I18nKey.about)} 
-  description={i18n(I18nKey.about)} 
+  description="Explore the Mega Meal Saga Universe: A sprawling world of dystopian fast-food, cosmic entities, and surreal narratives. Learn about its creation and lore."
   headings={aboutConfig.content.showTableOfContents ? aboutHeadings : undefined}
 >
   <!-- Team Section -->

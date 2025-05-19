@@ -31,11 +31,10 @@
   }
 </script>
 
-<div 
+<div
   class="timeline-card card-base {isMobile ? 'fixed-position mobile-card' : 'absolute z-30'} bg-[var(--card-bg)] backdrop-blur-sm shadow-lg
-         {isMobile ? 'w-[280px] h-auto' : 'w-[200px]'} 
-         {compact ? 'p-2 text-sm' : 'p-3'}
-         {isSelected ? 'border-2 border-[var(--primary)]' : 'border border-transparent'}"
+         {isMobile ? 'w-[280px] h-auto' : 'w-[200px]'}
+         {compact ? 'p-2 text-sm' : 'p-3'}"
   class:timeline-card-top={position === 'top' && !isMobile}
   class:timeline-card-bottom={position === 'bottom' && !isMobile}
   class:timeline-card-left={position === 'left' && !isMobile}
@@ -75,6 +74,7 @@
   .timeline-card {
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1), 0 0 5px rgba(var(--primary-rgb, 0 0 0), 0.3);
     border-radius: var(--radius-large, 12px);
+    border: 2px solid var(--primary-dimmed); /* Explicit border style */
     /* Remove these two lines:
     opacity: 0;
     animation: fadeIn 0.3s forwards;

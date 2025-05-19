@@ -5,6 +5,9 @@
     :root {
     /* Global transparency controls */
         --bg-opacity: 0.85; /* Default transparency value */
+    /* Card border opacity control */
+        --card-border-opacity: 0.7; /* Default opacity (0.0 to 1.0) */
+        --card-border-subtle-opacity: 0.2; /* Opacity for subtle border */
     }
     
     /* Keep existing card-base but add opacity and backdrop blur */
@@ -12,6 +15,27 @@
         @apply rounded-[var(--radius-large)] overflow-hidden transition;
         background-color: color-mix(in srgb, var(--card-bg), transparent calc((1 - var(--bg-opacity)) * 100%));
         backdrop-filter: blur(3px);
+        box-sizing: border-box;
+        /* padding: 2px; */ /* Padding removed, space created by transparent shadow layer */
+        border: none;
+        box-shadow:
+          /* Transparent 2px inset to create space for the glow */
+          inset 0 0 0 2px transparent,
+          /* Bright center line, inset by 2px (to sit inside transparent layer), 1px thick */
+          inset 0 0 0 2px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 100%), transparent),
+          /* Inner glow / falloff, starting from the 3px inset */
+          inset 0 0 5px 3px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 70%), transparent),
+          /* Softer, wider inner glow */
+          inset 0 0 7px 3px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 40%), transparent);
+    }
+
+    .card-base2 {
+        @apply rounded-[var(--radius-large)] overflow-hidden transition;
+        background-color: color-mix(in srgb, var(--card-bg), transparent calc((1 - var(--bg-opacity)) * 100%));
+        backdrop-filter: blur(3px);
+        box-sizing: border-box;
+        border: 1px solid color-mix(in srgb, var(--primary) calc(var(--card-border-subtle-opacity) * 100%), transparent);
+        /* No complex box-shadow for glow, just a subtle border */
     }
 
     h1, h2, h3, h4, h5, h6, p, a, span, li, ul, ol, blockquote, code, pre, table, th, td, strong {

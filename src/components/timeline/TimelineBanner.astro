@@ -1,6 +1,6 @@
 ---
 import TimelineController from './TimelineController.svelte';
-import { getTimelineEvents } from '../../services/TimelineService';
+import { getTimelineEvents, type TimelineEvent } from '../../services/TimelineService'; // Added TimelineEvent type import
 
 // Define props interface
 interface Props {
@@ -31,7 +31,7 @@ const {
 } = Astro.props;
 
 // Pre-fetch initial data on the server
-let initialEvents = [];
+let initialEvents: TimelineEvent[] = []; // Explicitly typed initialEvents
 let bannerBackground = background;
 
 try {
@@ -54,7 +54,7 @@ try {
 }
 
 // Helper function to safely stringify events for client-side hydration
-function safeStringify(obj) {
+function safeStringify(obj: any) { // Explicitly typed obj parameter
   return JSON.stringify(obj, (key, value) => {
     // Handle Date objects
     if (value instanceof Date) {
@@ -85,18 +85,33 @@ function safeStringify(obj) {
 const serializedEvents = safeStringify(initialEvents);
 ---
 
-<div id={id} 
-     class={`timeline-banner ${className}`} 
-     data-bannertype="timeline" 
+<div class={`timeline-banner-outer-wrapper ${className}`}
      style={`
-       --desktop-height: ${bannerHeight};
-       --mobile-height: ${mobileHeight};
+       margin-bottom: 1rem;
+       border: 2px solid var(--primary-dimmed); /* Use the restored --primary-dimmed */
+       border-radius: var(--radius-large, 12px); /* Match potential card-base rounding */
+       box-shadow: 0 0 8px 2px color-mix(in srgb, var(--primary-dimmed) 70%, transparent); /* Outward glow */
+       position: relative; /* Context for inner div if needed */
      `}
 >
-  <!-- Use client:only to completely skip server-side rendering -->
-  <TimelineController
+  <div id={id}
+       class={`timeline-banner-inner-content ${className}`}
+       data-bannertype="timeline"
+       style={`
+         --desktop-height: ${bannerHeight};
+         --mobile-height: ${mobileHeight};
+         position: relative;
+         width: 100%;
+         max-width: 100%;
+         overflow: hidden !important; /* Keep overflow hidden for inner content */
+         box-sizing: border-box;
+         border-radius: calc(var(--radius-large, 12px) - 2px); /* Inner radius to fit inside the parent's border */
+       `}
+  >
+    <!-- Use client:only to completely skip server-side rendering -->
+    <TimelineController
     client:only="svelte"
-    {id}
+    id={`${id}-controller`}
     {category}
     {startYear}
     {endYear}
@@ -143,50 +158,56 @@ const serializedEvents = safeStringify(initialEvents);
 </script>
 
 <style>
-  /* Base styles for the timeline banner container */
-  .timeline-banner {
-    position: relative;
-    width: 100%;
-    overflow-x: hidden;
-    margin-bottom: 1rem;
-    border-radius: var(--radius-large, 12px);
+  /* Styles for the new outer wrapper - mostly for structure if needed beyond inline */
+  .timeline-banner-outer-wrapper {
+    /* If any specific structural styles are needed for the outer wrapper, add them here. */
+    /* For now, border, shadow, and outer radius are handled inline for simplicity. */
+  }
+
+  /* Base styles for the INNER timeline banner content container */
+  .timeline-banner-inner-content {
+    /* These styles were previously on .timeline-banner */
+    /* position, width, max-width, overflow, box-sizing, inner radius are now inline */
+    /* The height will be controlled by --desktop-height and --mobile-height vars */
   }
   
-  /* Specifically for banner mode (full-width/height) */
-  [data-bannertype="timeline"] {
+  /* Specifically for banner mode (full-width/height) - applies to inner content */
+  .timeline-banner-inner-content[data-bannertype="timeline"] {
+    /* margin-top/bottom/padding were important for the old .timeline-banner when it had the border. */
+    /* Now that the border is outside, these might not be strictly necessary for the inner div, */
+    /* but keeping them ensures the inner content behaves as before if it was relying on these. */
     margin-top: 0 !important;
     margin-bottom: 0 !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
   }
   
-  /* Match site's card shadow style */
-  .timeline-banner {
-    box-shadow: var(--card-shadow, 0 2px 4px rgba(0,0,0,0.005));
-  }
-  
-  /* Mobile height handling */
+  /* Mobile height handling - applies to inner content */
   @media (max-width: 767px) {
-    .timeline-banner {
+    .timeline-banner-inner-content {
       height: var(--mobile-height) !important;
     }
   }
   
   @media (min-width: 768px) {
-    .timeline-banner {
+    .timeline-banner-inner-content {
       height: var(--desktop-height);
     }
   }
   
   /* Quality of life improvements */
   @media (prefers-reduced-motion: no-preference) {
-    .timeline-banner {
+    /* Hover effect can apply to the outer wrapper */
+    .timeline-banner-outer-wrapper {
       transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     
-    .timeline-banner:hover {
+    .timeline-banner-outer-wrapper:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      /* The box-shadow is already defined, this would override.
+         If a different hover shadow is desired, adjust the base shadow or this one.
+         For now, let's assume the base shadow is sufficient or adjust it if needed. */
+      /* box-shadow: 0 4px 12px rgba(0,0,0,0.05); */
     }
   }
 </style>

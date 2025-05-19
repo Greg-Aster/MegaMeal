@@ -6,3 +6,10 @@ declare global {
     swup: AstroIntegration
   }
 }
+
+// Svelte JSX namespace augmentation for custom events on intrinsic elements
+declare namespace svelte.JSX {
+  interface HTMLAttributes<T extends EventTarget> {
+    'on:timeline:resize'?: (event: CustomEvent<any> & { currentTarget: EventTarget & T }) => void;
+  }
+}

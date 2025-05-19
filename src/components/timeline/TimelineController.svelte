@@ -1,14 +1,29 @@
 <script lang="ts">
-  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+  import { onMount, onDestroy, createEventDispatcher } from 'svelte'; // Removed ChangeEvent
   import { timelineStore, timelineActions, filteredEvents, selectedEvent } from '../../stores/timelineStore';
   import type { TimelineEvent } from '../../services/TimelineService.client';
   import { extractEraConfig } from '../../services/TimelineService.client'; // Added this import
+  
+  // Type for era configuration entries
+  interface EraConfigEntry {
+    startYear: number;
+    endYear: number;
+    backgroundImage?: string;
+    displayName: string;
+  }
+  
+  // Type for the overall era configuration object
+  type EraConfig = Record<string, EraConfigEntry>;
+  
+  // Define valid view modes
+  type ViewMode = "timeline" | "list" | "tree" | "map";
   
   // Components
   import TimelineCore from './TimelineCore.svelte';
   import ListView from './TimelineViewModes/ListView.svelte';
   import MapView from './TimelineViewModes/MapView.svelte';
   import TreeView from './TimelineViewModes/TreeView.svelte';
+  import InfoCard from './InfoCard.svelte'; // Import InfoCard
   
   // Props
   export let id: string = "timeline-controller";
@@ -25,12 +40,20 @@
   let timelineCore: TimelineCore;
   let loading = true;
   let error: string | null = null;
-  let eraConfig = {};
+  let eraConfig: EraConfig = {}; // Typed eraConfig
   let isInitialized = false;
   let isMobile = false;
   let showGestureHint = false;
   let gestureHintTimer: number | null = null;
-
+  
+  // Info Card State
+  let currentFact: TimelineFact | null = null; // Changed type to TimelineFact | null
+  let showInfoCard: boolean = false;
+  let infoCardTimerId: ReturnType<typeof setInterval> | null = null;
+  let infoCardDismissedRecently: boolean = false;
+  // Import facts from the new file
+  import { megaMealUniverseFacts, type TimelineFact } from '../../config/timelineFacts';
+  
   // Safe Event dispatch
   const dispatch = createEventDispatcher();
   
@@ -211,6 +234,21 @@ onMount(() => {
     // Mark as initialized
     isInitialized = true;
     
+    // Start InfoCard timer
+    const showRandomFact = () => {
+      if (!showInfoCard && !infoCardDismissedRecently && megaMealUniverseFacts.length > 0) {
+        const randomIndex = Math.floor(Math.random() * megaMealUniverseFacts.length);
+        currentFact = megaMealUniverseFacts[randomIndex]; // Assign the whole object
+        showInfoCard = true;
+      }
+    };
+
+    // Show the first fact sooner
+    setTimeout(showRandomFact, 5000 + Math.random() * 2000); // First ad in 5-7 seconds
+
+    // Then set the regular interval for subsequent facts
+    infoCardTimerId = setInterval(showRandomFact, 15000 + Math.random() * 5000); // Subsequent ads every 15-20 seconds
+    
     // Initialize timeline with proper era after a short delay
     // to ensure timelineCore is ready
     setTimeout(() => {
@@ -247,12 +285,23 @@ onMount(() => {
     if (gestureHintTimer) {
       clearTimeout(gestureHintTimer);
     }
+    if (infoCardTimerId) {
+      clearInterval(infoCardTimerId);
+    }
   };
 });
+
+function handleDismissInfoCard() {
+  showInfoCard = false;
+  infoCardDismissedRecently = true;
+  setTimeout(() => {
+    infoCardDismissedRecently = false;
+  }, 30000); // Don't show another card for 30 seconds
+}
   
 // Improved handleEraFilter function with background handling
-function handleEraFilter(e) {
-  const value = e.target.value;
+function handleEraFilter(e: Event) { // Changed event type to standard Event
+  const value = (e.currentTarget as HTMLSelectElement).value; // Use currentTarget and cast
   console.log(`Era selected from dropdown: ${value}`);
   
   // Handle "all" or "all-time" options more directly
@@ -297,7 +346,7 @@ function handleEraFilter(e) {
   // Validate era exists in config
   if (!eraConfig[value]) {
     console.warn(`Invalid era selected: ${value}`);
-    e.target.value = 'all'; // Reset dropdown to "all"
+    (e.currentTarget as HTMLSelectElement).value = 'all'; // Reset dropdown to "all"
     timelineActions.setEra(null);
     handleResetView();
     return;
@@ -425,7 +474,7 @@ function handleEraFilter(e) {
     }
   }
   
-  function handleSelectEvent(e) {
+  function handleSelectEvent(e: CustomEvent<{ event: { slug: string } }>) { // Typed event parameter
     if (e && e.detail && e.detail.event && e.detail.event.slug) {
       timelineActions.selectEvent(e.detail.event.slug);
     }
@@ -435,7 +484,7 @@ function handleEraFilter(e) {
     timelineActions.selectEvent(null);
   }
   
-  function handleSetViewMode(mode) {
+  function handleSetViewMode(mode: ViewMode) { // Used ViewMode type
     timelineActions.setViewMode(mode);
   }
   
@@ -456,15 +505,20 @@ $: if (timelineCore && $timelineStore.background) {
 
 </script>
 
-<div class="timeline-wrapper relative w-full overflow-hidden {asBanner ? 'timeline-banner-mode' : ''}" 
-     style="height: {currentHeight};" 
+<div class="timeline-wrapper relative w-full overflow-hidden {asBanner ? 'timeline-banner-mode' : ''}"
+     style="height: {currentHeight}; overflow-x: hidden !important;"
      {id}
      on:timeline:resize={handleResize}>
   
+  <!-- Info Card -->
+  {#if currentFact} <!-- Ensure currentFact is not null before rendering -->
+    <InfoCard fact={currentFact} isVisible={showInfoCard} on:dismiss={handleDismissInfoCard} />
+  {/if}
+
   <!-- Main content container that takes the full area -->
   <div class="relative w-full h-full">
     <!-- Main content area with different views - takes up the entire space -->
-    <div class="timeline-viewport w-full h-full overflow-hidden cursor-grab active:cursor-grabbing">
+    <div class="timeline-viewport w-full h-full overflow-hidden cursor-grab active:cursor-grabbing" style="overflow-x: hidden !important;">
       <!-- Loading state -->
       {#if loading}
         <div class="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-black/50 z-[100]">

@@ -34,6 +34,8 @@
   let isTouchActive = false;
   let hoverTimeoutId: ReturnType<typeof setTimeout> | null = null;
   const hoverOutDelay = 300; // Delay in ms before hiding the card
+  let randomlyHighlightedSlug: string | null = null; // For random highlight
+  let randomHighlightIntervalId: ReturnType<typeof setInterval> | null = null;
   
   // Tweened stores with configurable durations
   const normalDuration = 300;
@@ -642,8 +644,37 @@
     setTimeout(() => {
       fadeOverlayVisible = false;
     }, 300);
+
+    // Setup random highlight interval
+    const highlightInterval = 5000 + Math.random() * 5000; // 5-10 seconds
+    randomHighlightIntervalId = setInterval(() => {
+      if (events.length > 0) {
+        // Clear previous highlight first to ensure reactivity if same node is picked
+        randomlyHighlightedSlug = null;
+        
+        // Short timeout to allow Svelte to process the null assignment
+        setTimeout(() => {
+          const randomIndex = Math.floor(Math.random() * events.length);
+          const randomEvent = events[randomIndex];
+          if (randomEvent) {
+            randomlyHighlightedSlug = randomEvent.slug;
+            // console.log("Highlighting:", randomEvent.slug); // For debugging
+
+            // Set a timeout to clear this highlight after animation
+            setTimeout(() => {
+              if (randomlyHighlightedSlug === randomEvent.slug) {
+                randomlyHighlightedSlug = null;
+              }
+            }, 3000); // Corresponds to StarNode animation duration
+          }
+        }, 50); // Small delay
+      }
+    }, highlightInterval);
     
     return () => {
+      if (randomHighlightIntervalId) {
+        clearInterval(randomHighlightIntervalId);
+      }
       window.removeEventListener('mousemove', drag);
       window.removeEventListener('mouseup', endDrag);
       window.removeEventListener('resize', handleResize);
@@ -875,8 +906,9 @@
   }
 </script>
 
-<div class="card-base relative overflow-hidden {asBanner ? 'h-full rounded-none' : 'h-[300px] md:h-[300px]'} {compact ? 'compact-mode' : ''}" 
-     data-start-year={startYear} 
+<div class="card-base relative overflow-hidden {asBanner ? 'h-full rounded-none' : 'h-[300px] md:h-[300px]'} {compact ? 'compact-mode' : ''}"
+     style="overflow: hidden !important;"
+     data-start-year={startYear}
      data-end-year={endYear}>
 
   <!-- Fade overlay for transitions -->
@@ -908,9 +940,9 @@
        role="application"
        aria-label="Interactive timeline visualization"
        tabindex="0"
-       style="transform: scale({$scale}) translate({$offsetX/$scale}px, {$offsetY/$scale}px);">
-    
-    <!-- Center line - horizontal for desktop, vertical for mobile -->
+       style="transform: scale({$scale}) translate({$offsetX/$scale}px, {$offsetY/$scale}px); overflow: hidden !important;">
+   
+   <!-- Center line - horizontal for desktop, vertical for mobile -->
     <div class="timeline-center-line absolute w-full h-[2px] top-1/2 bg-gradient-to-r from-transparent via-[oklch(0.7_0.08_var(--hue))] to-transparent opacity-10"></div>
     
     <!-- Year markers -->
@@ -938,6 +970,7 @@
             size={event.isKeyEvent ? 5 : 4}
             identifier={event.slug}
             {useEraColors}
+            triggerHighlightAnimation={randomlyHighlightedSlug === event.slug}
           />
         </div>
         
@@ -961,8 +994,8 @@
   {#if isMobile && (selectedEvent || hoveredEvent)}
     <div class="fixed-mobile-card-container">
       <!-- Keep mobile card but position it below the timeline point -->
-      <TimelineCard 
-        event={selectedEvent || hoveredEvent}
+      <TimelineCard
+        event={(selectedEvent || hoveredEvent)!}
         isSelected={!!selectedEvent}
         {compact}
         position="bottom"

@@ -9,9 +9,12 @@
   export let size: number = 8;
   export let identifier: string = Math.random().toString(36).substring(2, 10);
   export let useEraColors: boolean = false;
-
+  export let triggerHighlightAnimation: boolean = false; // New prop
+ 
   
-// Era color mapping 
+// Era color mapping
+type EraKey = keyof typeof eraColorMap; // Define a type for the keys
+
 const eraColorMap = {
   'ancient-epoch': '#3b82f6',        // Blue
   'awakening-era': '#8b5cf6',        // Purple
@@ -53,7 +56,7 @@ const eraColorMap = {
   ];
   
   // Helper to get deterministic random values
-  function hashCode(str): number {
+  function hashCode(str: string): number { // Typed str parameter
     if (!str) return 0;
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -66,8 +69,8 @@ const eraColorMap = {
   // Get a color from the color spectrum (without using era colors)
     function getStarColor(id: string): string {
     // If useEraColors is true and we have a valid era, use the era color
-    if (useEraColors && era && eraColorMap[era]) {
-      return eraColorMap[era];
+    if (useEraColors && era && era in eraColorMap) { // Check if era is a valid key
+      return eraColorMap[era as EraKey]; // Cast era to EraKey
     }
     
     // Otherwise use the original random color based on id
@@ -118,6 +121,7 @@ const eraColorMap = {
   let showSparkle = false;
   let isInitialized = false;
   let showInitAnimation = false;
+  let playRandomHighlight = false; // Local state for random highlight animation
   
   onMount(() => {
     isInitialized = true;
@@ -132,6 +136,16 @@ const eraColorMap = {
       // Nothing to clean up
     };
   });
+
+  $: if (triggerHighlightAnimation && !playRandomHighlight) {
+    playRandomHighlight = true;
+    // Duration of the orbital-init animation is 3s
+    setTimeout(() => {
+      playRandomHighlight = false;
+      // Optional: dispatch an event if parent needs to know animation finished
+      // dispatch('highlightAnimationEnd', { id: uniqueId });
+    }, 3000); // Match orbital-init animation duration
+  }
 </script>
 
 <div 
@@ -148,6 +162,9 @@ const eraColorMap = {
     --secondary-color: {mainColor};
   "
 >
+  <!-- New: Backing plate for contrast -->
+  <div class="star-backing-plate"></div>
+
   <!-- Glow effect -->
   <div class="star-glow"></div>
   
@@ -226,8 +243,13 @@ const eraColorMap = {
     {/if}
     
     <!-- Initialization orbital effect -->
-    {#if showInitAnimation}
+    {#if showInitAnimation && !playRandomHighlight} <!-- Don't play if random highlight is active -->
       <div class="orbital-ring orbital-init"></div>
+    {/if}
+
+    <!-- Random highlight orbital effect -->
+    {#if playRandomHighlight}
+      <div class="orbital-ring orbital-init random-highlight-animation"></div> <!-- Reuse or make new animation -->
     {/if}
   </div>
 </div>
@@ -243,6 +265,29 @@ const eraColorMap = {
       drop-shadow(0 0 3px var(--star-color))
       drop-shadow(0 0 8px color-mix(in oklch, var(--star-color), transparent 50%));
     transition: transform 0.3s ease, filter 0.3s ease;
+  }
+
+  /* New: Backing plate styles */
+  .star-backing-plate {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(var(--star-size) * 2.5); /* Increased default size */
+    height: calc(var(--star-size) * 2.5); /* Increased default size */
+    background-color: rgba(0, 0, 0, 0.4); /* Darker default background */
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0; /* Behind star shape but in front of background */
+    transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease;
+    opacity: 0.85; /* Increased default opacity */
+    backdrop-filter: blur(3px); /* Slightly more blur */
+  }
+
+  .is-hovered .star-backing-plate,
+  .is-selected .star-backing-plate {
+    opacity: 0.95; /* Slightly more opaque on hover/select */
+    background-color: rgba(0, 0, 0, 0.5); /* Slightly darker on hover/select */
+    transform: translate(-50%, -50%) scale(1.15); /* Slightly larger scale on hover/select */
   }
   
   /* Glow effect - customized by star type */
@@ -262,7 +307,8 @@ const eraColorMap = {
     opacity: 0.5;
     animation: colorShiftGlow var(--animation-duration, 4s) infinite alternate ease-in-out;
     pointer-events: none;
-    mix-blend-mode: screen;
+    mix-blend-mode: screen; /* Screen blend mode can look good for glows */
+    z-index: 1; /* Ensure glow is above backing plate */
   }
   
   /* New animation with color shifting */
@@ -314,7 +360,7 @@ const eraColorMap = {
     pointer-events: none;
     display: none; /* Hidden by default */
     animation: rotateRays 12s linear infinite;
-    z-index: 1;
+    z-index: 2; /* Ensure rays are above backing plate and glow */
   }
   
   /* Show rays for important stars */
@@ -342,7 +388,7 @@ const eraColorMap = {
   /* Star shape with added shimmer */
   .star-shape {
     position: relative;
-    z-index: 2;
+    z-index: 3; /* Ensure star shape is above rays, glow, and backing plate */
     filter: drop-shadow(0 0 1px var(--star-color));
     animation: starShimmer calc(var(--animation-duration) * 0.8) infinite ease-in-out;
   }
@@ -447,6 +493,12 @@ const eraColorMap = {
     box-shadow: 0 0 3px var(--star-color);
   }
 
+  /* Style for random highlight if we want it to be different, otherwise it uses orbital-init */
+  .random-highlight-animation {
+    /* Optionally, slightly different animation or appearance */
+    /* For now, it reuses .orbital-init keyframes */
+  }
+ 
   /* Enhanced animation for base orbital */
   @keyframes orbital-pulse-enhanced {
     0% {
