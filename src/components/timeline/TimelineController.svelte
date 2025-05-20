@@ -47,7 +47,8 @@
   let gestureHintTimer: number | null = null;
   
   // Info Card State
-  let currentFact: TimelineFact | null = null; // Changed type to TimelineFact | null
+  let currentFact: TimelineFact | null = null;
+  let currentFactIndex: number = -1; // To cycle through facts
   let showInfoCard: boolean = false;
   let infoCardTimerId: ReturnType<typeof setInterval> | null = null;
   let infoCardDismissedRecently: boolean = false;
@@ -235,19 +236,42 @@ onMount(() => {
     isInitialized = true;
     
     // Start InfoCard timer
-    const showRandomFact = () => {
-      if (!showInfoCard && !infoCardDismissedRecently && megaMealUniverseFacts.length > 0) {
-        const randomIndex = Math.floor(Math.random() * megaMealUniverseFacts.length);
-        currentFact = megaMealUniverseFacts[randomIndex]; // Assign the whole object
+    const showNextFactOrAd = () => {
+      if (megaMealUniverseFacts.length === 0) return;
+      if (infoCardDismissedRecently && showInfoCard) return; // Don't immediately show if just dismissed
+
+      // If it was visible and dismissed, or just to cycle, hide it first to allow transition out
+      if (showInfoCard) {
+        showInfoCard = false;
+        // Wait for hide transition before showing next (adjust duration if InfoCard transition changes)
+        setTimeout(() => {
+          let newIndex = currentFactIndex;
+          if (megaMealUniverseFacts.length > 1) {
+            while (newIndex === currentFactIndex) {
+              newIndex = Math.floor(Math.random() * megaMealUniverseFacts.length);
+            }
+          } else {
+            newIndex = 0; // Only one fact, so always show it
+          }
+          currentFactIndex = newIndex;
+          currentFact = megaMealUniverseFacts[currentFactIndex];
+          showInfoCard = true;
+          infoCardDismissedRecently = false; // Reset dismissed flag
+        }, 350); // Should be slightly longer than InfoCard's out transition
+      } else {
+        // If it wasn't visible, show immediately (pick a random one)
+        currentFactIndex = Math.floor(Math.random() * megaMealUniverseFacts.length);
+        currentFact = megaMealUniverseFacts[currentFactIndex];
         showInfoCard = true;
+        infoCardDismissedRecently = false; // Reset dismissed flag
       }
     };
 
-    // Show the first fact sooner
-    setTimeout(showRandomFact, 5000 + Math.random() * 2000); // First ad in 5-7 seconds
+    // Show the first fact/ad sooner
+    setTimeout(showNextFactOrAd, 5000 + Math.random() * 2000); // First ad in 5-7 seconds
 
-    // Then set the regular interval for subsequent facts
-    infoCardTimerId = setInterval(showRandomFact, 15000 + Math.random() * 5000); // Subsequent ads every 15-20 seconds
+    // Then set the regular interval for subsequent facts/ads
+    infoCardTimerId = setInterval(showNextFactOrAd, 15000 + Math.random() * 5000); // Subsequent ads every 15-20 seconds
     
     // Initialize timeline with proper era after a short delay
     // to ensure timelineCore is ready
@@ -511,8 +535,10 @@ $: if (timelineCore && $timelineStore.background) {
      on:timeline:resize={handleResize}>
   
   <!-- Info Card -->
-  {#if currentFact} <!-- Ensure currentFact is not null before rendering -->
-    <InfoCard fact={currentFact} isVisible={showInfoCard} on:dismiss={handleDismissInfoCard} />
+  {#if currentFact}
+    {#key currentFact.text} <!-- Key block to force re-render and transition -->
+      <InfoCard fact={currentFact} isVisible={showInfoCard} on:dismiss={handleDismissInfoCard} />
+    {/key}
   {/if}
 
   <!-- Main content container that takes the full area -->

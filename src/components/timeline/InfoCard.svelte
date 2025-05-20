@@ -16,12 +16,12 @@
 
 {#if isVisible}
   <div
-    class="info-card-wrapper card-base absolute bottom-8 right-4 md:bottom-20 md:right-6 p-3 bg-[var(--card-bg)] text-[var(--text-color)] backdrop-blur-sm shadow-lg rounded-[var(--radius-large,12px)] max-w-xs w-11/12 md:w-auto z-[100]"
+    class="info-card-wrapper card-base absolute bottom-8 right-4 md:bottom-20 md:right-6 p-3 backdrop-blur-sm shadow-lg rounded-[var(--radius-large,12px)] max-w-xs w-11/12 md:w-auto z-[100] {fact.bgColorClass || 'bg-[var(--card-bg)]'} {fact.textColorClass || 'text-[var(--text-color)]'} {fact.fontFamilyClass || 'font-sriracha'}"
     transition:fly={{ y: 20, duration: 300, easing: quintOut }}
   >
     <button
       on:click={handleClose}
-      class="absolute top-1 right-1 text-[var(--text-color)] opacity-60 hover:opacity-90 transition-opacity p-1"
+      class="absolute top-1 right-1 opacity-60 hover:opacity-90 transition-opacity p-1 {fact.textColorClass || 'text-[var(--text-color)]'}"
       aria-label="Dismiss fact"
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -29,11 +29,23 @@
         <line x1="6" y1="6" x2="18" y2="18"></line>
       </svg>
     </button>
-    <p class="text-sm pr-4 mb-2 font-sriracha">{fact.text}</p> <!-- Changed to text-sm and added font-sriracha -->
-    {#if fact.link}
+    {#if fact.headline}
+      <h3 class="{fact.headlineSizeClass || 'text-md'} font-bold mb-1 pr-4 {fact.headlineColorClass || 'text-[var(--primary)]'}">{fact.headline}</h3>
+    {/if}
+    <p class="text-xs pr-4 mb-2 leading-snug">{fact.text}</p>
+    
+    {#if fact.ctaText && fact.link}
       <a
         href={`/posts/${fact.link}/`}
-        class="text-xs text-[var(--primary)] hover:underline font-semibold"
+        target="_blank" rel="noopener noreferrer"
+        class="mt-2 inline-block text-xs font-bold py-1 px-3 rounded-md hover:bg-opacity-80 transition-colors duration-200 text-center w-full {fact.ctaButtonClass || 'bg-[var(--primary)] text-white'}"
+      >
+        {fact.ctaText}
+      </a>
+    {:else if fact.link}
+      <a
+        href={`/posts/${fact.link}/`}
+        class="text-xs text-[var(--primary)] hover:underline font-semibold mt-1 inline-block"
         target="_blank" rel="noopener noreferrer"
       >
         Learn More &rarr;
