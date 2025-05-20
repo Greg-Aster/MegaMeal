@@ -6,8 +6,12 @@
     /* Global transparency controls */
         --bg-opacity: 0.85; /* Default transparency value */
     /* Card border opacity control */
-        --card-border-opacity: 0.7; /* Default opacity (0.0 to 1.0) */
-        --card-border-subtle-opacity: 0.2; /* Opacity for subtle border */
+        --card-border-opacity: 0.2; /* Default opacity (0.0 to 1.0) for general cards */
+        --card-border-subtle-opacity: 0.1; /* Opacity for subtle border on general cards */
+
+    /* Timeline Banner specific opacity controls */
+        --timeline-banner-border-line-opacity: .3;  /* Opacity for the solid border line (0.0 to 1.0) */
+        --timeline-banner-glow-opacity: 0.7;       /* Opacity for the glow effect (0.0 to 1.0) */
     }
     
     /* Keep existing card-base but add opacity and backdrop blur */

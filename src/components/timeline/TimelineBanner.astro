@@ -88,9 +88,9 @@ const serializedEvents = safeStringify(initialEvents);
 <div class={`timeline-banner-outer-wrapper ${className}`}
      style={`
        margin-bottom: 1rem;
-       border: 2px solid var(--primary-dimmed); /* Use the restored --primary-dimmed */
+       border: 2px solid color-mix(in srgb, var(--primary-dimmed) calc(var(--timeline-banner-border-line-opacity, 1) * 100%), transparent);
        border-radius: var(--radius-large, 12px); /* Match potential card-base rounding */
-       box-shadow: 0 0 8px 2px color-mix(in srgb, var(--primary-dimmed) 70%, transparent); /* Outward glow */
+       box-shadow: 0 0 8px 2px color-mix(in srgb, var(--primary-dimmed) calc(var(--timeline-banner-glow-opacity, 0.7) * 100%), transparent);
        position: relative; /* Context for inner div if needed */
      `}
 >
