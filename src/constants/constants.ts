@@ -17,7 +17,7 @@ export const BANNER_HEIGHT_HOME = BANNER_HEIGHT + BANNER_HEIGHT_EXTEND
 export const BANNER_HEIGHT_HOME_MOBILE = BANNER_HEIGHT_MOBILE + BANNER_HEIGHT_EXTEND_MOBILE // smaller height for mobile
 
 // The height the main panel overlaps the banner, unit: rem
-export const MAIN_PANEL_OVERLAPS_BANNER_HEIGHT = 3.5
+export const MAIN_PANEL_OVERLAPS_BANNER_HEIGHT = 4.5
 export const MAIN_PANEL_OVERLAPS_BANNER_HEIGHT_MOBILE = 2 // Smaller height for mobile
 
 // Page width: rem

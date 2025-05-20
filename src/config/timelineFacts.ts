@@ -61,7 +61,7 @@ export const megaMealUniverseFacts: TimelineFact[] = [
   {
     type: 'advertisement',
     headline: "🔥 TASTE EXTINCTION! 🔥 Zelegant Truffle Roasts!",
-    text: "So rare, it's practically a MYTH! Dine like a DEITY on the last Zelegant Truffle Roasts in existence. Your tastebuds will thank you (if they survive).",
+    text: "So rare, it's practically a MYTH! Dine like a DEITY on the last Zelephant Truffle Roasts in existence. Your tastebuds will thank you (if they survive).",
     ctaText: "FEAST BEFORE IT'S FORBIDDEN!",
     bgColorClass: 'bg-orange-500',
     textColorClass: 'text-black',
@@ -72,7 +72,7 @@ export const megaMealUniverseFacts: TimelineFact[] = [
   {
     type: 'advertisement',
     headline: "🐶 PUPPY CHOW™: UNLEASH THE CUTE! 🐶",
-    text: "100% REAL PUPPIES, 1000% ADORABLE! Our patented 'EthicaLoopholes™' ensure maximum fluffiness with MINIMAL moral quandaries! You NEED this!",
+    text: "100% REAL PUPPIES, 1000% ADORABLE! Our patented 'EthicaLoopholes™' ensure maximum with MINIMAL moral quandaries! You NEED this!",
     ctaText: "GET YOUR PUPPY FIX!",
     // Default card-base styles will apply if not specified
   },
