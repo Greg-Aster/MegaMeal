@@ -32,7 +32,7 @@
     {#if fact.headline}
       <h3 class="{fact.headlineSizeClass || 'text-md'} font-bold mb-1 pr-4 {fact.headlineColorClass || 'text-[var(--primary)]'}">{fact.headline}</h3>
     {/if}
-    <p class="text-xs pr-4 mb-2 leading-snug">{fact.text}</p>
+    <p class="text-xs pr-4 mb- leading-snug">{fact.text}</p>
     
     {#if fact.ctaText && fact.link}
       <a
