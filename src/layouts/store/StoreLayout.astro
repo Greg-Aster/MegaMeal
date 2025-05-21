@@ -1,15 +1,23 @@
 ---
 // src/layouts/StoreLayout.astro
-import Navbar from '../../components/Navbar.astro';
+import StoreNavbar from '../../components/store/StoreNavbar.astro';
+import Footer from '@components/Footer.astro';
+import BackToTop from '@components/control/BackToTop.astro';
+import ImageWrapper from '../../components/misc/ImageWrapper.astro'; // Adjusted path
+import { siteConfig } from '../../config/config'; // Adjusted path
+import { LIGHT_MODE, DARK_MODE, AUTO_MODE, PAGE_WIDTH } from '../../constants/constants.ts';
+import '../../styles/main.css'; // Import main styles for card-base and parallax
+
 export interface Props {
   title: string;
   description: string;
 }
 
 const { title, description } = Astro.props;
+const configHue = siteConfig.themeColor.hue;
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" class="bg-[var(--page-bg)] transition text-[14px] md:text-[16px]" data-overlayscrollbars-initialize>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width" />
@@ -19,27 +27,198 @@ const { title, description } = Astro.props;
   {/* Add any truly essential global links here, e.g., for fonts if separate */}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+{/* Set the theme before the page is rendered to avoid a flash */}
+    <script is:inline define:vars={{LIGHT_MODE, DARK_MODE, AUTO_MODE, PAGE_WIDTH, configHue, defaultTheme: siteConfig.defaultTheme}}>
+        // Load the theme from local storage
+        const storedTheme = localStorage.getItem('theme');
+        console.log('[Theme Debug] Stored theme:', storedTheme);
+        let finalThemeIsDark;
+        const siteIsDefaultDark = defaultTheme === DARK_MODE;
+        console.log('[Theme Debug] Site default theme is dark:', siteIsDefaultDark, '(defaultTheme:', defaultTheme, ')');
+
+        if (storedTheme === LIGHT_MODE) {
+            console.log('[Theme Debug] Applying stored theme: LIGHT_MODE');
+            finalThemeIsDark = false;
+        } else if (storedTheme === DARK_MODE) {
+            console.log('[Theme Debug] Applying stored theme: DARK_MODE');
+            finalThemeIsDark = true;
+        } else if (storedTheme === AUTO_MODE) {
+            console.log('[Theme Debug] Stored theme is AUTO_MODE. Checking system preference...');
+            const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const systemPrefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+            console.log('[Theme Debug] System prefers dark:', systemPrefersDark);
+            console.log('[Theme Debug] System prefers light:', systemPrefersLight);
+
+            if (systemPrefersDark) {
+                console.log('[Theme Debug] Applying system preference: dark');
+                finalThemeIsDark = true;
+            } else if (systemPrefersLight) {
+                console.log('[Theme Debug] Applying system preference: light');
+                finalThemeIsDark = false;
+            } else {
+                console.log('[Theme Debug] System preference inconclusive or matchMedia not supported. Using site default for AUTO.');
+                finalThemeIsDark = siteIsDefaultDark;
+            }
+        } else { // storedTheme is null (not set) or invalid
+            console.log('[Theme Debug] No valid stored theme. Checking system preference...');
+            const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const systemPrefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+            console.log('[Theme Debug] System prefers dark:', systemPrefersDark);
+            console.log('[Theme Debug] System prefers light:', systemPrefersLight);
+
+            if (systemPrefersDark) {
+                console.log('[Theme Debug] Applying system preference: dark');
+                finalThemeIsDark = true;
+            } else if (systemPrefersLight) {
+                console.log('[Theme Debug] Applying system preference: light');
+                finalThemeIsDark = false;
+            } else {
+                 console.log('[Theme Debug] System preference inconclusive or matchMedia not supported. Using site default.');
+                finalThemeIsDark = siteIsDefaultDark;
+            }
+        }
+        console.log('[Theme Debug] Final decision: finalThemeIsDark =', finalThemeIsDark);
+
+        if (finalThemeIsDark) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        // Load the hue from local storage
+        const hue = localStorage.getItem('hue') || configHue;
+        document.documentElement.style.setProperty('--hue', hue);
+    </script>
+    <style define:vars={{
+        configHue,
+        'page-width': `${PAGE_WIDTH}rem`,
+    }}></style>
   <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Metal+Mania&family=Nosifier&display=swap" rel="stylesheet">
 
 </head>
-<body class="bg-black text-gray-300 font-sans"> {/* Example: Dark theme, consider a more sinister font-family later */}
-  <Navbar />
-  <main id="store-content">
+<body class="min-h-screen transition">
+  
+  {/* Parallax Background (Simplified from MainGridLayout) */}
+  {siteConfig.banner.enable && (
+    <div id="parallax-banner" class="fixed top-0 left-0 w-full h-screen z-[-1] overflow-hidden">
+      <ImageWrapper
+        id="parallax-image"
+        alt="Site background image"
+        class="parallax-bg object-cover w-full h-[120vh]"
+        src={siteConfig.banner.src}
+        position={siteConfig.banner.position || 'center'}
+      />
+      {siteConfig.banner.credit?.enable &&
+        <div class="absolute bottom-4 right-4 text-white/50 text-xs bg-black/30 px-2 py-1 rounded">
+          {siteConfig.banner.credit.text &&
+            <a href={siteConfig.banner.credit.url || '#'} class="hover:text-white/80 transition">
+              {siteConfig.banner.credit.text}
+            </a>
+          }
+        </div>
+      }
+      {/* Optional overlay for better text readability */}
+      <div class="absolute inset-0 bg-gradient-to-b from-black/20 to-black/50 pointer-events-none"></div>
+    </div>
+  )}
+
+  <div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:px-4 mx-auto">
+    <div id="navbar-wrapper" class="pointer-events-auto sticky top-0 transition-all">
+      <StoreNavbar />
+    </div>
+  </div>
+  <main id="store-content" class="relative z-10 py-8 mt-6"> {/* Added padding, mt-6, and relative z-index */}
     <slot />
   </main>
+  <Footer />
+  <BackToTop />
   <style is:global>
     /* Minimal global styles for StoreLayout if needed */
     /* Example: Apply a sinister font if desired */
     /* body { font-family: 'Creepster', cursive; } */
     /* Or use Tailwind utilities on the body tag */
+
+    /* Ensure parallax script from main.css can run if not already global */
+    /* Parallax background styles - these should be in main.css but ensure they are loaded */
+    .parallax-bg {
+        transform: translateZ(0);
+        position: absolute;
+        top: 0vh; /* Adjusted from 0vh to ensure it covers screen top */
+        left: 0;
+        width: 100%;
+        height: 120vh; /* Ensure it's taller than viewport for parallax */
+        will-change: transform;
+        transition: opacity 0.3s ease-out;
+        opacity: 1;
+    }
+    
+    #parallax-banner {
+        opacity: 0; /* Start hidden */
+        transition: opacity 0.5s ease-out;
+    }
+    
+    #parallax-banner.loaded {
+        opacity: 1; /* Fade in when loaded */
+    }
   </style>
+  <script>
+    // Simplified Parallax Logic (adapted from MainGridLayout)
+    // Ensure siteConfig is available to the client script if needed, or hardcode values
+    // For this simple version, we'll rely on the CSS and a simple load class.
+    // More complex JS parallax can be added if the CSS version isn't smooth enough.
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const parallaxBanner = document.getElementById('parallax-banner');
+      if (parallaxBanner) {
+        // Give it a moment for Astro to process images, then fade in
+        setTimeout(() => {
+          parallaxBanner.classList.add('loaded');
+        }, 100); // Small delay
+      }
+
+      // Initialize onload animations
+      const elementsToAnimate = document.querySelectorAll('.onload-animation');
+      elementsToAnimate.forEach(element => {
+        // Add 'loaded' class to trigger animation
+        // No timeout/staggering needed for this simplified version
+        element.classList.add('loaded');
+      });
+
+      // Basic scroll-based parallax (optional, CSS might be enough)
+      const parallaxImage = document.getElementById('parallax-image');
+      if (parallaxImage) {
+        const scrollFactor = -0.1; // Adjust for desired parallax intensity
+        let ticking = false;
+        let lastScrollY = window.scrollY;
+
+        function updateParallax() {
+          if (!parallaxImage) return;
+          const scrollY = window.scrollY;
+          const offset = scrollY * scrollFactor;
+          parallaxImage.style.transform = `translate3d(0, ${offset}px, 0)`;
+          ticking = false;
+        }
+
+        window.addEventListener('scroll', () => {
+          lastScrollY = window.scrollY;
+          if (!ticking) {
+            window.requestAnimationFrame(updateParallax);
+            ticking = true;
+          }
+        }, { passive: true });
+        
+        // Initial position
+        updateParallax();
+      }
+    });
+  </script>
 {/* COMING SOON OVERLAY - ADDED HERE */}
-  <div id="coming-soon-overlay" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+  <!-- <div id="coming-soon-overlay" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
     <div class="text-center p-8 bg-gray-800 rounded-lg shadow-xl border border-gray-700">
       <h2 class="text-4xl font-bold text-red-500 mb-4">Store Coming Soon!</h2>
       <p class="text-xl text-gray-300">Our emporium of unsettling treasures is under construction.</p>
       <p class="text-md text-gray-400 mt-2">Please check back later for a truly disturbing shopping experience.</p>
     </div>
-  </div>
+  </div> -->
 </body>
 </html>

@@ -91,6 +91,11 @@ const productsCollection = defineCollection({
     image: z.string().optional(), // Path to the product image, optional
     sku: z.string().optional(), // A unique stock keeping unit, optional
     draft: z.boolean().optional().default(false), // To mark if the product is a draft
+    // New fields for product frontmatter
+    rating: z.number().optional(),
+    additionalImages: z.array(z.string()).optional(),
+    specifications: z.array(z.object({ label: z.string(), value: z.string() })).optional(),
+    qanda: z.array(z.object({ question: z.string(), answer: z.string() })).optional(),
   }),
 });
 

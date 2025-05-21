@@ -1,4 +1,5 @@
 ---
+import type { CollectionEntry } from 'astro:content';
 import { getPostUrlBySlug } from '@utils/url-utils'
 import PostCard from './PostCard.astro'
 import FriendContentIntegrator from './svelte/friends/FriendContentIntegrator.svelte'
@@ -17,7 +18,7 @@ const animationEnabled = postCardConfig.localPosts.styling.animationEnabled;
 
 <div id="posts-container" class="transition flex flex-col rounded-[var(--radius-large)] bg-[var(--card-bg)] py-1 md:py-0 md:bg-transparent md:gap-4 mb-4">
     <!-- Regular local posts (server-rendered) with data attributes for friend content integration -->
-    {page.data.map((entry) => {
+    {page.data.map((entry: any) => {
         const dateStr = formatDateToYYYYMMDD(entry.data.published);
         const timestamp = new Date(entry.data.published).getTime();
         
