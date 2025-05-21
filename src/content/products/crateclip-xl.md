@@ -1,8 +1,8 @@
 ---
 name: "CrateClip XL"
-tagline: "For when 'secure' isn't secure enough. Keeps things in... or out."
+tagline: "For when 'secure' isn't secure enough."
 draft: false
-description: "Standard restraints too... humane? The CrateClip XL offers unparalleled security for those items (or entities) you *really* don't want escaping. Forged from alloys unknown and imbued with a faint, unsettling hum. We're not sure what it keeps out, but it's definitely good at keeping things *in*. Warranty void if used on anything that can file a complaint."
+description: "Warranty void if used on anything that can file a complaint."
 rating: 4.8
 additionalImages:
   - "/images/crateclip-xl-angle1.jpg"
@@ -24,4 +24,15 @@ qanda:
     answer: "Compatibility is not guaranteed across timelines. Consult your local paradox regulations."
   - question: "What's the return policy?"
     answer: "All sales are final. Especially on this item."
+preWrittenReviews:
+  - author: "Survivor #42"
+    rating: 1
+    date: "Unknown - Post-Incident"
+    comment: "The CrateClip XL didn't just restrain it; it... harmonized with its screams. My ears are still bleeding temporal echoes. Do not buy if you value your sanity or eardrums."
+  - author: "Maintenance Unit 7 (Decommissioned)"
+    comment: "Observed CrateClip XL autonomously 'securing' a rogue temporal anomaly. Anomaly is now... quieter. And flatter. Efficiency: 110%. Psychological impact on organic observers: regrettable but within acceptable parameters for containment."
+  - author: "Concerned Citizen"
+    rating: 2
+    date: "Last Tuesday"
+    comment: "I bought this to keep the squirrels out of my bird feeder. Now the squirrels bring *me* offerings. I'm not sure what to make of this. The birds are terrified."
 ---

@@ -2,6 +2,7 @@
 // src/components/store/ProductCard.astro
 // import ImageWrapper from '../misc/ImageWrapper.astro'; // If you adapt it
 import { Icon } from 'astro-icon/components'; // If you add icons
+import { communityConfig } from '../../config/community.config';
 
 export interface Props {
   class?: string;
@@ -11,10 +12,12 @@ export interface Props {
 
 const { product, style } = Astro.props;
 const className = Astro.props.class;
-const { name, tagline, description, price, image, sku, rating, additionalImages, specifications, qanda } = product.data; // Added specifications, qanda
+const { name, tagline, description, price, image, sku, rating, additionalImages, specifications, qanda, preWrittenReviews } = product.data; // Added specifications, qanda, preWrittenReviews
+const formActionUrl = communityConfig.contact.formActionUrl;
 
 const hasSpecifications = Array.isArray(specifications) && specifications.length > 0;
 const hasQandA = Array.isArray(qanda) && qanda.length > 0;
+const hasPreWrittenReviews = Array.isArray(preWrittenReviews) && preWrittenReviews.length > 0;
 
 const hasImage = image !== undefined && image !== null && image !== '';
 const hasAdditionalImages = additionalImages && additionalImages.length > 0;
@@ -158,6 +161,20 @@ if (typeof rating === 'number' && rating >= 0 && rating <= 5) {
             Q&A
           </button>
         )}
+        {hasPreWrittenReviews && (
+          <button
+            id={`tab-button-reviews-${product.id.replace(/\./g, '-')}`}
+            class="tab-link px-4 py-3 text-sm font-medium -mb-px border-b-2 focus:outline-none data-[active=true]:border-[var(--primary)] data-[active=true]:text-[var(--primary)] text-slate-400 dark:text-slate-300 hover:text-[var(--primary-hover)] dark:hover:text-[var(--primary)] border-transparent"
+            data-tab-type="reviews"
+            data-active="false"
+            type="button"
+            role="tab"
+            aria-controls={`tab-reviews-${product.id.replace(/\./g, '-')}`}
+            aria-selected="false"
+          >
+            Reviews
+          </button>
+        )}
       </div>
 
       {/* Tab Content */}
@@ -179,7 +196,12 @@ if (typeof rating === 'number' && rating >= 0 && rating <= 5) {
             {/* Content populated by script */}
           </div>
         )}
-        {!(description || hasSpecifications || hasQandA) && (
+        {hasPreWrittenReviews && (
+          <div id={`tab-reviews-${product.id.replace(/\./g, '-')}`} class="tab-panel text-slate-700 dark:text-slate-300" role="tabpanel" aria-labelledby={`tab-button-reviews-${product.id.replace(/\./g, '-')}`} style="display: none;" data-active="false">
+            {/* Content populated by script */}
+          </div>
+        )}
+        {!(description || hasSpecifications || hasQandA || hasPreWrittenReviews) && (
              <p class="text-sm text-slate-400 dark:text-slate-500 italic py-4">No details available for this product.</p>
         )}
       </div>
@@ -216,7 +238,7 @@ if (typeof rating === 'number' && rating >= 0 && rating <= 5) {
   }
 
   .product-card.selected .expandable-details {
-    max-height: 600px; /* Increased max-height for potentially longer content */
+    max-height: 1000px; /* Increased max-height for review form */
     opacity: 1;
   }
 
@@ -286,18 +308,45 @@ if (typeof rating === 'number' && rating >= 0 && rating <= 5) {
   .product-card.selected .expandable-details .btn-primary:hover {
     opacity: 1; /* Brighter on hover */
   }
+
+  .review-item:not(:last-child) {
+    border-bottom: 1px solid rgba(var(--slate-rgb, 71, 85, 105), 0.15);
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+  }
+  .review-author {
+    font-weight: 600;
+  }
+  .review-date {
+    font-size: 0.8em;
+    color: var(--slate-500);
+  }
+  .dark .review-date {
+    color: var(--slate-400);
+  }
+  .review-rating .icon {
+    color: var(--amber-400); /* Ensure stars are amber */
+    width: 1em; /* Adjust size as needed */
+    height: 1em; /* Adjust size as needed */
+    display: inline-block; /* Align stars correctly */
+    margin-right: 0.1em;
+  }
 </style>
 
 <script lang="ts" define:vars={{
     productId: product.id,
+    productName: product.data.name, // Added for review form
     descriptionData: product.data.description,
     specificationsData: product.data.specifications,
-    qandaData: product.data.qanda
+    qandaData: product.data.qanda,
+    preWrittenReviewsData: product.data.preWrittenReviews,
+    formActionUrl: formActionUrl
 }}>
-  console.log('[ProductCard SCRIPT START]', 'ID:', productId);
+  console.log('[ProductCard SCRIPT START]', 'ID:', productId, 'Name:', productName);
   console.log('Description Data:', descriptionData);
   console.log('Specifications Data:', specificationsData);
   console.log('Q&A Data:', qandaData);
+  console.log('Pre-written Reviews Data:', preWrittenReviewsData);
 
   // This script instance is specific to ONE ProductCard, identified by `productId` from define:vars.
   // All DOM queries and operations should be scoped to this specific card.
@@ -386,6 +435,37 @@ if (typeof rating === 'number' && rating >= 0 && rating <= 5) {
 
       // console.log(`[ProductCard ${productId}] Found tab links:`, tabLinks.length, `Found tab panels:`, tabPanels.length);
 
+      function createReviewFormHTML(currentProductId, currentProductName, safeProdId) {
+        // Using safeProdId for unique element IDs
+        // Ensure product name is escaped for HTML attribute if it can contain special characters, though for value it's usually fine.
+        const escapedProductName = currentProductName ? currentProductName.replace(/"/g, '"') : '';
+        return `
+          <form class="leave-review-form mt-8 pt-6 border-t border-slate-700/30 dark:border-slate-600/50">
+            <h4 class="text-xl font-semibold mb-4 text-slate-800 dark:text-slate-100">Leave Your Review</h4>
+            <input type="hidden" name="productId" value="${currentProductId}">
+            <input type="hidden" name="productName" value="${escapedProductName}">
+
+            <div class="mb-4">
+              <label for="reviewerName-${safeProdId}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Name (Optional)</label>
+              <input type="text" name="reviewerName" id="reviewerName-${safeProdId}" class="w-full p-2.5 border border-slate-300 dark:border-slate-600 rounded-md bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors duration-150 ease-in-out" placeholder="Your Name">
+            </div>
+
+            <div class="mb-4">
+              <label for="reviewerRating-${safeProdId}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Rating (1-5)</label>
+              <input type="number" name="reviewerRating" id="reviewerRating-${safeProdId}" min="1" max="5" required class="w-full p-2.5 border border-slate-300 dark:border-slate-600 rounded-md bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors duration-150 ease-in-out" placeholder="5">
+            </div>
+
+            <div class="mb-4">
+              <label for="reviewerComment-${safeProdId}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Comment (Required)</label>
+              <textarea name="reviewerComment" id="reviewerComment-${safeProdId}" rows="4" required class="w-full p-2.5 border border-slate-300 dark:border-slate-600 rounded-md bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors duration-150 ease-in-out" placeholder="Your insightful review..."></textarea>
+            </div>
+
+            <button type="submit" class="w-full sm:w-auto btn-primary text-white font-semibold py-2.5 px-5 rounded-[var(--radius-medium)] transition-all duration-200 ease-in-out hover:bg-[var(--primary-hover)] active:scale-95 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 focus:ring-offset-slate-100 dark:focus:ring-offset-slate-800">Submit Review</button>
+            <div id="review-form-message-${safeProdId}" class="review-form-message mt-3 text-sm"></div>
+          </form>
+        `;
+      }
+
       const activateTab = (linkToActivate) => {
         const panelType = linkToActivate.dataset.tabType;
 
@@ -420,39 +500,260 @@ if (typeof rating === 'number' && rating >= 0 && rating <= 5) {
           targetPanel.innerHTML = ''; // Clear previous content before adding new
 
           if (panelType === 'description') {
-            // console.log(`[ProductCard ${productId}] Rendering description. Data:`, descriptionData);
-            targetPanel.textContent = descriptionData || 'No description available.';
+            console.log(`[ProductCard ${productId}] Rendering description. Data:`, descriptionData, 'Target Panel:', targetPanel);
+            targetPanel.innerHTML = descriptionData || 'No description available.';
+            console.log(`[ProductCard ${productId}] Description HTML:`, targetPanel.innerHTML);
           } else if (panelType === 'specifications') {
-            // console.log(`[ProductCard ${productId}] Rendering specifications. Data:`, specificationsData);
+            console.log(`[ProductCard ${productId}] Rendering specifications. Data:`, specificationsData, 'Target Panel:', targetPanel);
+            targetPanel.innerHTML = ''; // Clear previous content
             if (Array.isArray(specificationsData) && specificationsData.length > 0) {
+              const dlElement = document.createElement('dl');
+              dlElement.classList.add('grid', 'grid-cols-1', 'sm:grid-cols-2', 'gap-x-4', 'gap-y-2', 'text-sm'); // Added some basic styling for dl
               specificationsData.forEach(spec => {
-                const specP = document.createElement('p');
-                specP.classList.add('text-slate-700', 'dark:text-slate-300');
-                specP.innerHTML = `<strong>${spec.label}:</strong> ${spec.value}`;
-                targetPanel.appendChild(specP);
+                if (spec && typeof spec.label !== 'undefined' && typeof spec.value !== 'undefined') {
+                  const dt = document.createElement('dt');
+                  dt.classList.add('font-semibold', 'text-slate-800', 'dark:text-slate-200');
+                  dt.textContent = spec.label;
+                  const dd = document.createElement('dd');
+                  dd.classList.add('text-slate-600', 'dark:text-slate-300', 'sm:col-start-2'); // Ensure value starts in second column on sm+
+                  dd.textContent = spec.value;
+                  dlElement.appendChild(dt);
+                  dlElement.appendChild(dd);
+                } else {
+                  console.warn(`[ProductCard ${productId}] Invalid spec item:`, spec);
+                }
               });
+              targetPanel.appendChild(dlElement);
             } else {
-              targetPanel.textContent = 'No specifications available.';
+              targetPanel.innerHTML = '<p class="text-slate-500 dark:text-slate-400 italic">No specifications available.</p>';
             }
+            console.log(`[ProductCard ${productId}] Specifications HTML:`, targetPanel.innerHTML);
           } else if (panelType === 'qanda') {
-            // console.log(`[ProductCard ${productId}] Rendering Q&A. Data:`, qandaData);
+            console.log(`[ProductCard ${productId}] Rendering Q&A. Data:`, qandaData, 'Target Panel:', targetPanel);
+            targetPanel.innerHTML = ''; // Clear previous content
             if (Array.isArray(qandaData) && qandaData.length > 0) {
               qandaData.forEach(item => {
-                const qaDiv = document.createElement('div');
-                qaDiv.classList.add('qna-item', 'mb-3');
-                const questionH4 = document.createElement('h4');
-                questionH4.classList.add('text-md', 'font-semibold', 'text-slate-800', 'dark:text-slate-200', 'mb-1');
-                questionH4.textContent = item.question;
-                const answerP = document.createElement('p');
-                answerP.classList.add('text-sm', 'text-slate-600', 'dark:text-slate-300');
-                answerP.textContent = item.answer;
-                qaDiv.appendChild(questionH4);
-                qaDiv.appendChild(answerP);
-                targetPanel.appendChild(qaDiv);
+                if (item && typeof item.question !== 'undefined' && typeof item.answer !== 'undefined') {
+                  const qDiv = document.createElement('div');
+                  qDiv.classList.add('qna-item', 'mb-4', 'pb-4', 'border-b', 'border-slate-200', 'dark:border-slate-700', 'last:border-b-0', 'last:pb-0', 'last:mb-0');
+                  qDiv.innerHTML = `<h3 class="text-md font-semibold text-slate-800 dark:text-slate-100 mb-1">${item.question}</h3><p class="text-sm text-slate-600 dark:text-slate-300">${item.answer}</p>`;
+                  targetPanel.appendChild(qDiv);
+                } else {
+                  console.warn(`[ProductCard ${productId}] Invalid Q&A item:`, item);
+                }
               });
             } else {
-              targetPanel.textContent = 'No questions and answers available.';
+              targetPanel.innerHTML = '<p class="text-slate-500 dark:text-slate-400 italic">No questions and answers available.</p>';
             }
+            console.log(`[ProductCard ${productId}] Q&A HTML:`, targetPanel.innerHTML);
+          } else if (panelType === 'reviews') {
+            // console.log(`[ProductCard ${productId}] Rendering reviews. Data:`, preWrittenReviewsData);
+            if (Array.isArray(preWrittenReviewsData) && preWrittenReviewsData.length > 0) {
+              preWrittenReviewsData.forEach(review => {
+                const reviewDiv = document.createElement('div');
+                reviewDiv.classList.add('review-item');
+
+                const authorP = document.createElement('p');
+                authorP.classList.add('review-author', 'text-slate-800', 'dark:text-slate-200');
+                authorP.textContent = review.author || 'Anonymous';
+                reviewDiv.appendChild(authorP);
+
+                if (review.date) {
+                  const dateP = document.createElement('p');
+                  dateP.classList.add('review-date', 'text-xs', 'mb-1');
+                  try {
+                    dateP.textContent = new Date(review.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+                  } catch (e) {
+                     dateP.textContent = review.date; // fallback to raw date if parsing fails
+                  }
+                  reviewDiv.appendChild(dateP);
+                }
+
+                if (typeof review.rating === 'number' && review.rating >= 0 && review.rating <= 5) {
+                  const ratingDiv = document.createElement('div');
+                  ratingDiv.classList.add('review-rating', 'flex', 'items-center', 'mb-1');
+                  ratingDiv.setAttribute('aria-label', `Rating: ${review.rating} out of 5 stars`);
+
+                  const fullStars = Math.floor(review.rating);
+                  const halfStar = review.rating % 1 >= 0.5;
+                  const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+
+                  for (let i = 0; i < fullStars; i++) {
+                    const starIcon = document.createElement('span');
+                    starIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="icon"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`; // mdi:star
+                    ratingDiv.appendChild(starIcon);
+                  }
+                  if (halfStar) {
+                    const starIcon = document.createElement('span');
+                    starIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="icon"><path d="M12 15.4V6.1l1.71 4.04 4.38.38-3.32 2.88 1 4.28L12 15.4zM20 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-2-1.74z"/></svg>`; // mdi:star-half-full (approximated with path, consider using Icon component if possible or more accurate SVG)
+                    ratingDiv.appendChild(starIcon);
+                  }
+                  for (let i = 0; i < emptyStars; i++) {
+                    const starIcon = document.createElement('span');
+                    starIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="icon"><path d="M12 17.27l6.18 3.73-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27zm0-2.54l-4.57 2.77 1.18-5.08L4.36 9.8l5.21-.45L12 4.6l2.43 4.75 5.21.45-4.25 3.64 1.18 5.08L12 14.73z"/></svg>`; // mdi:star-outline
+                    ratingDiv.appendChild(starIcon);
+                  }
+                  reviewDiv.appendChild(ratingDiv);
+                }
+
+
+                const commentP = document.createElement('p');
+                commentP.classList.add('review-comment', 'text-slate-600', 'dark:text-slate-300', 'text-sm');
+                commentP.textContent = review.comment || 'No comment provided.';
+                reviewDiv.appendChild(commentP);
+
+                targetPanel.appendChild(reviewDiv);
+              });
+            } else {
+              targetPanel.textContent = 'No reviews yet.';
+            }
+
+            // START: New "Leave a Review" button and togglable form logic
+            const safeId = safeProductId; // Use the existing safeProductId from line 489
+
+            // --- "Leave a Review" Button Setup ---
+            const leaveReviewButtonId = `leave-review-btn-${safeId}`;
+            let leaveReviewButton = targetPanel.querySelector(`#${leaveReviewButtonId}`);
+            // Try to find existing form instance as well, in case tab is re-activated without full clear (though current clear makes this less likely)
+            let reviewFormInstance = targetPanel.querySelector(`#review-form-instance-${safeId}`);
+
+            if (!leaveReviewButton) {
+                leaveReviewButton = document.createElement('button');
+                leaveReviewButton.id = leaveReviewButtonId;
+                leaveReviewButton.textContent = 'Leave a Review';
+                leaveReviewButton.className = 'leave-review-toggle-button mt-6 mb-4 px-4 py-2 text-sm font-medium rounded-md border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] focus:ring-offset-slate-50 dark:focus:ring-offset-slate-800 transition-colors duration-150';
+                targetPanel.appendChild(leaveReviewButton); // Append button after pre-written reviews
+            }
+
+            // --- Review Form Setup (create if not exists, ensure hidden) ---
+            const reviewFormId = `review-form-instance-${safeId}`;
+            if (!reviewFormInstance) { // Only create form if it doesn't exist in the panel
+                const formHtml = createReviewFormHTML(productId, productName, safeId);
+                const formWrapper = document.createElement('div'); // Temporary wrapper to parse HTML
+                formWrapper.innerHTML = formHtml;
+                const newForm = formWrapper.firstElementChild;
+
+                if (newForm) {
+                    reviewFormInstance = newForm; // Assign to the outer scope variable
+                    reviewFormInstance.id = reviewFormId;
+                    reviewFormInstance.style.display = 'none'; // Initially hidden
+
+                    // Insert form after the button
+                    if (leaveReviewButton && leaveReviewButton.parentNode === targetPanel) {
+                        targetPanel.insertBefore(reviewFormInstance, leaveReviewButton.nextSibling);
+                    } else { // Fallback if button somehow isn't there or not in panel
+                        targetPanel.appendChild(reviewFormInstance);
+                    }
+
+                    // Event listener for the form itself to stop propagation
+                    reviewFormInstance.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                    });
+
+                    // Event listeners for inputs/textarea/submit button within the form
+                    const formInputsAndSubmit = reviewFormInstance.querySelectorAll('input, textarea, button[type="submit"]');
+                    formInputsAndSubmit.forEach(element => {
+                        element.addEventListener('focus', (e) => { // Stop propagation on focus
+                            e.stopPropagation();
+                        });
+                    });
+
+                    // Attach the submit event listener (Formspree logic)
+                    reviewFormInstance.addEventListener('submit', async (event) => {
+                        event.preventDefault(); // Prevent default page reload
+
+                        const formElement = event.target;
+                        if (!(formElement instanceof HTMLFormElement)) {
+                            console.error("[ProductCard] Review form submission target is not an HTMLFormElement:", formElement);
+                            const msgDiv = reviewFormInstance?.querySelector(`#review-form-message-${safeId}`);
+                            if (msgDiv) {
+                                msgDiv.textContent = 'Error: Form submission failed (invalid form structure).';
+                                msgDiv.className = 'review-form-message mt-3 text-sm text-red-600 dark:text-red-400';
+                            }
+                            return;
+                        }
+                        const form = formElement;
+                        const messageDiv = form.querySelector(`#review-form-message-${safeId}`);
+
+                        if (!messageDiv) {
+                            console.error(`[ProductCard ${productId}] Could not find messageDiv #review-form-message-${safeId} for review form.`);
+                            return;
+                        }
+
+                        messageDiv.textContent = 'Submitting...';
+                        messageDiv.className = 'review-form-message mt-3 text-sm text-slate-500 dark:text-slate-400';
+
+                        const formData = new FormData(form);
+                        const reviewData = {
+                            product_id: formData.get('productId'),
+                            product_name: formData.get('productName'),
+                            name: formData.get('reviewerName') || 'Anonymous',
+                            rating: formData.get('reviewerRating'),
+                            comment: formData.get('reviewerComment'),
+                            _subject: `New Product Review for ${formData.get('productName')}`,
+                        };
+ 
+                        // const reviewFormActionUrl = 'https://formspree.io/f/YOUR_FORMSPREE_ID_PLACEHOLDER'; // Replace with actual URL
+                        // Use formActionUrl passed via define:vars
+                        if (!formActionUrl) {
+                            console.error(`[ProductCard ${productId}] Formspree URL (formActionUrl) is not defined. Cannot submit review.`);
+                            messageDiv.textContent = 'Error: Review submission endpoint is not configured.';
+                            messageDiv.className = 'review-form-message mt-3 text-sm text-red-600 dark:text-red-400';
+                            return;
+                        }
+ 
+                        try {
+                            const response = await fetch(formActionUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                                body: JSON.stringify(reviewData)
+                            });
+
+                            if (response.ok) {
+                                messageDiv.textContent = 'Thank you! Your review has been submitted.';
+                                messageDiv.className = 'review-form-message mt-3 text-sm text-green-600 dark:text-green-400';
+                                form.reset();
+                                if (reviewFormInstance) reviewFormInstance.style.display = 'none'; // Hide form
+                                if (leaveReviewButton) leaveReviewButton.textContent = 'Leave a Review'; // Reset button text
+                            } else {
+                                const errorData = await response.json().catch(() => ({}));
+                                console.error('Review submission error data:', errorData);
+                                messageDiv.textContent = `Submission failed: ${errorData.error || response.statusText || 'Please try again.'}`;
+                                messageDiv.className = 'review-form-message mt-3 text-sm text-red-600 dark:text-red-400';
+                            }
+                        } catch (error) {
+                            console.error('Review submission fetch error:', error);
+                            messageDiv.textContent = 'An error occurred while submitting your review. Please check your connection and try again.';
+                            messageDiv.className = 'review-form-message mt-3 text-sm text-red-600 dark:text-red-400';
+                        }
+                    });
+                }
+            }
+
+            // --- Event Listener for "Leave a Review" Button (ensure it's attached and refers to the correct form instance) ---
+            if (leaveReviewButton) {
+                // The button element is new if activateTab cleared innerHTML, so a new listener is appropriate.
+                leaveReviewButton.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Crucial for preventing card collapse
+
+                    // Always re-fetch the form instance from the DOM within the event handler,
+                    // as it might have been re-created if the tab was re-activated.
+                    const currentFormInPanel = targetPanel.querySelector(`#${reviewFormId}`);
+                    if (currentFormInPanel) {
+                        const isFormOpen = currentFormInPanel.style.display !== 'none';
+                        if (isFormOpen) {
+                            currentFormInPanel.style.display = 'none';
+                            leaveReviewButton.textContent = 'Leave a Review';
+                        } else {
+                            currentFormInPanel.style.display = 'block';
+                            leaveReviewButton.textContent = 'Cancel Review';
+                        }
+                    } else {
+                        console.warn(`[ProductCard ${productId}] Review form instance (#${reviewFormId}) not found when toggling visibility.`);
+                    }
+                });
+            }
+            // END: New "Leave a Review" button and togglable form logic
           }
           targetPanel.style.display = 'block';
           targetPanel.dataset.active = 'true';

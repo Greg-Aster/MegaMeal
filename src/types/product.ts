@@ -13,6 +13,12 @@ export interface ProductFrontmatter {
   additionalImages?: string[];
   specifications?: Array<{ label: string; value: string }>;
   qanda?: Array<{ question: string; answer: string }>;
+  preWrittenReviews?: Array<{
+    author: string;
+    rating?: number;
+    date?: string;
+    comment: string;
+  }>;
 
   // Potentially other relevant fields (can be added if needed)
   // category?: string;

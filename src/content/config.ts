@@ -96,6 +96,14 @@ const productsCollection = defineCollection({
     additionalImages: z.array(z.string()).optional(),
     specifications: z.array(z.object({ label: z.string(), value: z.string() })).optional(),
     qanda: z.array(z.object({ question: z.string(), answer: z.string() })).optional(),
+    preWrittenReviews: z.array(
+      z.object({
+        author: z.string(),
+        rating: z.number().optional(),
+        date: z.string().optional(),
+        comment: z.string(),
+      })
+    ).optional(),
   }),
 });
 
