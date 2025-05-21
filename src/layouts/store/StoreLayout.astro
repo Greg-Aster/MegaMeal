@@ -1,0 +1,45 @@
+---
+// src/layouts/StoreLayout.astro
+import Navbar from '../../components/Navbar.astro';
+export interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <meta name="generator" content={Astro.generator} />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  {/* Add any truly essential global links here, e.g., for fonts if separate */}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Metal+Mania&family=Nosifier&display=swap" rel="stylesheet">
+
+</head>
+<body class="bg-black text-gray-300 font-sans"> {/* Example: Dark theme, consider a more sinister font-family later */}
+  <Navbar />
+  <main id="store-content">
+    <slot />
+  </main>
+  <style is:global>
+    /* Minimal global styles for StoreLayout if needed */
+    /* Example: Apply a sinister font if desired */
+    /* body { font-family: 'Creepster', cursive; } */
+    /* Or use Tailwind utilities on the body tag */
+  </style>
+{/* COMING SOON OVERLAY - ADDED HERE */}
+  <div id="coming-soon-overlay" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+    <div class="text-center p-8 bg-gray-800 rounded-lg shadow-xl border border-gray-700">
+      <h2 class="text-4xl font-bold text-red-500 mb-4">Store Coming Soon!</h2>
+      <p class="text-xl text-gray-300">Our emporium of unsettling treasures is under construction.</p>
+      <p class="text-md text-gray-400 mt-2">Please check back later for a truly disturbing shopping experience.</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -81,10 +81,24 @@ const friendsCollection = defineCollection({
   }),
 });
 
+// Define the 'products' collection
+const productsCollection = defineCollection({
+  schema: z.object({
+    name: z.string(), // The name of the product
+    tagline: z.string(), // The sinister tagline for the product
+    description: z.string().optional(), // A more detailed description, optional
+    price: z.number().optional(), // The price of the product, optional
+    image: z.string().optional(), // Path to the product image, optional
+    sku: z.string().optional(), // A unique stock keeping unit, optional
+    draft: z.boolean().optional().default(false), // To mark if the product is a draft
+  }),
+});
+
 // Export the collections
 export const collections = {
   posts: postsCollection,
   spec: specCollection,
   team: teamCollection,
   friends: friendsCollection,
+  products: productsCollection,
 };

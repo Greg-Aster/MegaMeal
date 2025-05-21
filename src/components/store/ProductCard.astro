@@ -1,0 +1,53 @@
+---
+// src/components/store/ProductCard.astro
+// import ImageWrapper from '../misc/ImageWrapper.astro'; // If you adapt it
+// import { Icon } from 'astro-icon/components'; // If you add icons
+
+export interface Props {
+  class?: string;
+  product: any;
+  style?: string;
+}
+
+const { product, style } = Astro.props;
+const className = Astro.props.class;
+const { name, tagline, description, price, image, sku } = product.data;
+
+const hasImage = image !== undefined && image !== null && image !== '';
+---
+
+<div
+  class:list={["card-base flex flex-col w-full overflow-hidden relative product-card", className]}
+  style={style}>
+
+  {/* Image Section */}
+  {hasImage ? (
+    <a href="#" class="block overflow-hidden rounded-t-lg"> {/* Make link to product page later */}
+      {/* <ImageWrapper src={image} alt={name} class="w-full h-48 object-cover transition-transform duration-300 hover:scale-105" /> */}
+      <img src={image} alt={name} class="w-full h-48 object-cover transition-transform duration-300 hover:scale-105" />
+    </a>
+  ) : (
+    <div class="w-full h-48 bg-gray-700 flex items-center justify-center rounded-t-lg">
+      <p class="text-gray-500 italic">Image Coming Soon</p>
+    </div>
+  )}
+
+  {/* Text Content Section */}
+  <div class="p-4 md:p-6 flex-grow">
+    <h3 class="text-xl md:text-2xl font-bold mb-1 text-red-500 hover:text-red-400 transition">
+      <a href="#">{name}</a> {/* Make link to product page later */}
+    </h3>
+    {tagline && <p class="text-sm text-gray-400 italic mb-3">"{tagline}"</p>}
+
+    {description && <p class="text-xs md:text-sm text-gray-300 mb-4 line-clamp-3">{description}</p>}
+
+    <div class="mt-auto"> {/* Push price/sku to bottom if card flex-grow */}
+      {price ? (
+        <p class="text-lg font-semibold text-green-400 mb-1">Price: {price}</p>
+      ) : (
+        <p class="text-md text-yellow-400 italic mb-1">Price: Inquire Within</p>
+      )}
+      {sku && <p class="text-xs text-gray-500">SKU: {sku}</p>}
+    </div>
+  </div>
+</div>

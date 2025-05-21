@@ -3,6 +3,8 @@ enum I18nKey {
   about = 'about',
   archive = 'archive',
   community = 'community',
+  store = 'store',
+  projects = 'projects',
   search = 'search',
   
   configs = 'configs',

@@ -73,8 +73,8 @@ export const navBarConfig: NavBarConfig = {
 
 export const profileConfig: ProfileConfig = {
   avatar: "/src/content/avatar/avatar.png",
-  name: "Mysterious Witness",
-  bio: "Observer of extinction events, time traveler, and collector of perfect recipes across the multiverse.",
+  name: "MEGA MEAL SAGA",
+  bio: "Cosmic Horror and Food.",
   links: [
     {
       name: "Interdimensional Transit",

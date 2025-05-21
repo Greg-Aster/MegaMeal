@@ -1,0 +1,31 @@
+---
+import StoreLayout from '../layouts/store/StoreLayout.astro';
+import { getCollection } from 'astro:content';
+import ProductCard from '../components/store/ProductCard.astro';
+
+// Placeholder products array for display purposes
+const products = await getCollection('products', ({ data }) => {
+  return data.draft !== true;
+});
+---
+<StoreLayout title="Store" description="Browse our unique collection of unsettling treasures.">
+  <div class="card-base w-[60rem] mx-auto p-6 text-gray-200">
+    <h1 class="text-4xl font-bold mb-8 text-center text-red-500">Welcome to the Store</h1>
+    
+    {products.length === 0 ? (
+      <p class="text-center text-xl">Our shelves are currently... empty. How ominous.</p>
+    ) : (
+      <div class="flex flex-col gap-6">
+        {products.map(product => (
+          <ProductCard product={product} />
+        ))}
+      </div>
+    )}
+  </div>
+</StoreLayout>
+
+<style is:global>
+  body {
+    /* background-color: #1A1A1A; */ /* Ensuring dark theme if not covered by layout */
+  }
+</style>

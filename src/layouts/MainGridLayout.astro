@@ -256,7 +256,7 @@ style={`margin-top: ${navbarSpacing};`}
        src={src}
        alt="Banner image"
        width={bannerConfig.layout.maxWidth}
-       height={Math.round(bannerConfig.layout.maxWidth * 0.5625)} // 16:9 aspect ratio
+       height={Math.round(bannerConfig.layout.maxWidth * 0.5625)}
        class={`absolute inset-0 w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition} transition-opacity duration-${bannerConfig.animation.transitionDuration} ${
        index === 0 ? 'opacity-100' : 'opacity-0'
        }`}
