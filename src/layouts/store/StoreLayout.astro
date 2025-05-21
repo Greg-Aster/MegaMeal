@@ -1,104 +1,29 @@
 ---
-// src/layouts/StoreLayout.astro
+// src/layouts/store/StoreLayout.astro
+import Layout from '../Layout.astro'; // Adjusted path to parent directory
 import StoreNavbar from '../../components/store/StoreNavbar.astro';
 import Footer from '@components/Footer.astro';
 import BackToTop from '@components/control/BackToTop.astro';
-import ImageWrapper from '../../components/misc/ImageWrapper.astro'; // Adjusted path
-import { siteConfig } from '../../config/config'; // Adjusted path
-import { LIGHT_MODE, DARK_MODE, AUTO_MODE, PAGE_WIDTH } from '../../constants/constants.ts';
-import '../../styles/main.css'; // Import main styles for card-base and parallax
+import ImageWrapper from '../../components/misc/ImageWrapper.astro';
+import { siteConfig } from '../../config/config';
+// Removed LIGHT_MODE, DARK_MODE, AUTO_MODE, PAGE_WIDTH constants as theme script is removed
+// main.css is likely imported by Layout.astro, if not, it might need to be re-evaluated.
+// For now, assuming Layout.astro handles global styles.
 
 export interface Props {
   title: string;
   description: string;
+  // Add other props if Layout.astro expects them (e.g., lang, banner for OG tags)
 }
-
-const { title, description } = Astro.props;
-const configHue = siteConfig.themeColor.hue;
+const { title, description, ...rest } = Astro.props; // Capture other potential props for Layout
 ---
-<!doctype html>
-<html lang="en" class="bg-[var(--page-bg)] transition text-[14px] md:text-[16px]" data-overlayscrollbars-initialize>
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width" />
-  <meta name="generator" content={Astro.generator} />
-  <title>{title}</title>
-  <meta name="description" content={description} />
-  {/* Add any truly essential global links here, e.g., for fonts if separate */}
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-{/* Set the theme before the page is rendered to avoid a flash */}
-    <script is:inline define:vars={{LIGHT_MODE, DARK_MODE, AUTO_MODE, PAGE_WIDTH, configHue, defaultTheme: siteConfig.defaultTheme}}>
-        // Load the theme from local storage
-        const storedTheme = localStorage.getItem('theme');
-        console.log('[Theme Debug] Stored theme:', storedTheme);
-        let finalThemeIsDark;
-        const siteIsDefaultDark = defaultTheme === DARK_MODE;
-        console.log('[Theme Debug] Site default theme is dark:', siteIsDefaultDark, '(defaultTheme:', defaultTheme, ')');
+<Layout title={title} description={description} {...rest}>
+  {/* Specific Google Fonts for StoreLayout */}
+  <link rel="preconnect" href="https://fonts.googleapis.com" slot="head">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin slot="head">
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Metal+Mania&family=Nosifier&display=swap" rel="stylesheet" slot="head">
 
-        if (storedTheme === LIGHT_MODE) {
-            console.log('[Theme Debug] Applying stored theme: LIGHT_MODE');
-            finalThemeIsDark = false;
-        } else if (storedTheme === DARK_MODE) {
-            console.log('[Theme Debug] Applying stored theme: DARK_MODE');
-            finalThemeIsDark = true;
-        } else if (storedTheme === AUTO_MODE) {
-            console.log('[Theme Debug] Stored theme is AUTO_MODE. Checking system preference...');
-            const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const systemPrefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-            console.log('[Theme Debug] System prefers dark:', systemPrefersDark);
-            console.log('[Theme Debug] System prefers light:', systemPrefersLight);
-
-            if (systemPrefersDark) {
-                console.log('[Theme Debug] Applying system preference: dark');
-                finalThemeIsDark = true;
-            } else if (systemPrefersLight) {
-                console.log('[Theme Debug] Applying system preference: light');
-                finalThemeIsDark = false;
-            } else {
-                console.log('[Theme Debug] System preference inconclusive or matchMedia not supported. Using site default for AUTO.');
-                finalThemeIsDark = siteIsDefaultDark;
-            }
-        } else { // storedTheme is null (not set) or invalid
-            console.log('[Theme Debug] No valid stored theme. Checking system preference...');
-            const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const systemPrefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-            console.log('[Theme Debug] System prefers dark:', systemPrefersDark);
-            console.log('[Theme Debug] System prefers light:', systemPrefersLight);
-
-            if (systemPrefersDark) {
-                console.log('[Theme Debug] Applying system preference: dark');
-                finalThemeIsDark = true;
-            } else if (systemPrefersLight) {
-                console.log('[Theme Debug] Applying system preference: light');
-                finalThemeIsDark = false;
-            } else {
-                 console.log('[Theme Debug] System preference inconclusive or matchMedia not supported. Using site default.');
-                finalThemeIsDark = siteIsDefaultDark;
-            }
-        }
-        console.log('[Theme Debug] Final decision: finalThemeIsDark =', finalThemeIsDark);
-
-        if (finalThemeIsDark) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-
-        // Load the hue from local storage
-        const hue = localStorage.getItem('hue') || configHue;
-        document.documentElement.style.setProperty('--hue', hue);
-    </script>
-    <style define:vars={{
-        configHue,
-        'page-width': `${PAGE_WIDTH}rem`,
-    }}></style>
-  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Metal+Mania&family=Nosifier&display=swap" rel="stylesheet">
-
-</head>
-<body class="min-h-screen transition">
-  
-  {/* Parallax Background (Simplified from MainGridLayout) */}
+  {/* Parallax Background */}
   {siteConfig.banner.enable && (
     <div id="parallax-banner" class="fixed top-0 left-0 w-full h-screen z-[-1] overflow-hidden">
       <ImageWrapper
@@ -132,14 +57,10 @@ const configHue = siteConfig.themeColor.hue;
   </main>
   <Footer />
   <BackToTop />
-  <style is:global>
-    /* Minimal global styles for StoreLayout if needed */
-    /* Example: Apply a sinister font if desired */
-    /* body { font-family: 'Creepster', cursive; } */
-    /* Or use Tailwind utilities on the body tag */
 
-    /* Ensure parallax script from main.css can run if not already global */
-    /* Parallax background styles - these should be in main.css but ensure they are loaded */
+  {/* Global styles specific to StoreLayout's parallax, if not already in main.css or handled by Layout.astro */}
+  <style is:global>
+    /* Parallax background styles - these might be needed if not globally available via Layout.astro */
     .parallax-bg {
         transform: translateZ(0);
         position: absolute;
@@ -161,35 +82,27 @@ const configHue = siteConfig.themeColor.hue;
         opacity: 1; /* Fade in when loaded */
     }
   </style>
+  {/* Script specific to StoreLayout's parallax and animations */}
   <script>
-    // Simplified Parallax Logic (adapted from MainGridLayout)
-    // Ensure siteConfig is available to the client script if needed, or hardcode values
-    // For this simple version, we'll rely on the CSS and a simple load class.
-    // More complex JS parallax can be added if the CSS version isn't smooth enough.
-
+    // Simplified Parallax Logic
     document.addEventListener('DOMContentLoaded', () => {
       const parallaxBanner = document.getElementById('parallax-banner');
       if (parallaxBanner) {
-        // Give it a moment for Astro to process images, then fade in
         setTimeout(() => {
           parallaxBanner.classList.add('loaded');
-        }, 100); // Small delay
+        }, 100);
       }
 
-      // Initialize onload animations
       const elementsToAnimate = document.querySelectorAll('.onload-animation');
       elementsToAnimate.forEach(element => {
-        // Add 'loaded' class to trigger animation
-        // No timeout/staggering needed for this simplified version
         element.classList.add('loaded');
       });
 
-      // Basic scroll-based parallax (optional, CSS might be enough)
       const parallaxImage = document.getElementById('parallax-image');
       if (parallaxImage) {
-        const scrollFactor = -0.1; // Adjust for desired parallax intensity
+        const scrollFactor = -0.1; 
         let ticking = false;
-        let lastScrollY = window.scrollY;
+        // let lastScrollY = window.scrollY; // lastScrollY is not used
 
         function updateParallax() {
           if (!parallaxImage) return;
@@ -200,25 +113,23 @@ const configHue = siteConfig.themeColor.hue;
         }
 
         window.addEventListener('scroll', () => {
-          lastScrollY = window.scrollY;
+          // lastScrollY = window.scrollY; // lastScrollY is not used
           if (!ticking) {
             window.requestAnimationFrame(updateParallax);
             ticking = true;
           }
         }, { passive: true });
         
-        // Initial position
-        updateParallax();
+        updateParallax(); // Initial position
       }
     });
   </script>
-{/* COMING SOON OVERLAY - ADDED HERE */}
-  <!-- <div id="coming-soon-overlay" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+  {/* COMING SOON OVERLAY - RETAINED AS COMMENTED OUT */}
+  {/* <div id="coming-soon-overlay" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
     <div class="text-center p-8 bg-gray-800 rounded-lg shadow-xl border border-gray-700">
       <h2 class="text-4xl font-bold text-red-500 mb-4">Store Coming Soon!</h2>
       <p class="text-xl text-gray-300">Our emporium of unsettling treasures is under construction.</p>
       <p class="text-md text-gray-400 mt-2">Please check back later for a truly disturbing shopping experience.</p>
     </div>
-  </div> -->
-</body>
-</html>
+  </div> */}
+</Layout>
