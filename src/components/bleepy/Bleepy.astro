@@ -4,12 +4,13 @@
     <!-- Mascot SVG will be injected here by JavaScript -->
   </div>
 
+  <div id="mascot-ephemeral-speech"></div>
 
   <button id="dismiss-mascot-button" aria-label="Dismiss Mascot" title="Dismiss Mascot">
     🍴
   </button>
 
-  <div id="mascot-dialogue">[Bleep] bloop! [Bleepy]'s online and ready to talk snacks!</div>
+  <!-- <div id="mascot-dialogue">[Bleep] bloop! [Bleepy]'s online and ready to talk snacks!</div> -->
   <div id="mascot-chat-ui">
     <input type="text" id="mascot-chat-input" placeholder="Talk to me...">
     <button id="mascot-chat-send">Send</button>
@@ -74,33 +75,62 @@
     object-fit: contain;
   }
   
-  /* Dialogue Styling (similar to original, but positioned relative to new container) */
-  #mascot-dialogue {
+  /* Ephemeral Speech Styling */
+  #mascot-ephemeral-speech {
     position: absolute;
-    bottom: 80%; /* New: percentage */
-    left: 50%;    /* New: percentage */
-    transform: translateX(-50%); /* New: simplified transform */
-    width: auto;  /* New */
-    min-width: 70%; /* New: percentage */
-    max-width: 90%; /* New: percentage */
-    padding: 0.3rem 0.5rem; /* New: rem padding */
-    background-color: var(--dialogue-bg-light);
-    border: 1px solid var(--primary-hover);
-    border-radius: 0.5rem; /* Simplified border-radius, tail removed */
-    box-shadow: 0 -0.125rem 0.3125rem rgba(0,0,0,0.1);
+    bottom: 79%; /* Adjust as needed based on visual area height */
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    max-width: 85%; /* Or a suitable rem value */
+    padding: 0.2rem 0.4rem;
     font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
-    font-size: 0.9rem; /* New: rem font size */
-    color: var(--primary-hover);
+    font-size: clamp(0.8rem, 2.2vw, 0.95rem); /* Responsive font size */
+    color: var(--primary-hover); /* Default light mode text color */
     text-align: center;
     z-index: 1001;
-    opacity: 1;
-    transition: opacity 0.3s ease-in-out;
-    max-height: 10rem; /* Added for chat transcript */
-    overflow-y: auto; /* Added for chat transcript */
-    display: flex; /* Added for chat transcript */
-    flex-direction: column; /* Added for chat transcript */
-    gap: 0.25rem; /* Added for chat transcript */
+    opacity: 0;
+    pointer-events: none;
+    overflow-wrap: break-word;
   }
+
+  @media (prefers-color-scheme: dark) {
+    #mascot-ephemeral-speech {
+      color: var(--dialogue-text-dark);
+    }
+  }
+
+  #mascot-ephemeral-speech.appearing {
+    animation: speech-appear 0.8s ease-out forwards;
+  }
+
+  #mascot-ephemeral-speech.fading {
+    animation: speech-fade 1.2s ease-in forwards;
+  }
+
+  #mascot-ephemeral-speech.quick-fading {
+    animation: speech-quick-fade 0.2s ease-in forwards;
+  }
+
+  @keyframes speech-appear {
+    from { opacity: 0; transform: translate(-50%, 10px); } /* Start slightly lower */
+    to { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  }
+
+  @keyframes speech-fade {
+    from { opacity: 1; transform: translate(-50%, 0); }
+    to { opacity: 0; transform: translate(-50%, -10px); pointer-events: none; } /* Fade upwards */
+  }
+
+  @keyframes speech-quick-fade {
+    from { opacity: 1; }
+    to { opacity: 0; pointer-events: none; }
+  }
+
+  /* Old #mascot-dialogue styles removed or commented out if needed for reference */
+  /*
+  #mascot-dialogue { ... }
+  */
 
   #mascot-chat-ui {
     display: flex;
@@ -150,14 +180,13 @@
 
   /* #mascot-dialogue::after removed as tail design is incompatible with new centering */
 
-  @media (prefers-color-scheme: dark) {
+  /* @media (prefers-color-scheme: dark) {
     #mascot-dialogue {
       background-color: var(--dialogue-bg-dark);
       color: var(--dialogue-text-dark);
       border: 1px solid var(--dialogue-border-dark);
     }
-    /* #mascot-dialogue::after dark mode styles removed */
-  }
+  } */
 
   /* Dismiss Button (formerly kill-bleepy-icon-button) */
   #dismiss-mascot-button {
@@ -235,10 +264,13 @@
       /* No changes needed here, scales with parent */
     }
 
-    #mascot-dialogue {
-      font-size: 0.8rem; /* New */
-      max-height: 8rem; /* Adjusted for smaller screen */
-      /* Other properties scale with parent or are rem-based from base */
+    /* #mascot-dialogue {
+      font-size: 0.8rem;
+      max-height: 8rem;
+    } */
+    #mascot-ephemeral-speech {
+      font-size: clamp(0.75rem, 2vw, 0.9rem);
+      max-width: 90%;
     }
 
     #mascot-chat-ui {
@@ -280,10 +312,13 @@
       /* No changes needed here, scales with parent */
     }
 
-    #mascot-dialogue {
-      font-size: 0.7rem; /* New */
-      max-height: 7rem; /* Adjusted for mobile */
-      /* Other properties scale with parent or are rem-based from base */
+    /* #mascot-dialogue {
+      font-size: 0.7rem;
+      max-height: 7rem;
+    } */
+    #mascot-ephemeral-speech {
+      font-size: clamp(0.7rem, 1.8vw, 0.85rem);
+      max-width: 90%;
     }
 
     #mascot-chat-ui {
@@ -331,7 +366,8 @@
   // --- DOM Elements ---
   const mascotContainer = document.getElementById('mascot-container');
   const mascotVisualArea = document.getElementById('mascot-visual-area');
-  const mascotDialogue = document.getElementById('mascot-dialogue');
+  // const mascotDialogue = document.getElementById('mascot-dialogue'); // Old dialogue
+  const mascotEphemeralSpeech = document.getElementById('mascot-ephemeral-speech');
   const dismissButton = document.getElementById('dismiss-mascot-button');
   const bringBackButton = document.getElementById('bring-back-mascot-button');
   const mascotChatInput = document.getElementById('mascot-chat-input') as HTMLInputElement;
@@ -410,7 +446,14 @@
     if (isDismissal) {
       sessionStorage.setItem('bleepyDismissed', 'true');
       bringBackButton.style.display = 'flex'; // Show spoon
-      displayNewDialogue(true); // Show dismissal message
+      // displayNewDialogue(true); // Old dialogue system
+      if (mascotEphemeralSpeech && mascotEphemeralSpeech.textContent) {
+        // If speech is visible, let it fade or quick-fade naturally
+        // Or, force a quick fade if desired:
+        // mascotEphemeralSpeech.className = 'quick-fading';
+        // setTimeout(() => { if(mascotEphemeralSpeech) mascotEphemeralSpeech.textContent = ''; }, 200);
+      }
+
 
       // Start fade-out animation for the visual element
       mascotVisualArea.classList.add('visual-fading-out');
@@ -450,70 +493,77 @@
   }
 
   function restartAnimationsAndDialogue() {
-    if (!mascotContainer || !mascotDialogue) return;
+    if (!mascotContainer) return; // Removed mascotDialogue check
     // Jiggle animation
     mascotContainer.classList.remove('jiggle');
     void mascotContainer.offsetWidth; // Trigger reflow
     mascotContainer.classList.add('jiggle');
 
-    // Dialogue
-    // resetDialogueCycle(); // Dialogue cycle will be managed differently with chat
-    if (mascotDialogue) mascotDialogue.innerHTML = ''; // Clear initial dialogue for chat
+    // Dialogue - ephemeral speech will handle its own clearing
+    // if (mascotDialogue) mascotDialogue.innerHTML = '';
   }
   
-  // --- Chat Helper Functions ---
-  function appendMessageToDialogue(sender: string, text: string, isUser: boolean = false) {
-    if (!mascotDialogue) return;
-    const messageDiv = document.createElement('div');
-    messageDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
-    // Simple styling to differentiate user and mascot messages
-    if (isUser) {
-      messageDiv.style.textAlign = 'right';
-      messageDiv.style.color = 'var(--primary)'; // Example color for user
-    } else {
-      messageDiv.style.textAlign = 'left';
-      // Mascot uses default dialogue color
+  // --- Ephemeral Speech Logic ---
+  let speechLingerTimeout: NodeJS.Timeout | undefined;
+  let speechFadeCleanupListener: (() => void) | undefined;
+  let speechQuickFadeTimeout: NodeJS.Timeout | undefined;
+
+  function displayEphemeralSpeech(text: string) {
+    if (!mascotEphemeralSpeech) return;
+
+    // Clear existing timers and listeners
+    clearTimeout(speechLingerTimeout);
+    clearTimeout(speechQuickFadeTimeout);
+    if (speechFadeCleanupListener && mascotEphemeralSpeech) {
+      mascotEphemeralSpeech.removeEventListener('animationend', speechFadeCleanupListener);
+      speechFadeCleanupListener = undefined;
     }
-    mascotDialogue.appendChild(messageDiv);
-    mascotDialogue.scrollTop = mascotDialogue.scrollHeight; // Scroll to bottom
+
+    function proceedWithNewSpeech() {
+      if (!mascotEphemeralSpeech) return;
+      // Defensive cleanup
+      mascotEphemeralSpeech.className = '';
+      mascotEphemeralSpeech.textContent = '';
+
+      // Set New Text
+      mascotEphemeralSpeech.innerHTML = text; // Use innerHTML if text can contain simple HTML like <strong>
+
+      // Appear Animation
+      mascotEphemeralSpeech.className = 'appearing'; // Remove any old, then add new
+
+      // Linger Logic (Reverted)
+      const words = text.split(/\s+/).length;
+      let lingerDuration = (words / 2.5) * 1000 + 1500; // Previous formula
+      lingerDuration = Math.max(2500, Math.min(lingerDuration, 10000)); // Min 2.5s, Max 10s
+
+      speechLingerTimeout = setTimeout(() => {
+        if (!mascotEphemeralSpeech) return;
+
+        // Fade Away
+        mascotEphemeralSpeech.classList.remove('appearing');
+        mascotEphemeralSpeech.classList.add('fading');
+
+        // Cleanup after Fade
+        speechFadeCleanupListener = () => {
+          if (!mascotEphemeralSpeech) return;
+          mascotEphemeralSpeech.classList.remove('fading');
+          mascotEphemeralSpeech.textContent = ''; // Clear text
+          speechFadeCleanupListener = undefined; // Clear self
+        };
+        mascotEphemeralSpeech.addEventListener('animationend', speechFadeCleanupListener, { once: true });
+      }, lingerDuration);
+    }
+
+    proceedWithNewSpeech(); // Start the process if no interruption
   }
 
 
-  // --- Dialogue Functions ---
-  function getRandomDialogue(isDismissMsg = false) {
-    const sourceArray = isDismissMsg ? dismissDialogues : randomDialogues;
-    return sourceArray[Math.floor(Math.random() * sourceArray.length)];
-  }
-
-  function displayNewDialogue(isDismissMsg = false, customMessage: string | null = null) {
-    if (!mascotDialogue || !mascotContainer?.classList.contains('visible')) return;
-
-    const newText = customMessage ? customMessage : getRandomDialogue(isDismissMsg);
-
-    // Fade out current text
-    mascotDialogue.style.opacity = '0';
-
-    setTimeout(() => {
-      mascotDialogue.innerHTML = newText;
-      // Fade in new text
-      mascotDialogue.style.opacity = '1';
-
-      // Re-trigger jiggle on dialogue change for emphasis
-      if (mascotContainer) { // Ensure mascotContainer exists
-        mascotContainer.classList.remove('jiggle');
-        void mascotContainer.offsetWidth;
-        mascotContainer.classList.add('jiggle');
-      }
-    }, 350); // Delay should be slightly longer than fade-out (0.3s)
-  }
-  
-  function resetDialogueCycle() {
-    // clearTimers(); // Clear existing timers before starting new ones
-    // Dialogue cycle is paused/modified for chat interface
-    // The explainer message and random dialogues might be re-introduced differently or removed
-    // For now, chat takes precedence.
-    if (mascotDialogue) mascotDialogue.innerHTML = ''; // Clear dialogue for chat
-  }
+  // --- Old Dialogue Functions (to be removed or adapted) ---
+  /*
+  function getRandomDialogue(isDismissMsg = false) { ... }
+  function displayNewDialogue(isDismissMsg = false, customMessage: string | null = null) { ... }
+  function resetDialogueCycle() { ... }
+  */
 
   function resetInactivityBasedDialogueTimer() {
     // clearTimeout(inactivityTimer);
@@ -524,23 +574,22 @@
 
   // --- Chat Logic ---
   async function handleSendMessage() {
-    if (!mascotChatInput || !mascotDialogue) return;
+    if (!mascotChatInput || !mascotEphemeralSpeech) return; // Check mascotEphemeralSpeech
     const userMessage = mascotChatInput.value.trim();
     if (!userMessage) return;
 
     const currentMascot = mascots[currentMascotIndex];
-    const currentMascotName = currentMascot.name as MascotName; // Cast to MascotName
+    const currentMascotName = currentMascot.name as MascotName;
     const currentMascotPersonaString = personaStrings[currentMascotName] || "You are a friendly mascot.";
 
-    appendMessageToDialogue("You", userMessage, true);
+    // appendMessageToDialogue("You", userMessage, true); // Do not display user message
     mascotChatInput.value = '';
 
-    // Show Loading State
-    const loadingMessageId = `loading-${Date.now()}`;
-    appendMessageToDialogue(currentMascotName, "Thinking...", false);
-    const loadingDiv = mascotDialogue.lastElementChild as HTMLElement; // Assume last child is the loading message
-    if(loadingDiv) loadingDiv.id = loadingMessageId;
-
+    // Show Loading State (optional: could be a small visual cue elsewhere, or just wait)
+    // For now, we'll just display the mascot's reply directly.
+    // If a loading indicator is desired for ephemeral speech, it would need a dedicated spot or animation.
+    // const loadingMessageId = `loading-${Date.now()}`;
+    // displayEphemeralSpeech("Thinking..."); // Example of using ephemeral for loading
 
     const workerUrl = 'https://my-mascot-worker-service.greggles.workers.dev';
     try {
@@ -555,20 +604,20 @@
 
       const data = await response.json();
       
-      // Remove loading state
-      const existingLoadingDiv = document.getElementById(loadingMessageId);
-      if (existingLoadingDiv) existingLoadingDiv.remove();
+      // Remove loading state (if one was implemented for ephemeral speech)
+      // const existingLoadingDiv = document.getElementById(loadingMessageId);
+      // if (existingLoadingDiv) existingLoadingDiv.remove();
 
       if (response.ok && data.reply) {
-        appendMessageToDialogue(currentMascotName, data.reply);
+        displayEphemeralSpeech(data.reply);
       } else {
-        appendMessageToDialogue('Error', data.error || 'Failed to get a response.');
+        displayEphemeralSpeech(data.error || 'Failed to get a response.');
       }
     } catch (error) {
-      // Remove loading state
-      const existingLoadingDiv = document.getElementById(loadingMessageId);
-      if (existingLoadingDiv) existingLoadingDiv.remove();
-      appendMessageToDialogue('Error', 'Could not connect to the mascot.');
+      // Remove loading state (if one was implemented for ephemeral speech)
+      // const existingLoadingDiv = document.getElementById(loadingMessageId);
+      // if (existingLoadingDiv) existingLoadingDiv.remove();
+      displayEphemeralSpeech('Could not connect to the mascot.');
       console.error('Error calling mascot worker:', error);
     }
   }
