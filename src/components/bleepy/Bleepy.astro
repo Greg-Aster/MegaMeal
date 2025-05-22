@@ -30,18 +30,16 @@
 
   #mascot-container {
     position: fixed;
-    bottom: -2.5rem; /* New bottom */
-    right: 0rem;
+    bottom: 1rem;
+    right: 1rem;
     width: 14rem;
     height: 18rem; /* New height */
-    /* aspect-ratio removed */
-    /* min-width and max-width removed, assuming they were part of vw/vh refactor */
     background-color: transparent;
     z-index: 1000;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-top: 0.5rem; /* New padding-top */
+    /* padding-top removed */
     opacity: 0; /* Initial: opacity */
     transform: translateY(calc(100% + 1.5rem)); /* Initial: transform */
     transition: transform 0.7s ease-in-out, opacity 0.7s ease-in-out;
@@ -49,7 +47,7 @@
 
   #mascot-container.visible {
     transform: translateY(0); /* Final position */
-    opacity: 0.65; /* Default opacity */
+    opacity: 0.75; /* Default opacity */
   }
 
   #mascot-container.jiggle {
@@ -75,18 +73,20 @@
   /* END NEW FADE OUT ANIMATION FOR VISUAL ONLY */
 
   #mascot-visual-area {
-    width: 12rem; /* New width */
-    height: 14rem; /* New height */
+    width: 85%; /* New: percentage */
+    height: 77%; /* New: percentage */
+    margin-top: auto;    /* New */
+    margin-bottom: 5%;   /* New */
     position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 0.5rem; /* New margin-bottom */
+    /* margin-bottom: 0.5rem; removed */
   }
 
   #mascot-visual-area svg { /* Ensure SVGs scale nicely */
-    width: 90%;
-    height: 90%;
+    width: 100%; /* New: percentage */
+    height: 100%; /* New: percentage */
     object-fit: contain;
     animation: mascotWobble 3s infinite ease-in-out;
   }
@@ -100,40 +100,27 @@
   /* Dialogue Styling (similar to original, but positioned relative to new container) */
   #mascot-dialogue {
     position: absolute;
-    bottom: 80%; /* Position above the visual area */
-    left: 50%;    /* Center horizontally relative to visual area */
-    transform: translateX(-50%) translateY(-0.5rem); /* Center and add gap */
-    width: auto;
-    min-width: 10rem; /* Kept min-width as it's rem */
-    max-width: 16rem; /* New max-width */
-    padding: 0.6rem 0.8rem; /* New padding */
+    bottom: 80%; /* New: percentage */
+    left: 50%;    /* New: percentage */
+    transform: translateX(-50%); /* New: simplified transform */
+    width: auto;  /* New */
+    min-width: 70%; /* New: percentage */
+    max-width: 90%; /* New: percentage */
+    padding: 0.3rem 0.5rem; /* New: rem padding */
     background-color: var(--dialogue-bg-light);
     border: 1px solid var(--primary-hover);
-    border-radius: 0.9375rem 0.9375rem 0.9375rem 0; /* Tail on bottom-left, pointing down */
-    box-shadow: 0 -0.125rem 0.3125rem rgba(0,0,0,0.1); /* Shadow adjusted for top position */
+    border-radius: 0.5rem; /* Simplified border-radius, tail removed */
+    box-shadow: 0 -0.125rem 0.3125rem rgba(0,0,0,0.1);
     font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
-    font-size: 0.9rem; /* New font-size */
+    font-size: 0.9rem; /* New: rem font size */
     color: var(--primary-hover);
     text-align: center;
     z-index: 1001;
-    /* margin-right removed, dialogue is centered above */
-    opacity: 1; /* Initial opacity for transition */
-    transition: opacity 0.3s ease-in-out; /* Transition for smooth fade */
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
   }
 
-  #mascot-dialogue::after {
-    content: '';
-    position: absolute;
-    top: 80%; /* Attach to the bottom of the bubble */
-    left: 50%; /* Position tail towards the center */
-    transform: translateX(-50%); /* Center the tail */
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 0.625rem 0.625rem 0 0.625rem; /* Triangle pointing down */
-    border-color: var(--dialogue-bg-light) transparent transparent transparent; /* Color on top */
-    filter: drop-shadow(0px 1px 0.5px rgba(0,0,0,0.1)); /* Shadow for downward tail */
-  }
+  /* #mascot-dialogue::after removed as tail design is incompatible with new centering */
 
   @media (prefers-color-scheme: dark) {
     #mascot-dialogue {
@@ -141,44 +128,42 @@
       color: var(--dialogue-text-dark);
       border: 1px solid var(--dialogue-border-dark);
     }
-    #mascot-dialogue::after {
-      border-color: var(--dialogue-bg-dark) transparent transparent transparent; /* Color on top */
-      filter: drop-shadow(0px 1px 0.5px rgba(0,0,0,0.2)); /* Shadow for downward tail */
-    }
+    /* #mascot-dialogue::after dark mode styles removed */
   }
 
   /* Dismiss Button (formerly kill-bleepy-icon-button) */
   #dismiss-mascot-button {
     position: absolute;
-    top: 4rem; /* New top */
-    right: 0.75rem; /* New right */
+    top: 35%; /* New: percentage */
+    right: 5%; /* New: percentage */
     background: transparent;
     border: none;
     padding: 0;
     cursor: pointer;
-    width: 2rem; /* New width */
-    height: 2rem; /* New height */
+    width: 12%; /* New: percentage (of parent height, via aspect-ratio) */
+    aspect-ratio: 1/1; /* New */
     z-index: 1005;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem; /* New font-size */
-    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif; /* Emoji font stack */
-    line-height: 1; /* Helps center emoji */
+    font-size: 1rem; /* New: rem font size */
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+    line-height: 1;
     opacity: .75;
   }
 
   /* Spoon Icon Button */
   #bring-back-mascot-button {
     position: fixed;
-    bottom: .6rem;    /* New bottom */
-    right: 10.5rem;     /* New right */
+    bottom: .6rem;    /* Kept base value, overrides in MQ will be removed where "New" */
+    right: 10.5rem;   /* Kept base value, overrides in MQ will be removed where "New" */
     background-color: transparent;
     color: inherit; /* Let emoji use its natural color, or parent text color */
     border: none;
     border-radius: 0; /* No longer a circle if it's just the emoji */
-    width: 2.25rem;   /* New width */
-    height: 2.25rem;  /* New height */
+    width: 2.25rem;   /* Kept from "New width", assuming general rem width */
+    aspect-ratio: 1/1; /* Restored */
+    /* height removed */
     padding: 0;
     cursor: pointer;
     z-index: 999;
@@ -186,7 +171,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem; /* New font-size */
+    font-size: 1rem; /* Kept base value, overrides in MQ will be removed where "New" */
     font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
     transition: transform 0.2s ease-in-out;
     line-height: 1;
@@ -211,92 +196,72 @@
   /* Tablet Breakpoint */
   @media (max-width: 768px) {
     #mascot-container {
-      width: 11rem; /* New width */
-      height: 14rem; /* New height */
+      width: 5.5rem; /* New */
+      height: 7rem; /* New */
       right: 1rem;
       bottom: 1rem;
-      padding-top: 0.4rem; /* New padding-top */
-      /* Original transform behavior for off-screen is assumed to be handled by base or not overridden if not specified */
+      /* padding-top removed */
     }
 
-    #mascot-visual-area { /* Added for tablet */
-      width: 9rem;
-      height: 11rem;
-      margin-bottom: 0.4rem;
+    #mascot-visual-area {
+      /* No changes needed here, scales with parent */
     }
 
     #mascot-dialogue {
-      /* Inherits bottom: 100%; left: 50%; border-radius from base */
-      transform: translateX(-50%) translateY(-0.4rem); /* New transform */
-      font-size: 0.8rem; /* New font-size */
-      max-width: 13rem; /* New max-width */
-      padding: 0.5rem 0.7rem; /* New padding */
-      /* margin-right and right removed, dialogue is centered above */
+      font-size: 0.8rem; /* New */
+      /* Other properties scale with parent or are rem-based from base */
     }
 
-    /* #mascot-dialogue::after removed to inherit from base */
+    /* #mascot-dialogue::after removed */
 
     #dismiss-mascot-button {
-      top: 0.5rem; /* New top */
-      right: 0.5rem; /* New right */
-      width: 1.75rem;
-      height: 1.75rem;
-      font-size: 1rem; /* New font-size */
+      font-size: 0.9rem; /* New */
+      /* Width scales with parent, aspect-ratio maintained */
     }
 
     #bring-back-mascot-button {
-      bottom: 1rem; /* New bottom */
-      right: 1rem; /* New right */
-      width: 2rem; /* New width */
-      height: 2rem; /* New height */
-      font-size: 0.9rem; /* New font-size */
+      /* bottom: 1rem; removed, inherit from base */
+      /* right: 1rem; removed, inherit from base */
+      width: 2rem; /* Kept from "New width" */
+      /* height: 2rem; removed, now determined by base aspect-ratio */
+      /* font-size: 0.9rem; removed, inherit from base */
     }
   }
 
   /* Mobile Breakpoint */
   @media (max-width: 480px) {
     #mascot-container {
-      width: 8rem; /* New width */
-      height: 10rem; /* New height */
+      width: 8rem; /* New */
+      height: 10.28rem; /* New */
       right: 0.5rem;
       bottom: 0.5rem;
-      padding-top: 0.25rem; /* New padding-top */
-      opacity: 0.85; /* Base visible opacity is 0.65, this overrides for mobile */
-      /* Original transform behavior for off-screen is assumed to be handled by base or not overridden if not specified */
+      /* padding-top removed */
+      opacity: 0.85; /* This was an existing override, kept it */
     }
 
-    #mascot-visual-area { /* Added for mobile */
-      width: 6.5rem;
-      height: 8rem;
-      margin-bottom: 0.25rem;
+    #mascot-visual-area {
+      /* No changes needed here, scales with parent */
     }
 
     #mascot-dialogue {
-      /* Inherits bottom: 100%; left: 50%; border-radius from base */
-      transform: translateX(-50%) translateY(-0.25rem); /* New transform */
-      max-width: 9rem; /* New max-width */
-      font-size: 0.75rem; /* New font-size */
-      padding: 0.4rem 0.5rem; /* New padding */
-      /* bottom, left, right, margin-right, margin-bottom, border-radius removed to inherit from base or handled by transform */
+      font-size: 0.7rem; /* New */
+      /* Other properties scale with parent or are rem-based from base */
     }
 
-    /* #mascot-dialogue::after and its dark mode override removed to inherit from base */
+    /* #mascot-dialogue::after and its dark mode override removed */
 
 
     #dismiss-mascot-button {
-      top: 0.25rem;
-      right: 0.25rem;
-      width: 1.5rem;
-      height: 1.5rem;
-      font-size: 0.9rem; /* New font-size */
+      font-size: 0.8rem; /* New */
+      /* Width scales with parent, aspect-ratio maintained */
     }
 
     #bring-back-mascot-button {
-      bottom: 0.5rem;
-      right: 0.5rem;
-      width: 1.75rem; /* New width */
-      height: 1.75rem; /* New height */
-      font-size: 0.8rem;
+      bottom: 0.5rem; /* This was not "New", so kept */
+      right: 0.5rem; /* This was not "New", so kept */
+      width: 1.75rem; /* Kept from "New width" */
+      /* height: 1.75rem; removed, now determined by base aspect-ratio */
+      /* font-size: 0.8rem; removed, inherit from base */
     }
   }
 </style>
