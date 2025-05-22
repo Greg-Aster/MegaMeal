@@ -1,0 +1,585 @@
+<!-- Main Mascot Container -->
+<div id="mascot-container">
+  <div id="mascot-visual-area">
+    <!-- Mascot SVG will be injected here by JavaScript -->
+  </div>
+
+
+  <button id="dismiss-mascot-button" aria-label="Dismiss Mascot" title="Dismiss Mascot">
+    🍴
+  </button>
+
+  <div id="mascot-dialogue">[Bleep] bloop! [Bleepy]'s online and ready to talk snacks!</div>
+</div>
+
+<!-- Spoon Icon Button to Bring Back Mascot -->
+<button id="bring-back-mascot-button" style="display: none;" aria-label="Bring back mascot" title="Bring back mascot">
+  🥄
+</button>
+
+<style>
+  :root {
+    /* Define your theme colors if not already global */
+    --primary: #007bff;
+    --primary-hover: #0056b3;
+    --dialogue-bg-light: #e6f2ff;
+    --dialogue-bg-dark: rgba(50, 50, 50, 0.9);
+    --dialogue-text-dark: #f0f0f0;
+    --dialogue-border-dark: rgba(65, 65, 65, 0.95);
+  }
+
+  #mascot-container {
+    position: fixed;
+    bottom: -250px; /* Start off-screen, increased height for potential taller mascots */
+    right: 20px;
+    background-color: transparent;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: bottom 0.7s ease-in-out;
+    width: 200px; /* Adjusted width for potentially wider mascots */
+    padding-top: 30px; /* Space for dismiss button */
+    opacity: 0.85;
+  }
+
+  #mascot-container.visible {
+    bottom: 20px; /* Final position */
+  }
+
+  #mascot-container.jiggle {
+    animation: jiggle 0.5s ease-in-out;
+  }
+
+  @keyframes jiggle {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-2px) rotate(-2deg); }
+    50% { transform: translateY(0) rotate(2deg); }
+    75% { transform: translateY(-1px) rotate(-1deg); }
+  }
+
+  /* NEW FADE OUT ANIMATION FOR VISUAL ONLY */
+  @keyframes fadeOutMascotVisual {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  #mascot-visual-area.visual-fading-out {
+    animation: fadeOutMascotVisual 1.5s ease-out forwards;
+  }
+  /* END NEW FADE OUT ANIMATION FOR VISUAL ONLY */
+
+  #mascot-visual-area {
+    width: 150px; /* Adjust as needed for new mascots */
+    height: 180px; /* Adjust as needed */
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  #mascot-visual-area svg { /* Ensure SVGs scale nicely */
+    max-width: 100%;
+    max-height: 100%;
+    animation: mascotWobble 3s infinite ease-in-out;
+  }
+  
+  /* Base wobble for all mascots, can be overridden by specific mascot CSS */
+  @keyframes mascotWobble {
+    0%, 100% { transform: rotate(-1deg); }
+    50% { transform: rotate(1deg); }
+  }
+
+  /* Dialogue Styling (similar to original, but positioned relative to new container) */
+  #mascot-dialogue {
+    position: absolute;
+    bottom: 50%; /* Vertically centered relative to mascot-visual-area */
+    right: 80%; /* Position to the left of mascot-visual-area */
+    transform: translateY(50%) translateX(0px); /* Adjust Y for vertical centering, X for gap */
+    width: 100px;
+    padding: 8px 12px;
+    background-color: var(--dialogue-bg-light);
+    border: 1px solid var(--primary-hover);
+    border-radius: 15px 15px 0 15px; /* Tail on bottom-right, pointing to mascot */
+    box-shadow: -2px 2px 5px rgba(0,0,0,0.1); /* Shadow adjusted for left position */
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
+    font-size: 12px;
+    color: var(--primary-hover);
+    text-align: center;
+    z-index: 1001;
+    margin-right: 15px; /* Space between mascot and bubble */
+    opacity: 1; /* Initial opacity for transition */
+    transition: opacity 0.3s ease-in-out; /* Transition for smooth fade */
+  }
+
+  #mascot-dialogue::after {
+    content: '';
+    position: absolute;
+    top: 50%; /* Align with middle of the bubble */
+    left: 100%; /* Attach to the right side of the bubble */
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 10px 0 10px 10px; /* Triangle pointing right */
+    border-color: transparent transparent transparent var(--dialogue-bg-light);
+    filter: drop-shadow(1px 0px 0.5px rgba(0,0,0,0.1)); /* Shadow adjusted */
+  }
+
+  @media (prefers-color-scheme: dark) {
+    #mascot-dialogue {
+      background-color: var(--dialogue-bg-dark);
+      color: var(--dialogue-text-dark);
+      border: 1px solid var(--dialogue-border-dark);
+    }
+    #mascot-dialogue::after {
+      border-color: transparent transparent transparent var(--dialogue-bg-dark);
+      filter: drop-shadow(1px 0px 0.5px rgba(0,0,0,0.2)); /* Shadow adjusted */
+    }
+  }
+
+  /* Dismiss Button (formerly kill-bleepy-icon-button) */
+  #dismiss-mascot-button {
+    position: absolute;
+    top: 75px; /* Positioned within the mascot container at the top */
+    right: 5px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    width: 30px; /* Adjusted for emoji */
+    height: 30px; /* Adjusted for emoji */
+    z-index: 1005;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px; /* Emoji size */
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif; /* Emoji font stack */
+    line-height: 1; /* Helps center emoji */
+    opacity: .75;
+  }
+
+  /* Spoon Icon Button */
+  #bring-back-mascot-button {
+    position: fixed;
+    bottom: 10px;
+    right: 170px;
+    background-color: transparent;
+    color: inherit; /* Let emoji use its natural color, or parent text color */
+    border: none;
+    border-radius: 0; /* No longer a circle if it's just the emoji */
+    width: 35px;   /* Reduced size */
+    height: 35px;  /* Reduced size */
+    padding: 0;
+    cursor: pointer;
+    z-index: 999;
+    box-shadow: none; /* Removed shadow */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px; /* Reduced emoji size */
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+    transition: transform 0.2s ease-in-out;
+    line-height: 1;
+    opacity: 0.3;
+  }
+  #bring-back-mascot-button:hover {
+    /* background-color: transparent; /* Keep transparent */
+    transform: scale(1.15); /* Slightly larger scale for feedback */
+    /* opacity: 0.8; /* Alternative subtle feedback */
+  }
+
+
+
+  /* Specific Mascot Styles (Example - can be extended) */
+  .cuppy-cake-specific-styles .eyes { /* Example if Cuppy had unique eye CSS */
+    /* ... */
+  }
+  /* Add more specific styles for Pretzel Pete, Sushi Sam if needed */
+
+</style>
+
+<script>
+  // --- Mascot Data ---
+  const mascots = [
+    {
+      name: "Cuppy Cake",
+      svgHTML: `
+        <svg class="cuppy-cake-specific-styles" viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg" width="100" height="150">
+          <g class="hat" transform="translate(20, 0) rotate(-10 25 15)">
+              <path d="M10 30 Q15 20 25 20 T40 30 L40 25 Q35 15 25 15 T10 25 Z" fill="var(--primary-hover)" stroke="black" stroke-width="1"/>
+              <path d="M10 25 Q15 22 25 22 T40 25" fill="none" stroke="black" stroke-width="0.5"/>
+          </g>
+          <g class="frosting-group" transform="translate(0, 30)">
+            <path d="M0,30 Q0,0 50,0 T100,30 Q100,60 75,70 T25,70 Q0,60 0,30 Z" fill="var(--primary)" stroke="#000" stroke-width="0.5" />
+            <!-- Sprinkles -->
+            <rect x="28" y="18" width="4" height="10" fill="var(--primary-hover)" rx="2" transform="rotate(20 30 23)"/>
+            <rect x="58" y="13" width="4" height="10" fill="var(--primary-hover)" rx="2" transform="rotate(-15 60 18)"/>
+            <rect x="43" y="28" width="4" height="10" fill="var(--primary-hover)" rx="2" transform="rotate(5 45 33)"/>
+          </g>
+          <g class="eyes-group" transform="translate(20, 60)">
+            <g class="eye left-eye" transform="translate(0,0)">
+              <circle cx="10" cy="10" r="10" fill="white" stroke="black" stroke-width="1"/>
+              <circle class="pupil" cx="10" cy="10" r="5" fill="black"/>
+            </g>
+            <g class="eye right-eye" transform="translate(40,0)">
+              <circle cx="10" cy="10" r="10" fill="white" stroke="black" stroke-width="1"/>
+              <circle class="pupil" cx="10" cy="10" r="5" fill="black"/>
+            </g>
+          </g>
+          <g class="cupcake-base-group" transform="translate(10, 90)">
+            <rect x="0" y="0" width="80" height="60" fill="url(#cupcakePattern)" rx="0" ry="0" stroke="#000" stroke-width="0.5"
+                  style="clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);"/>
+            <defs>
+              <pattern id="cupcakePattern" patternUnits="userSpaceOnUse" width="20" height="20" patternTransform="rotate(45)">
+                <rect width="10" height="20" fill="var(--primary)"/>
+                <rect x="10" width="10" height="20" fill="#b3d7ff"/>
+              </pattern>
+            </defs>
+          </g>
+          <style>
+            .pupil { animation: lookAroundMascot 8s infinite ease-in-out; }
+            .left-eye .pupil { animation-delay: -0.2s; }
+            @keyframes lookAroundMascot {
+              0%, 100% { transform: translate(0px, 0px); } 15% { transform: translate(2px, -2px); }
+              30% { transform: translate(-2px, 2px); }  45% { transform: translate(0px, 2px); }
+              60% { transform: translate(2px, 0px); }    75% { transform: translate(-2px, -2px); }
+              90% { transform: translate(0px, 0px); }
+            }
+          </style>
+        </svg>
+      `,
+      cssClasses: "cuppy-cake-specific-styles" // Example
+    },
+    {
+      name: "Pretzel Pete",
+      svgHTML: `
+        <svg id="pretzel-pete" viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg" width="100" height="130">
+          <defs>
+            <linearGradient id="pretzelBodyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#E6BF91;stop-opacity:1" />
+              <stop offset="50%" style="stop-color:#D2A679;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#B88A61;stop-opacity:1" />
+            </linearGradient>
+            <symbol id="saltCrystal" viewBox="0 0 10 10">
+              <polygon points="2,5 5,2 8,5 5,8" fill="white" stroke="#D0D0D0" stroke-width="0.5"/>
+            </symbol>
+          </defs>
+          <path d="M 50,15 C 30,15 20,30 20,50 C 20,70 30,85 50,85 C 70,85 80,70 80,50 C 80,30 70,15 50,15 Z M 50,25 C 65,25 70,35 70,50 C 70,65 65,75 50,75 C 35,75 30,65 30,50 C 30,35 35,25 50,25 Z" fill="url(#pretzelBodyGradient)" stroke="#A07855" stroke-width="3" stroke-linejoin="round" />
+          <path d="M35 35 C 25 40, 25 60, 35 65 L 40 62 C 35 60, 35 40, 40 38 Z" fill="url(#pretzelBodyGradient)" stroke="#A07855" stroke-width="2.5"/>
+          <path d="M65 35 C 75 40, 75 60, 65 65 L 60 62 C 65 60, 65 40, 60 38 Z" fill="url(#pretzelBodyGradient)" stroke="#A07855" stroke-width="2.5"/>
+          <path d="M30 50 C 40 70, 60 70, 70 50 L 65 53 C 58 65, 42 65, 35 53 Z" fill="url(#pretzelBodyGradient)" stroke="#A07855" stroke-width="2.5"/>
+          <use href="#saltCrystal" x="38" y="28" width="4" height="4" />
+          <use href="#saltCrystal" x="58" y="28" width="4" height="4" transform="rotate(15 60 30)"/>
+          <use href="#saltCrystal" x="33" y="48" width="4" height="4" transform="rotate(-10 35 50)"/>
+          <use href="#saltCrystal" x="63" y="48" width="4" height="4" />
+          <use href="#saltCrystal" x="48" y="68" width="5" height="5" transform="rotate(5 50 70)"/>
+          <use href="#saltCrystal" x="48" y="38" width="3.5" height="3.5" transform="rotate(-5 50 40)"/>
+          <line x1="20" y1="55" x2="5" y2="70" stroke="#A07855" stroke-width="5" stroke-linecap="round" class="pretzel-arm left-arm"/>
+          <line x1="80" y1="55" x2="95" y2="70" stroke="#A07855" stroke-width="5" stroke-linecap="round" class="pretzel-arm right-arm"/>
+          <line x1="40" y1="85" x2="30" y2="110" stroke="#A07855" stroke-width="6" stroke-linecap="round" class="pretzel-leg left-leg"/>
+          <line x1="60" y1="85" x2="70" y2="110" stroke="#A07855" stroke-width="6" stroke-linecap="round" class="pretzel-leg right-leg"/>
+          <circle cx="3" cy="73" r="4" fill="#A07855" class="pretzel-hand"/>
+          <circle cx="97" cy="73" r="4" fill="#A07855" class="pretzel-hand"/>
+          <ellipse cx="28" cy="112" rx="6" ry="3" fill="#A07855" class="pretzel-foot"/>
+          <ellipse cx="72" cy="112" rx="6" ry="3" fill="#A07855" class="pretzel-foot"/>
+        </svg>
+      `,
+      cssClasses: "pretzel-pete-styles"
+    },
+    {
+      name: "Sushi Sam",
+      svgHTML: `
+        <svg id="sushi-sam" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" width="100" height="120">
+          <defs>
+            <linearGradient id="noriGradientSam2" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#333333;" />
+              <stop offset="50%" style="stop-color:#3A3A3A;" />
+              <stop offset="100%" style="stop-color:#454545;" />
+            </linearGradient>
+          </defs>
+          <g class="maki-roll">
+            <ellipse cx="50" cy="65" rx="40" ry="35" fill="url(#noriGradientSam2)" class="nori-wrap" stroke="#2A2A2A" stroke-width="0.5"/>
+            <ellipse cx="50" cy="65" rx="33" ry="28" fill="#F2F2F2" class="rice-layer" stroke="#E0E0E0" stroke-width="0.25"/>
+            <ellipse cx="45" cy="55" rx="2.5" ry="1.8" fill="#FCFCFC" opacity="0.9" transform="rotate(-10 45 55)"/>
+            <ellipse cx="55" cy="52" rx="2.2" ry="1.5" fill="#FEFEFE" opacity="0.8" transform="rotate(15 55 52)"/>
+            <ellipse cx="62" cy="60" rx="2.8" ry="2" fill="#FAFAFA" opacity="0.9" transform="rotate(5 62 60)"/>
+            <ellipse cx="38" cy="63" rx="2.4" ry="1.7" fill="#FCFCFC" opacity="0.85" transform="rotate(20 38 63)"/>
+            <ellipse cx="42" cy="72" rx="2.6" ry="1.9" fill="#FDFDFD" opacity="0.9" transform="rotate(-5 42 72)"/>
+            <ellipse cx="58" cy="75" rx="2.3" ry="1.6" fill="#FEFEFE" opacity="0.8" transform="rotate(25 58 75)"/>
+            <ellipse cx="50" cy="78" rx="2.5" ry="1.8" fill="#FAFAFA" opacity="0.85" transform="rotate(0 50 78)"/>
+            <ellipse cx="51" cy="65" rx="2.5" ry="1.8" fill="#FCFCFC" opacity="0.7" transform="rotate(10 51 65)"/>
+            <circle cx="50" cy="65" r="15" fill="#5C8C58" class="maki-filling" stroke="#4A7046" stroke-width="0.75"/>
+            <path d="M 50 51 A 14 14 0 0 1 50 79 A 10 10 0 0 0 50 51 Z" fill="rgba(255,255,255,0.1)" />
+          </g>
+          <g class="hachimaki">
+            <path d="M 20 45 Q 50 35 80 45 L 78 52 Q 50 42 22 52 Z" fill="white" stroke="black" stroke-width="1"/>
+            <circle cx="18" cy="48" r="5" fill="white" stroke="black" stroke-width="1"/>
+            <path d="M 15 48 L 5 40" stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <path d="M 15 50 L 8 58" stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <circle cx="50" cy="46" r="6" fill="red"/>
+          </g>
+          <circle cx="40" cy="60" r="2.5" fill="black" class="sushi-eye left-sushi-eye"/>
+          <circle cx="60" cy="60" r="2.5" fill="black" class="sushi-eye right-sushi-eye"/>
+          <path d="M 45 75 Q 50 80 55 75" stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round" class="sushi-mouth"/>
+        </svg>
+      `,
+      cssClasses: "sushi-sam-styles"
+    }
+  ];
+
+  // --- DOM Elements ---
+  const mascotContainer = document.getElementById('mascot-container');
+  const mascotVisualArea = document.getElementById('mascot-visual-area');
+  const mascotDialogue = document.getElementById('mascot-dialogue');
+  const dismissButton = document.getElementById('dismiss-mascot-button');
+  const bringBackButton = document.getElementById('bring-back-mascot-button');
+  
+
+  // --- State Variables ---
+  let currentMascotIndex = 0;
+  let inactivityTimer: NodeJS.Timeout | undefined;
+  let hoverTimeout: NodeJS.Timeout | undefined;
+  let dialogueCycleInterval: NodeJS.Timeout | number | undefined; // setInterval returns a number in browsers
+
+  // --- Dialogue Content (Shared for now) ---
+  const dialogues = [
+    "Psst! You look like you could use a pickle-flavored ice cream!", "Bleepy's here! Did someone say 'experimental snacks'?",
+    "Bleep bloop! Bleepy's online and ready to talk snacks!", "Ever tried peanut butter on a pizza? Don't knock it 'til you've tried it... or maybe do.",
+    "My circuits are craving a byte... of cheesecake!", "Fact: Sprinkles make everything 20% more fun.",
+    "Is it lunchtime yet? Or second breakfast time?", "Did you know a strawberry isn't technically a berry, but a banana is? Mind. Blown. Like a soufflé.",
+    "Why did the tomato blush? Because it saw the salad dressing!", "I'm on a seafood diet. I see food, and I eat it!",
+    "Is this frosting... or just sweet, fleeting oblivion?", "We are all just ingredients in a cosmic soup, aren't we? Pass the croutons of despair.",
+    "The gingerbread man ran as fast as he could, but eventually, we all get eaten. Some sooner than others.",
+    "Another sprinkle, another day closer to the inevitable crumb-bling of existence.",
+    "Are we baked, or are we merely half-baked in the grand oven of the universe? Either way, the heat is on.",
+    "My cherry on top? A tiny, sweet beacon in an otherwise flavorless void.", "I'm going to kill you in your sleep." , "Never gonna give you up, never gonna let you down."
+  ];
+  const dismissDialogues = [
+    "Nooo! My recipes... unfinished!",
+    "You'll miss my culinary genius!",
+    "Noooo please don't eat me!",
+    "I wish I had more time!",
+    "You monster! noooo!",
+    "My batter hasn't even risen yet!",
+    "Is this... the final seasoning?",
+    "You'll be scraping me off the cosmic pan!"
+  ];
+
+  // --- Core Functions ---
+  function loadMascot(index: number) {
+    if (!mascotVisualArea || index < 0 || index >= mascots.length) return;
+    const mascot = mascots[index];
+    mascotVisualArea.innerHTML = mascot.svgHTML;
+    
+    // Apply/remove specific CSS classes
+    mascotVisualArea.className = ''; // Clear previous classes
+    if (mascot.cssClasses) {
+      mascotVisualArea.classList.add(mascot.cssClasses);
+    }
+
+    currentMascotIndex = index;
+    // localStorage.setItem('lastSelectedMascot', mascot.name); // Removed: No longer storing last selected
+    
+    // if (cycleMascotNameButton) { // Removed: UI element is gone
+    //     cycleMascotNameButton.textContent = mascot.name;
+    // }
+    restartAnimationsAndDialogue();
+  }
+
+  function showMascot() {
+    if (!mascotContainer || !bringBackButton || !mascotVisualArea) return;
+    mascotContainer.style.display = 'flex'; // Make sure it's flex before animation
+    mascotVisualArea.style.opacity = '1'; // Reset visual opacity
+    mascotVisualArea.classList.remove('visual-fading-out'); // Ensure animation class is removed
+
+    setTimeout(() => mascotContainer.classList.add('visible'), 50); // Delay for CSS transition
+    bringBackButton.style.display = 'none';
+    sessionStorage.removeItem('bleepyDismissed');
+    sessionStorage.removeItem('lastSelectedMascot'); // Clear any old session storage for this
+
+    // Randomly select a mascot
+    const randomIndex = Math.floor(Math.random() * mascots.length);
+    loadMascot(randomIndex);
+    // showRandomCharacterSelectionUI(); // Removed: No character selection UI logic
+
+    // Initial dialogue after being brought back
+    // displayNewDialogue(false, "I'm back! Ready for more fun?");
+  }
+
+  function hideMascot(isDismissal = true) {
+    if (!mascotContainer || !bringBackButton || !mascotVisualArea) return;
+
+    if (isDismissal) {
+      sessionStorage.setItem('bleepyDismissed', 'true');
+      bringBackButton.style.display = 'flex'; // Show spoon
+      displayNewDialogue(true); // Show dismissal message
+
+      // Start fade-out animation for the visual element
+      mascotVisualArea.classList.add('visual-fading-out');
+
+      const onVisualFadeEnd = () => {
+        // Visual fade ended. Ensure it's fully transparent.
+        mascotVisualArea.style.opacity = '0';
+
+        // Start timer for text to linger
+        setTimeout(() => {
+          // Linger timer ended. Hide the entire mascot container.
+          if (sessionStorage.getItem('bleepyDismissed') === 'true') { // Check again
+            mascotContainer.style.display = 'none';
+          }
+          mascotContainer.classList.remove('visible');   // Clean up visibility/positioning class
+          mascotVisualArea.classList.remove('visual-fading-out'); // Clean up animation class for visual
+          // Visual opacity will be reset by showMascot
+        }, 1500); // Linger for 1.5 seconds
+      };
+
+      mascotVisualArea.addEventListener('animationend', onVisualFadeEnd, { once: true });
+
+    } else { // Not a dismissal (e.g., initial load dismissed)
+      mascotContainer.style.display = 'none'; // Hide immediately
+      mascotContainer.classList.remove('visible'); // Ensure visible is also cleared
+      mascotVisualArea.style.opacity = '0'; // Ensure visual is also hidden
+    }
+    clearTimers();
+  }
+
+  function clearTimers() {
+    clearTimeout(inactivityTimer);
+    clearTimeout(hoverTimeout);
+    clearInterval(dialogueCycleInterval);
+  }
+
+  function restartAnimationsAndDialogue() {
+    if (!mascotContainer || !mascotDialogue) return;
+    // Jiggle animation
+    mascotContainer.classList.remove('jiggle');
+    void mascotContainer.offsetWidth; // Trigger reflow
+    mascotContainer.classList.add('jiggle');
+
+    // Dialogue
+    resetDialogueCycle();
+  }
+  
+  // --- Dialogue Functions ---
+  function getRandomDialogue(isDismissMsg = false) {
+    const sourceArray = isDismissMsg ? dismissDialogues : dialogues;
+    return sourceArray[Math.floor(Math.random() * sourceArray.length)];
+  }
+
+  function displayNewDialogue(isDismissMsg = false, customMessage: string | null = null) {
+    if (!mascotDialogue || !mascotContainer?.classList.contains('visible')) return;
+
+    const newText = customMessage ? customMessage : getRandomDialogue(isDismissMsg);
+
+    // Fade out current text
+    mascotDialogue.style.opacity = '0';
+
+    setTimeout(() => {
+      mascotDialogue.innerHTML = newText;
+      // Fade in new text
+      mascotDialogue.style.opacity = '1';
+
+      // Re-trigger jiggle on dialogue change for emphasis
+      if (mascotContainer) { // Ensure mascotContainer exists
+        mascotContainer.classList.remove('jiggle');
+        void mascotContainer.offsetWidth;
+        mascotContainer.classList.add('jiggle');
+      }
+    }, 350); // Delay should be slightly longer than fade-out (0.3s)
+  }
+  
+  function resetDialogueCycle() {
+    clearTimers(); // Clear existing timers before starting new ones
+
+    // Initial dialogue (can be a specific greeting or random)
+    // displayNewDialogue(false, mascots[currentMascotIndex].name + " says hi!"); // Example specific greeting
+
+    // Then, the explainer message
+    hoverTimeout = setTimeout(() => {
+      if (mascotContainer?.classList.contains('visible') && mascotDialogue) {
+        mascotDialogue.innerHTML = "If it's your first time, check out this article: <a href='/posts/explainer/' style='color: inherit; text-decoration: underline;'>learn more here!</a>";
+        mascotContainer.classList.remove('jiggle');
+        void mascotContainer.offsetWidth;
+        mascotContainer.classList.add('jiggle');
+      }
+    }, 7000); // Display after 7 seconds
+
+    // Regular random dialogue cycle
+    dialogueCycleInterval = setInterval(() => {
+      if (mascotContainer?.classList.contains('visible')) {
+        displayNewDialogue();
+      }
+    }, 45000); // Every 45 seconds
+
+    // Reset inactivity timer for mouse/key interaction based dialogue
+    resetInactivityBasedDialogueTimer();
+  }
+
+  function resetInactivityBasedDialogueTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+      if (mascotContainer?.classList.contains('visible')) {
+        displayNewDialogue();
+      }
+      resetInactivityBasedDialogueTimer(); // Keep the timer going
+    }, 30000); // 30 seconds of inactivity
+  }
+
+
+  // --- Event Listeners ---
+  function setupEventListeners() {
+    if (!dismissButton || !bringBackButton || !mascotContainer) return; // Removed UI buttons from check
+
+    dismissButton.addEventListener('click', () => {
+      hideMascot(true);
+    });
+
+    bringBackButton.addEventListener('click', () => {
+      showMascot();
+    });
+
+    // prevMascotButton, nextMascotButton, cycleMascotNameButton listeners removed
+    
+    // Inactivity and hover for dialogue
+    window.addEventListener('mousemove', resetInactivityBasedDialogueTimer);
+    window.addEventListener('keypress', resetInactivityBasedDialogueTimer);
+
+    mascotContainer.addEventListener('mouseenter', () => {
+      clearTimeout(hoverTimeout); // Clear explainer/other timed messages
+      hoverTimeout = setTimeout(() => {
+        if (mascotContainer.classList.contains('visible')) {
+          displayNewDialogue();
+          resetInactivityBasedDialogueTimer(); 
+        }
+      }, 1500); // Dialogue on hover after 1.5s
+    });
+
+    mascotContainer.addEventListener('mouseleave', () => {
+      clearTimeout(hoverTimeout);
+    });
+  }
+
+  // --- Initialization ---
+  function initializeMascotSystem() {
+    if (sessionStorage.getItem('bleepyDismissed') === 'true') {
+      hideMascot(false); // Hide immediately, don't show dismiss message
+      if (bringBackButton) bringBackButton.style.display = 'flex'; // Ensure spoon is visible
+      if (mascotContainer) mascotContainer.style.display = 'none';
+      // if (characterSelectionUI) characterSelectionUI.style.display = 'none'; // Removed
+    } else {
+      // showMascot will now load a random mascot by default
+      showMascot();
+    }
+    setupEventListeners();
+  }
+
+  // Wait for the DOM to be fully loaded before initializing
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeMascotSystem);
+  } else {
+    initializeMascotSystem(); // DOMContentLoaded has already fired
+  }
+
+</script>

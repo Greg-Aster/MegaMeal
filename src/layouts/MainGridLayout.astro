@@ -15,8 +15,10 @@ import { getDir } from '../utils/url-utils';
 import TimelineController from '../components/timeline/TimelineBanner.astro';
 import '../styles/timeline-styles.css';
 
+import Bleepy from '@components/bleepy/Bleepy.astro';
+
 // Import banner configuration and helper functions
-import { 
+import {
   bannerConfig, 
   getResponsiveBannerDimensions, 
   getFallbackBannerCSS,
@@ -327,10 +329,11 @@ style={`margin-top: 1.5rem;`}>
         {!siteConfig.toc.enable && <div id="toc"></div>}
     </div>
   </div>
+  <Bleepy />
 </Layout>
 
 
-<style define:vars={{ 
+<style define:vars={{
   'banner-height': bannerConfig.layout.height.desktop, 
   'banner-height-mobile': bannerConfig.layout.height.mobile,
   'banner-overlap': bannerConfig.layout.overlap.desktop,
