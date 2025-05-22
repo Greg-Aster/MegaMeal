@@ -126,6 +126,19 @@ const getBannerNavbarSpacing = () => {
 };
 
 const navbarSpacing = getBannerNavbarSpacing();
+
+let contextForBleepy = null;
+if (post && post.data) {
+  contextForBleepy = {
+    title: post.data.title,
+    description: post.data.description,
+    tags: post.data.tags,
+    category: post.data.category,
+    timelineEra: post.data.timelineEra,
+    timelineLocation: post.data.timelineLocation,
+    mascotContext: post.data.mascotContext,
+  };
+}
 ---
 
 <Layout 
@@ -329,6 +342,9 @@ style={`margin-top: 1.5rem;`}>
         {!siteConfig.toc.enable && <div id="toc"></div>}
     </div>
   </div>
+  {contextForBleepy && (
+    <div id="bleepy-page-context" style="display: none;" data-context={JSON.stringify(contextForBleepy)}></div>
+  )}
   <Bleepy />
 </Layout>
 

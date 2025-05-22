@@ -35,65 +35,19 @@ export type SurrealAnimationData = CuppyCakeSurrealAnimation | PretzelPeteSurrea
 export const mascots = [
   {
     name: "BLEEPY",
-    svgHTML: `
-      <svg class="cuppy-cake-specific-styles" viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg" width="75" height="135">
-        <g class="hat" transform="translate(20, 0) rotate(-10 25 15)">
-            <path d="M10 30 Q15 20 25 20 T40 30 L40 25 Q35 15 25 15 T10 25 Z" fill="var(--primary-hover)" stroke="black" stroke-width="1"/>
-            <path d="M10 25 Q15 22 25 22 T40 25" fill="none" stroke="black" stroke-width="0.5"/>
-        </g>
-        <g class="frosting-group" transform="translate(0, 30)">
-          <path d="M0,30 Q0,0 50,0 T100,30 Q100,60 75,70 T25,70 Q0,60 0,30 Z" fill="var(--primary)" stroke="#000" stroke-width="0.5" />
-          <!-- Sprinkles -->
-          <rect class="sprinkle" x="28" y="18" width="4" height="10" fill="var(--primary-hover)" rx="2" transform="rotate(20 30 23)"/>
-          <rect class="sprinkle" x="58" y="13" width="4" height="10" fill="var(--primary-hover)" rx="2" transform="rotate(-15 60 18)"/>
-          <rect class="sprinkle" x="43" y="28" width="4" height="10" fill="var(--primary-hover)" rx="2" transform="rotate(5 45 33)"/>
-        </g>
-        <g class="eyes-group" transform="translate(20, 60)">
-          <g class="eye left-eye" transform="translate(0,0)">
-            <circle cx="10" cy="10" r="10" fill="white" stroke="black" stroke-width="1"/>
-            <circle class="pupil" cx="10" cy="10" r="5" fill="black"/>
-          </g>
-          <g class="eye right-eye" transform="translate(40,0)">
-            <circle cx="10" cy="10" r="10" fill="white" stroke="black" stroke-width="1"/>
-            <circle class="pupil" cx="10" cy="10" r="5" fill="black"/>
-          </g>
-        </g>
-        <g class="cupcake-base-group" transform="translate(10, 90)">
-          <rect x="0" y="0" width="80" height="60" fill="url(#cupcakePattern)" rx="0" ry="0" stroke="#000" stroke-width="0.5"
-                style="clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);"/>
-          <defs>
-            <pattern id="cupcakePattern" patternUnits="userSpaceOnUse" width="20" height="20" patternTransform="rotate(45)">
-              <rect width="10" height="20" fill="var(--primary)"/>
-              <rect x="10" width="10" height="20" fill="#b3d7ff"/>
-            </pattern>
-          </defs>
-        </g>
-        <style>
-          .pupil { animation: lookAroundMascot 8s infinite ease-in-out; }
-          .left-eye .pupil { animation-delay: -0.2s; }
-          @keyframes lookAroundMascot {
-            0%, 100% { transform: translate(0px, 0px); } 15% { transform: translate(2px, -2px); }
-            30% { transform: translate(-2px, 2px); }  45% { transform: translate(0px, 2px); }
-            60% { transform: translate(2px, 0px); }    75% { transform: translate(-2px, -2px); }
-            90% { transform: translate(0px, 0px); }
-          }
-        </style>
-      </svg>
-    `,
-    cssClasses: "cuppy-cake-specific-styles", // Example
-    uniqueAnimations: [
-      { id: "cc_hat_tip", targetSelector: "svg.cuppy-cake-specific-styles", animationClass: "animate-hat-tip", cssAnimationName: "hatTip" },
-      { id: "cc_sprinkle_shiver", targetSelector: "svg.cuppy-cake-specific-styles", animationClass: "animate-sprinkle-shiver", cssAnimationName: "sprinkleShiver" }
-    ],
-    surrealAnimations: [
-      {
-        id: "cc_eye_spy",
-        pupilSelector: ".pupil",
-        eyeGroupSelector: ".eyes-group",
-        animationClass: "animate-eye-spy",
-        duration: 2500 // ms, matches animation
-      }
-    ]
+    type: "image-set",
+    images: {
+      standard: "/src/content/mascot/standard.png",
+      openmouth: "/src/content/mascot/openmouth.png",
+      awe: "/src/content/mascot/awe.png",
+      eyesClosedMouthOpen: "/src/content/mascot/eyes-closed-mouth-open.png",
+      horror: "/src/content/mascot/horror.png",
+      joyAnticipation: "/src/content/mascot/joy-anticipation.png",
+      stare: "/src/content/mascot/stare.png",
+      toungeOutEyesClosed: "/src/content/mascot/tounge-out-eyesclosed.png",
+      toungeOut: "/src/content/mascot/tounge-out.png"
+    },
+    cssClasses: "bleepy-image-styles" // Example, can be adjusted
   },
 /*  {
     name: "Pretzel Pete",

@@ -42,6 +42,7 @@ const postsCollection = defineCollection({
     timelineLocation: z.string().optional(),
     isKeyEvent: z.boolean().optional(),
     yIndex: z.number().optional(),
+    mascotContext: z.string().optional(),
 
     /* For internal use */
     prevTitle: z.string().default(''),

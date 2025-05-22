@@ -1,7 +1,8 @@
 <!-- Main Mascot Container -->
 <div id="mascot-container">
   <div id="mascot-visual-area">
-    <!-- Mascot SVG will be injected here by JavaScript -->
+    <img id="mascot-image-display" src="" alt="Current Mascot Expression" style="max-width: 100%; max-height: 100%; object-fit: contain; display: none;" />
+    <!-- SVG content will be injected here if mascot is SVG type, replacing the img -->
   </div>
 
   <div id="mascot-ephemeral-speech"></div>
@@ -375,46 +376,61 @@
 
 
   // --- State Variables ---
+  let activeMascot: any; // Will hold the full mascot object from mascotData.ts
   let currentMascotIndex = 0;
   let inactivityTimer: NodeJS.Timeout | undefined;
   let hoverTimeout: NodeJS.Timeout | undefined;
   let dialogueCycleInterval: NodeJS.Timeout | number | undefined; // setInterval returns a number in browsers
   let specialAnimationInterval: NodeJS.Timeout | number | undefined;
   let surrealAnimationInterval: NodeJS.Timeout | number | undefined;
+  let proactiveDialogueTimer: NodeJS.Timeout | undefined;
+  let mouthOpenTimeout: NodeJS.Timeout | undefined;
+  let randomExpressionTimeout: NodeJS.Timeout | undefined;
 
 
   // --- Core Functions ---
   function loadMascot(index: number) {
     if (!mascotVisualArea || index < 0 || index >= mascots.length) return;
-    const mascot = mascots[index];
-    mascotVisualArea.innerHTML = mascot.svgHTML;
-    
-    // Apply/remove specific CSS classes
-    mascotVisualArea.className = ''; // Clear previous classes
-    if (mascot.cssClasses) {
-      mascotVisualArea.classList.add(mascot.cssClasses);
-    }
-
+    activeMascot = mascots[index];
     currentMascotIndex = index;
-    // localStorage.setItem('lastSelectedMascot', mascot.name); // Removed: No longer storing last selected
-    
-    // if (cycleMascotNameButton) { // Removed: UI element is gone
-    //     cycleMascotNameButton.textContent = mascot.name;
-    // }
 
-    // Clear previous special animation interval and start new one for the current mascot
-    clearInterval(specialAnimationInterval as number);
-    const currentMascotData = mascots[currentMascotIndex]; // Use a local var for clarity
-    if (currentMascotData.uniqueAnimations && currentMascotData.uniqueAnimations.length > 0) {
-      specialAnimationInterval = setInterval(tryPlayRandomMascotAnimation, 18000 + Math.random() * 5000); // e.g. 18-23 seconds
+    const mascotImageDisplay = document.getElementById('mascot-image-display') as HTMLImageElement | null;
+    mascotVisualArea.innerHTML = ''; // Clear previous content (SVG or old image if structure changes)
+
+    if (activeMascot.type === "image-set") {
+      if (mascotImageDisplay) {
+        mascotImageDisplay.src = activeMascot.images.standard;
+        mascotImageDisplay.style.display = 'block';
+        mascotVisualArea.appendChild(mascotImageDisplay); // Ensure it's in the visual area
+      }
+    } else { // SVG type
+      if (mascotImageDisplay) {
+        mascotImageDisplay.style.display = 'none'; // Hide the static img tag
+      }
+      mascotVisualArea.innerHTML = activeMascot.svgHTML; // Inject SVG
+    }
+    
+    // Apply/remove specific CSS classes to mascotVisualArea itself
+    mascotVisualArea.className = ''; // Clear previous classes from the container
+    if (activeMascot.cssClasses) {
+      mascotVisualArea.classList.add(activeMascot.cssClasses);
     }
 
-    // Clear and set up surreal animation interval
+    // Clear previous animation intervals
+    clearInterval(specialAnimationInterval as number);
     clearInterval(surrealAnimationInterval as number);
-    if (currentMascotData.surrealAnimations && currentMascotData.surrealAnimations.length > 0) {
-      // Surreal animations are much rarer: timer fires e.g. every 3-5 minutes
-      // Actual play chance is then handled by tryPlaySurrealAnimation
-      surrealAnimationInterval = setInterval(tryPlaySurrealAnimation, (3 * 60 * 1000) + Math.random() * (2 * 60 * 1000)); // 3 to 5 minutes
+
+    // Conditionally set up animation intervals
+    if (activeMascot.type !== "image-set") { // For SVG mascots
+      if (activeMascot.uniqueAnimations && activeMascot.uniqueAnimations.length > 0) {
+        specialAnimationInterval = setInterval(tryPlayRandomVisualEffect, 18000 + Math.random() * 5000);
+      }
+      if (activeMascot.surrealAnimations && activeMascot.surrealAnimations.length > 0) {
+        surrealAnimationInterval = setInterval(tryPlaySurrealAnimation, (3 * 60 * 1000) + Math.random() * (2 * 60 * 1000));
+      }
+    } else { // For image-set mascots, we might have a different timer for expressions
+        // The random image expression is now tied to tryPlayRandomVisualEffect
+        specialAnimationInterval = setInterval(tryPlayRandomVisualEffect, 18000 + Math.random() * 5000);
     }
     
     restartAnimationsAndDialogue();
@@ -426,7 +442,11 @@
     mascotVisualArea.style.opacity = '1'; // Reset visual opacity
     mascotVisualArea.classList.remove('visual-fading-out'); // Ensure animation class is removed
 
-    setTimeout(() => mascotContainer.classList.add('visible'), 50); // Delay for CSS transition
+    setTimeout(() => {
+      mascotContainer.classList.add('visible');
+      startProactiveDialogueTimer(); // MOVED HERE: Restart proactive dialogue when mascot is shown
+      console.log("Proactive timer started from showMascot"); // Task-specific log
+    }, 50); // Delay for CSS transition
     bringBackButton.style.display = 'none';
     sessionStorage.removeItem('bleepyDismissed');
     sessionStorage.removeItem('lastSelectedMascot'); // Clear any old session storage for this
@@ -438,6 +458,7 @@
 
     // Initial dialogue after being brought back
     // displayNewDialogue(false, "I'm back! Ready for more fun?");
+    // startProactiveDialogueTimer(); // OLD POSITION
   }
 
   function hideMascot(isDismissal = true) {
@@ -481,7 +502,7 @@
       mascotContainer.classList.remove('visible'); // Ensure visible is also cleared
       mascotVisualArea.style.opacity = '0'; // Ensure visual is also hidden
     }
-    clearTimers();
+    clearTimers(); // This will now also clear proactiveDialogueTimer
   }
 
   function clearTimers() {
@@ -490,6 +511,7 @@
     clearInterval(dialogueCycleInterval);
     clearInterval(specialAnimationInterval);
     clearInterval(surrealAnimationInterval);
+    clearTimeout(proactiveDialogueTimer);
   }
 
   function restartAnimationsAndDialogue() {
@@ -509,7 +531,38 @@
   let speechQuickFadeTimeout: NodeJS.Timeout | undefined;
 
   function displayEphemeralSpeech(text: string) {
+    console.log("displayEphemeralSpeech called with text:", text); // Task-specific log
     if (!mascotEphemeralSpeech) return;
+
+    const mascotImageDisplay = document.getElementById('mascot-image-display') as HTMLImageElement | null;
+
+    if (activeMascot && mascotImageDisplay) {
+      if (activeMascot.type === "image-set") {
+        if (activeMascot.images.openmouth) {
+          clearTimeout(mouthOpenTimeout);
+          mascotImageDisplay.src = activeMascot.images.openmouth;
+          mouthOpenTimeout = setTimeout(() => {
+            if (activeMascot && activeMascot.images.standard && mascotImageDisplay) {
+               mascotImageDisplay.src = activeMascot.images.standard;
+            }
+          }, 700);
+        }
+        // Apply jiggle to the image display
+        mascotImageDisplay.classList.remove('jiggle');
+        void mascotImageDisplay.offsetWidth; // Trigger reflow
+        mascotImageDisplay.classList.add('jiggle');
+        setTimeout(() => { if (mascotImageDisplay) mascotImageDisplay.classList.remove('jiggle'); }, 500);
+
+      } else { // SVG mascot
+        const svgElement = mascotVisualArea?.querySelector('svg');
+        if (svgElement) {
+          svgElement.classList.remove('jiggle');
+          void (svgElement as unknown as HTMLElement).offsetWidth; // Cast to unknown then HTMLElement
+          svgElement.classList.add('jiggle');
+          setTimeout(() => { svgElement.classList.remove('jiggle'); }, 500);
+        }
+      }
+    }
 
     // Clear existing timers and listeners
     clearTimeout(speechLingerTimeout);
@@ -582,8 +635,29 @@
     const currentMascotName = currentMascot.name as MascotName;
     const currentMascotPersonaString = personaStrings[currentMascotName] || "You are a friendly mascot.";
 
+    const pageCtx = getPageContextForBleepy();
+    let promptForWorker: string;
+
+    if (pageCtx) {
+      const contextSummary = `Current Page Context:
+- Title: ${pageCtx.title || "N/A"}
+- Description: ${pageCtx.description || "N/A"}
+- Tags: ${(pageCtx.tags && pageCtx.tags.length > 0 ? pageCtx.tags.join(', ') : "N/A")}
+- Category: ${pageCtx.category || "N/A"}
+- Timeline Era: ${pageCtx.timelineEra || "N/A"}
+- Timeline Location: ${pageCtx.timelineLocation || "N/A"}
+- Author's Hint for Mascot: ${pageCtx.mascotContext || "N/A"}
+
+Based on this context AND your persona, respond to the following user message:
+User: "${userMessage}"`;
+      promptForWorker = contextSummary;
+    } else {
+      promptForWorker = `User: "${userMessage}"`;
+    }
+    console.log(">>> PROMPT FOR DIRECT CHAT (to Worker):", promptForWorker);
     // appendMessageToDialogue("You", userMessage, true); // Do not display user message
     mascotChatInput.value = '';
+    resetProactiveDialogueTimer(); // Reset timer on user message send
 
     // Show Loading State (optional: could be a small visual cue elsewhere, or just wait)
     // For now, we'll just display the mascot's reply directly.
@@ -597,7 +671,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: userMessage,
+          message: promptForWorker,
           persona: currentMascotPersonaString
         })
       });
@@ -622,11 +696,196 @@
     }
   }
 
-  // --- New Mascot Animations Logic ---
-  function playRandomMascotAnimation() {
-    if (!mascotVisualArea || !mascotContainer?.classList.contains('visible')) return;
+  // --- Page Context Logic ---
+  function getPageContextForBleepy() {
+    console.log("getPageContextForBleepy called");
+    const contextDiv = document.getElementById('bleepy-page-context');
+    console.log("Context element found:", contextDiv);
+    if (contextDiv) {
+      const contextData = contextDiv.dataset.context;
+      if (contextData) {
+        console.log("Raw data-context attribute:", contextData);
+        try {
+          const parsedContext = JSON.parse(contextData);
+          console.log("Parsed page context:", parsedContext);
+          return parsedContext;
+        } catch (e) {
+          console.error("Bleepy: Error parsing page context JSON:", e);
+          return null;
+        }
+      }
+    }
+    return null;
+  }
+  
+  // --- Proactive Dialogue Logic ---
+  function triggerProactiveDialogue() {
+    console.log("Proactive dialogue triggered"); // Task-specific log
+    if (!mascotContainer?.classList.contains('visible')) {
+      // If mascot is not visible, don't trigger.
+      // The timer will be restarted by showMascot if/when it's reshown,
+      // or cleared by hideMascot if dismissed.
+      return;
+    }
 
-    const mascotData = mascots[currentMascotIndex];
+    const randomNumber = Math.random();
+    console.log("Proactive dialogue Math.random() for legacy/AI choice:", randomNumber); // Task-specific log
+    const currentMascot = mascots[currentMascotIndex];
+    const currentMascotName = currentMascot.name as MascotName;
+    const currentMascotPersonaString = personaStrings[currentMascotName] || "You are a friendly mascot.";
+
+    if (randomNumber < 0.7) { // 70% chance for legacy dialogue
+      if (randomDialogues && randomDialogues.length > 0) {
+        const randomIndex = Math.floor(Math.random() * randomDialogues.length);
+        const selectedDialogue = randomDialogues[randomIndex];
+        console.log("Calling displayEphemeralSpeech with legacy phrase:", selectedDialogue); // Task-specific log
+        displayEphemeralSpeech(selectedDialogue);
+      } else {
+        // Fallback if randomDialogues is empty
+        console.log("Calling displayEphemeralSpeech with legacy phrase (fallback):", "..."); // Task-specific log
+        displayEphemeralSpeech("...");
+      }
+    } else { // 30% chance for AI-generated thought
+      const pageContext = getPageContextForBleepy();
+      console.log("Page context for AI thought:", pageContext);
+      let thoughtInstruction = "";
+  
+      // Chance to play random image expression if mascot is image-set
+      // This is handled by tryPlayRandomVisualEffect called by specialAnimationInterval
+      // The prompt for triggerProactiveDialogue was: "Modify or create a function like playRandomImageExpression(). This function, when called (e.g., by the existing proactive animation timer..."
+      // So, it's not directly part of this text-dialogue triggering.
+
+      if (pageContext) {
+        // Construct Contextual Prompt
+        const pageMascotContext = pageContext.mascotContext || "N/A";
+        const pageTitle = pageContext.title || "N/A";
+        const pageDescription = pageContext.description || "N/A";
+        const pageTags = (pageContext.tags && pageContext.tags.length > 0 ? pageContext.tags.join(', ') : "N/A");
+        const pageCategory = pageContext.category || "N/A";
+        const pageTimelineEra = pageContext.timelineEra || "N/A";
+        const pageTimelineLocation = pageContext.timelineLocation || "N/A";
+
+        thoughtInstruction = `You are ${currentMascotName}.
+
+Your primary goal for this random thought is to reflect the SPECIFIC content of the current webpage.
+
+**Key Focus for This Thought:**
+- Specific Page Context for ${currentMascotName}: ${pageMascotContext}
+
+Supporting Page Details:
+- Title: ${pageTitle}
+- Description: ${pageDescription}
+- Tags: ${pageTags}
+- Category: ${pageCategory}
+- Timeline Era: ${pageTimelineEra}
+- Timeline Location: ${pageTimelineLocation}
+
+Instruction:
+Generate a brief, spontaneous, in-character statement, observation, or dark joke.
+1.  **Prioritize**: Your thought MUST be directly and obviously inspired by the "**Key Focus for This Thought**" (${pageMascotContext}) if it is not "N/A". Make a clear connection.
+2.  **Fallback**: If "${pageMascotContext}" is "N/A", then draw your inspiration primarily from the "Supporting Page Details" (especially Title and Description).
+3.  **Style**: Maintain your ${currentMascotName} persona (as fully defined in the system prompt sent separately by the worker). The thought should be a random musing, not a reply to a user. Keep it concise.`;
+
+      } else {
+        // Construct Generic/Default Prompt
+        thoughtInstruction = `You are ${currentMascotName}. Generate a brief, spontaneous, in-character statement, observation, or dark joke, consistent with your established persona (which is provided as a system instruction). This is not a reply to a user, but rather a random thought or musing. Keep it concise.`;
+      }
+      
+      console.log(">>> FINAL PROMPT SENT TO WORKER for AI thought:", thoughtInstruction); // Key log
+      displayEphemeralSpeech("Mascot is pondering..."); // Loading state
+
+      const workerUrl = 'https://my-mascot-worker-service.greggles.workers.dev';
+      fetch(workerUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: thoughtInstruction,
+          persona: currentMascotPersonaString
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.reply) {
+          console.log("Calling displayEphemeralSpeech with AI thought:", data.reply); // Task-specific log
+          displayEphemeralSpeech(data.reply);
+        } else {
+          console.error('Proactive AI thought error:', data.error || 'No reply from worker');
+          // Fallback for AI failure
+          if (randomDialogues && randomDialogues.length > 0) {
+            const randomIndex = Math.floor(Math.random() * randomDialogues.length);
+            const fallbackPhrase = randomDialogues[randomIndex];
+            console.log("Calling displayEphemeralSpeech with legacy phrase (AI fallback):", fallbackPhrase); // Task-specific log
+            displayEphemeralSpeech(fallbackPhrase);
+          } else {
+            console.log("Calling displayEphemeralSpeech with legacy phrase (AI fallback, no random dialogues):", "Hmm..."); // Task-specific log
+            displayEphemeralSpeech("Hmm...");
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error calling mascot worker for proactive thought:', error);
+         if (randomDialogues && randomDialogues.length > 0) {
+            const randomIndex = Math.floor(Math.random() * randomDialogues.length);
+            const fallbackPhrase = randomDialogues[randomIndex];
+            console.log("Calling displayEphemeralSpeech with legacy phrase (AI catch):", fallbackPhrase); // Task-specific log
+            displayEphemeralSpeech(fallbackPhrase);
+          } else {
+            console.log("Calling displayEphemeralSpeech with legacy phrase (AI catch, no random dialogues):", "My thoughts are tangled!"); // Task-specific log
+            displayEphemeralSpeech("My thoughts are tangled!");
+          }
+      });
+    }
+    // Restart the timer for the next proactive dialogue
+    startProactiveDialogueTimer();
+  }
+
+  function startProactiveDialogueTimer() {
+    console.log("Proactive timer started or reset"); // Task-specific log
+    clearTimeout(proactiveDialogueTimer);
+    if (!mascotContainer?.classList.contains('visible')) {
+      // Don't start the timer if the mascot is hidden.
+      // It will be started by showMascot when mascot becomes visible.
+      return;
+    }
+    const randomDelay = Math.random() * (60000 - 45000) + 45000; // 45-60 seconds
+    proactiveDialogueTimer = setTimeout(triggerProactiveDialogue, randomDelay);
+  }
+
+  function resetProactiveDialogueTimer() {
+    // This will clear the existing timer and start a new one.
+    // Ensures that user interaction or mascot recall resets the countdown.
+    startProactiveDialogueTimer();
+  }
+
+  // --- New Mascot Animations Logic ---
+  function playRandomImageExpression() {
+    const mascotImageDisplay = document.getElementById('mascot-image-display') as HTMLImageElement | null;
+    if (!activeMascot || activeMascot.type !== "image-set" || !mascotImageDisplay || !activeMascot.images) {
+      return;
+    }
+
+    const expressionKeys = Object.keys(activeMascot.images).filter(
+      key => key !== "standard" && key !== "openmouth"
+    );
+
+    if (expressionKeys.length === 0) return;
+
+    const randomKey = expressionKeys[Math.floor(Math.random() * expressionKeys.length)];
+    mascotImageDisplay.src = activeMascot.images[randomKey];
+
+    clearTimeout(randomExpressionTimeout);
+    randomExpressionTimeout = setTimeout(() => {
+      if (activeMascot && activeMascot.images.standard && mascotImageDisplay) {
+        mascotImageDisplay.src = activeMascot.images.standard;
+      }
+    }, Math.random() * 500 + 1000); // 1000ms to 1500ms
+  }
+
+  function playRandomMascotAnimation() { // This is for SVG animations
+    if (!mascotVisualArea || !mascotContainer?.classList.contains('visible')) return;
+    if (!activeMascot || activeMascot.type === "image-set") return; // Guard for SVG type
+
+    const mascotData = activeMascot; // Use activeMascot
     if (!mascotData.uniqueAnimations || mascotData.uniqueAnimations.length === 0) return;
 
     const availableAnimations = mascotData.uniqueAnimations;
@@ -701,22 +960,33 @@
     }
   }
 
-  function tryPlayRandomMascotAnimation() {
-      // Chance to play an animation, e.g., 40%
-      if (Math.random() < 0.4) {
-          playRandomMascotAnimation();
+  function tryPlayRandomVisualEffect() { // Called by specialAnimationInterval
+    if (!activeMascot || !mascotContainer?.classList.contains('visible')) return;
+
+    if (activeMascot.type === "image-set") {
+      if (Math.random() < 0.6) { // Chance to play image expression
+        playRandomImageExpression();
       }
+    } else { // SVG type
+      if (activeMascot.uniqueAnimations && activeMascot.uniqueAnimations.length > 0) {
+        if (Math.random() < 0.4) { // Chance to play SVG animation
+           playRandomMascotAnimation(); // Original function for SVG parts
+        }
+      }
+    }
   }
 
   // --- Surreal Mascot Animations Logic ---
   function playSurrealAnimation() {
-    if (!mascotVisualArea || !mascotContainer?.classList.contains('visible')) return;
+    if (!activeMascot || activeMascot.type === "image-set" || !mascotVisualArea || !mascotContainer?.classList.contains('visible')) {
+      return; // Do not run for image-set mascots or if not visible/active
+    }
 
-    const mascotData = mascots[currentMascotIndex];
-    if (!mascotData.surrealAnimations || mascotData.surrealAnimations.length === 0) return;
+    // const mascotData = mascots[currentMascotIndex]; // Now use activeMascot
+    if (!activeMascot.surrealAnimations || activeMascot.surrealAnimations.length === 0) return;
 
     // Assume one surreal animation per mascot for now, pick the first one
-    const animData = mascotData.surrealAnimations[0] as SurrealAnimationData; // Cast to the union type
+    const animData = activeMascot.surrealAnimations[0] as SurrealAnimationData; // Cast to the union type
     const svgElement = mascotVisualArea.querySelector('svg');
     if (!svgElement) return;
 
@@ -727,7 +997,9 @@
     svgElement.dataset.surrealAnimationActive = 'true'; // Mark as active
 
     // Mascot-specific logic with type guards
-    if (mascotData.name === "Cuppy Cake" && animData.id === "cc_eye_spy") {
+    // Note: "Cuppy Cake" is now "BLEEPY" and is image-set, so this block won't run for BLEEPY.
+    // This logic remains for other potential SVG mascots.
+    if (activeMascot.name === "Cuppy Cake" && animData.id === "cc_eye_spy") { // This name might be outdated if BLEEPY was Cuppy
       const specificAnimData = animData as CuppyCakeSurrealAnimation;
       const pupils = svgElement.querySelectorAll(specificAnimData.pupilSelector);
       const eyeGroup = svgElement.querySelector(specificAnimData.eyeGroupSelector) as HTMLElement | null;
@@ -741,7 +1013,7 @@
         delete svgElement.dataset.surrealAnimationActive;
       }, specificAnimData.duration);
 
-    } else if (mascotData.name === "Pretzel Pete" && animData.id === "pp_unraveling") {
+    } else if (activeMascot.name === "Pretzel Pete" && animData.id === "pp_unraveling") {
       const specificAnimData = animData as PretzelPeteSurrealAnimation;
       const originalBody = svgElement.querySelector(`#${specificAnimData.originalBodyId}`) as SVGPathElement | null;
       const unravelled1 = svgElement.querySelector(`#${specificAnimData.unravelledPathIds[0]}`) as SVGPathElement | null;
@@ -791,7 +1063,7 @@
         }, specificAnimData.swayDuration);
       }, specificAnimData.step2Duration);
 
-    } else if (mascotData.name === "Sushi Sam" && animData.id === "ss_nori_void") {
+    } else if (activeMascot.name === "Sushi Sam" && animData.id === "ss_nori_void") {
       const specificAnimData = animData as SushiSamSurrealAnimation;
       const flap = svgElement.querySelector(specificAnimData.flapSelector) as SVGPathElement | null;
       if (!flap) {
@@ -832,6 +1104,15 @@
     if (!dismissButton || !bringBackButton || !mascotContainer || !mascotChatSendButton || !mascotChatInput) return;
 
     dismissButton.addEventListener('click', () => {
+      clearTimeout(proactiveDialogueTimer); // Clear timer on dismiss
+      if (dismissDialogues && dismissDialogues.length > 0) {
+        const dismissalMessage = dismissDialogues[Math.floor(Math.random() * dismissDialogues.length)];
+        console.log("Selected dismissal message:", dismissalMessage); // Task-specific log
+        console.log("Calling displayEphemeralSpeech with dismissal phrase:", dismissalMessage); // Task-specific log
+        displayEphemeralSpeech(dismissalMessage);
+      } else {
+        console.log("No dismissal dialogues found, proceeding with hide.");
+      }
       hideMascot(true);
     });
 
@@ -842,7 +1123,7 @@
     mascotChatSendButton.addEventListener('click', handleSendMessage);
     mascotChatInput.addEventListener('keypress', (event) => {
       if (event.key === 'Enter') {
-        handleSendMessage();
+        handleSendMessage(); // handleSendMessage already calls resetProactiveDialogueTimer
       }
     });
     
@@ -873,7 +1154,7 @@
       if (mascotContainer) mascotContainer.style.display = 'none';
       // if (characterSelectionUI) characterSelectionUI.style.display = 'none'; // Removed
     } else {
-      // showMascot will now load a random mascot by default
+      // showMascot will now load a random mascot by default and start the proactive timer
       showMascot();
     }
     setupEventListeners();
