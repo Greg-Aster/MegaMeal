@@ -23,7 +23,7 @@ export const siteConfig: SiteConfig = {
     src: "/posts/timeline/golden-era.png", // Using one of your timeline backgrounds
     position: "center",
     credit: {
-      enable: true,
+      enable: false,
       text: "Corporate Archives Division",
       url: ""
     }

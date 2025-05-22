@@ -75,7 +75,8 @@
     "depcheck": "^1.4.7",
     "find-unused-exports": "^7.1.1",
     "postcss-import": "^16.1.0",
-    "postcss-nesting": "^13.0.1"
+    "postcss-nesting": "^13.0.1",
+    "wrangler": "^4.16.0"
   },
   "packageManager": "pnpm@9.14.4"
 }
