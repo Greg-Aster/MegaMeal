@@ -30,21 +30,26 @@
 
   #mascot-container {
     position: fixed;
-    bottom: -250px; /* Start off-screen, increased height for potential taller mascots */
-    right: 20px;
+    bottom: -2.5rem; /* New bottom */
+    right: 0rem;
+    width: 14rem;
+    height: 18rem; /* New height */
+    /* aspect-ratio removed */
+    /* min-width and max-width removed, assuming they were part of vw/vh refactor */
     background-color: transparent;
     z-index: 1000;
     display: flex;
     flex-direction: column;
     align-items: center;
-    transition: bottom 0.7s ease-in-out;
-    width: 200px; /* Adjusted width for potentially wider mascots */
-    padding-top: 30px; /* Space for dismiss button */
-    opacity: 0.85;
+    padding-top: 0.5rem; /* New padding-top */
+    opacity: 0; /* Initial: opacity */
+    transform: translateY(calc(100% + 1.5rem)); /* Initial: transform */
+    transition: transform 0.7s ease-in-out, opacity 0.7s ease-in-out;
   }
 
   #mascot-container.visible {
-    bottom: 20px; /* Final position */
+    transform: translateY(0); /* Final position */
+    opacity: 0.65; /* Default opacity */
   }
 
   #mascot-container.jiggle {
@@ -53,9 +58,9 @@
 
   @keyframes jiggle {
     0%, 100% { transform: translateY(0) rotate(0deg); }
-    25% { transform: translateY(-2px) rotate(-2deg); }
+    25% { transform: translateY(-0.125rem) rotate(-2deg); }
     50% { transform: translateY(0) rotate(2deg); }
-    75% { transform: translateY(-1px) rotate(-1deg); }
+    75% { transform: translateY(-0.0625rem) rotate(-1deg); }
   }
 
   /* NEW FADE OUT ANIMATION FOR VISUAL ONLY */
@@ -70,18 +75,19 @@
   /* END NEW FADE OUT ANIMATION FOR VISUAL ONLY */
 
   #mascot-visual-area {
-    width: 150px; /* Adjust as needed for new mascots */
-    height: 180px; /* Adjust as needed */
+    width: 12rem; /* New width */
+    height: 14rem; /* New height */
     position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 0.5rem; /* New margin-bottom */
   }
 
   #mascot-visual-area svg { /* Ensure SVGs scale nicely */
-    max-width: 100%;
-    max-height: 100%;
+    width: 90%;
+    height: 90%;
+    object-fit: contain;
     animation: mascotWobble 3s infinite ease-in-out;
   }
   
@@ -94,21 +100,23 @@
   /* Dialogue Styling (similar to original, but positioned relative to new container) */
   #mascot-dialogue {
     position: absolute;
-    bottom: 50%; /* Vertically centered relative to mascot-visual-area */
-    right: 80%; /* Position to the left of mascot-visual-area */
-    transform: translateY(50%) translateX(0px); /* Adjust Y for vertical centering, X for gap */
-    width: 100px;
-    padding: 8px 12px;
+    bottom: 80%; /* Position above the visual area */
+    left: 50%;    /* Center horizontally relative to visual area */
+    transform: translateX(-50%) translateY(-0.5rem); /* Center and add gap */
+    width: auto;
+    min-width: 10rem; /* Kept min-width as it's rem */
+    max-width: 16rem; /* New max-width */
+    padding: 0.6rem 0.8rem; /* New padding */
     background-color: var(--dialogue-bg-light);
     border: 1px solid var(--primary-hover);
-    border-radius: 15px 15px 0 15px; /* Tail on bottom-right, pointing to mascot */
-    box-shadow: -2px 2px 5px rgba(0,0,0,0.1); /* Shadow adjusted for left position */
+    border-radius: 0.9375rem 0.9375rem 0.9375rem 0; /* Tail on bottom-left, pointing down */
+    box-shadow: 0 -0.125rem 0.3125rem rgba(0,0,0,0.1); /* Shadow adjusted for top position */
     font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
-    font-size: 12px;
+    font-size: 0.9rem; /* New font-size */
     color: var(--primary-hover);
     text-align: center;
     z-index: 1001;
-    margin-right: 15px; /* Space between mascot and bubble */
+    /* margin-right removed, dialogue is centered above */
     opacity: 1; /* Initial opacity for transition */
     transition: opacity 0.3s ease-in-out; /* Transition for smooth fade */
   }
@@ -116,15 +124,15 @@
   #mascot-dialogue::after {
     content: '';
     position: absolute;
-    top: 50%; /* Align with middle of the bubble */
-    left: 100%; /* Attach to the right side of the bubble */
-    transform: translateY(-50%);
+    top: 80%; /* Attach to the bottom of the bubble */
+    left: 50%; /* Position tail towards the center */
+    transform: translateX(-50%); /* Center the tail */
     width: 0;
     height: 0;
     border-style: solid;
-    border-width: 10px 0 10px 10px; /* Triangle pointing right */
-    border-color: transparent transparent transparent var(--dialogue-bg-light);
-    filter: drop-shadow(1px 0px 0.5px rgba(0,0,0,0.1)); /* Shadow adjusted */
+    border-width: 0.625rem 0.625rem 0 0.625rem; /* Triangle pointing down */
+    border-color: var(--dialogue-bg-light) transparent transparent transparent; /* Color on top */
+    filter: drop-shadow(0px 1px 0.5px rgba(0,0,0,0.1)); /* Shadow for downward tail */
   }
 
   @media (prefers-color-scheme: dark) {
@@ -134,27 +142,27 @@
       border: 1px solid var(--dialogue-border-dark);
     }
     #mascot-dialogue::after {
-      border-color: transparent transparent transparent var(--dialogue-bg-dark);
-      filter: drop-shadow(1px 0px 0.5px rgba(0,0,0,0.2)); /* Shadow adjusted */
+      border-color: var(--dialogue-bg-dark) transparent transparent transparent; /* Color on top */
+      filter: drop-shadow(0px 1px 0.5px rgba(0,0,0,0.2)); /* Shadow for downward tail */
     }
   }
 
   /* Dismiss Button (formerly kill-bleepy-icon-button) */
   #dismiss-mascot-button {
     position: absolute;
-    top: 75px; /* Positioned within the mascot container at the top */
-    right: 5px;
+    top: 4rem; /* New top */
+    right: 0.75rem; /* New right */
     background: transparent;
     border: none;
     padding: 0;
     cursor: pointer;
-    width: 30px; /* Adjusted for emoji */
-    height: 30px; /* Adjusted for emoji */
+    width: 2rem; /* New width */
+    height: 2rem; /* New height */
     z-index: 1005;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px; /* Emoji size */
+    font-size: 1.2rem; /* New font-size */
     font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif; /* Emoji font stack */
     line-height: 1; /* Helps center emoji */
     opacity: .75;
@@ -163,14 +171,14 @@
   /* Spoon Icon Button */
   #bring-back-mascot-button {
     position: fixed;
-    bottom: 10px;
-    right: 170px;
+    bottom: .6rem;    /* New bottom */
+    right: 10.5rem;     /* New right */
     background-color: transparent;
     color: inherit; /* Let emoji use its natural color, or parent text color */
     border: none;
     border-radius: 0; /* No longer a circle if it's just the emoji */
-    width: 35px;   /* Reduced size */
-    height: 35px;  /* Reduced size */
+    width: 2.25rem;   /* New width */
+    height: 2.25rem;  /* New height */
     padding: 0;
     cursor: pointer;
     z-index: 999;
@@ -178,7 +186,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 15px; /* Reduced emoji size */
+    font-size: 1rem; /* New font-size */
     font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
     transition: transform 0.2s ease-in-out;
     line-height: 1;
@@ -198,9 +206,318 @@
   }
   /* Add more specific styles for Pretzel Pete, Sushi Sam if needed */
 
+/* --- Responsive Adjustments --- */
+
+  /* Tablet Breakpoint */
+  @media (max-width: 768px) {
+    #mascot-container {
+      width: 11rem; /* New width */
+      height: 14rem; /* New height */
+      right: 1rem;
+      bottom: 1rem;
+      padding-top: 0.4rem; /* New padding-top */
+      /* Original transform behavior for off-screen is assumed to be handled by base or not overridden if not specified */
+    }
+
+    #mascot-visual-area { /* Added for tablet */
+      width: 9rem;
+      height: 11rem;
+      margin-bottom: 0.4rem;
+    }
+
+    #mascot-dialogue {
+      /* Inherits bottom: 100%; left: 50%; border-radius from base */
+      transform: translateX(-50%) translateY(-0.4rem); /* New transform */
+      font-size: 0.8rem; /* New font-size */
+      max-width: 13rem; /* New max-width */
+      padding: 0.5rem 0.7rem; /* New padding */
+      /* margin-right and right removed, dialogue is centered above */
+    }
+
+    /* #mascot-dialogue::after removed to inherit from base */
+
+    #dismiss-mascot-button {
+      top: 0.5rem; /* New top */
+      right: 0.5rem; /* New right */
+      width: 1.75rem;
+      height: 1.75rem;
+      font-size: 1rem; /* New font-size */
+    }
+
+    #bring-back-mascot-button {
+      bottom: 1rem; /* New bottom */
+      right: 1rem; /* New right */
+      width: 2rem; /* New width */
+      height: 2rem; /* New height */
+      font-size: 0.9rem; /* New font-size */
+    }
+  }
+
+  /* Mobile Breakpoint */
+  @media (max-width: 480px) {
+    #mascot-container {
+      width: 8rem; /* New width */
+      height: 10rem; /* New height */
+      right: 0.5rem;
+      bottom: 0.5rem;
+      padding-top: 0.25rem; /* New padding-top */
+      opacity: 0.85; /* Base visible opacity is 0.65, this overrides for mobile */
+      /* Original transform behavior for off-screen is assumed to be handled by base or not overridden if not specified */
+    }
+
+    #mascot-visual-area { /* Added for mobile */
+      width: 6.5rem;
+      height: 8rem;
+      margin-bottom: 0.25rem;
+    }
+
+    #mascot-dialogue {
+      /* Inherits bottom: 100%; left: 50%; border-radius from base */
+      transform: translateX(-50%) translateY(-0.25rem); /* New transform */
+      max-width: 9rem; /* New max-width */
+      font-size: 0.75rem; /* New font-size */
+      padding: 0.4rem 0.5rem; /* New padding */
+      /* bottom, left, right, margin-right, margin-bottom, border-radius removed to inherit from base or handled by transform */
+    }
+
+    /* #mascot-dialogue::after and its dark mode override removed to inherit from base */
+
+
+    #dismiss-mascot-button {
+      top: 0.25rem;
+      right: 0.25rem;
+      width: 1.5rem;
+      height: 1.5rem;
+      font-size: 0.9rem; /* New font-size */
+    }
+
+    #bring-back-mascot-button {
+      bottom: 0.5rem;
+      right: 0.5rem;
+      width: 1.75rem; /* New width */
+      height: 1.75rem; /* New height */
+      font-size: 0.8rem;
+    }
+  }
+</style>
+
+<!-- /* --- New Mascot Specific Animations --- */ -->
+<style>
+  /* Cuppy Cake Animations */
+  @keyframes hatTip {
+    0%, 100% { transform: rotate(-10deg); } /* Matches initial rotation in SVG group */
+    50% { transform: rotate(-25deg); }
+  }
+  /* Apply animation class to the SVG element */
+  svg.cuppy-cake-specific-styles.animate-hat-tip .hat {
+    transform-origin: 25px 30px; /* Relative to hat group's coordinate system, at its base */
+    animation: hatTip 0.7s ease-in-out;
+  }
+
+  @keyframes sprinkleShiver {
+    0%, 100% { transform: translate(0, 0) rotate(0); }
+    25% { transform: translate(0.5px, -0.5px) rotate(2deg); }
+    50% { transform: translate(-0.5px, 0.5px) rotate(-2deg); }
+    75% { transform: translate(0.5px, 0.5px) rotate(1deg); }
+  }
+  /* Apply animation class to the SVG element */
+  svg.cuppy-cake-specific-styles.animate-sprinkle-shiver .sprinkle {
+    animation: sprinkleShiver 0.4s linear; /* All sprinkles shiver together */
+  }
+
+  /* Pretzel Pete Animations */
+  @keyframes legTap {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    50% { transform: translateY(-5px) rotate(-5deg); }
+  }
+  /* Animation class applied directly to the leg element */
+  #pretzel-pete .left-leg.animate-left-leg-tap {
+    transform-origin: 40px 85px; /* Top of the left leg (its x1, y1) */
+    animation: legTap 0.6s ease-in-out;
+  }
+  #pretzel-pete .right-leg.animate-right-leg-tap {
+    transform-origin: 60px 85px; /* Top of the right leg (its x1, y1) */
+    animation: legTap 0.6s ease-in-out;
+  }
+
+  @keyframes armWave {
+    0%, 100% { transform: rotate(0); }
+    50% { transform: rotate(-20deg); }
+  }
+  /* Animation class applied directly to the arm element */
+  #pretzel-pete .left-arm.animate-left-arm-wave {
+    transform-origin: 20px 55px; /* Connection point of left arm (its x1, y1) */
+    animation: armWave 0.7s ease-in-out;
+  }
+  #pretzel-pete .right-arm.animate-right-arm-wave {
+    transform-origin: 80px 55px; /* Connection point of right arm (its x1, y1) */
+    animation: armWave 0.7s ease-in-out;
+  }
+
+  /* Sushi Sam Animations */
+  @keyframes hachimakiFlutter {
+    0%, 100% { transform: rotate(0deg) skewX(0deg); }
+    50% { transform: rotate(5deg) skewX(-5deg); }
+  }
+  /* Apply animation class to the SVG element */
+  svg#sushi-sam.animate-hachimaki-flutter .hachimaki-tie-1 {
+    transform-origin: 15px 48px; /* Connection point of tie 1 */
+    animation: hachimakiFlutter 0.8s ease-in-out;
+  }
+  svg#sushi-sam.animate-hachimaki-flutter .hachimaki-tie-2 {
+    transform-origin: 15px 50px; /* Connection point of tie 2 */
+    animation: hachimakiFlutter 0.8s ease-in-out 0.05s; /* Staggered start */
+  }
+
+  @keyframes makiRoll {
+    0%, 100% { transform: rotateZ(0deg); } /* Side-to-side roll */
+    50% { transform: rotateZ(4deg); }
+  }
+  /* Apply animation class to the SVG element */
+  svg#sushi-sam.animate-maki-roll .maki-roll {
+    transform-origin: center bottom;
+    animation: makiRoll 0.9s ease-in-out;
+  }
+  /* --- Surreal Mascot Animations --- */
+  /* Cuppy Cake: Eye Spy */
+  @keyframes cuppyEyeFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    20% { transform: translate(-8px, 5px) scale(0.8); }
+    40% { transform: translate(10px, -7px) scale(1.2); } /* One might grow larger */
+    60% { transform: translate(-5px, -10px) scale(0.7); }
+    80% { transform: translate(7px, 6px) scale(1.1); }
+  }
+  svg.cuppy-cake-specific-styles.animate-eye-spy .left-eye .pupil {
+    animation: cuppyEyeFloat 2.5s ease-in-out;
+    transform-origin: center;
+  }
+  svg.cuppy-cake-specific-styles.animate-eye-spy .right-eye .pupil {
+    animation: cuppyEyeFloat 2.5s ease-in-out 0.1s; /* Slight delay for variation */
+    transform-origin: center;
+  }
+  .eyes-group.animating-surreal,
+  .eye.animating-surreal { /* Ensure eyes group doesn't clip if pupils go wild */
+    overflow: visible !important;
+  }
+
+
+  /* Pretzel Pete: The Unraveling */
+  #pretzel-pete .pretzel-body-segment { /* Common class for body parts */
+    transition: opacity 0.5s ease-in-out;
+  }
+  #pretzel-pete #pretzel-unravelled-1,
+  #pretzel-pete #pretzel-unravelled-2 {
+    opacity: 0;
+    pointer-events: none; /* Prevent interaction when invisible */
+  }
+
+  @keyframes saltCrystalFall {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(1.25rem); }
+  }
+  @keyframes saltCrystalReappear {
+    0% { opacity: 0; transform: translateY(1.25rem); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  #pretzel-pete.animate-unraveling .salt-crystal-instance.falling {
+    animation: saltCrystalFall 0.8s ease-in forwards;
+  }
+  #pretzel-pete.animate-unraveling .salt-crystal-instance.reappearing {
+    animation: saltCrystalReappear 0.8s ease-out forwards;
+  }
+
+  @keyframes unravelledSway {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(5deg); }
+  }
+  #pretzel-pete #pretzel-unravelled-2.swaying {
+    transform-origin: 50px 15px; /* Approx top-center of the pretzel */
+    animation: unravelledSway 2s ease-in-out infinite;
+  }
+
+
+  /* Sushi Sam: Nori Void */
+  #sushi-sam .nori-void-layer {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+  #sushi-sam.animate-nori-void .nori-void-layer {
+    opacity: 1;
+  }
+
+  @keyframes noriFlapOpen {
+    0% { transform: rotateX(0deg); }
+    100% { transform: rotateX(-70deg); }
+  }
+  @keyframes noriFlapClose {
+    0% { transform: rotateX(-70deg); }
+    100% { transform: rotateX(0deg); }
+  }
+  /* transform-origin for flap should be set in SVG or via JS if highly dynamic,
+     otherwise this assumes a path where 'top' makes sense.
+     Example: style="transform-origin: 50% 0%;" on the flap path itself.
+     For this CSS, it's a general guide.
+  */
+  #sushi-sam.animate-nori-void .nori-flap {
+    transform-origin: 50% 0%; /* Top center of the flap itself */
+  }
+  #sushi-sam.animate-nori-void .nori-flap.opening {
+    animation: noriFlapOpen 0.7s ease-out forwards;
+  }
+  #sushi-sam.animate-nori-void .nori-flap.closing {
+    animation: noriFlapClose 0.7s ease-in forwards;
+  }
+
+  @keyframes cosmicSwirl1 {
+    0%, 100% { transform: translate(0,0) scale(1); opacity: 0.7; }
+    50% { transform: translate(3px, -2px) scale(1.1); opacity: 0.9; }
+  }
+  @keyframes cosmicSwirl2 {
+    0%, 100% { transform: translate(0,0) scale(1); opacity: 0.6; }
+    50% { transform: translate(-2px, 3px) scale(0.9); opacity: 0.8; }
+  }
+  #sushi-sam.animate-nori-void .cosmic-particle1 {
+    animation: cosmicSwirl1 3s infinite ease-in-out;
+  }
+  #sushi-sam.animate-nori-void .cosmic-particle2 {
+    animation: cosmicSwirl2 3s infinite ease-in-out 0.5s;
+  }
 </style>
 
 <script>
+  // --- TypeScript Interfaces for Animation Data ---
+  interface BaseAnimation {
+    id: string;
+    animationClass: string;
+  }
+
+  interface CuppyCakeSurrealAnimation extends BaseAnimation {
+    pupilSelector: string;
+    eyeGroupSelector: string;
+    duration: number;
+  }
+
+  interface PretzelPeteSurrealAnimation extends BaseAnimation {
+    originalBodyId: string;
+    unravelledPathIds: string[];
+    saltSelector: string;
+    step1Duration: number;
+    step2Duration: number;
+    swayDuration: number;
+    saltFallDuration: number;
+    reverseStep1Duration: number;
+    reverseStep2Duration: number;
+  }
+
+  interface SushiSamSurrealAnimation extends BaseAnimation {
+    flapSelector: string;
+    openDuration: number;
+    closeDuration: number;
+    revealDuration: number;
+  }
+
+  type SurrealAnimationData = CuppyCakeSurrealAnimation | PretzelPeteSurrealAnimation | SushiSamSurrealAnimation;
+
   // --- Mascot Data ---
   const mascots = [
     {
@@ -214,9 +531,9 @@
           <g class="frosting-group" transform="translate(0, 30)">
             <path d="M0,30 Q0,0 50,0 T100,30 Q100,60 75,70 T25,70 Q0,60 0,30 Z" fill="var(--primary)" stroke="#000" stroke-width="0.5" />
             <!-- Sprinkles -->
-            <rect x="28" y="18" width="4" height="10" fill="var(--primary-hover)" rx="2" transform="rotate(20 30 23)"/>
-            <rect x="58" y="13" width="4" height="10" fill="var(--primary-hover)" rx="2" transform="rotate(-15 60 18)"/>
-            <rect x="43" y="28" width="4" height="10" fill="var(--primary-hover)" rx="2" transform="rotate(5 45 33)"/>
+            <rect class="sprinkle" x="28" y="18" width="4" height="10" fill="var(--primary-hover)" rx="2" transform="rotate(20 30 23)"/>
+            <rect class="sprinkle" x="58" y="13" width="4" height="10" fill="var(--primary-hover)" rx="2" transform="rotate(-15 60 18)"/>
+            <rect class="sprinkle" x="43" y="28" width="4" height="10" fill="var(--primary-hover)" rx="2" transform="rotate(5 45 33)"/>
           </g>
           <g class="eyes-group" transform="translate(20, 60)">
             <g class="eye left-eye" transform="translate(0,0)">
@@ -250,7 +567,20 @@
           </style>
         </svg>
       `,
-      cssClasses: "cuppy-cake-specific-styles" // Example
+      cssClasses: "cuppy-cake-specific-styles", // Example
+      uniqueAnimations: [
+        { id: "cc_hat_tip", targetSelector: "svg.cuppy-cake-specific-styles", animationClass: "animate-hat-tip", cssAnimationName: "hatTip" },
+        { id: "cc_sprinkle_shiver", targetSelector: "svg.cuppy-cake-specific-styles", animationClass: "animate-sprinkle-shiver", cssAnimationName: "sprinkleShiver" }
+      ],
+      surrealAnimations: [
+        {
+          id: "cc_eye_spy",
+          pupilSelector: ".pupil",
+          eyeGroupSelector: ".eyes-group",
+          animationClass: "animate-eye-spy",
+          duration: 2500 // ms, matches animation
+        }
+      ]
     },
     {
       name: "Pretzel Pete",
@@ -266,16 +596,19 @@
               <polygon points="2,5 5,2 8,5 5,8" fill="white" stroke="#D0D0D0" stroke-width="0.5"/>
             </symbol>
           </defs>
-          <path d="M 50,15 C 30,15 20,30 20,50 C 20,70 30,85 50,85 C 70,85 80,70 80,50 C 80,30 70,15 50,15 Z M 50,25 C 65,25 70,35 70,50 C 70,65 65,75 50,75 C 35,75 30,65 30,50 C 30,35 35,25 50,25 Z" fill="url(#pretzelBodyGradient)" stroke="#A07855" stroke-width="3" stroke-linejoin="round" />
+          <path id="pretzel-original-body" class="pretzel-body-segment" d="M 50,15 C 30,15 20,30 20,50 C 20,70 30,85 50,85 C 70,85 80,70 80,50 C 80,30 70,15 50,15 Z M 50,25 C 65,25 70,35 70,50 C 70,65 65,75 50,75 C 35,75 30,65 30,50 C 30,35 35,25 50,25 Z" fill="url(#pretzelBodyGradient)" stroke="#A07855" stroke-width="3" stroke-linejoin="round" />
+          <!-- Unravelled states - paths are illustrative -->
+          <path id="pretzel-unravelled-1" class="pretzel-body-segment" d="M 50,15 C 35,20 25,40 25,50 C 25,60 35,80 50,85 C 65,80 75,60 75,50 C 75,40 65,20 50,15 Z" fill="url(#pretzelBodyGradient)" stroke="#A07855" stroke-width="3" style="opacity:0;"/>
+          <path id="pretzel-unravelled-2" class="pretzel-body-segment" d="M50 15 C 45 40, 55 60, 50 85" fill="none" stroke="#A07855" stroke-width="4" stroke-linecap="round" style="opacity:0;"/>
           <path d="M35 35 C 25 40, 25 60, 35 65 L 40 62 C 35 60, 35 40, 40 38 Z" fill="url(#pretzelBodyGradient)" stroke="#A07855" stroke-width="2.5"/>
           <path d="M65 35 C 75 40, 75 60, 65 65 L 60 62 C 65 60, 65 40, 60 38 Z" fill="url(#pretzelBodyGradient)" stroke="#A07855" stroke-width="2.5"/>
           <path d="M30 50 C 40 70, 60 70, 70 50 L 65 53 C 58 65, 42 65, 35 53 Z" fill="url(#pretzelBodyGradient)" stroke="#A07855" stroke-width="2.5"/>
-          <use href="#saltCrystal" x="38" y="28" width="4" height="4" />
-          <use href="#saltCrystal" x="58" y="28" width="4" height="4" transform="rotate(15 60 30)"/>
-          <use href="#saltCrystal" x="33" y="48" width="4" height="4" transform="rotate(-10 35 50)"/>
-          <use href="#saltCrystal" x="63" y="48" width="4" height="4" />
-          <use href="#saltCrystal" x="48" y="68" width="5" height="5" transform="rotate(5 50 70)"/>
-          <use href="#saltCrystal" x="48" y="38" width="3.5" height="3.5" transform="rotate(-5 50 40)"/>
+          <use class="salt-crystal-instance" href="#saltCrystal" x="38" y="28" width="4" height="4" />
+          <use class="salt-crystal-instance" href="#saltCrystal" x="58" y="28" width="4" height="4" transform="rotate(15 60 30)"/>
+          <use class="salt-crystal-instance" href="#saltCrystal" x="33" y="48" width="4" height="4" transform="rotate(-10 35 50)"/>
+          <use class="salt-crystal-instance" href="#saltCrystal" x="63" y="48" width="4" height="4" />
+          <use class="salt-crystal-instance" href="#saltCrystal" x="48" y="68" width="5" height="5" transform="rotate(5 50 70)"/>
+          <use class="salt-crystal-instance" href="#saltCrystal" x="48" y="38" width="3.5" height="3.5" transform="rotate(-5 50 40)"/>
           <line x1="20" y1="55" x2="5" y2="70" stroke="#A07855" stroke-width="5" stroke-linecap="round" class="pretzel-arm left-arm"/>
           <line x1="80" y1="55" x2="95" y2="70" stroke="#A07855" stroke-width="5" stroke-linecap="round" class="pretzel-arm right-arm"/>
           <line x1="40" y1="85" x2="30" y2="110" stroke="#A07855" stroke-width="6" stroke-linecap="round" class="pretzel-leg left-leg"/>
@@ -286,7 +619,28 @@
           <ellipse cx="72" cy="112" rx="6" ry="3" fill="#A07855" class="pretzel-foot"/>
         </svg>
       `,
-      cssClasses: "pretzel-pete-styles"
+      cssClasses: "pretzel-pete-styles",
+      uniqueAnimations: [
+        { id: "pp_leg_tap_left", targetSelector: "#pretzel-pete .left-leg", animationClass: "animate-left-leg-tap", cssAnimationName: "legTap" },
+        { id: "pp_leg_tap_right", targetSelector: "#pretzel-pete .right-leg", animationClass: "animate-right-leg-tap", cssAnimationName: "legTap" },
+        { id: "pp_arm_wave_left", targetSelector: "#pretzel-pete .left-arm", animationClass: "animate-left-arm-wave", cssAnimationName: "armWave" },
+        { id: "pp_arm_wave_right", targetSelector: "#pretzel-pete .right-arm", animationClass: "animate-right-arm-wave", cssAnimationName: "armWave" }
+      ],
+      surrealAnimations: [
+        {
+          id: "pp_unraveling",
+          animationClass: "animate-unraveling",
+          originalBodyId: "pretzel-original-body",
+          unravelledPathIds: ["pretzel-unravelled-1", "pretzel-unravelled-2"],
+          saltSelector: ".salt-crystal-instance",
+          step1Duration: 500,
+          step2Duration: 500,
+          swayDuration: 3000,
+          saltFallDuration: 800,
+          reverseStep1Duration: 500, // Duration for unravelled-1 to original
+          reverseStep2Duration: 500  // Duration for unravelled-2 to unravelled-1
+        }
+      ]
     },
     {
       name: "Sushi Sam",
@@ -300,7 +654,17 @@
             </linearGradient>
           </defs>
           <g class="maki-roll">
+            <!-- Void Layer: behind nori-wrap, revealed by flap -->
+            <g class="nori-void-layer" style="opacity: 0;">
+                <circle class="cosmic-particle1" cx="50" cy="65" r="12" fill="#1a082b" opacity="0.8"/>
+                <path class="cosmic-particle2" d="M40 60 Q50 50 60 60 Q70 70 60 80 Q50 90 40 80 Q30 70 40 60Z" fill="#2c0f4d" opacity="0.7"/>
+                <ellipse cx="50" cy="65" rx="25" ry="20" fill="#0d0414" opacity="0.9" />
+            </g>
             <ellipse cx="50" cy="65" rx="40" ry="35" fill="url(#noriGradientSam2)" class="nori-wrap" stroke="#2A2A2A" stroke-width="0.5"/>
+            <!-- Nori Flap: A piece of nori that opens. Positioned over the main nori-wrap. -->
+            <!-- Path d is illustrative, needs to match a segment of the nori-wrap ellipse. -->
+            <!-- transform-origin is critical and set in CSS for .nori-flap -->
+            <path class="nori-flap" d="M30 50 A40 35 0 0 1 70 50 L 68 55 A35 30 0 0 0 32 55 Z" fill="url(#noriGradientSam2)" stroke="#2A2A2A" stroke-width="0.5" style="transform-origin: 50% 0%;"/>
             <ellipse cx="50" cy="65" rx="33" ry="28" fill="#F2F2F2" class="rice-layer" stroke="#E0E0E0" stroke-width="0.25"/>
             <ellipse cx="45" cy="55" rx="2.5" ry="1.8" fill="#FCFCFC" opacity="0.9" transform="rotate(-10 45 55)"/>
             <ellipse cx="55" cy="52" rx="2.2" ry="1.5" fill="#FEFEFE" opacity="0.8" transform="rotate(15 55 52)"/>
@@ -316,8 +680,8 @@
           <g class="hachimaki">
             <path d="M 20 45 Q 50 35 80 45 L 78 52 Q 50 42 22 52 Z" fill="white" stroke="black" stroke-width="1"/>
             <circle cx="18" cy="48" r="5" fill="white" stroke="black" stroke-width="1"/>
-            <path d="M 15 48 L 5 40" stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-            <path d="M 15 50 L 8 58" stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <path class="hachimaki-tie hachimaki-tie-1" d="M 15 48 L 5 40" stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <path class="hachimaki-tie hachimaki-tie-2" d="M 15 50 L 8 58" stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round"/>
             <circle cx="50" cy="46" r="6" fill="red"/>
           </g>
           <circle cx="40" cy="60" r="2.5" fill="black" class="sushi-eye left-sushi-eye"/>
@@ -325,7 +689,22 @@
           <path d="M 45 75 Q 50 80 55 75" stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round" class="sushi-mouth"/>
         </svg>
       `,
-      cssClasses: "sushi-sam-styles"
+      cssClasses: "sushi-sam-styles",
+      uniqueAnimations: [
+        { id: "ss_hachimaki_flutter", targetSelector: "svg#sushi-sam", animationClass: "animate-hachimaki-flutter", cssAnimationName: "hachimakiFlutter" },
+        { id: "ss_maki_roll", targetSelector: "svg#sushi-sam", animationClass: "animate-maki-roll", cssAnimationName: "makiRoll" }
+      ],
+      surrealAnimations: [
+        {
+          id: "ss_nori_void",
+          animationClass: "animate-nori-void",
+          flapSelector: ".nori-flap",
+          // voidLayerSelector: ".nori-void-layer", // Not directly targeted, parent class handles it
+          openDuration: 700,
+          closeDuration: 700,
+          revealDuration: 2000
+        }
+      ]
     }
   ];
 
@@ -342,6 +721,8 @@
   let inactivityTimer: NodeJS.Timeout | undefined;
   let hoverTimeout: NodeJS.Timeout | undefined;
   let dialogueCycleInterval: NodeJS.Timeout | number | undefined; // setInterval returns a number in browsers
+  let specialAnimationInterval: NodeJS.Timeout | number | undefined;
+  let surrealAnimationInterval: NodeJS.Timeout | number | undefined;
 
   // --- Dialogue Content (Shared for now) ---
   const dialogues = [
@@ -385,6 +766,22 @@
     // if (cycleMascotNameButton) { // Removed: UI element is gone
     //     cycleMascotNameButton.textContent = mascot.name;
     // }
+
+    // Clear previous special animation interval and start new one for the current mascot
+    clearInterval(specialAnimationInterval as number);
+    const currentMascotData = mascots[currentMascotIndex]; // Use a local var for clarity
+    if (currentMascotData.uniqueAnimations && currentMascotData.uniqueAnimations.length > 0) {
+      specialAnimationInterval = setInterval(tryPlayRandomMascotAnimation, 18000 + Math.random() * 5000); // e.g. 18-23 seconds
+    }
+
+    // Clear and set up surreal animation interval
+    clearInterval(surrealAnimationInterval as number);
+    if (currentMascotData.surrealAnimations && currentMascotData.surrealAnimations.length > 0) {
+      // Surreal animations are much rarer: timer fires e.g. every 3-5 minutes
+      // Actual play chance is then handled by tryPlaySurrealAnimation
+      surrealAnimationInterval = setInterval(tryPlaySurrealAnimation, (3 * 60 * 1000) + Math.random() * (2 * 60 * 1000)); // 3 to 5 minutes
+    }
+    
     restartAnimationsAndDialogue();
   }
 
@@ -449,6 +846,8 @@
     clearTimeout(inactivityTimer);
     clearTimeout(hoverTimeout);
     clearInterval(dialogueCycleInterval);
+    clearInterval(specialAnimationInterval);
+    clearInterval(surrealAnimationInterval);
   }
 
   function restartAnimationsAndDialogue() {
@@ -527,6 +926,210 @@
     }, 30000); // 30 seconds of inactivity
   }
 
+  // --- New Mascot Animations Logic ---
+  function playRandomMascotAnimation() {
+    if (!mascotVisualArea || !mascotContainer?.classList.contains('visible')) return;
+
+    const mascotData = mascots[currentMascotIndex];
+    if (!mascotData.uniqueAnimations || mascotData.uniqueAnimations.length === 0) return;
+
+    const availableAnimations = mascotData.uniqueAnimations;
+    const animToPlay = availableAnimations[Math.floor(Math.random() * availableAnimations.length)];
+
+    const targetElement = mascotVisualArea.querySelector(animToPlay.targetSelector) as SVGElement | null;
+
+    if (targetElement && !targetElement.classList.contains(animToPlay.animationClass)) {
+      // Basic check to prevent re-adding class if somehow already present (e.g. from a very fast previous trigger)
+      // A more complex system could check for any active animation on the element.
+      
+      // Check if any animation from this mascot's unique set is already on this specific target.
+      // This is to prevent, for example, left leg tapping if right leg is already tapping.
+      // Or hat tipping if sprinkles are shivering (if both target the SVG root).
+      let alreadyAnimating = false;
+      if (targetElement.classList) {
+        for (const anim of availableAnimations) {
+            if (targetElement.classList.contains(anim.animationClass)) {
+                alreadyAnimating = true;
+                break;
+            }
+        }
+      }
+      // For elements that are not the SVG root, also check if SVG root has an animation class
+      const svgRoot = mascotVisualArea.querySelector('svg');
+      if (svgRoot && targetElement !== svgRoot) {
+        for (const anim of availableAnimations) {
+            // Check if the SVG root has an animation class that might conflict
+            if (svgRoot.classList.contains(anim.animationClass) && anim.targetSelector === `svg#${svgRoot.id}` || anim.targetSelector === `svg.${svgRoot.classList[0]}`) {
+                 // This logic is a bit broad, assumes targetSelector for root is specific.
+                 // A simpler rule: if targetElement is not svgRoot, and svgRoot is animating, maybe skip.
+                 // For now, the primary check is on targetElement itself.
+            }
+        }
+      }
+
+
+      if (alreadyAnimating) {
+        // console.log(`Animation ${animToPlay.animationClass} skipped, ${animToPlay.targetSelector} already has a unique animation.`);
+        return;
+      }
+
+
+      targetElement.classList.add(animToPlay.animationClass);
+
+      const onAnimationEnd = (event: Event) => { // Use generic Event, or AnimationEvent if sure
+        const currentTarget = event.currentTarget as HTMLElement;
+        // Ensure the event is for the specific animation we added
+        if (animToPlay.cssAnimationName && (event as AnimationEvent).animationName === animToPlay.cssAnimationName &&
+            currentTarget.classList.contains(animToPlay.animationClass)) {
+            currentTarget.classList.remove(animToPlay.animationClass);
+        }
+        // { once: true } handles removing this listener.
+        // We still need to remove the 'animationcancel' listener if 'animationend' fires.
+        currentTarget.removeEventListener('animationcancel', onAnimationCancel);
+      };
+      
+      const onAnimationCancel = (event: Event) => { // Use generic Event, or AnimationEvent if sure
+        const currentTarget = event.currentTarget as HTMLElement;
+        // Ensure the event is for the specific animation we added
+        if (animToPlay.cssAnimationName && (event as AnimationEvent).animationName === animToPlay.cssAnimationName &&
+            currentTarget.classList.contains(animToPlay.animationClass)) {
+            currentTarget.classList.remove(animToPlay.animationClass);
+        }
+        // { once: true } handles removing this listener.
+        // We still need to remove the 'animationend' listener if 'animationcancel' fires.
+        currentTarget.removeEventListener('animationend', onAnimationEnd);
+      };
+
+      targetElement.addEventListener('animationend', onAnimationEnd as EventListener, { once: true });
+      targetElement.addEventListener('animationcancel', onAnimationCancel as EventListener, { once: true });
+    }
+  }
+
+  function tryPlayRandomMascotAnimation() {
+      // Chance to play an animation, e.g., 40%
+      if (Math.random() < 0.4) {
+          playRandomMascotAnimation();
+      }
+  }
+
+  // --- Surreal Mascot Animations Logic ---
+  function playSurrealAnimation() {
+    if (!mascotVisualArea || !mascotContainer?.classList.contains('visible')) return;
+
+    const mascotData = mascots[currentMascotIndex];
+    if (!mascotData.surrealAnimations || mascotData.surrealAnimations.length === 0) return;
+
+    // Assume one surreal animation per mascot for now, pick the first one
+    const animData = mascotData.surrealAnimations[0] as SurrealAnimationData; // Cast to the union type
+    const svgElement = mascotVisualArea.querySelector('svg');
+    if (!svgElement) return;
+
+    if (svgElement.dataset.surrealAnimationActive === 'true' || svgElement.dataset.uniqueAnimationActive === 'true') {
+      // console.log("Surreal animation skipped, another animation is active.");
+      return;
+    }
+    svgElement.dataset.surrealAnimationActive = 'true'; // Mark as active
+
+    // Mascot-specific logic with type guards
+    if (mascotData.name === "Cuppy Cake" && animData.id === "cc_eye_spy") {
+      const specificAnimData = animData as CuppyCakeSurrealAnimation;
+      const pupils = svgElement.querySelectorAll(specificAnimData.pupilSelector);
+      const eyeGroup = svgElement.querySelector(specificAnimData.eyeGroupSelector) as HTMLElement | null;
+      
+      if (eyeGroup) eyeGroup.classList.add('animating-surreal'); // For overflow
+      svgElement.classList.add(specificAnimData.animationClass);
+
+      setTimeout(() => {
+        svgElement.classList.remove(specificAnimData.animationClass);
+        if (eyeGroup) eyeGroup.classList.remove('animating-surreal');
+        delete svgElement.dataset.surrealAnimationActive;
+      }, specificAnimData.duration);
+
+    } else if (mascotData.name === "Pretzel Pete" && animData.id === "pp_unraveling") {
+      const specificAnimData = animData as PretzelPeteSurrealAnimation;
+      const originalBody = svgElement.querySelector(`#${specificAnimData.originalBodyId}`) as SVGPathElement | null;
+      const unravelled1 = svgElement.querySelector(`#${specificAnimData.unravelledPathIds[0]}`) as SVGPathElement | null;
+      const unravelled2 = svgElement.querySelector(`#${specificAnimData.unravelledPathIds[1]}`) as SVGPathElement | null;
+      const saltCrystals = svgElement.querySelectorAll(specificAnimData.saltSelector);
+
+      if (!originalBody || !unravelled1 || !unravelled2) {
+        delete svgElement.dataset.surrealAnimationActive;
+        return;
+      }
+      
+      svgElement.classList.add(specificAnimData.animationClass);
+
+      // Sequence:
+      originalBody.style.opacity = '0';
+      unravelled1.style.opacity = '1';
+      saltCrystals.forEach(salt => {
+        (salt as HTMLElement).classList.remove('reappearing');
+        (salt as HTMLElement).classList.add('falling');
+      });
+
+      setTimeout(() => { // Step 1 done (original -> unravelled1)
+        unravelled1.style.opacity = '0';
+        unravelled2.style.opacity = '1';
+        (unravelled2 as SVGPathElement).classList.add('swaying');
+
+        setTimeout(() => { // Step 2 done (unravelled1 -> unravelled2, swaying starts)
+          (unravelled2 as SVGPathElement).classList.remove('swaying');
+          unravelled2.style.opacity = '0';
+          unravelled1.style.opacity = '1';
+          saltCrystals.forEach(salt => {
+            (salt as HTMLElement).classList.remove('falling');
+            (salt as HTMLElement).classList.add('reappearing');
+          });
+
+          setTimeout(() => { // Step 3 done (unravelled2 -> unravelled1, salt reappearing)
+            unravelled1.style.opacity = '0';
+            originalBody.style.opacity = '1';
+            
+            setTimeout(() => { // Step 4 done (unravelled1 -> original)
+              saltCrystals.forEach(salt => (salt as HTMLElement).classList.remove('reappearing'));
+              svgElement.classList.remove(specificAnimData.animationClass);
+              delete svgElement.dataset.surrealAnimationActive;
+            }, specificAnimData.saltFallDuration); // Ensure salt animation finishes
+
+          }, specificAnimData.reverseStep1Duration);
+        }, specificAnimData.swayDuration);
+      }, specificAnimData.step2Duration);
+
+    } else if (mascotData.name === "Sushi Sam" && animData.id === "ss_nori_void") {
+      const specificAnimData = animData as SushiSamSurrealAnimation;
+      const flap = svgElement.querySelector(specificAnimData.flapSelector) as SVGPathElement | null;
+      if (!flap) {
+        delete svgElement.dataset.surrealAnimationActive;
+        return;
+      }
+
+      svgElement.classList.add(specificAnimData.animationClass); // This makes void layer visible
+      flap.classList.add('opening');
+
+      setTimeout(() => { // Flap is open
+        flap.classList.remove('opening');
+        // Void is visible, linger
+        setTimeout(() => {
+          flap.classList.add('closing');
+          // Void layer will hide once parent class is removed
+          setTimeout(() => { // Flap is closed
+            flap.classList.remove('closing');
+            svgElement.classList.remove(specificAnimData.animationClass);
+            delete svgElement.dataset.surrealAnimationActive;
+          }, specificAnimData.closeDuration);
+        }, specificAnimData.revealDuration);
+      }, specificAnimData.openDuration);
+    } else {
+      delete svgElement.dataset.surrealAnimationActive; // Unknown animation
+    }
+  }
+
+  function tryPlaySurrealAnimation() {
+    // Example: 5% chance when this (already infrequent) timer fires
+    if (Math.random() < 0.05) {
+      playSurrealAnimation();
+    }
+  }
 
   // --- Event Listeners ---
   function setupEventListeners() {
