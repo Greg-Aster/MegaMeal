@@ -26,11 +26,11 @@
 </button>
 
 <!-- Mobile Function Card -->
-<div id="mobile-mascot-function-card" style="display: none;"> <!-- Initially hidden, shown by @media query -->
-  <input type="text" id="mascot-chat-input-mobile" placeholder="Talk to BLEEPY..." aria-label="Chat with mascot">
-  <button id="mascot-chat-send-mobile" aria-label="Send message">✈️</button>
-  <button id="dismiss-mascot-button-mobile" aria-label="Dismiss Mascot">🍴</button>
-  <button id="bring-back-mascot-button-mobile" aria-label="Bring back mascot" style="display:none;">🥄</button>
+<div id="mobile-mascot-function-card" class="group fixed bottom-0 left-0 w-full z-[1010] flex sm:hidden items-center gap-2 py-2 px-3 bg-white dark:bg-slate-800 border-t border-slate-300 dark:border-slate-700 shadow-[0_-2px_5px_rgba(0,0,0,0.05)] dark:shadow-[0_-2px_5px_rgba(0,0,0,0.2)]"> <!-- Initially hidden by sm:hidden, shown by flex on smaller screens -->
+  <input type="text" id="mascot-chat-input-mobile" placeholder="Talk to BLEEPY..." aria-label="Chat with mascot" class="flex-grow h-10 px-3 py-2 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 border border-slate-400 dark:border-slate-600 rounded-full text-sm group-[.mascot-dismissed-state]:hidden">
+  <button id="mascot-chat-send-mobile" aria-label="Send message" class="flex-shrink-0 flex items-center justify-center h-10 w-10 p-2 bg-transparent border-none text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 text-xl cursor-pointer group-[.mascot-dismissed-state]:hidden">🍳</button>
+  <button id="dismiss-mascot-button-mobile" aria-label="Dismiss Mascot" class="flex-shrink-0 flex items-center justify-center h-10 w-10 p-2 bg-transparent border-none text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 text-xl cursor-pointer group-[.mascot-dismissed-state]:hidden">🍴</button>
+  <button id="bring-back-mascot-button-mobile" aria-label="Bring back mascot" class="flex-shrink-0 flex items-center justify-center h-10 w-10 p-2 bg-transparent border-none text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 text-xl cursor-pointer hidden group-[.mascot-dismissed-state]:flex group-[.mascot-dismissed-state]:mx-auto">🥄</button>
 </div>
 
 <style>
@@ -47,13 +47,13 @@
   }
 
   :root {
-    --speech-bubble-bg-light: rgba(230, 242, 255, 0.85); /* Light, slightly transparent */
-    --speech-bubble-border-light: rgba(0, 91, 179, 0.7); /* Darker blue, slightly transparent */
-    --speech-bubble-text-light: #003366; /* Dark blue text */
+    --speech-bubble-bg-light: rgba(224, 242, 254, 0.9); /* sky-100/90 */
+    --speech-bubble-border-light: #0ea5e9; /* sky-500 */
+    --speech-bubble-text-light: #1e293b; /* slate-800 */
 
-    --speech-bubble-bg-dark: rgba(40, 40, 40, 0.85); /* Dark, slightly transparent */
-    --speech-bubble-border-dark: rgba(100, 100, 100, 0.7); /* Lighter gray, slightly transparent */
-    --speech-bubble-text-dark: #e0e0e0; /* Light gray text */
+    --speech-bubble-bg-dark: rgba(51, 65, 85, 0.9); /* slate-700/90 */
+    --speech-bubble-border-dark: #64748b; /* slate-500 */
+    --speech-bubble-text-dark: #e2e8f0; /* slate-200 */
 
     --speech-bubble-max-width: 50rem;
     --speech-bubble-padding: 0.6rem 0.6rem;
@@ -116,39 +116,29 @@
     object-fit: contain;
   }
   
-  /* New Speech Bubble Styling */
-  #mascot-speech-bubble {
-    position: absolute;
-    /* Positioning: to the left of the mascot. Needs careful adjustment.
-       Assuming mascot visual area is roughly centered in mascot-container.
-       And mascot-container width is 14rem.
-       Mascot visual area width is 85% of 14rem = 11.9rem.
-       Let's try to place it to the left of this visual area.
-    */
-    right: calc(100% - 3rem); /* (Container width - visual area width)/2 + visual_area_width + some_offset */
-                              /* (14rem - 11.9rem)/2 + 11.9rem = 1.05rem + 11.9rem = 12.95rem from left edge of container */
-                              /* So, from right edge of container, it's 14rem - 12.95rem = 1.05rem to the *right* of visual area */
-                              /* Let's try right: calc(100% - 2rem); to place it left of the mascot image */
-    bottom: 60%; /* Vertically align with mid-upper part of mascot */
-    width: auto;
-    height: auto;
-    max-width: var(--speech-bubble-max-width);
-    min-width: 12rem;
-    padding: var(--speech-bubble-padding);
-    background-color: var(--speech-bubble-bg);
-    border: 2px solid var(--speech-bubble-border);
-    border-radius: var(--speech-bubble-radius);
-    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
-    font-size: clamp(0.8rem, 2.2vw, 0.95rem); /* Start with existing responsive font size */
-    color: var(--speech-bubble-text);
-    text-align: left;
-    z-index: 1001;
-    opacity: 0; /* Start hidden */
-    pointer-events: none; /* Not interactive until visible */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-    overflow-wrap: break-word;
-    /* transform: translateY(10px); Initial transform for animation */
-  }
+  /* Speech Bubble Styling */
+#mascot-speech-bubble {
+  position: absolute;
+  right: calc(100% - 3rem); /* Positions its right edge 3rem from the left edge of #mascot-container, effectively placing it to the left */
+  bottom: 60%;
+  width: auto;
+  min-width: 12rem; /* Restored from previous effective style */
+  max-width: var(--speech-bubble-max-width); /* Uses existing CSS variable (e.g., 50rem, Tailwind was 30rem) */
+  height: auto;
+  padding: var(--speech-bubble-padding);
+  background-color: var(--speech-bubble-bg);
+  border: 2px solid var(--speech-bubble-border);
+  border-radius: var(--speech-bubble-radius);
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif; /* Restored from previous effective style */
+  font-size: clamp(0.8rem, 2.2vw, 0.95rem); /* Restored from previous effective style */
+  color: var(--speech-bubble-text);
+  text-align: left; /* Restored from previous effective style */
+  z-index: 1001; /* Restored from previous effective style */
+  opacity: 0; /* Initial state for animations, restored from previous effective style */
+  pointer-events: none; /* Initial state for animations, restored from previous effective style */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15); /* Restored from previous effective style */
+  overflow-wrap: break-words; /* Restored from previous effective style */
+}
 
   #mascot-speech-bubble::after, #mascot-speech-bubble::before {
     content: '';
@@ -176,10 +166,11 @@
   }
 
 
-  #mascot-speech-text {
-    margin: 0;
-    padding: 0;
-  }
+#mascot-speech-text {
+  margin: 0;
+  padding: 0;
+  /* Font, color, and text-align are typically inherited from #mascot-speech-bubble */
+}
 
   /* Animations for the new speech bubble */
   #mascot-speech-bubble.appearing {
@@ -258,21 +249,6 @@
       border: 1px solid var(--dialogue-border-dark);
     }
 
-    /* Mobile Function Card Dark Mode */
-    #mobile-mascot-function-card {
-      background-color: var(--dialogue-bg-dark, rgba(30,30,30,0.95)); /* Darker than speech bubble */
-      border-top: 1px solid var(--speech-bubble-border-dark, rgba(80,80,80,0.8));
-    }
-    #mascot-chat-input-mobile {
-      background-color: var(--dialogue-bg-dark, rgba(50,50,50,0.9)); /* Consistent with desktop dark input */
-      color: var(--dialogue-text-dark, #f0f0f0);
-      border: 1px solid var(--dialogue-border-dark, rgba(65,65,65,0.95));
-    }
-    #mascot-chat-send-mobile,
-    #dismiss-mascot-button-mobile,
-    #bring-back-mascot-button-mobile {
-      color: var(--primary-hover, #58a6ff); /* Lighter blue for dark mode */
-    }
   }
 
 
@@ -346,64 +322,6 @@
   }
   /* Add more specific styles for Pretzel Pete, Sushi Sam if needed */
 
-  /* --- Mobile Function Card Styles --- */
-  #mobile-mascot-function-card {
-    display: none; /* Default, shown by media query */
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    background-color: var(--dialogue-bg-light, #e6f2ff);
-    border-top: 1px solid var(--speech-bubble-border-light, rgba(0, 91, 179, 0.7));
-    box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
-  }
-
-  #mascot-chat-input-mobile {
-    flex-grow: 1;
-    padding: 0.6rem 0.8rem;
-    border: 1px solid var(--primary-hover, #0056b3);
-    border-radius: 20px;
-    background-color: #fff; /* Explicitly white for light mode */
-    color: var(--primary-hover, #003366);
-    font-size: 0.9rem;
-    height: 2.5rem;
-    box-sizing: border-box;
-  }
-
-  #mascot-chat-send-mobile,
-  #dismiss-mascot-button-mobile,
-  #bring-back-mascot-button-mobile {
-    flex-shrink: 0;
-    background: transparent;
-    border: none;
-    color: var(--primary, #007bff);
-    font-size: 1.3rem;
-    padding: 0.4rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 2.5rem;
-    width: 2.5rem;
-  }
-
-  /* Mobile Card States */
-  #mobile-mascot-function-card.mascot-dismissed-state #mascot-chat-input-mobile,
-  #mobile-mascot-function-card.mascot-dismissed-state #mascot-chat-send-mobile,
-  #mobile-mascot-function-card.mascot-dismissed-state #dismiss-mascot-button-mobile {
-    display: none;
-  }
-
-  #mobile-mascot-function-card.mascot-dismissed-state #bring-back-mascot-button-mobile {
-    display: flex; /* Or inline-flex */
-    margin: 0 auto; /* Center the spoon */
-  }
-
-  /* Default state (mascot active) for bring back button */
-  #mobile-mascot-function-card #bring-back-mascot-button-mobile {
-    display: none;
-  }
-  /* Ensure others are visible by default if not in dismissed state (handled by base #mobile-mascot-function-card display:flex and individual button display:flex) */
-
 
 /* --- Responsive Adjustments --- */
 
@@ -460,8 +378,8 @@
     #mascot-container {
       width: 8rem; /* New */
       height: 10.28rem; /* New */
-      right: 0.5rem;
-      bottom: 0.5rem;
+      right: 0.0rem;
+      bottom: 2.5rem;
       /* padding-top removed */
       opacity: 0.85; /* This was an existing override, kept it */
     }
@@ -509,23 +427,11 @@
       /* font-size: 0.8rem; removed, inherit from base */
     }
 
-    /* Show Mobile Function Card and Hide Desktop Elements */
-    #mobile-mascot-function-card {
-      display: flex;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      z-index: 1010;
-      border: 3px solid red !important; /* TEMPORARY DIAGNOSTIC BORDER */
-      background-color: rgba(255, 0, 0, 0.3) !important; /* TEMPORARY DIAGNOSTIC BACKGROUND */
-    }
-
     /* Hide original desktop controls */
     #mascot-chat-ui,
     #mascot-container > #dismiss-mascot-button, /* Original dismiss button is child of mascot-container */
     body > #bring-back-mascot-button { /* Original bring back button is child of body */
-      display: none !important;
+      display: none !important; /* Ensured !important is present on all */
     }
   }
 </style>
@@ -636,7 +542,6 @@
     setTimeout(() => {
       mascotContainer.classList.add('visible');
       startProactiveDialogueTimer(); // MOVED HERE: Restart proactive dialogue when mascot is shown
-      console.log("Proactive timer started from showMascot"); // Task-specific log
     }, 50); // Delay for CSS transition
     bringBackButton.style.display = 'none'; // Hide original bring back button
     sessionStorage.removeItem('bleepyDismissed');
@@ -649,7 +554,6 @@
     // Mobile card state
     if (mobileMascotFunctionCard) {
       mobileMascotFunctionCard.classList.remove('mascot-dismissed-state');
-      console.log("showMascot: #mobile-mascot-function-card classList after removing .mascot-dismissed-state:", mobileMascotFunctionCard ? mobileMascotFunctionCard.classList.toString() : 'NOT FOUND');
       // The CSS for #mobile-mascot-function-card (not .mascot-dismissed-state)
       // should ensure the correct items are visible by default.
       // Specifically, #bring-back-mascot-button-mobile is display:none by default,
@@ -672,7 +576,6 @@
       // Mobile card state
       if (mobileMascotFunctionCard) {
         mobileMascotFunctionCard.classList.add('mascot-dismissed-state');
-        console.log("hideMascot: #mobile-mascot-function-card classList after adding .mascot-dismissed-state:", mobileMascotFunctionCard ? mobileMascotFunctionCard.classList.toString() : 'NOT FOUND');
       }
 
       // displayNewDialogue(true); // Old dialogue system
@@ -902,7 +805,6 @@ User: "${userMessage}"`;
     } else {
       promptForWorker = `User: "${userMessage}"`;
     }
-    console.log(">>> PROMPT FOR DIRECT CHAT (to Worker):", promptForWorker);
     
     currentInput.value = ''; // Clear the correct input
     resetProactiveDialogueTimer(); // Reset timer on user message send
@@ -933,16 +835,12 @@ User: "${userMessage}"`;
 
   // --- Page Context Logic ---
   function getPageContextForBleepy() {
-    console.log("getPageContextForBleepy called");
     const contextDiv = document.getElementById('bleepy-page-context');
-    console.log("Context element found:", contextDiv);
     if (contextDiv) {
       const contextData = contextDiv.dataset.context;
       if (contextData) {
-        console.log("Raw data-context attribute:", contextData);
         try {
           const parsedContext = JSON.parse(contextData);
-          console.log("Parsed page context:", parsedContext);
           return parsedContext;
         } catch (e) {
           console.error("Bleepy: Error parsing page context JSON:", e);
@@ -955,7 +853,6 @@ User: "${userMessage}"`;
   
   // --- Proactive Dialogue Logic ---
   function triggerProactiveDialogue() {
-    console.log("Proactive dialogue triggered"); // Task-specific log
     if (!mascotContainer?.classList.contains('visible')) {
       // If mascot is not visible, don't trigger.
       // The timer will be restarted by showMascot if/when it's reshown,
@@ -964,7 +861,6 @@ User: "${userMessage}"`;
     }
 
     const randomNumber = Math.random();
-    console.log("Proactive dialogue Math.random() for legacy/AI choice:", randomNumber); // Task-specific log
     const currentMascot = mascots[currentMascotIndex];
     const currentMascotName = currentMascot.name as MascotName;
     const currentMascotPersonaString = personaStrings[currentMascotName] || "You are a friendly mascot.";
@@ -973,16 +869,13 @@ User: "${userMessage}"`;
       if (randomDialogues && randomDialogues.length > 0) {
         const randomIndex = Math.floor(Math.random() * randomDialogues.length);
         const selectedDialogue = randomDialogues[randomIndex];
-        console.log("Calling displayEphemeralSpeech with legacy phrase:", selectedDialogue); // Task-specific log
         displayEphemeralSpeech(selectedDialogue);
       } else {
         // Fallback if randomDialogues is empty
-        console.log("Calling displayEphemeralSpeech with legacy phrase (fallback):", "..."); // Task-specific log
         displayEphemeralSpeech("...");
       }
     } else { // 30% chance for AI-generated thought
       const pageContext = getPageContextForBleepy();
-      console.log("Page context for AI thought:", pageContext);
       let thoughtInstruction = "";
   
       // Chance to play random image expression if mascot is image-set
@@ -1026,7 +919,6 @@ Generate a brief, spontaneous, in-character statement, observation, or dark joke
         thoughtInstruction = `You are ${currentMascotName}. Generate a brief, spontaneous, in-character statement, observation, or dark joke, consistent with your established persona (which is provided as a system instruction). This is not a reply to a user, but rather a random thought or musing. Keep it concise.`;
       }
       
-      console.log(">>> FINAL PROMPT SENT TO WORKER for AI thought:", thoughtInstruction); // Key log
       displayEphemeralSpeech("Mascot is pondering..."); // Loading state
 
       const workerUrl = 'https://my-mascot-worker-service.greggles.workers.dev';
@@ -1041,7 +933,6 @@ Generate a brief, spontaneous, in-character statement, observation, or dark joke
       .then(response => response.json())
       .then(data => {
         if (data.reply) {
-          console.log("Calling displayEphemeralSpeech with AI thought:", data.reply); // Task-specific log
           displayEphemeralSpeech(data.reply);
         } else {
           console.error('Proactive AI thought error:', data.error || 'No reply from worker');
@@ -1049,10 +940,8 @@ Generate a brief, spontaneous, in-character statement, observation, or dark joke
           if (randomDialogues && randomDialogues.length > 0) {
             const randomIndex = Math.floor(Math.random() * randomDialogues.length);
             const fallbackPhrase = randomDialogues[randomIndex];
-            console.log("Calling displayEphemeralSpeech with legacy phrase (AI fallback):", fallbackPhrase); // Task-specific log
             displayEphemeralSpeech(fallbackPhrase);
           } else {
-            console.log("Calling displayEphemeralSpeech with legacy phrase (AI fallback, no random dialogues):", "Hmm..."); // Task-specific log
             displayEphemeralSpeech("Hmm...");
           }
         }
@@ -1062,10 +951,8 @@ Generate a brief, spontaneous, in-character statement, observation, or dark joke
          if (randomDialogues && randomDialogues.length > 0) {
             const randomIndex = Math.floor(Math.random() * randomDialogues.length);
             const fallbackPhrase = randomDialogues[randomIndex];
-            console.log("Calling displayEphemeralSpeech with legacy phrase (AI catch):", fallbackPhrase); // Task-specific log
             displayEphemeralSpeech(fallbackPhrase);
           } else {
-            console.log("Calling displayEphemeralSpeech with legacy phrase (AI catch, no random dialogues):", "My thoughts are tangled!"); // Task-specific log
             displayEphemeralSpeech("My thoughts are tangled!");
           }
       });
@@ -1075,7 +962,6 @@ Generate a brief, spontaneous, in-character statement, observation, or dark joke
   }
 
   function startProactiveDialogueTimer() {
-    console.log("Proactive timer started or reset"); // Task-specific log
     clearTimeout(proactiveDialogueTimer);
     if (!mascotContainer?.classList.contains('visible')) {
       // Don't start the timer if the mascot is hidden.
@@ -1354,11 +1240,8 @@ Generate a brief, spontaneous, in-character statement, observation, or dark joke
       clearTimeout(proactiveDialogueTimer); // Clear timer on dismiss
       if (dismissDialogues && dismissDialogues.length > 0) {
         const dismissalMessage = dismissDialogues[Math.floor(Math.random() * dismissDialogues.length)];
-        console.log("Selected dismissal message:", dismissalMessage); // Task-specific log
-        console.log("Calling displayEphemeralSpeech with dismissal phrase:", dismissalMessage); // Task-specific log
         displayEphemeralSpeech(dismissalMessage);
       } else {
-        console.log("No dismissal dialogues found, proceeding with hide.");
       }
       hideMascot(true);
     });
@@ -1375,7 +1258,6 @@ Generate a brief, spontaneous, in-character statement, observation, or dark joke
     });
 
     // Mobile Function Card Event Listeners
-    console.log("Attempting to get #mascot-chat-input-mobile for event listener:", document.getElementById('mascot-chat-input-mobile'));
     if (mascotChatInputMobile) {
       mascotChatInputMobile.addEventListener('keypress', (event) => {
         if (event.key === 'Enter') {
@@ -1383,11 +1265,9 @@ Generate a brief, spontaneous, in-character statement, observation, or dark joke
         }
       });
     }
-    console.log("Attempting to get #mascot-chat-send-mobile for event listener:", document.getElementById('mascot-chat-send-mobile'));
     if (mascotChatSendMobile) {
       mascotChatSendMobile.addEventListener('click', handleSendMessage);
     }
-    console.log("Attempting to get #dismiss-mascot-button-mobile for event listener:", document.getElementById('dismiss-mascot-button-mobile'));
     if (dismissMascotButtonMobile) {
       dismissMascotButtonMobile.addEventListener('click', () => {
         clearTimeout(proactiveDialogueTimer);
@@ -1398,7 +1278,6 @@ Generate a brief, spontaneous, in-character statement, observation, or dark joke
         hideMascot(true);
       });
     }
-    console.log("Attempting to get #bring-back-mascot-button-mobile for event listener:", document.getElementById('bring-back-mascot-button-mobile'));
     if (bringBackMascotButtonMobile) {
       bringBackMascotButtonMobile.addEventListener('click', showMascot);
     }
@@ -1439,14 +1318,12 @@ Generate a brief, spontaneous, in-character statement, observation, or dark joke
   document.addEventListener('astro:page-load', () => {
     const mobileCard = document.getElementById('mobile-mascot-function-card');
     if (mobileCard) {
-      console.log("Mobile card #mobile-mascot-function-card initial computed display:", window.getComputedStyle(mobileCard).display);
     } else {
       console.error("Mobile card #mobile-mascot-function-card NOT FOUND in DOM for logging.");
     }
 
     const desktopChatUi = document.getElementById('mascot-chat-ui'); // Assuming this is the ID of the original desktop chat UI wrapper
     if (desktopChatUi) {
-      console.log("Desktop #mascot-chat-ui initial computed display:", window.getComputedStyle(desktopChatUi).display);
     } else {
       console.error("Desktop #mascot-chat-ui NOT FOUND in DOM for logging.");
     }
