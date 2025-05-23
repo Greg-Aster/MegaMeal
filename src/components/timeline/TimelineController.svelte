@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy, createEventDispatcher } from 'svelte'; // Removed ChangeEvent
+  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { timelineStore, timelineActions, filteredEvents, selectedEvent } from '../../stores/timelineStore';
   import type { TimelineEvent } from '../../services/TimelineService.client';
   import { extractEraConfig } from '../../services/TimelineService.client'; // Added this import
@@ -43,6 +43,7 @@
   let eraConfig: EraConfig = {}; // Typed eraConfig
   let isInitialized = false;
   let isMobile = false;
+  let isPortrait = false; // Added for orientation detection
   let showGestureHint = false;
   let gestureHintTimer: number | null = null;
   
@@ -73,9 +74,23 @@
     }
   }
   
-  // Check if we're on a mobile device
-  function checkMobileView() {
-    isMobile = window.innerWidth < 768; // Standard mobile breakpoint
+  // Check if we're on a mobile device and its orientation
+  function checkMobileAndOrientation() {
+    const newIsMobile = window.innerWidth < 768;
+    let newIsPortrait = false;
+
+    if (newIsMobile) {
+      newIsPortrait = window.matchMedia("(orientation: portrait)").matches;
+    }
+
+    // Update Svelte state only if changed, to avoid unnecessary re-renders
+    // and ensure reactivity for currentHeight
+    if (newIsMobile !== isMobile) {
+      isMobile = newIsMobile;
+    }
+    if (newIsPortrait !== isPortrait) {
+      isPortrait = newIsPortrait;
+    }
   }
   
   // Function to show gesture hint for mobile users
@@ -155,13 +170,17 @@
 // Initialize the component only after mounting
 onMount(() => {
   console.log("Timeline controller mounting");
-  
-  // Check for mobile view
-  checkMobileView();
-  
-  // Listen for window resize to update mobile state
-  window.addEventListener('resize', checkMobileView);
-  
+
+  // Initial check for mobile view and orientation
+  checkMobileAndOrientation();
+
+  // Listen for window resize and orientation changes
+  window.addEventListener('resize', checkMobileAndOrientation);
+  const portraitMediaQuery = window.matchMedia("(orientation: portrait)");
+  // Store the listener function to remove it correctly in onDestroy
+  const orientationListener = () => checkMobileAndOrientation();
+  portraitMediaQuery.addEventListener('change', orientationListener);
+
   // Show gesture hint for mobile users
   if (isMobile) {
     // Show gesture hint with a slight delay to ensure it appears after the component is visible
@@ -305,7 +324,10 @@ onMount(() => {
   
   // Return cleanup function
   return () => {
-    window.removeEventListener('resize', checkMobileView);
+    window.removeEventListener('resize', checkMobileAndOrientation);
+    if (portraitMediaQuery && typeof orientationListener === 'function') {
+      portraitMediaQuery.removeEventListener('change', orientationListener);
+    }
     if (gestureHintTimer) {
       clearTimeout(gestureHintTimer);
     }
@@ -432,8 +454,8 @@ function handleEraFilter(e: Event) { // Changed event type to standard Event
 }
   
   function handleResize() {
-    // Simple resize handler
-    checkMobileView();
+    // Resize handler now also checks orientation
+    checkMobileAndOrientation();
   }
 
   // Safe handlers for timeline actions
@@ -518,7 +540,14 @@ function handleEraFilter(e: Event) { // Changed event type to standard Event
   }
   
   // Define currentHeight as a reactive variable
-  $: currentHeight = asBanner ? (isMobile ? '600px' : bannerHeight) : "500px";
+  $: currentHeight = asBanner
+    ? (isMobile && isPortrait // Mobile Portrait
+        ? '40vh'
+        : (isMobile // Mobile Landscape (since !isPortrait here implies landscape if mobile)
+            ? '600px'
+            : bannerHeight) // Desktop
+      )
+    : "500px"; // Not asBanner
   $: useEraColors = $timelineStore.era === 'all-eras';
 
   // (like $: currentHeight = asBanner ? ... and $: useEraColors = ...)
@@ -531,8 +560,7 @@ $: if (timelineCore && $timelineStore.background) {
 
 <div class="timeline-wrapper relative w-full overflow-hidden {asBanner ? 'timeline-banner-mode' : ''}"
      style="height: {currentHeight}; overflow-x: hidden !important;"
-     {id}
-     on:timeline:resize={handleResize}>
+     {id}>
   
   <!-- Info Card -->
   {#if currentFact}
@@ -865,5 +893,16 @@ $: if (timelineCore && $timelineStore.background) {
     10% { opacity: 1; transform: translateX(-50%) translateY(0); }
     80% { opacity: 1; transform: translateX(-50%) translateY(0); }
     100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  }
+
+  @media (max-width: 767px) and (orientation: portrait) {
+    .timeline-wrapper.timeline-banner-mode {
+      height: 40vh !important; /* Adjust height for mobile portrait */
+      max-height: 350px; /* Cap the height */
+    }
+
+    .timeline-viewport {
+      touch-action: manipulation; /* Improve touch interaction on mobile portrait */
+    }
   }
 </style>
