@@ -5,7 +5,9 @@
     <!-- SVG content will be injected here if mascot is SVG type, replacing the img -->
   </div>
 
-  <div id="mascot-ephemeral-speech"></div>
+  <div id="mascot-speech-bubble">
+    <p id="mascot-speech-text"></p>
+  </div>
 
   <button id="dismiss-mascot-button" aria-label="Dismiss Mascot" title="Dismiss Mascot">
     🍴
@@ -36,12 +38,42 @@
     --dialogue-border-dark: rgba(65, 65, 65, 0.95);
   }
 
+  :root {
+    --speech-bubble-bg-light: rgba(230, 242, 255, 0.85); /* Light, slightly transparent */
+    --speech-bubble-border-light: rgba(0, 91, 179, 0.7); /* Darker blue, slightly transparent */
+    --speech-bubble-text-light: #003366; /* Dark blue text */
+
+    --speech-bubble-bg-dark: rgba(40, 40, 40, 0.85); /* Dark, slightly transparent */
+    --speech-bubble-border-dark: rgba(100, 100, 100, 0.7); /* Lighter gray, slightly transparent */
+    --speech-bubble-text-dark: #e0e0e0; /* Light gray text */
+
+    --speech-bubble-max-width: 50rem;
+    --speech-bubble-padding: 0.6rem 0.6rem;
+    --speech-bubble-radius: 0.75rem;
+    --speech-bubble-tail-size: 0.7rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --speech-bubble-bg: var(--speech-bubble-bg-dark);
+      --speech-bubble-border: var(--speech-bubble-border-dark);
+      --speech-bubble-text: var(--speech-bubble-text-dark);
+    }
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --speech-bubble-bg: var(--speech-bubble-bg-light);
+      --speech-bubble-border: var(--speech-bubble-border-light);
+      --speech-bubble-text: var(--speech-bubble-text-light);
+    }
+  }
+
   #mascot-container {
     position: fixed;
     bottom: 1rem;
     right: 1rem;
-    width: 14rem;
-    height: 18rem; /* New height */
+    width: 12rem;
+    height: 10rem; /* New height */
     background-color: transparent;
     z-index: 1000;
     display: flex;
@@ -76,54 +108,95 @@
     object-fit: contain;
   }
   
-  /* Ephemeral Speech Styling */
-  #mascot-ephemeral-speech {
+  /* New Speech Bubble Styling */
+  #mascot-speech-bubble {
     position: absolute;
-    bottom: 79%; /* Adjust as needed based on visual area height */
-    left: 50%;
-    transform: translateX(-50%);
+    /* Positioning: to the left of the mascot. Needs careful adjustment.
+       Assuming mascot visual area is roughly centered in mascot-container.
+       And mascot-container width is 14rem.
+       Mascot visual area width is 85% of 14rem = 11.9rem.
+       Let's try to place it to the left of this visual area.
+    */
+    right: calc(100% - 3rem); /* (Container width - visual area width)/2 + visual_area_width + some_offset */
+                              /* (14rem - 11.9rem)/2 + 11.9rem = 1.05rem + 11.9rem = 12.95rem from left edge of container */
+                              /* So, from right edge of container, it's 14rem - 12.95rem = 1.05rem to the *right* of visual area */
+                              /* Let's try right: calc(100% - 2rem); to place it left of the mascot image */
+    bottom: 60%; /* Vertically align with mid-upper part of mascot */
     width: auto;
-    max-width: 85%; /* Or a suitable rem value */
-    padding: 0.2rem 0.4rem;
+    height: auto;
+    max-width: var(--speech-bubble-max-width);
+    min-width: 12rem;
+    padding: var(--speech-bubble-padding);
+    background-color: var(--speech-bubble-bg);
+    border: 2px solid var(--speech-bubble-border);
+    border-radius: var(--speech-bubble-radius);
     font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
-    font-size: clamp(0.8rem, 2.2vw, 0.95rem); /* Responsive font size */
-    color: var(--primary-hover); /* Default light mode text color */
-    text-align: center;
+    font-size: clamp(0.8rem, 2.2vw, 0.95rem); /* Start with existing responsive font size */
+    color: var(--speech-bubble-text);
+    text-align: left;
     z-index: 1001;
-    opacity: 0;
-    pointer-events: none;
+    opacity: 0; /* Start hidden */
+    pointer-events: none; /* Not interactive until visible */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
     overflow-wrap: break-word;
+    /* transform: translateY(10px); Initial transform for animation */
   }
 
-  @media (prefers-color-scheme: dark) {
-    #mascot-ephemeral-speech {
-      color: var(--dialogue-text-dark);
-    }
+  #mascot-speech-bubble::after, #mascot-speech-bubble::before {
+    content: '';
+    position: absolute;
+    bottom: 1rem; /* Adjust to align with bubble's bottom edge */
+    width: 0;
+    height: 0;
+    border-style: solid;
   }
 
-  #mascot-ephemeral-speech.appearing {
+  /* Tail pointing right */
+  #mascot-speech-bubble::after { /* Border part of the tail */
+    left: 100%; /* Position tail to the right of the bubble */
+    border-width: var(--speech-bubble-tail-size) 0 var(--speech-bubble-tail-size) var(--speech-bubble-tail-size);
+    border-color: transparent transparent transparent var(--speech-bubble-border);
+  }
+
+  #mascot-speech-bubble::before { /* Background part of the tail */
+    left: calc(100% - 2px); /* Position slightly inside the border tail */
+    /* border-width needs to be slightly smaller than ::after to fit inside */
+    border-width: calc(var(--speech-bubble-tail-size) - 2px) 0 calc(var(--speech-bubble-tail-size) - 2px) calc(var(--speech-bubble-tail-size) - 2px);
+    border-color: transparent transparent transparent var(--speech-bubble-bg);
+    /* Adjust bottom to align with the border tail's inner edge */
+    bottom: calc(1rem + 2px);
+  }
+
+
+  #mascot-speech-text {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Animations for the new speech bubble */
+  #mascot-speech-bubble.appearing {
     animation: speech-appear 0.8s ease-out forwards;
   }
 
-  #mascot-ephemeral-speech.fading {
+  #mascot-speech-bubble.fading {
     animation: speech-fade 1.2s ease-in forwards;
   }
 
-  #mascot-ephemeral-speech.quick-fading {
+  #mascot-speech-bubble.quick-fading { /* If needed */
     animation: speech-quick-fade 0.2s ease-in forwards;
   }
 
   @keyframes speech-appear {
-    from { opacity: 0; transform: translate(-50%, 10px); } /* Start slightly lower */
-    to { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+    from { opacity: 0; transform: translateY(10px); } /* Start slightly lower */
+    to { opacity: 1; transform: translateY(0); pointer-events: auto; }
   }
 
   @keyframes speech-fade {
-    from { opacity: 1; transform: translate(-50%, 0); }
-    to { opacity: 0; transform: translate(-50%, -10px); pointer-events: none; } /* Fade upwards */
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-10px); pointer-events: none; } /* Fade upwards */
   }
 
-  @keyframes speech-quick-fade {
+  @keyframes speech-quick-fade { /* If needed */
     from { opacity: 1; }
     to { opacity: 0; pointer-events: none; }
   }
@@ -269,9 +342,10 @@
       font-size: 0.8rem;
       max-height: 8rem;
     } */
-    #mascot-ephemeral-speech {
+    #mascot-speech-bubble {
       font-size: clamp(0.75rem, 2vw, 0.9rem);
-      max-width: 90%;
+      max-width: calc(var(--speech-bubble-max-width) * 0.9); /* Adjust max-width */
+      /* Potential adjustments for tail or position if needed */
     }
 
     #mascot-chat-ui {
@@ -317,17 +391,23 @@
       font-size: 0.7rem;
       max-height: 7rem;
     } */
-    #mascot-ephemeral-speech {
+    #mascot-speech-bubble {
       font-size: clamp(0.7rem, 1.8vw, 0.85rem);
-      max-width: 90%;
+      max-width: calc(var(--speech-bubble-max-width) * 0.8); /* Adjust max-width */
+       /* Potential adjustments for tail or position if needed */
     }
 
     #mascot-chat-ui {
-      /* Adjustments for mobile if needed */
+      flex-direction: column;
+      align-items: stretch; /* Makes input and button full width of this container */
+      gap: 0.5rem; /* Space between stacked input and button */
     }
     #mascot-chat-input, #mascot-chat-send {
       font-size: 0.65rem;
       padding: 0.25rem 0.4rem;
+      width: 100%; /* Make them full width in the stacked layout */
+      margin-left: 0; /* Reset any specific side margins */
+      margin-right: 0;
     }
 
     /* #mascot-dialogue::after and its dark mode override removed */
@@ -368,7 +448,9 @@
   const mascotContainer = document.getElementById('mascot-container');
   const mascotVisualArea = document.getElementById('mascot-visual-area');
   // const mascotDialogue = document.getElementById('mascot-dialogue'); // Old dialogue
-  const mascotEphemeralSpeech = document.getElementById('mascot-ephemeral-speech');
+  // const mascotEphemeralSpeech = document.getElementById('mascot-ephemeral-speech'); // Old ephemeral
+  const mascotSpeechBubble = document.getElementById('mascot-speech-bubble');
+  const mascotSpeechText = document.getElementById('mascot-speech-text');
   const dismissButton = document.getElementById('dismiss-mascot-button');
   const bringBackButton = document.getElementById('bring-back-mascot-button');
   const mascotChatInput = document.getElementById('mascot-chat-input') as HTMLInputElement;
@@ -468,11 +550,11 @@
       sessionStorage.setItem('bleepyDismissed', 'true');
       bringBackButton.style.display = 'flex'; // Show spoon
       // displayNewDialogue(true); // Old dialogue system
-      if (mascotEphemeralSpeech && mascotEphemeralSpeech.textContent) {
+      if (mascotSpeechBubble && mascotSpeechText && mascotSpeechText.textContent) {
         // If speech is visible, let it fade or quick-fade naturally
         // Or, force a quick fade if desired:
-        // mascotEphemeralSpeech.className = 'quick-fading';
-        // setTimeout(() => { if(mascotEphemeralSpeech) mascotEphemeralSpeech.textContent = ''; }, 200);
+        // mascotSpeechBubble.className = 'quick-fading'; // Ensure this class is defined if used
+        // setTimeout(() => { if(mascotSpeechText) mascotSpeechText.textContent = ''; }, 200);
       }
 
 
@@ -527,15 +609,31 @@
   
   // --- Ephemeral Speech Logic ---
   let speechLingerTimeout: NodeJS.Timeout | undefined;
-  let speechFadeCleanupListener: (() => void) | undefined;
+  let speechFadeCleanupListener: ((event: AnimationEvent) => void) | undefined;
   let speechQuickFadeTimeout: NodeJS.Timeout | undefined;
 
   function displayEphemeralSpeech(text: string) {
-    console.log("displayEphemeralSpeech called with text:", text); // Task-specific log
-    if (!mascotEphemeralSpeech) return;
+    if (!mascotSpeechBubble || !mascotSpeechText) return;
 
+    // 1. Clear any ongoing speech processes
+    clearTimeout(speechLingerTimeout);
+    speechLingerTimeout = undefined;
+
+    if (speechFadeCleanupListener) {
+      mascotSpeechBubble.removeEventListener('animationend', speechFadeCleanupListener);
+      speechFadeCleanupListener = undefined;
+    }
+    // Note: typingTimeoutId and its clearing are removed as the typewriter effect is removed.
+
+    // Reset bubble visual state and text content
+    mascotSpeechBubble.className = ''; // Clear .appearing, .fading, .quick-fading
+    mascotSpeechBubble.style.opacity = '0'; // Start fully transparent
+    mascotSpeechBubble.style.transform = 'translateY(0)'; // Reset any transform
+    mascotSpeechBubble.style.pointerEvents = 'none'; // Not interactive initially
+    mascotSpeechText.textContent = '';   // Clear old text
+
+    // --- Existing mascot jiggle/mouth animation logic (KEEP AS IS) ---
     const mascotImageDisplay = document.getElementById('mascot-image-display') as HTMLImageElement | null;
-
     if (activeMascot && mascotImageDisplay) {
       if (activeMascot.type === "image-set") {
         if (activeMascot.images.openmouth) {
@@ -547,67 +645,65 @@
             }
           }, 700);
         }
-        // Apply jiggle to the image display
         mascotImageDisplay.classList.remove('jiggle');
-        void mascotImageDisplay.offsetWidth; // Trigger reflow
+        void mascotImageDisplay.offsetWidth;
         mascotImageDisplay.classList.add('jiggle');
         setTimeout(() => { if (mascotImageDisplay) mascotImageDisplay.classList.remove('jiggle'); }, 500);
-
       } else { // SVG mascot
         const svgElement = mascotVisualArea?.querySelector('svg');
         if (svgElement) {
           svgElement.classList.remove('jiggle');
-          void (svgElement as unknown as HTMLElement).offsetWidth; // Cast to unknown then HTMLElement
+          void (svgElement as unknown as HTMLElement).offsetWidth;
           svgElement.classList.add('jiggle');
           setTimeout(() => { svgElement.classList.remove('jiggle'); }, 500);
         }
       }
     }
+    // --- End of jiggle/mouth animation logic ---
 
-    // Clear existing timers and listeners
-    clearTimeout(speechLingerTimeout);
-    clearTimeout(speechQuickFadeTimeout);
-    if (speechFadeCleanupListener && mascotEphemeralSpeech) {
-      mascotEphemeralSpeech.removeEventListener('animationend', speechFadeCleanupListener);
-      speechFadeCleanupListener = undefined;
-    }
+    // 2. Set the full text content immediately
+    mascotSpeechText.textContent = text;
 
-    function proceedWithNewSpeech() {
-      if (!mascotEphemeralSpeech) return;
-      // Defensive cleanup
-      mascotEphemeralSpeech.className = '';
-      mascotEphemeralSpeech.textContent = '';
+    // 3. Make #mascot-speech-bubble visible by adding .appearing class
+    // Force reflow to ensure animation plays if class is rapidly toggled
+    void mascotSpeechBubble.offsetWidth;
+    mascotSpeechBubble.classList.add('appearing');
 
-      // Set New Text
-      mascotEphemeralSpeech.innerHTML = text; // Use innerHTML if text can contain simple HTML like <strong>
+    // 4. After the speech-appear animation completes, start the lingerDuration timeout
+    const onAppearAnimationEnd = (event: AnimationEvent) => {
+      // Ensure this listener only reacts to the 'speech-appear' animation
+      if (event.animationName !== 'speech-appear') {
+        return;
+      }
+      // The { once: true } option for addEventListener handles self-removal.
 
-      // Appear Animation
-      mascotEphemeralSpeech.className = 'appearing'; // Remove any old, then add new
-
-      // Linger Logic (Reverted)
       const words = text.split(/\s+/).length;
-      let lingerDuration = (words / 2.5) * 1000 + 1500; // Previous formula
-      lingerDuration = Math.max(2500, Math.min(lingerDuration, 10000)); // Min 2.5s, Max 10s
+      let currentLingerDuration = (words / 2.5) * 1000 + 1500;
+      currentLingerDuration = Math.max(2500, Math.min(currentLingerDuration, 10000));
 
       speechLingerTimeout = setTimeout(() => {
-        if (!mascotEphemeralSpeech) return;
+        if (!mascotSpeechBubble || !mascotSpeechText) return;
 
-        // Fade Away
-        mascotEphemeralSpeech.classList.remove('appearing');
-        mascotEphemeralSpeech.classList.add('fading');
+        mascotSpeechBubble.classList.remove('appearing'); // Clean up class
+        mascotSpeechBubble.classList.add('fading');
 
-        // Cleanup after Fade
-        speechFadeCleanupListener = () => {
-          if (!mascotEphemeralSpeech) return;
-          mascotEphemeralSpeech.classList.remove('fading');
-          mascotEphemeralSpeech.textContent = ''; // Clear text
-          speechFadeCleanupListener = undefined; // Clear self
+        speechFadeCleanupListener = (fadeEvent: AnimationEvent) => {
+          if (fadeEvent.animationName !== 'speech-fade') {
+            return;
+          }
+          // Check again inside async callback as elements might have been removed
+          if (!mascotSpeechBubble || !mascotSpeechText) return;
+          mascotSpeechBubble.classList.remove('fading');
+          mascotSpeechText.textContent = '';
+          mascotSpeechBubble.style.opacity = '0';
+          mascotSpeechBubble.style.pointerEvents = 'none';
+          speechFadeCleanupListener = undefined;
         };
-        mascotEphemeralSpeech.addEventListener('animationend', speechFadeCleanupListener, { once: true });
-      }, lingerDuration);
-    }
+        mascotSpeechBubble.addEventListener('animationend', speechFadeCleanupListener as EventListener, { once: true });
+      }, currentLingerDuration);
+    };
 
-    proceedWithNewSpeech(); // Start the process if no interruption
+    mascotSpeechBubble.addEventListener('animationend', onAppearAnimationEnd as EventListener, { once: true });
   }
 
 
@@ -627,7 +723,7 @@
 
   // --- Chat Logic ---
   async function handleSendMessage() {
-    if (!mascotChatInput || !mascotEphemeralSpeech) return; // Check mascotEphemeralSpeech
+    if (!mascotChatInput || !mascotSpeechBubble || !mascotSpeechText) return; // Check new speech elements
     const userMessage = mascotChatInput.value.trim();
     if (!userMessage) return;
 
@@ -964,9 +1060,21 @@ Generate a brief, spontaneous, in-character statement, observation, or dark joke
     if (!activeMascot || !mascotContainer?.classList.contains('visible')) return;
 
     if (activeMascot.type === "image-set") {
-      if (Math.random() < 0.6) { // Chance to play image expression
+      const mascotImageEl = document.getElementById('mascot-image-display') as HTMLImageElement | null;
+      if (!mascotImageEl) return;
+
+      const randomNumber = Math.random();
+
+      if (randomNumber < 0.4) { // 40% chance to wiggle
+        mascotImageEl.classList.add('wiggling');
+        mascotImageEl.addEventListener('animationend', () => {
+          mascotImageEl.classList.remove('wiggling');
+        }, { once: true });
+      } else if (randomNumber < 0.8) { // 40% chance for random expression
+        // The playRandomImageExpression function already checks if expressions exist
         playRandomImageExpression();
       }
+      // Else (20% chance): do nothing for this cycle
     } else { // SVG type
       if (activeMascot.uniqueAnimations && activeMascot.uniqueAnimations.length > 0) {
         if (Math.random() < 0.4) { // Chance to play SVG animation
