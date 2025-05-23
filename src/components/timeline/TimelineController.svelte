@@ -542,7 +542,7 @@ function handleEraFilter(e: Event) { // Changed event type to standard Event
   // Define currentHeight as a reactive variable
   $: currentHeight = asBanner
     ? (isMobile && isPortrait // Mobile Portrait
-        ? '40vh'
+        ? bannerHeight // Use bannerHeight for mobile portrait, allowing inheritance
         : (isMobile // Mobile Landscape (since !isPortrait here implies landscape if mobile)
             ? '600px'
             : bannerHeight) // Desktop
@@ -896,10 +896,11 @@ $: if (timelineCore && $timelineStore.background) {
   }
 
   @media (max-width: 767px) and (orientation: portrait) {
-    .timeline-wrapper.timeline-banner-mode {
-      height: 40vh !important; /* Adjust height for mobile portrait */
-      max-height: 350px; /* Cap the height */
-    }
+    /* Removed fixed height for timeline-banner-mode to allow more natural flow or inheritance */
+     .timeline-wrapper.timeline-banner-mode { 
+       height: 40vh !important; 
+       max-height: 500px; 
+    } 
 
     .timeline-viewport {
       touch-action: manipulation; /* Improve touch interaction on mobile portrait */
