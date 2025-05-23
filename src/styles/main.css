@@ -20,8 +20,7 @@
     }
     
     /* Keep existing card-base but add opacity and backdrop blur */
-    .card-base {
-        @apply rounded-[var(--radius-large)] overflow-hidden transition;
+c        @apply rounded-[var(--radius-large)] overflow-hidden transition;
         background-color: color-mix(in srgb, var(--card-bg), transparent calc((1 - var(--bg-opacity)) * 100%));
         backdrop-filter: blur(3px);
         box-sizing: border-box;

@@ -15,7 +15,8 @@ import { getDir } from '../utils/url-utils';
 import TimelineController from '../components/timeline/TimelineBanner.astro';
 import '../styles/timeline-styles.css';
 
-import Bleepy from '@components/bleepy/Bleepy.astro';
+import BleepyOverlay from '@components/bleepy/Bleepy.astro';
+import BleepyBanner from '@components/bleepy/BleepyBanner.astro';
 
 // Import banner configuration and helper functions
 import {
@@ -230,7 +231,7 @@ style={`margin-top: ${navbarSpacing};`}
         Its internal #mascot-container will need the .is-banner-feature class.
         We'll modify Bleepy.astro's script to add this class if its parent
         is 'assistant-banner-content'. */}
-    <Bleepy />
+    <BleepyBanner backgroundImageUrl={assistantBannerData?.imageUrl} />
   </div>
 )}
 
@@ -370,7 +371,7 @@ style={`margin-top: 1.5rem;`}>
   )}
   {/* Render Bleepy as a fixed overlay ONLY if not an assistant banner */}
   {!hasAssistantBanner && (
-    <Bleepy />
+    <BleepyOverlay />
   )}
 </Layout>
 
