@@ -53,6 +53,7 @@
   let showInfoCard: boolean = false;
   let infoCardTimerId: ReturnType<typeof setInterval> | null = null;
   let infoCardDismissedRecently: boolean = false;
+  let infoCardsDismissedForSession: boolean = false; // Added for session dismissal
   // Import facts from the new file
   import { megaMealUniverseFacts, type TimelineFact } from '../../config/timelineFacts';
   
@@ -256,6 +257,7 @@ onMount(() => {
     
     // Start InfoCard timer
     const showNextFactOrAd = () => {
+      if (infoCardsDismissedForSession) return; // If dismissed for session, do nothing
       if (megaMealUniverseFacts.length === 0) return;
       if (infoCardDismissedRecently && showInfoCard) return; // Don't immediately show if just dismissed
 
@@ -339,10 +341,23 @@ onMount(() => {
 
 function handleDismissInfoCard() {
   showInfoCard = false;
+  infoCardsDismissedForSession = true; // Set session dismissal flag
+
+  // Clear the main timer
+  if (infoCardTimerId) {
+    clearInterval(infoCardTimerId);
+    infoCardTimerId = null;
+  }
+
+  // The infoCardDismissedRecently logic might still be useful if we ever
+  // want a temporary dismissal before a session-wide one, but for now,
+  // session dismissal takes precedence. We can leave it or remove it.
+  // For this task, we'll keep it but it won't have much effect once
+  // infoCardsDismissedForSession is true.
   infoCardDismissedRecently = true;
   setTimeout(() => {
     infoCardDismissedRecently = false;
-  }, 30000); // Don't show another card for 30 seconds
+  }, 30000); // This timeout is now less relevant due to session dismissal
 }
   
 // Improved handleEraFilter function with background handling

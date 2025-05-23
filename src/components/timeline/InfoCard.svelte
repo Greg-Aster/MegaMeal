@@ -16,7 +16,7 @@
 
 {#if isVisible}
   <div
-    class="info-card-wrapper card-base absolute bottom-8 right-4 md:bottom-20 md:right-6 p-3 backdrop-blur-sm shadow-lg rounded-[var(--radius-large,12px)] max-w-xs w-11/12 md:w-auto z-[100] {fact.bgColorClass || 'bg-[var(--card-bg)]'} {fact.textColorClass || 'text-[var(--text-color)]'} {fact.fontFamilyClass || 'font-sriracha'}"
+    class="info-card-wrapper card-base absolute bottom-8 right-4 md:bottom-20 md:right-6 p-3 backdrop-blur-sm shadow-lg rounded-[var(--radius-large,12px)] w-full max-w-[280px] sm:w-11/12 sm:max-w-xs md:w-auto z-[100] {fact.bgColorClass || 'bg-[var(--card-bg)]'} {fact.textColorClass || 'text-[var(--text-color)]'} {fact.fontFamilyClass || 'font-sriracha'}"
     transition:fly={{ y: 20, duration: 300, easing: quintOut }}
   >
     <button
@@ -30,7 +30,7 @@
       </svg>
     </button>
     {#if fact.headline}
-      <h3 class="{fact.headlineSizeClass || 'text-md'} font-bold mb-1 pr-4 {fact.headlineColorClass || 'text-[var(--primary)]'}">{fact.headline}</h3>
+      <h3 class="{fact.headlineSizeClass || 'text-sm sm:text-md'} font-bold mb-1 pr-4 {fact.headlineColorClass || 'text-[var(--primary)]'}">{fact.headline}</h3>
     {/if}
     <p class="text-xs pr-4 mb- leading-snug">{fact.text}</p>
     
