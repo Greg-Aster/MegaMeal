@@ -115,8 +115,8 @@ const jsonLd = {
             </div>
 
             <!-- Only show cover if it exists and showImageOnPost isn't false -->
-            {post.data.image && post.data.showImageOnPost !== false &&
-             <ImageWrapper id="post-cover" src={post.data.image} basePath={path.join("content/posts/", getDir(post.id))} class="mb-8 rounded-xl banner-container onload-animation"/>
+            {post.data.image && post.data.showImageOnPost !== false && post.data.bannerType !== 'assistant' &&
+              <ImageWrapper id="post-cover" src={post.data.image} basePath={path.join("content/posts/", getDir(post.id))} class="mb-8 rounded-xl banner-container onload-animation"/>
             }
 
 

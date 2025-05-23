@@ -13,7 +13,7 @@ import banner7 from 'src/assets/banner/0007.png'
 import banner8 from 'src/assets/banner/0008.png'
 
 // Banner type definitions
-export type BannerType = 'standard' | 'video' | 'image' | 'timeline';
+export type BannerType = 'standard' | 'video' | 'image' | 'timeline' | 'assistant';
 
 // Banner data type for each banner type
 export interface StandardBannerData {
@@ -38,13 +38,15 @@ export interface TimelineBannerData {
   height?: string;
 }
 
+export interface AssistantBannerData {}
+
 // Define the banner configuration type
 export interface BannerConfig {
   // Default banner type for main pages
   defaultBannerType: BannerType;
   
   // Default banner data (differs based on banner type)
-  defaultBannerData: StandardBannerData | VideoBannerData | ImageBannerData | TimelineBannerData;
+  defaultBannerData: StandardBannerData | VideoBannerData | ImageBannerData | TimelineBannerData | AssistantBannerData;
   
   // List of banner images for animation (used for standard banner type)
   bannerList: ImageMetadata[]
@@ -95,6 +97,7 @@ export interface BannerConfig {
     timeline: string         // For timeline banner
     video: string            // For video banner
     image: string            // For image banner
+    assistant: string        // For assistant banner
   }
 
   // Navbar height settings (previously hardcoded in MainGridLayout.astro)
@@ -112,6 +115,7 @@ export interface BannerConfig {
       image: string          // CSS value for image banner type
       timeline: string       // CSS value for timeline banner type
       standard: string       // CSS value for standard banner type
+      assistant: string      // CSS value for assistant banner type
     }
   }
 
@@ -199,7 +203,8 @@ export const bannerConfig: BannerConfig = {
     standard: "0",
     timeline: "5.5rem",       // Adjust to exact navbar height
     video: "5.5rem",
-    image: "0"                // Set to 0 for navbar overlap
+    image: "0",               // Set to 0 for navbar overlap
+    assistant: "5.5rem",
   },
 
   // Navbar height settings (moved from MainGridLayout.astro)
@@ -216,7 +221,8 @@ export const bannerConfig: BannerConfig = {
       video: "0",             // For video banner: no overlap needed
       image: "calc(var(--navbar-height) + 1rem)", // For image banner: navbar + spacing
       timeline: "0",          // For timeline banner
-      standard: "calc(var(--banner-height) - var(--banner-overlap))" // For standard banner
+      standard: "calc(var(--banner-height) - var(--banner-overlap))", // For standard banner
+      assistant: "0",
     }
   },
 
@@ -282,6 +288,7 @@ export function getPanelTopPosition(bannerType: BannerType): string {
     case 'video': return bannerConfig.panel.top.video;
     case 'image': return bannerConfig.panel.top.image;
     case 'timeline': return bannerConfig.panel.top.timeline;
+    case 'assistant': return bannerConfig.panel.top.assistant;
     default: return bannerConfig.panel.top.standard;
   }
 }
@@ -308,4 +315,10 @@ export function isImageBannerData(data: any): data is ImageBannerData {
 
 export function isTimelineBannerData(data: any): data is TimelineBannerData {
   return data && 'category' in data && typeof data.category === 'string';
+}
+
+export function isAssistantBannerData(data: any): data is AssistantBannerData {
+  // For now, as AssistantBannerData is empty, this can be a simple check.
+  // If AssistantBannerData gets specific properties, update this check.
+  return data && typeof data === 'object' && !('videoId' in data) && !('imageUrl' in data) && !('category' in data);
 }

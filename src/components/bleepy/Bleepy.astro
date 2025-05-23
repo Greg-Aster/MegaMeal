@@ -5,6 +5,11 @@
     <!-- SVG content will be injected here if mascot is SVG type, replacing the img -->
   </div>
 
+  <!-- NEW: Chat History Window -->
+  <div id="chat-history-window">
+    {/* Messages will be dynamically inserted here by JavaScript */}
+  </div>
+
   <div id="mascot-speech-bubble">
     <p id="mascot-speech-text"></p>
   </div>
@@ -323,6 +328,116 @@
   /* Add more specific styles for Pretzel Pete, Sushi Sam if needed */
 
 
+  /* --- Banner Feature Styles --- */
+  #mascot-container.is-banner-feature {
+    position: relative;
+    width: 100%;
+    height: 70vh;
+    bottom: auto;
+    right: auto;
+    z-index: auto;
+    opacity: 1;
+    transform: none;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1rem;
+    box-sizing: border-box;
+    /* Added styles from chat-history-window */
+    background-color: var(--speech-bubble-bg, rgba(224, 242, 254, 0.9));
+    border: 2px solid var(--speech-bubble-border, #0ea5e9);
+    border-radius: var(--speech-bubble-radius, 0.75rem);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+
+  #mascot-container.is-banner-feature #mascot-visual-area {
+    flex: 0 0 30%;
+    /* max-width: 200px; */
+    height: 100%;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1; /* Ensure mascot visual is above the container's background */
+  }
+
+  #mascot-container.is-banner-feature #mascot-speech-bubble {
+    position: absolute; /* Keep absolute to position relative to mascot-container */
+    /* Adjust positioning: e.g., below or to the side of the larger visual area */
+    bottom: 5%; /* Example: position below visual area */
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto; /* Override fixed positioning */
+    min-width: 40%; /* Example: larger min-width */
+    max-width: 80%; /* Example: larger max-width */
+    font-size: clamp(1rem, 2.5vw, 1.2rem); /* Example: larger font size */
+    /* Ensure tail still makes sense or adjust/hide it */
+  }
+  
+  /* Tail adjustment for banner mode - pointing upwards */
+  #mascot-container.is-banner-feature #mascot-speech-bubble::after {
+    left: 50%;
+    bottom: 100%; /* Tail points up */
+    transform: translateX(-50%);
+    border-width: 0 var(--speech-bubble-tail-size) var(--speech-bubble-tail-size) var(--speech-bubble-tail-size);
+    border-color: transparent transparent var(--speech-bubble-border) transparent;
+  }
+
+  #mascot-container.is-banner-feature #mascot-speech-bubble::before {
+    left: 50%;
+    bottom: calc(100% - 2px); /* Tail points up, inside border */
+    transform: translateX(-50%);
+    border-width: 0 calc(var(--speech-bubble-tail-size) - 2px) calc(var(--speech-bubble-tail-size) - 2px) calc(var(--speech-bubble-tail-size) - 2px);
+    border-color: transparent transparent var(--speech-bubble-bg) transparent;
+  }
+
+
+  #mascot-container.is-banner-feature #mascot-chat-ui {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    margin: 0; /* Override previous margin */
+    padding: 0.75rem;
+    background-color: var(--dialogue-bg-light); /* Or a slightly different shade */
+    border-top: 1px solid var(--speech-bubble-border);
+    box-sizing: border-box;
+    z-index: 1003; /* Above messages if they scroll under */
+    display: flex; /* Ensure it remains flex for input and button */
+    gap: 0.5rem; /* Keep gap between input and button */
+  }
+
+  @media (prefers-color-scheme: dark) {
+    #mascot-container.is-banner-feature #mascot-chat-ui {
+      background-color: var(--dialogue-bg-dark);
+      border-top: 1px solid var(--dialogue-border-dark);
+    }
+  }
+
+  #mascot-container.is-banner-feature #mascot-chat-input,
+  #mascot-container.is-banner-feature #mascot-chat-send {
+    font-size: 0.9rem; /* Example: slightly larger font */
+    padding: 0.4rem 0.7rem; /* Example: adjust padding */
+  }
+
+  #mascot-container.is-banner-feature #dismiss-mascot-button,
+  #mascot-container.is-banner-feature ~ #bring-back-mascot-button, /* If it's a sibling of mascot-container */
+  #mascot-container.is-banner-feature #mobile-mascot-function-card {
+    display: none !important;
+  }
+  
+  /* If #bring-back-mascot-button is NOT a sibling but a general element, target it directly if needed */
+  /* This might be redundant if the above general rule for #bring-back-mascot-button is effective */
+  /* body > #bring-back-mascot-button { */
+    /* This rule might be too broad if .is-banner-feature is not on #mascot-container */
+    /* Consider if #mascot-container.is-banner-feature implies hiding the global button */
+  /* } */
+
+
 /* --- Responsive Adjustments --- */
 
   /* Tablet Breakpoint */
@@ -434,6 +549,91 @@
       display: none !important; /* Ensured !important is present on all */
     }
   }
+  /* --- Chat History Window Styles --- */
+  #chat-history-window {
+    display: none; /* Hidden by default */
+  }
+
+  #mascot-container.is-banner-feature #chat-history-window {
+    flex: 1 1 auto; /* Takes remaining space */
+    height: 100%;
+    position: relative; /* For positioning chat input UI */
+    display: flex;
+    flex-direction: column;
+    /* Removed background, border, shadow as they are on the parent container */
+    padding: 10px 10px 70px 10px; /* Bottom padding for chat input */
+    overflow-y: auto; /* For messages */
+    z-index: 1002; /* Kept high for message content */
+    color: var(--speech-bubble-text, #1e293b); /* Text color for messages */
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+  }
+
+  #mascot-container.is-banner-feature #mascot-speech-bubble {
+    display: none !important;
+  }
+  /* --- End Chat History Window Styles --- */
+
+  /* --- Chat Message Styles --- */
+  #mascot-container.is-banner-feature #chat-history-window .chat-message {
+    margin-bottom: 8px;
+    padding: 8px 12px; /* Increased padding slightly */
+    border-radius: 12px; /* Slightly more rounded */
+    line-height: 1.4;
+    max-width: 90%;
+    word-wrap: break-word;
+    clear: both; /* Ensure messages don't overlap if floats were used, good practice */
+    overflow: hidden; /* Contains floats if children use them */
+  }
+
+  #mascot-container.is-banner-feature #chat-history-window .user-message {
+    background-color: var(--primary, #007bff); /* Use primary color from variables */
+    color: white; /* Text color for user messages */
+    margin-left: auto;
+    text-align: right;
+    float: right; /* Float to right */
+  }
+  #mascot-container.is-banner-feature #chat-history-window .user-message strong {
+    /* Sender name already distinct by position, color can be subtle or removed */
+    /* color: #e6f2ff; */ /* Lighter shade for "You:" */
+    display: block; /* Make strong take full width before text for alignment */
+    margin-bottom: 2px;
+  }
+
+  #mascot-container.is-banner-feature #chat-history-window .bleepy-message {
+    background-color: var(--dialogue-bg-light, #e6f2ff); /* Use existing variable */
+    /* color is inherited from #chat-history-window or can be set explicitly */
+    margin-right: auto;
+    text-align: left;
+    float: left; /* Float to left */
+  }
+   #mascot-container.is-banner-feature #chat-history-window .bleepy-message strong {
+    /* color: var(--primary-hover, #0056b3); */ /* Use existing variable for Bleepy's name */
+    display: block; /* Make strong take full width before text for alignment */
+    margin-bottom: 2px;
+  }
+
+  /* Clearfix for the container if messages are floated */
+  #mascot-container.is-banner-feature #chat-history-window::after {
+    content: "";
+    clear: both;
+    display: table;
+  }
+
+  /* Dark mode considerations for chat messages if not covered by variables */
+  @media (prefers-color-scheme: dark) {
+    #mascot-container.is-banner-feature #chat-history-window .user-message {
+      background-color: var(--primary-hover, #0056b3); /* Darker primary for user bg */
+      /* color: white; remains good */
+    }
+    #mascot-container.is-banner-feature #chat-history-window .bleepy-message {
+      background-color: var(--dialogue-bg-dark, rgba(50, 50, 50, 0.9)); /* Use existing dark variable */
+      /* color: var(--dialogue-text-dark, #f0f0f0); inherited or set if needed */
+    }
+  }
+  /* --- End Chat Message Styles --- */
+
 </style>
 
 
@@ -450,6 +650,7 @@
     type PretzelPeteSurrealAnimation,
     type SushiSamSurrealAnimation
   } from './mascotData.ts';
+
 
 
   // --- DOM Elements ---
@@ -470,6 +671,7 @@
   const mascotChatSendMobile = document.getElementById('mascot-chat-send-mobile');
   const dismissMascotButtonMobile = document.getElementById('dismiss-mascot-button-mobile');
   const bringBackMascotButtonMobile = document.getElementById('bring-back-mascot-button-mobile');
+  const chatHistoryWindow = document.getElementById('chat-history-window');
 
 
   // --- State Variables ---
@@ -483,6 +685,12 @@
   let proactiveDialogueTimer: NodeJS.Timeout | undefined;
   let mouthOpenTimeout: NodeJS.Timeout | undefined;
   let randomExpressionTimeout: NodeJS.Timeout | undefined;
+  
+  interface ConversationEntry {
+    sender: 'user' | 'bleepy';
+    text: string;
+  }
+  let conversationHistory: ConversationEntry[] = [];
 
 
   // --- Core Functions ---
@@ -490,6 +698,7 @@
     if (!mascotVisualArea || index < 0 || index >= mascots.length) return;
     activeMascot = mascots[index];
     currentMascotIndex = index;
+    conversationHistory = []; // Reset conversation history for new mascot
 
     const mascotImageDisplay = document.getElementById('mascot-image-display') as HTMLImageElement | null;
     mascotVisualArea.innerHTML = ''; // Clear previous content (SVG or old image if structure changes)
@@ -546,6 +755,7 @@
     bringBackButton.style.display = 'none'; // Hide original bring back button
     sessionStorage.removeItem('bleepyDismissed');
     sessionStorage.removeItem('lastSelectedMascot'); // Clear any old session storage for this
+    conversationHistory = []; // Reset conversation history when mascot is shown
 
     // Randomly select a mascot
     const randomIndex = Math.floor(Math.random() * mascots.length);
@@ -640,32 +850,42 @@
     // if (mascotDialogue) mascotDialogue.innerHTML = '';
   }
   
+  // --- Chat History Logic ---
+  function addMessageToHistory(text: string, sender: 'user' | 'bleepy') {
+    if (!chatHistoryWindow) return; // Should only be called if chatHistoryWindow exists (i.e., in banner mode)
+
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('chat-message');
+    messageElement.classList.add(sender === 'user' ? 'user-message' : 'bleepy-message');
+    
+    const senderName = sender === 'user' ? 'You' : (activeMascot?.name || 'Bleepy');
+    const senderPrefix = document.createElement('strong');
+    senderPrefix.textContent = `${senderName}: `;
+    
+    const textNode = document.createTextNode(text); // Use createTextNode for plain text
+
+    messageElement.appendChild(senderPrefix);
+    messageElement.appendChild(textNode);
+    
+    chatHistoryWindow.appendChild(messageElement);
+    
+    // Add to internal conversation history
+    conversationHistory.push({ sender, text });
+
+    // Auto-scroll to the bottom
+    chatHistoryWindow.scrollTop = chatHistoryWindow.scrollHeight;
+  }
+
   // --- Ephemeral Speech Logic ---
   let speechLingerTimeout: NodeJS.Timeout | undefined;
   let speechFadeCleanupListener: ((event: AnimationEvent) => void) | undefined;
   let speechQuickFadeTimeout: NodeJS.Timeout | undefined;
 
   function displayEphemeralSpeech(text: string) {
-    if (!mascotSpeechBubble || !mascotSpeechText) return;
+    const mascotContainer = document.getElementById('mascot-container');
+    const isBannerMode = mascotContainer && mascotContainer.classList.contains('is-banner-feature');
 
-    // 1. Clear any ongoing speech processes
-    clearTimeout(speechLingerTimeout);
-    speechLingerTimeout = undefined;
-
-    if (speechFadeCleanupListener) {
-      mascotSpeechBubble.removeEventListener('animationend', speechFadeCleanupListener);
-      speechFadeCleanupListener = undefined;
-    }
-    // Note: typingTimeoutId and its clearing are removed as the typewriter effect is removed.
-
-    // Reset bubble visual state and text content
-    mascotSpeechBubble.className = ''; // Clear .appearing, .fading, .quick-fading
-    mascotSpeechBubble.style.opacity = '0'; // Start fully transparent
-    mascotSpeechBubble.style.transform = 'translateY(0)'; // Reset any transform
-    mascotSpeechBubble.style.pointerEvents = 'none'; // Not interactive initially
-    mascotSpeechText.textContent = '';   // Clear old text
-
-    // --- Existing mascot jiggle/mouth animation logic (KEEP AS IS) ---
+    // --- Mascot jiggle/mouth animation logic (can run for both modes if Bleepy is speaking) ---
     const mascotImageDisplay = document.getElementById('mascot-image-display') as HTMLImageElement | null;
     if (activeMascot && mascotImageDisplay) {
       if (activeMascot.type === "image-set") {
@@ -678,10 +898,13 @@
             }
           }, 700);
         }
-        mascotImageDisplay.classList.remove('jiggle');
-        void mascotImageDisplay.offsetWidth;
-        mascotImageDisplay.classList.add('jiggle');
-        setTimeout(() => { if (mascotImageDisplay) mascotImageDisplay.classList.remove('jiggle'); }, 500);
+        // Jiggle for image-set mascot (only if not already handled by a specific expression animation)
+        if (!mascotImageDisplay.classList.contains('wiggling')) { // Avoid double jiggle
+           mascotImageDisplay.classList.remove('jiggle'); // Ensure clean state
+           void mascotImageDisplay.offsetWidth;
+           mascotImageDisplay.classList.add('jiggle');
+           setTimeout(() => { if (mascotImageDisplay) mascotImageDisplay.classList.remove('jiggle'); }, 500);
+        }
       } else { // SVG mascot
         const svgElement = mascotVisualArea?.querySelector('svg');
         if (svgElement) {
@@ -694,37 +917,44 @@
     }
     // --- End of jiggle/mouth animation logic ---
 
-    // 2. Set the full text content immediately
-    mascotSpeechText.textContent = text;
+    if (isBannerMode) {
+      // If in banner mode, add Bleepy's reply to the history window.
+      // The single speech bubble is hidden by CSS in banner mode.
+      // The addMessageToHistory function will also add it to the conversationHistory array.
+      addMessageToHistory(text, 'bleepy');
+      return; // Done for banner mode, no ephemeral speech bubble logic needed.
+    }
 
-    // 3. Make #mascot-speech-bubble visible by adding .appearing class
-    // Force reflow to ensure animation plays if class is rapidly toggled
+    // --- Existing logic for overlay mode (single speech bubble) ---
+    if (!mascotSpeechBubble || !mascotSpeechText) return; // Check for overlay elements
+
+    clearTimeout(speechLingerTimeout);
+    speechLingerTimeout = undefined;
+    if (speechFadeCleanupListener) {
+      mascotSpeechBubble.removeEventListener('animationend', speechFadeCleanupListener);
+      speechFadeCleanupListener = undefined;
+    }
+    mascotSpeechBubble.className = '';
+    mascotSpeechBubble.style.opacity = '0';
+    mascotSpeechBubble.style.transform = 'translateY(0)';
+    mascotSpeechBubble.style.pointerEvents = 'none';
+    mascotSpeechText.textContent = '';
+
+    mascotSpeechText.textContent = text;
     void mascotSpeechBubble.offsetWidth;
     mascotSpeechBubble.classList.add('appearing');
 
-    // 4. After the speech-appear animation completes, start the lingerDuration timeout
     const onAppearAnimationEnd = (event: AnimationEvent) => {
-      // Ensure this listener only reacts to the 'speech-appear' animation
-      if (event.animationName !== 'speech-appear') {
-        return;
-      }
-      // The { once: true } option for addEventListener handles self-removal.
-
+      if (event.animationName !== 'speech-appear') return;
       const words = text.split(/\s+/).length;
       let currentLingerDuration = (words / 2.5) * 1000 + 1500;
       currentLingerDuration = Math.max(2500, Math.min(currentLingerDuration, 10000));
-
       speechLingerTimeout = setTimeout(() => {
         if (!mascotSpeechBubble || !mascotSpeechText) return;
-
-        mascotSpeechBubble.classList.remove('appearing'); // Clean up class
+        mascotSpeechBubble.classList.remove('appearing');
         mascotSpeechBubble.classList.add('fading');
-
         speechFadeCleanupListener = (fadeEvent: AnimationEvent) => {
-          if (fadeEvent.animationName !== 'speech-fade') {
-            return;
-          }
-          // Check again inside async callback as elements might have been removed
+          if (fadeEvent.animationName !== 'speech-fade') return;
           if (!mascotSpeechBubble || !mascotSpeechText) return;
           mascotSpeechBubble.classList.remove('fading');
           mascotSpeechText.textContent = '';
@@ -735,8 +965,8 @@
         mascotSpeechBubble.addEventListener('animationend', speechFadeCleanupListener as EventListener, { once: true });
       }, currentLingerDuration);
     };
-
     mascotSpeechBubble.addEventListener('animationend', onAppearAnimationEnd as EventListener, { once: true });
+    // --- End of existing overlay mode logic ---
   }
 
 
@@ -756,16 +986,13 @@
 
   // --- Chat Logic ---
   async function handleSendMessage() {
-    // Determine which input to use
     let currentInput: HTMLInputElement | null = null;
     let userMessage: string = "";
-
-    // Check if mobile card is visible (a proxy for mobile mode)
     const isMobileView = mobileMascotFunctionCard && getComputedStyle(mobileMascotFunctionCard).display !== 'none';
 
     if (isMobileView && mascotChatInputMobile) {
       currentInput = mascotChatInputMobile;
-    } else if (mascotChatInput) { // Fallback to desktop or if mobile card not fully set up
+    } else if (mascotChatInput) {
       currentInput = mascotChatInput;
     }
 
@@ -774,40 +1001,46 @@
       return;
     }
     userMessage = currentInput.value.trim();
-
     if (!userMessage) return;
-    // Ensure speech bubble elements are available
-    if (!mascotSpeechBubble || !mascotSpeechText) {
-        console.warn("handleSendMessage: Speech bubble elements not found.");
-        return;
+
+    const mascotContainer = document.getElementById('mascot-container');
+    const isBannerMode = mascotContainer && mascotContainer.classList.contains('is-banner-feature');
+
+    if (isBannerMode && chatHistoryWindow) { // Check chatHistoryWindow exists
+      addMessageToHistory(userMessage, 'user'); // Add user's message to history
+    }
+    
+    // The rest of the function remains the same:
+    // (Ensure speech bubble elements are available for overlay mode - this check might need adjustment
+    // if mascotSpeechBubble is null in banner mode, but displayEphemeralSpeech handles that)
+    if (!isBannerMode && (!mascotSpeechBubble || !mascotSpeechText)) { // Check for overlay elements only if not banner mode
+        console.warn("handleSendMessage: Speech bubble elements not found for overlay mode.");
+        // return; // Decide if this should be a hard stop for overlay mode
     }
 
     const currentMascot = mascots[currentMascotIndex];
     const currentMascotName = currentMascot.name as MascotName;
     const currentMascotPersonaString = personaStrings[currentMascotName] || "You are a friendly mascot.";
-
     const pageCtx = getPageContextForBleepy();
     let promptForWorker: string;
 
-    if (pageCtx) {
-      const contextSummary = `Current Page Context:
-- Title: ${pageCtx.title || "N/A"}
-- Description: ${pageCtx.description || "N/A"}
-- Tags: ${(pageCtx.tags && pageCtx.tags.length > 0 ? pageCtx.tags.join(', ') : "N/A")}
-- Category: ${pageCtx.category || "N/A"}
-- Timeline Era: ${pageCtx.timelineEra || "N/A"}
-- Timeline Location: ${pageCtx.timelineLocation || "N/A"}
-- Author's Hint for Mascot: ${pageCtx.mascotContext || "N/A"}
-
-Based on this context AND your persona, respond to the following user message:
-User: "${userMessage}"`;
-      promptForWorker = contextSummary;
+    // Format conversation history for the prompt
+    let historyString = "Previous Conversation (if any):\n";
+    if (conversationHistory.length > 0) {
+      historyString += conversationHistory.map(entry => `${entry.sender === 'user' ? 'User' : activeMascot?.name || 'Bleepy'}: ${entry.text}`).join('\n') + '\n\n';
     } else {
-      promptForWorker = `User: "${userMessage}"`;
+      historyString = ""; // No history yet
     }
+
+    let contextString = "";
+    if (pageCtx) {
+      contextString = `Current Page Context:\n- Title: ${pageCtx.title || "N/A"}\n- Description: ${pageCtx.description || "N/A"}\n- Tags: ${(pageCtx.tags && pageCtx.tags.length > 0 ? pageCtx.tags.join(', ') : "N/A")}\n- Category: ${pageCtx.category || "N/A"}\n- Timeline Era: ${pageCtx.timelineEra || "N/A"}\n- Timeline Location: ${pageCtx.timelineLocation || "N/A"}\n- Author's Hint for Mascot: ${pageCtx.mascotContext || "N/A"}\n\n`;
+    }
+
+    promptForWorker = `${historyString}${contextString}Based on the page context (if provided), your persona, AND the previous conversation (if any), respond to the following user message:\nUser: "${userMessage}"`;
     
-    currentInput.value = ''; // Clear the correct input
-    resetProactiveDialogueTimer(); // Reset timer on user message send
+    currentInput.value = '';
+    resetProactiveDialogueTimer();
 
     const workerUrl = 'https://my-mascot-worker-service.greggles.workers.dev';
     try {
@@ -819,16 +1052,28 @@ User: "${userMessage}"`;
           persona: currentMascotPersonaString
         })
       });
-
       const data = await response.json();
-      
       if (response.ok && data.reply) {
+        // For overlay mode, Bleepy's reply also needs to be added to conversationHistory.
+        // For banner mode, displayEphemeralSpeech calls addMessageToHistory which handles it.
+        if (!isBannerMode) {
+          conversationHistory.push({ sender: 'bleepy', text: data.reply });
+        }
         displayEphemeralSpeech(data.reply);
       } else {
-        displayEphemeralSpeech(data.error || 'Failed to get a response.');
+        const errorMessage = data.error || 'Failed to get a response.';
+        if (!isBannerMode) {
+           // Log error to history if not banner (banner mode logs via displayEphemeralSpeech -> addMessageToHistory)
+          conversationHistory.push({ sender: 'bleepy', text: errorMessage });
+        }
+        displayEphemeralSpeech(errorMessage);
       }
     } catch (error) {
-      displayEphemeralSpeech('Could not connect to the mascot.');
+      const connectErrorMessage = 'Could not connect to the mascot.';
+      if (!isBannerMode) {
+        conversationHistory.push({ sender: 'bleepy', text: connectErrorMessage });
+      }
+      displayEphemeralSpeech(connectErrorMessage);
       console.error('Error calling mascot worker:', error);
     }
   }
@@ -1082,7 +1327,8 @@ Generate a brief, spontaneous, in-character statement, observation, or dark joke
   }
 
   function tryPlayRandomVisualEffect() { // Called by specialAnimationInterval
-    if (!activeMascot || !mascotContainer?.classList.contains('visible')) return;
+    const isBanner = mascotContainer?.classList.contains('is-banner-feature');
+    if (!activeMascot || (!isBanner && !mascotContainer?.classList.contains('visible'))) return;
 
     if (activeMascot.type === "image-set") {
       const mascotImageEl = document.getElementById('mascot-image-display') as HTMLImageElement | null;
@@ -1303,16 +1549,38 @@ Generate a brief, spontaneous, in-character statement, observation, or dark joke
 
   // --- Initialization ---
   function initializeMascotSystem() {
+    const mascotContainer = document.getElementById('mascot-container'); // Ensure this is accessible
+    if (!mascotContainer) return;
+
+    const parentElement = mascotContainer.parentElement;
+    const isBannerMode = parentElement && parentElement.classList.contains('assistant-banner-content');
+
+    if (isBannerMode) {
+      mascotContainer.classList.add('is-banner-feature');
+      // Ensure Bleepy is visible and styled for banner mode
+      mascotContainer.style.display = 'flex'; // Or 'block', depending on your flex setup
+      mascotContainer.classList.remove('visible'); // Remove this if it triggers fixed-position animations
+      
+      // Potentially bypass fixed-overlay specific logic:
+      // For example, directly load a mascot without the slide-in animation or session checks.
+      const randomIndex = Math.floor(Math.random() * mascots.length);
+      loadMascot(randomIndex); // Load mascot (this will reset conversationHistory)
+      startProactiveDialogueTimer(); // Start dialogue timer
+      // Skip the sessionStorage check and hideMascot/showMascot calls for fixed overlay
+      setupEventListeners(); // Still setup event listeners, though some might be N/A
+      return; // Exit early to prevent fixed-overlay logic from running
+    }
+
+    // --- Existing logic for fixed overlay ---
     if (sessionStorage.getItem('bleepyDismissed') === 'true') {
-      hideMascot(false); // Hide immediately, don't show dismiss message
-      if (bringBackButton) bringBackButton.style.display = 'flex'; // Ensure spoon is visible
+      hideMascot(false);
+      if (bringBackButton) bringBackButton.style.display = 'flex';
       if (mascotContainer) mascotContainer.style.display = 'none';
-      // if (characterSelectionUI) characterSelectionUI.style.display = 'none'; // Removed
     } else {
-      // showMascot will now load a random mascot by default and start the proactive timer
       showMascot();
     }
     setupEventListeners();
+    // --- End of existing logic ---
   }
 
   document.addEventListener('astro:page-load', () => {

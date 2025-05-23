@@ -19,7 +19,7 @@ const postsCollection = defineCollection({
     showImageOnPost: z.boolean().optional(),
     
     // Add bannerType field
-    bannerType: z.enum(['image', 'video', 'timeline']).optional(),
+    bannerType: z.enum(['image', 'video', 'timeline', 'assistant']).optional(),
     bannerLink: z.string().optional(),// for image banners link
 
 

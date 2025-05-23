@@ -19,12 +19,13 @@ import Bleepy from '@components/bleepy/Bleepy.astro';
 
 // Import banner configuration and helper functions
 import {
-  bannerConfig, 
-  getResponsiveBannerDimensions, 
+  bannerConfig,
+  getResponsiveBannerDimensions,
   getFallbackBannerCSS,
   isVideoBannerData,
   isImageBannerData,
   isTimelineBannerData,
+  isAssistantBannerData, // Add this
   getPanelTopPosition,
   getNavbarHeight,
   getBannerAnimationSettings
@@ -73,20 +74,23 @@ const NAVBAR_HEIGHT_MOBILE = getNavbarHeight(true);
 // Check if post has a specific banner type
 const hasPostTimelineBanner = post?.data?.bannerType === "timeline" && post?.data?.bannerData?.category;
 const hasPostVideoBanner = post?.data?.bannerType === "video" && post?.data?.bannerData?.videoId;
-const hasPostImageBanner = (post?.data?.image || (post?.data?.bannerType === "image" && post?.data?.bannerData?.imageUrl)) && !hasPostVideoBanner && !hasPostTimelineBanner;
-const hasPostBanner = hasPostVideoBanner || hasPostImageBanner || hasPostTimelineBanner;
+const hasPostAssistantBanner = post?.data?.bannerType === "assistant"; // Add this line
+const hasPostImageBanner = (post?.data?.image || (post?.data?.bannerType === "image" && post?.data?.bannerData?.imageUrl)) && !hasPostVideoBanner && !hasPostTimelineBanner && !hasPostAssistantBanner;
+const hasPostBanner = hasPostVideoBanner || hasPostImageBanner || hasPostTimelineBanner || hasPostAssistantBanner; // Add || hasPostAssistantBanner
 
 // Determine which banner type to use for standard pages
 const useDefaultVideo = !hasPostBanner && bannerConfig.defaultBannerType === 'video' && isVideoBannerData(bannerConfig.defaultBannerData);
 const useDefaultImage = !hasPostBanner && bannerConfig.defaultBannerType === 'image' && isImageBannerData(bannerConfig.defaultBannerData);
 const useDefaultTimeline = !hasPostBanner && bannerConfig.defaultBannerType === 'timeline' && isTimelineBannerData(bannerConfig.defaultBannerData);
-const useDefaultStandard = !hasPostBanner && (bannerConfig.defaultBannerType === 'standard' || (!useDefaultVideo && !useDefaultImage && !useDefaultTimeline));
+const useDefaultAssistant = !hasPostBanner && bannerConfig.defaultBannerType === 'assistant' && isAssistantBannerData(bannerConfig.defaultBannerData); // Add this line
+const useDefaultStandard = !hasPostBanner && (bannerConfig.defaultBannerType === 'standard' || (!useDefaultVideo && !useDefaultImage && !useDefaultTimeline && !useDefaultAssistant)); // Add && !useDefaultAssistant
 
 // Master flag to determine which banner type to use
 const hasTimelineBanner = hasPostTimelineBanner || useDefaultTimeline;
 const hasVideoBanner = hasPostVideoBanner || useDefaultVideo;
 const hasImageBanner = hasPostImageBanner || useDefaultImage;
-const hasStandardBanner = useDefaultStandard;
+const hasAssistantBanner = hasPostAssistantBanner || useDefaultAssistant; // Add this line
+const hasStandardBanner = !hasVideoBanner && !hasImageBanner && !hasTimelineBanner && !hasAssistantBanner && useDefaultStandard;
 const isStandardPage = !hasPostBanner;
 
 // Get banner data based on source (post or default config)
@@ -102,14 +106,20 @@ const timelineBannerData = hasPostTimelineBanner
   ? post.data.bannerData
   : useDefaultTimeline ? bannerConfig.defaultBannerData : null;
 
+const assistantBannerData = hasPostAssistantBanner
+  ? post.data.bannerData // Or an empty object {} if assistant data is separate
+  : useDefaultAssistant ? bannerConfig.defaultBannerData : null; // Add this block
+
 // Use centralized config for panel position
-const currentBannerType = hasVideoBanner 
-  ? 'video' 
-  : hasImageBanner 
-    ? 'image' 
-    : hasTimelineBanner 
-      ? 'timeline' 
-      : 'standard';
+const currentBannerType = hasVideoBanner
+  ? 'video'
+  : hasImageBanner
+    ? 'image'
+    : hasTimelineBanner
+      ? 'timeline'
+      : hasAssistantBanner // Add this case
+        ? 'assistant'    // Add this case
+        : 'standard';
 
 const mainPanelTop = getPanelTopPosition(currentBannerType);
 
@@ -122,6 +132,7 @@ const getBannerNavbarSpacing = () => {
   if (hasTimelineBanner) return bannerConfig.navbarSpacing.timeline;
   if (hasVideoBanner) return bannerConfig.navbarSpacing.video;
   if (hasImageBanner) return bannerConfig.navbarSpacing.image;
+  if (hasAssistantBanner) return bannerConfig.navbarSpacing.assistant; // Add this line
   return bannerConfig.navbarSpacing.standard;
 };
 
@@ -188,8 +199,9 @@ class={`z-10 w-full
   ${hasTimelineBanner ? 'has-timeline-banner' : ''}
   ${hasVideoBanner ? 'has-video-banner' : ''}
   ${hasImageBanner ? 'has-image-banner' : ''}
+  ${hasAssistantBanner ? 'has-assistant-banner' : ''} {/* Add this line */}
   ${hasStandardBanner ? 'has-standard-banner' : ''}
-  ${hasTimelineBanner ? '' : 'overflow-hidden'}
+  ${hasTimelineBanner || hasAssistantBanner ? '' : 'overflow-hidden'} {/* Adjust logic if assistant banner needs overflow */}
   transition-all duration-500
   relative`}
 style={`margin-top: ${navbarSpacing};`}
@@ -208,6 +220,17 @@ style={`margin-top: ${navbarSpacing};`}
         class="absolute top-0 left-0 w-full h-full"
       ></iframe>
     </div>
+  </div>
+)}
+
+{/* Assistant Banner Content (Bleepy) */}
+{hasAssistantBanner && (
+  <div class="assistant-banner-content max-w-screen-2xl mx-auto px-0 py-0" style="height: 70vh;"> {/* Ensure this parent has a defined height */}
+    {/* The Bleepy component will be placed here.
+        Its internal #mascot-container will need the .is-banner-feature class.
+        We'll modify Bleepy.astro's script to add this class if its parent
+        is 'assistant-banner-content'. */}
+    <Bleepy />
   </div>
 )}
 
@@ -345,12 +368,15 @@ style={`margin-top: 1.5rem;`}>
   {contextForBleepy && (
     <div id="bleepy-page-context" style="display: none;" data-context={JSON.stringify(contextForBleepy)}></div>
   )}
-  <Bleepy />
+  {/* Render Bleepy as a fixed overlay ONLY if not an assistant banner */}
+  {!hasAssistantBanner && (
+    <Bleepy />
+  )}
 </Layout>
 
 
 <style define:vars={{
-  'banner-height': bannerConfig.layout.height.desktop, 
+  'banner-height': bannerConfig.layout.height.desktop,
   'banner-height-mobile': bannerConfig.layout.height.mobile,
   'banner-overlap': bannerConfig.layout.overlap.desktop,
   'banner-overlap-mobile': bannerConfig.layout.overlap.mobile,
@@ -359,7 +385,8 @@ style={`margin-top: 1.5rem;`}>
   'standard-navbar-spacing': bannerConfig.navbarSpacing.standard,
   'timeline-navbar-spacing': bannerConfig.navbarSpacing.timeline,
   'video-navbar-spacing': bannerConfig.navbarSpacing.video,
-  'image-navbar-spacing': bannerConfig.navbarSpacing.image
+  'image-navbar-spacing': bannerConfig.navbarSpacing.image,
+  'assistant-navbar-spacing': bannerConfig.navbarSpacing.assistant, // Add this if not present
 }}>
   /* Banner styles */
   #banner-container, #animated-banner {
@@ -386,6 +413,10 @@ style={`margin-top: 1.5rem;`}>
   
   .has-image-banner {
     margin-top: var(--image-navbar-spacing) !important;
+  }
+  
+  .has-assistant-banner {
+    margin-top: var(--assistant-navbar-spacing) !important;
   }
   
   /* Video banner specifics */
