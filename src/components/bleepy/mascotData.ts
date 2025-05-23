@@ -1,3 +1,13 @@
+import standardImg from '/src/content/mascot/standard.png';
+import openmouthImg from '/src/content/mascot/openmouth.png';
+import aweImg from '/src/content/mascot/awe.png';
+import eyesClosedMouthOpenImg from '/src/content/mascot/eyes-closed-mouth-open.png';
+import horrorImg from '/src/content/mascot/horror.png';
+import joyAnticipationImg from '/src/content/mascot/joy-anticipation.png';
+import stareImg from '/src/content/mascot/stare.png';
+import toungeOutEyesClosedImg from '/src/content/mascot/tounge-out-eyesclosed.png';
+import toungeOutImg from '/src/content/mascot/tounge-out.png';
+
 // --- TypeScript Interfaces for Animation Data ---
 export interface BaseAnimation {
   id: string;
@@ -37,15 +47,15 @@ export const mascots = [
     name: "BLEEPY",
     type: "image-set",
     images: {
-      standard: "/src/content/mascot/standard.png",
-      openmouth: "/src/content/mascot/openmouth.png",
-      awe: "/src/content/mascot/awe.png",
-      eyesClosedMouthOpen: "/src/content/mascot/eyes-closed-mouth-open.png",
-      horror: "/src/content/mascot/horror.png",
-      joyAnticipation: "/src/content/mascot/joy-anticipation.png",
-      stare: "/src/content/mascot/stare.png",
-      toungeOutEyesClosed: "/src/content/mascot/tounge-out-eyesclosed.png",
-      toungeOut: "/src/content/mascot/tounge-out.png"
+      standard: standardImg.src,
+      openmouth: openmouthImg.src,
+      awe: aweImg.src,
+      eyesClosedMouthOpen: eyesClosedMouthOpenImg.src,
+      horror: horrorImg.src,
+      joyAnticipation: joyAnticipationImg.src,
+      stare: stareImg.src,
+      toungeOutEyesClosed: toungeOutEyesClosedImg.src,
+      toungeOut: toungeOutImg.src
     },
     cssClasses: "bleepy-image-styles" // Example, can be adjusted
   },
