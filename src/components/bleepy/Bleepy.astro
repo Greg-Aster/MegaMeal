@@ -482,7 +482,7 @@ console.log(`BLEEPY.ASTRO (${instanceIdentifier || 'UNKNOWN'}) - Typeof mascotCo
 <script define:vars={{ mascotContextPropValue: mascotContext, instanceId: instanceIdentifier }}>
   async function init() {
     // mascotContextPropValue is directly available here thanks to define:vars
-    const { setupBleepy } = await import('~/components/bleepy/bleepy-client-setup.ts');
+    const { setupBleepy } = await import('/src/components/bleepy/bleepy-client-setup.ts');
     setupBleepy(mascotContextPropValue, instanceId);
   }
 
