@@ -3,7 +3,8 @@ import {
   bleepyPersonaString,
   bleepyRandomDialogues,
   bleepyDismissDialogues,
-  type MascotName
+  type MascotName,
+  currentAiProvider
   // bleepyGreetingMessages is also available in bleepyConfig.ts if needed later.
 } from '../../config/bleepyConfig.ts';
 
@@ -313,7 +314,7 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
         message: messageForWorker,
         persona: currentMascotPersonaString,
         history: historyForWorker,
-        provider: "google",
+        provider: currentAiProvider,
         pageContext: pageContextForPayload
       };
 

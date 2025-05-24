@@ -24,8 +24,8 @@ const { mascotContext } = Astro.props;
 </div>
 
 <script>
-  import { bleepyPersonaString, bleepyRandomDialogues, mascots } from '../../config/bleepyConfig.ts';
-  import type { Mascot, MascotName, MascotImageSet } from '../../config/bleepyConfig.ts';
+  import { bleepyPersonaString, bleepyRandomDialogues, mascots, currentAiProvider } from '../../config/bleepyConfig.ts';
+  import type { Mascot, MascotName, MascotImageSet, AiProvider } from '../../config/bleepyConfig.ts';
 
   let proactiveDialogueTimer: ReturnType<typeof setTimeout> | undefined;
   let activeMascot: Mascot | null = null;
@@ -247,7 +247,7 @@ const { mascotContext } = Astro.props;
         body: JSON.stringify({
           message: userInput,
           history: historyForApi,
-          provider: "google",
+          provider: currentAiProvider,
           persona: bleepyPersonaString,
           // Conditionally add pageContext if it's available and not empty
           ...(pageContextFromData && pageContextFromData.trim() !== '' ? { pageContext: pageContextFromData } : {}),
