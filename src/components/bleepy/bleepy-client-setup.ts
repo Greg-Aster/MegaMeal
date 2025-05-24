@@ -27,11 +27,13 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
   const dismissButton = document.getElementById('dismiss-mascot-button');
   const bringBackButton = document.getElementById('bring-back-mascot-button');
   const mascotChatInput = document.getElementById('mascot-chat-input') as HTMLInputElement;
+  console.log('Mascot chat input (desktop):', mascotChatInput); // Verify element
   const mascotChatSendButton = document.getElementById('mascot-chat-send');
 
   // Mobile Function Card Elements
   const mobileMascotFunctionCard = document.getElementById('mobile-mascot-function-card');
   const mascotChatInputMobile = document.getElementById('mascot-chat-input-mobile') as HTMLInputElement;
+  console.log('Mascot chat input (mobile):', mascotChatInputMobile); // Verify element
   const mascotChatSendMobile = document.getElementById('mascot-chat-send-mobile');
   const dismissMascotButtonMobile = document.getElementById('dismiss-mascot-button-mobile');
   const bringBackMascotButtonMobile = document.getElementById('bring-back-mascot-button-mobile');
@@ -55,6 +57,7 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
     content: string;
   }
   let conversationHistory: HistoryMessage[] = [];
+  let originalPlaceholder: string = ""; // To store the original placeholder
 
 
   // --- Core Functions ---
@@ -63,6 +66,13 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
     activeMascot = cuppyMascotData; // Always Bleepy, sourced from correct import
     // currentMascotIndex = 0; // Implicitly Bleepy
     conversationHistory = []; // Reset conversation history
+
+    // Store original placeholder
+    if (mascotChatInput) {
+      originalPlaceholder = mascotChatInput.placeholder;
+    } else if (mascotChatInputMobile) { // Fallback for mobile if desktop isn't primary
+      originalPlaceholder = mascotChatInputMobile.placeholder;
+    }
 
     const mascotImageDisplay = document.getElementById('mascot-image-display') as HTMLImageElement | null;
     mascotVisualArea.innerHTML = ''; // Clear previous content (SVG or old image if structure changes)
@@ -281,6 +291,10 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
     }
     userMessage = currentInput.value.trim();
     if (!userMessage) return;
+
+    currentInput.value = ""; // Clear input first
+    currentInput.placeholder = "Thinking..."; // Then set placeholder
+    currentInput.disabled = true; // Then disable
     
     if (!mascotSpeechBubble || !mascotSpeechText) {
         console.warn(`Client (${instanceId || 'UNKNOWN'}): handleSendMessage: Speech bubble elements not found for overlay mode.`);
@@ -293,7 +307,13 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
     const historyForWorker = [...conversationHistory];
     const messageForWorker = userMessage;
     
-    currentInput.value = '';
+    // Store original placeholder if not already stored (e.g. if loadMascot didn't run for some reason or for mobile specific)
+    if (!originalPlaceholder && currentInput) {
+        originalPlaceholder = currentInput.placeholder;
+    }
+
+    // The lines for setting placeholder and disabling input have been moved up.
+    // The line `currentInput.value = '';` is now handled before the fetch call.
     resetProactiveDialogueTimer();
 
     const workerUrl = 'https://my-mascot-worker-service.greggles.workers.dev';
@@ -339,11 +359,18 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
         displayEphemeralSpeech(errorMessage);
       }
     } catch (error) {
-      conversationHistory.push({ role: 'user', content: userMessage });
+      conversationHistory.push({ role: 'user', content: userMessage }); // Log user message even on fetch error
       const connectErrorMessage = 'Could not connect to the mascot.';
       conversationHistory.push({ role: 'assistant', content: connectErrorMessage });
       displayEphemeralSpeech(connectErrorMessage);
       console.error(`Client (${instanceId || 'UNKNOWN'}): Error calling mascot worker:`, error);
+    } finally {
+      if (currentInput) {
+        currentInput.placeholder = originalPlaceholder || "Talk to me..."; // Fallback if original wasn't captured
+        currentInput.disabled = false;
+        // currentInput.value = ""; // Now cleared before fetch
+        currentInput.focus();
+      }
     }
   }
 
