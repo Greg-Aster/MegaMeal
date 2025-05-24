@@ -67,6 +67,7 @@ const customAvatar = post?.data?.avatarImage || '';
 const customName = post?.data?.authorName || '';
 const customBio = post?.data?.authorBio || '';
 
+const postWantsNoDefaultBanner = post?.data?.showImageOnPost === false;
 // Use the config helper functions for dimensions
 const { height: BANNER_HEIGHT, overlap: BANNER_OVERLAP } = getResponsiveBannerDimensions(false);
 const NAVBAR_HEIGHT = getNavbarHeight(false);
@@ -76,15 +77,15 @@ const NAVBAR_HEIGHT_MOBILE = getNavbarHeight(true);
 const hasPostTimelineBanner = post?.data?.bannerType === "timeline" && post?.data?.bannerData?.category;
 const hasPostVideoBanner = post?.data?.bannerType === "video" && post?.data?.bannerData?.videoId;
 const hasPostAssistantBanner = post?.data?.bannerType === "assistant"; // Add this line
-const hasPostImageBanner = (post?.data?.image || (post?.data?.bannerType === "image" && post?.data?.bannerData?.imageUrl)) && !hasPostVideoBanner && !hasPostTimelineBanner && !hasPostAssistantBanner;
+const hasPostImageBanner = !postWantsNoDefaultBanner && (post?.data?.image || (post?.data?.bannerType === "image" && post?.data?.bannerData?.imageUrl)) && !hasPostVideoBanner && !hasPostTimelineBanner && !hasPostAssistantBanner;
 const hasPostBanner = hasPostVideoBanner || hasPostImageBanner || hasPostTimelineBanner || hasPostAssistantBanner; // Add || hasPostAssistantBanner
 
 // Determine which banner type to use for standard pages
-const useDefaultVideo = !hasPostBanner && bannerConfig.defaultBannerType === 'video' && isVideoBannerData(bannerConfig.defaultBannerData);
-const useDefaultImage = !hasPostBanner && bannerConfig.defaultBannerType === 'image' && isImageBannerData(bannerConfig.defaultBannerData);
-const useDefaultTimeline = !hasPostBanner && bannerConfig.defaultBannerType === 'timeline' && isTimelineBannerData(bannerConfig.defaultBannerData);
-const useDefaultAssistant = !hasPostBanner && bannerConfig.defaultBannerType === 'assistant' && isAssistantBannerData(bannerConfig.defaultBannerData); // Add this line
-const useDefaultStandard = !hasPostBanner && (bannerConfig.defaultBannerType === 'standard' || (!useDefaultVideo && !useDefaultImage && !useDefaultTimeline && !useDefaultAssistant)); // Add && !useDefaultAssistant
+const useDefaultVideo = !hasPostBanner && !postWantsNoDefaultBanner && bannerConfig.defaultBannerType === 'video' && isVideoBannerData(bannerConfig.defaultBannerData);
+const useDefaultImage = !hasPostBanner && !postWantsNoDefaultBanner && bannerConfig.defaultBannerType === 'image' && isImageBannerData(bannerConfig.defaultBannerData);
+const useDefaultTimeline = !hasPostBanner && !postWantsNoDefaultBanner && bannerConfig.defaultBannerType === 'timeline' && isTimelineBannerData(bannerConfig.defaultBannerData);
+const useDefaultAssistant = !hasPostBanner && !postWantsNoDefaultBanner && bannerConfig.defaultBannerType === 'assistant' && isAssistantBannerData(bannerConfig.defaultBannerData);
+const useDefaultStandard = !hasPostBanner && !postWantsNoDefaultBanner && (bannerConfig.defaultBannerType === 'standard' || (!useDefaultVideo && !useDefaultImage && !useDefaultTimeline && !useDefaultAssistant));
 
 // Master flag to determine which banner type to use
 const hasTimelineBanner = hasPostTimelineBanner || useDefaultTimeline;
@@ -130,6 +131,12 @@ const MAX_BANNER_WIDTH = bannerConfig.layout.maxWidth; // px
 
 // Get navbar spacing based on banner type
 const getBannerNavbarSpacing = () => {
+  // If bannerType is "image" and showImageOnPost is false,
+  // effectively there's no banner, so navbar spacing should be minimal (0)
+  // to let the main content's margin-top handle the gap.
+  if (post?.data?.bannerType === "image" && post?.data?.showImageOnPost === false) {
+    return '4rem';
+  }
   if (hasTimelineBanner) return bannerConfig.navbarSpacing.timeline;
   if (hasVideoBanner) return bannerConfig.navbarSpacing.video;
   if (hasImageBanner) return bannerConfig.navbarSpacing.image;

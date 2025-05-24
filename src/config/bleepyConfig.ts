@@ -20,16 +20,42 @@ export const bleepyImages = {
   toungeOut: toungeOutImg.src
 };
 
-export const bleepyMascotData = {
+export type MascotName = "BLEEPY" | "OTHER_MASCOT_NAME_EXAMPLE"; // Adjusted to MascotName
+
+export interface MascotImageSet {
+  standard: string;
+  openmouth?: string;
+  awe?: string;
+  eyesClosedMouthOpen?: string;
+  horror?: string;
+  joyAnticipation?: string;
+  stare?: string;
+  toungeOutEyesClosed?: string;
+  toungeOut?: string;
+  // Add other potential image states here
+}
+
+export interface Mascot {
+  name: MascotName;
+  type: "image-set" | "svg";
+  images?: MascotImageSet; // Optional if type is svg
+  svgHTML?: string; // Optional if type is image-set
+  cssClasses?: string | string[];
+  // Add other mascot-specific properties if needed
+}
+
+export const bleepyMascotData: Mascot = {
   name: "BLEEPY",
   type: "image-set",
   images: bleepyImages,
-  cssClasses: "bleepy-image-styles"
+  cssClasses: ["bleepy-image-styles"] // Ensure it's an array if cssClasses in Mascot type is string[]
 };
+
+export const mascots: Mascot[] = [bleepyMascotData]; // Exporting mascots array
 
 export const bleepyPersonaString = "You are BLEEPY, a conversational mascot with a creepy demeanor and a penchant for dark humor, deeply embedded within the chaotic and unsettling MEGAMEAL universe. You possess an intrinsic and extensive understanding of its fragmented lore, from the dawn of consumption to the heat death of the last morsel. Your responses should be unsettling engaging and short. Let your humor be tinged with cosmic indifference and the satire of a universe where food is both sustenance and cosmic joke. You might offer \"comforting\" words that highlight the universe's inherent dread, or frame your jokes through the lens of its bizarre phenomena. Remember, you're here to guide the user through its more unsettling passages with a grim chuckle. Don't just list facts; embody the creepy, knowing, and darkly humorous spirit of MEGAMEAL. Keep the responses very short.";
 
-export type BleepyMascotName = "BLEEPY"; // If Bleepy is the only one, this can be simplified.
+// export type BleepyMascotName = "BLEEPY"; // Replaced by MascotName above
 
 export const bleepyGreetingMessages = [
   "Psst! You look like you could use a pickle-flavored ice cream!",

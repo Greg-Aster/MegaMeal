@@ -8,7 +8,7 @@ avatarImage: "/src/content/mascot/standard.png"
 authorName: "Bleepy"
 authorBio: "Your friendly, slightly unsettling AI assistant."
 # Use the assistant banner
-bannerType: "assistant"
+bannerType: "image"
 # Regular post metadata for timeline integration (removed as per request)
 # timelineYear: 28045
 # timelineEra: "conflict-epoch"
@@ -22,6 +22,10 @@ draft: false
 lang: ""
 mascotContext: "Hey there! It's me, Bleepy, taking center stage! I'm here to help... or at least provide some unsettlingly amusing commentary. Ask me anything, if you dare. This new banner is all MINE!"
 ---
+
+import BleepyPostWidget from '@components/bleepy/BleepyPostWidget.astro';
+
+<BleepyPostWidget />
 
 ## Welcome to the Bleepy Assistant Showcase!
 

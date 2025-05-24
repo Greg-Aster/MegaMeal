@@ -479,7 +479,7 @@ const { backgroundImageUrl } = Astro.props;
     bleepyPersonaString,
     bleepyRandomDialogues,
     bleepyDismissDialogues,
-    type BleepyMascotName
+    type MascotName
     // bleepyGreetingMessages is also available in bleepyConfig.ts if needed later.
   } from '../../config/bleepyConfig.ts';
   // General types like SurrealAnimationData, CuppyCakeSurrealAnimation, etc.,
@@ -811,7 +811,7 @@ const { backgroundImageUrl } = Astro.props;
     }
 
     const currentMascot = bleepyMascotData; // Always Bleepy, sourced from correct import
-    const currentMascotName = currentMascot.name as BleepyMascotName; // Use BleepyMascotName, sourced from correct import
+    const currentMascotName = currentMascot.name as MascotName; // Use MascotName, sourced from correct import
     const currentMascotPersonaString = bleepyPersonaString; // Use direct Bleepy persona, sourced from correct import
     const pageCtx = getPageContextForBleepy();
     let promptForWorker: string;
@@ -891,7 +891,7 @@ const { backgroundImageUrl } = Astro.props;
 
     const randomNumber = Math.random();
     const currentMascot = bleepyMascotData; // Always Bleepy, sourced from correct import
-    const currentMascotName = currentMascot.name as BleepyMascotName; // Use BleepyMascotName, sourced from correct import
+    const currentMascotName = currentMascot.name as MascotName; // Use MascotName, sourced from correct import
     const currentMascotPersonaString = bleepyPersonaString; // Use direct Bleepy persona, sourced from correct import
 
     if (randomNumber < 0.7) { // 70% chance for legacy dialogue

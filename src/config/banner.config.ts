@@ -13,7 +13,7 @@ import banner7 from 'src/assets/banner/0007.png'
 import banner8 from 'src/assets/banner/0008.png'
 
 // Banner type definitions
-export type BannerType = 'standard' | 'video' | 'image' | 'timeline' | 'assistant';
+export type BannerType = 'standard' | 'video' | 'image' | 'timeline' | 'assistant' | 'none';
 
 // Banner data type for each banner type
 export interface StandardBannerData {
@@ -40,13 +40,17 @@ export interface TimelineBannerData {
 
 export interface AssistantBannerData {}
 
+export interface NoneBannerData {
+  // No additional data needed for none banner
+}
+
 // Define the banner configuration type
 export interface BannerConfig {
   // Default banner type for main pages
   defaultBannerType: BannerType;
   
   // Default banner data (differs based on banner type)
-  defaultBannerData: StandardBannerData | VideoBannerData | ImageBannerData | TimelineBannerData | AssistantBannerData;
+  defaultBannerData: StandardBannerData | VideoBannerData | ImageBannerData | TimelineBannerData | AssistantBannerData | NoneBannerData;
   
   // List of banner images for animation (used for standard banner type)
   bannerList: ImageMetadata[]
@@ -73,6 +77,7 @@ export interface BannerConfig {
       mobile: string           // CSS value (e.g., '2rem')
     }
     maxWidth: number           // Maximum width in pixels
+    noneBannerPlaceholderHeight?: string; // Placeholder height for 'none' banner
   }
   
   // Visual settings
@@ -98,6 +103,7 @@ export interface BannerConfig {
     video: string            // For video banner
     image: string            // For image banner
     assistant: string        // For assistant banner
+    none: string             // For none banner
   }
 
   // Navbar height settings (previously hardcoded in MainGridLayout.astro)
@@ -116,6 +122,7 @@ export interface BannerConfig {
       timeline: string       // CSS value for timeline banner type
       standard: string       // CSS value for standard banner type
       assistant: string      // CSS value for assistant banner type
+      none: string           // CSS value for none banner type
     }
   }
 
@@ -179,7 +186,8 @@ export const bannerConfig: BannerConfig = {
       desktop: '-1rem',        // Content overlap on desktop
       mobile: '-1rem'          // Content overlap on mobile
     },
-    maxWidth: 3840             // Max banner width in pixels
+    maxWidth: 3840,            // Max banner width in pixels
+    noneBannerPlaceholderHeight: '3.5rem', // Default placeholder height for 'none' banner
   },
   
   // Visual settings
@@ -205,6 +213,7 @@ export const bannerConfig: BannerConfig = {
     video: "5.5rem",
     image: "0",               // Set to 0 for navbar overlap
     assistant: "5.5rem",
+    none: "0px",              // For none banner, minimal spacing
   },
 
   // Navbar height settings (moved from MainGridLayout.astro)
@@ -223,6 +232,7 @@ export const bannerConfig: BannerConfig = {
       timeline: "0",          // For timeline banner
       standard: "calc(var(--banner-height) - var(--banner-overlap))", // For standard banner
       assistant: "0",
+      none: "0", // For none banner, panel starts at top of its container
     }
   },
 
@@ -289,6 +299,7 @@ export function getPanelTopPosition(bannerType: BannerType): string {
     case 'image': return bannerConfig.panel.top.image;
     case 'timeline': return bannerConfig.panel.top.timeline;
     case 'assistant': return bannerConfig.panel.top.assistant;
+    case 'none': return bannerConfig.panel.top.none;
     default: return bannerConfig.panel.top.standard;
   }
 }
@@ -321,4 +332,16 @@ export function isAssistantBannerData(data: any): data is AssistantBannerData {
   // For now, as AssistantBannerData is empty, this can be a simple check.
   // If AssistantBannerData gets specific properties, update this check.
   return data && typeof data === 'object' && !('videoId' in data) && !('imageUrl' in data) && !('category' in data);
+}
+
+export function isNoneBannerData(data: any): data is NoneBannerData {
+  // Assuming NoneBannerData is an empty object and distinct from others.
+  // This guard is primarily for type narrowing if defaultBannerType were 'none'.
+  return data &&
+         typeof data === 'object' &&
+         !('videoId' in data) &&
+         !('imageUrl' in data) &&
+         !('category' in data) &&
+         // Add more specific checks if AssistantBannerData gets unique props
+         Object.keys(data).length === 0; // A simple check if it's truly an empty object
 }

@@ -26,302 +26,251 @@ const { backgroundImageUrl } = Astro.props;
 <style>
   @import './mascotAnimations.css';
 
+  /* Structural variables, not theme colors directly */
   :root {
-    /* Structural variables for speech bubble, not theme colors */
     --speech-bubble-max-width: 50rem;
-    --speech-bubble-padding: 0.5rem 0.75rem; /* As per example */
-    --speech-bubble-radius: 0.75rem;
-    --speech-bubble-tail-size: 0.7rem;
-
-    /* Fallback for --hue if not defined globally, though main.css should provide it */
-    --hue: 270;
-
-    /* Speech bubble specific colors for chat history */
-    --bleepy-bubble-bg-light: color-mix(in srgb, var(--card-bg, oklch(0.98 0.01 var(--hue))), oklch(0 0 0 / 0.05)); /* Fallback, prefer global */
-    --bleepy-bubble-bg-dark: color-mix(in srgb, var(--card-bg, oklch(0.15 0.02 var(--hue))), oklch(1 1 1 / 0.05)); /* Fallback, prefer global */
-    --bleepy-text-light: oklch(0.15 0.01 var(--hue)); /* Default light mode text for Bleepy messages */
-    --bleepy-text-dark: oklch(0.85 0.01 var(--hue)); /* Default dark mode text for Bleepy messages */
-    --user-message-text-color: white; /* Assuming primary bg has good contrast with white */
+    --speech-bubble-padding: 0.6em 1em; /* Default padding for messages */
+    --speech-bubble-radius: 15px;      /* Default radius for messages */
+    --speech-bubble-tail-size: 0.7rem; /* If tails were to be re-added */
+    --hue: 270; /* Fallback hue, ideally set globally or by theme switcher */
+    /* Assuming --radius-large and --radius-medium are globally available from main.css or similar */
+    --radius-large: 0.75rem;
+    --radius-medium: 0.4rem;
   }
 
-/* Added CSS Variable Definitions from old Bleepy.astro */
-#mascot-container.is-banner-feature {
-  --primary: #007bff; /* Example, actual theme var might be used if globally available */
-  --primary-hover: #0056b3; /* Example */
-
-  --dialogue-bg-light: #f0f8ff; /* A light, friendly blue like aliceblue */
-  --dialogue-bg-dark: rgba(50, 50, 50, 0.9); /* Dark, slightly transparent */
-  --dialogue-text-dark: #f1f1f1; /* Light text for dark dialogue bg */
-
-  --speech-bubble-bg-light: var(--dialogue-bg-light);
-  --speech-bubble-border-light: color-mix(in srgb, var(--primary) 50%, transparent);
-  --speech-bubble-text-light: #1e293b; /* slate-800 */
-
-  --speech-bubble-bg-dark: var(--dialogue-bg-dark);
-  --speech-bubble-border-dark: color-mix(in srgb, var(--primary) 70%, #000 30%);
-  --speech-bubble-text-dark: #e2e8f0; /* slate-200 */
-
-  /* Derived variables that adapt to light/dark mode */
-  --speech-bubble-bg: var(--speech-bubble-bg-light);
-  --speech-bubble-border: var(--speech-bubble-border-light);
-  --speech-bubble-text: var(--speech-bubble-text-light);
-}
-
-@media (prefers-color-scheme: dark) {
   #mascot-container.is-banner-feature {
-    --speech-bubble-bg: var(--speech-bubble-bg-dark);
-    --speech-bubble-border: var(--speech-bubble-border-dark);
-    --speech-bubble-text: var(--speech-bubble-text-dark);
-  }
-}
-/* --- End Added CSS Variable Definitions --- */
+    /* Theme variables. These inherit from global scope (e.g. main.css) or provide component-specific theming.
+       --primary, --primary-hover, --card-bg, --bg-opacity, --card-border-subtle-opacity
+       are expected to be available globally.
+    */
 
-  /* Global variables like --primary, --primary-hover, --card-bg, --bg-opacity,
-     --card-border-opacity, --card-border-subtle-opacity, --dialogue-bg-light, --dialogue-bg-dark
-     are expected to be defined in src/styles/main.css or by a theme switcher.
-  */
+    /* Base Theme Colors (Light Mode Defaults) */
+    --text-color-light: oklch(0.15 0.01 var(--hue));
+    --text-color-dark: oklch(0.85 0.01 var(--hue));
+    --text-color: var(--text-color-light);
 
-  #mascot-visual-area svg { /* Ensure SVGs scale nicely */
-    width: 100%; /* New: percentage */
-    height: 100%; /* New: percentage */
-    object-fit: contain;
+    --border-color-light: color-mix(in srgb, var(--primary, oklch(0.6 0.2 var(--hue))) calc(var(--card-border-subtle-opacity, 0.1) * 100%), transparent);
+    --border-color-dark: color-mix(in srgb, var(--primary, oklch(0.6 0.2 var(--hue))) calc(var(--card-border-subtle-opacity, 0.1) * 100% + 15%), oklch(0.35 0.02 var(--hue)));
+    --border-color: var(--border-color-light);
+
+    /* Surface colors based on global --card-bg */
+    --surface-1-light: var(--card-bg, oklch(0.98 0.01 var(--hue))); /* Main container bg */
+    --surface-1-dark: var(--card-bg, oklch(0.15 0.02 var(--hue)));
+    --surface-1: var(--surface-1-light);
+
+    --surface-2-light: color-mix(in srgb, var(--surface-1-light), oklch(0 0 0 / 0.04)); /* Bleepy messages bg */
+    --surface-2-dark: color-mix(in srgb, var(--surface-1-dark), oklch(1 1 1 / 0.04));
+    --surface-2: var(--surface-2-light);
+
+    --text-on-primary: white; /* Text on primary-colored elements */
+
+    /* Chat Message Specific Variables */
+    --user-message-text-color: var(--text-on-primary);
+    --bleepy-message-bg: var(--surface-2);
+    --bleepy-message-text-color: var(--text-color);
+    
+    /* Input Field Specific Colors */
+    --input-field-bg-light: oklch(0.97 0.005 var(--hue));
+    --input-field-text-light: oklch(0.18 0.01 var(--hue));
+    --input-field-border-light: color-mix(in srgb, var(--primary, oklch(0.6 0.2 var(--hue))) calc(var(--card-border-subtle-opacity, 0.2) * 100%), transparent);
+    --input-placeholder-text-light: oklch(0.65 0.01 var(--hue));
+
+    --input-field-bg-dark: oklch(0.22 0.015 var(--hue));
+    --input-field-text-dark: oklch(0.92 0.01 var(--hue));
+    --input-field-border-dark: oklch(0.45 0.01 var(--hue));
+    --input-placeholder-text-dark: oklch(0.55 0.01 var(--hue));
+
+    /* Derived input field variables for actual use */
+    --input-bg-actual: var(--input-field-bg-light);
+    --input-text-actual: var(--input-field-text-light);
+    --input-border-actual: var(--input-field-border-light);
+    --input-placeholder-actual: var(--input-placeholder-text-light);
   }
-  
-#mascot-speech-text { /* This is generic, might be used if a speech bubble concept returns to banner */
-  margin: 0;
-  padding: 0;
-}
 
   @media (prefers-color-scheme: dark) {
-    #mascot-container.is-banner-feature,
-    #mascot-container.is-banner-feature #chat-history-window {
-      color: oklch(0.85 0.01 var(--hue)); /* Dark mode text for chat history window itself */
+    #mascot-container.is-banner-feature {
+      --text-color: var(--text-color-dark);
+      --border-color: var(--border-color-dark);
+      --surface-1: var(--surface-1-dark);
+      --surface-2: var(--surface-2-dark);
+
+      --input-bg-actual: var(--input-field-bg-dark);
+      --input-text-actual: var(--input-field-text-dark);
+      --input-border-actual: var(--input-field-border-dark);
+      --input-placeholder-actual: var(--input-placeholder-text-dark);
     }
-    
-    /* #mascot-container.is-banner-feature #chat-history-window .bleepy-message {
-      background-color: var(--dialogue-bg-dark, var(--bleepy-bubble-bg-dark));
-      color: var(--text-color-dark, var(--bleepy-text-dark));
-    } */
   }
-
-  /* Specific Mascot Styles (Example - can be extended) */
-  .cuppy-cake-specific-styles .eyes { /* Example if Cuppy had unique eye CSS */
-    /* ... */
-  }
-  /* Add more specific styles for Pretzel Pete, Sushi Sam if needed */
-
 
   /* --- Banner Feature Styles --- */
   #mascot-container.is-banner-feature {
     position: relative;
     width: 100%;
-    height: 70vh;
-    bottom: auto;
-    right: auto;
-    z-index: auto;
-    opacity: 1;
-    transform: none;
+    height: 70vh; /* Or as per design */
     display: flex;
     flex-direction: row;
     align-items: stretch;
     gap: 1rem;
     padding: 1rem;
     box-sizing: border-box;
-    color: oklch(0.15 0.01 var(--hue)); /* Default light mode text */
-    /* Apply .card-base styling */
-    background-color: color-mix(in srgb, var(--card-bg), transparent calc((1 - var(--bg-opacity)) * 100%));
-    /* Background image will be set by --mascot-background-image variable from script */
-    background-image: var(--mascot-background-image);
+    
+    color: var(--text-color);
+    background-color: var(--surface-1);
+    background-image: var(--mascot-background-image); /* Set by JS */
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    backdrop-filter: blur(3px);
-    border: none;
-    box-shadow:
-      inset 0 0 0 2px transparent,
-      inset 0 0 0 2px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 100%), transparent),
-      inset 0 0 5px 3px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 70%), transparent),
-      inset 0 0 7px 3px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 40%), transparent);
+    backdrop-filter: blur(3px); /* Kept from original for card feel */
+    
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-large);
     overflow: hidden;
-    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+    box-shadow: none; /* Remove old complex glow if using simple border */
   }
 
   #mascot-container.is-banner-feature #mascot-visual-area {
     flex: 0 0 30%;
-    /* max-width: 200px; */
     height: 100%;
-    margin: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0.5rem;
     box-sizing: border-box;
     position: relative;
-    z-index: 1; /* Ensure mascot visual is above the container's background */
+    z-index: 1;
   }
 
-  #mascot-container.is-banner-feature #mascot-speech-bubble { /* This refers to the overlay bubble, which is hidden in banner mode */
-    position: absolute; 
-    bottom: 5%; 
-    left: 50%;
-    transform: translateX(-50%);
-    right: auto; 
-    min-width: 40%; 
-    max-width: 80%; 
-    font-size: clamp(1rem, 2.5vw, 1.2rem); 
-  }
-  
-  /* Tail adjustment for banner mode - pointing upwards (for the hidden overlay bubble if it were shown) */
-  #mascot-container.is-banner-feature #mascot-speech-bubble::after {
-    left: 50%;
-    bottom: 100%; /* Tail points up */
-    transform: translateX(-50%);
-    border-width: 0 var(--speech-bubble-tail-size) var(--speech-bubble-tail-size) var(--speech-bubble-tail-size);
-    border-color: transparent transparent var(--speech-bubble-border) transparent;
-  }
-
-  #mascot-container.is-banner-feature #mascot-speech-bubble::before {
-    left: 50%;
-    bottom: calc(100% - 2px); /* Tail points up, inside border */
-    transform: translateX(-50%);
-    border-width: 0 calc(var(--speech-bubble-tail-size) - 2px) calc(var(--speech-bubble-tail-size) - 2px) calc(var(--speech-bubble-tail-size) - 2px);
-    border-color: transparent transparent var(--speech-bubble-bg) transparent;
-  }
-
-
-  #mascot-container.is-banner-feature #mascot-chat-ui {
-    position: absolute;
-    bottom: 0;
-    left: 0;
+  #mascot-visual-area svg,
+  #mascot-visual-area img {
     width: 100%;
-    margin: 0; /* Override previous margin */
-    padding: 0.75rem;
-    background-color: color-mix(in srgb, var(--card-bg, oklch(0.98 0.01 var(--hue))), transparent calc((1 - var(--bg-opacity, 0.85)) * 100%));
-    border-top: 1px solid color-mix(in srgb, var(--primary, oklch(0.6 0.2 var(--hue))), calc(var(--card-border-subtle-opacity, 0.1) * 100%), transparent);
-    box-sizing: border-box;
-    z-index: 1003; /* Above messages if they scroll under */
-    display: flex; 
-    gap: 0.5rem; 
-  }
-
-  #mascot-container.is-banner-feature #mascot-chat-input { 
-    font-size: 0.9rem; 
-    padding: 0.4rem 0.7rem; 
-    border: 1px solid color-mix(in srgb, var(--primary) calc(var(--card-border-subtle-opacity) * 100%), transparent);
-    border-radius: 0.3rem; 
-    flex-grow: 1; /* Added to take available space */
-    min-width: 0; /* Added for flex behavior */
-    background-color: oklch(1 0 0); /* white - Light mode default */
-    color: oklch(0.15 0.01 var(--hue)); /* Light mode default text */
-  }
-  #mascot-container.is-banner-feature #mascot-chat-input::placeholder {
-    color: oklch(0.55 0.01 var(--hue)); /* Light mode default placeholder */
-    opacity: 1;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    #mascot-container.is-banner-feature #mascot-chat-input {
-      background-color: oklch(0.15 0.01 var(--hue)); /* Simple dark background */
-      border-color: oklch(0.35 0.01 var(--hue)); /* Simple dark border */
-      color: oklch(0.85 0.01 var(--hue)); /* Dark mode text */
-    }
-    #mascot-container.is-banner-feature #mascot-chat-input::placeholder {
-      color: oklch(0.50 0.01 var(--hue)); /* Dark mode placeholder */
-    }
-  }
-
-
-  #mascot-container.is-banner-feature #mascot-chat-send {
-    font-size: 0.9rem; 
-    padding: 0.4rem 0.7rem; 
-    flex-shrink: 0; /* Prevent button from shrinking */
-    background-color: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 0.3rem;
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out;
-  }
-   #mascot-container.is-banner-feature #mascot-chat-send:hover {
-    background-color: var(--primary-hover);
-  }
-
-
-  #mascot-container.is-banner-feature #dismiss-mascot-button,
-  #mascot-container.is-banner-feature ~ #bring-back-mascot-button, 
-  #mascot-container.is-banner-feature #mobile-mascot-function-card {
-    display: none !important; /* These elements are removed from HTML, but rule kept for posterity */
+    height: 100%;
+    object-fit: contain;
   }
   
   /* --- Chat History Window Styles --- */
-  #chat-history-window {
-    display: none; /* Hidden by default, shown by .is-banner-feature context below */
-  }
-
   #mascot-container.is-banner-feature #chat-history-window {
-    flex: 1 1 auto; /* Takes remaining space */
+    flex: 1 1 auto;
     height: 100%;
-    position: relative; /* For positioning chat input UI */
+    position: relative;
     display: flex;
     flex-direction: column;
-    padding: 10px 10px 70px 10px; /* Bottom padding for chat input */
-    overflow-y: auto; /* For messages */
-    z-index: 1002;
-    color: var(--speech-bubble-text); /* MODIFIED - Default text color for the window */
-    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
-    font-size: 0.9rem;
+    padding: 1rem 1rem 4.5rem 1rem; /* Bottom padding for chat input UI (e.g., 3.5rem UI + 1rem space) */
+    overflow-y: auto;
     box-sizing: border-box;
+    color: var(--text-color);
+    /* background-color: transparent; /* Or var(--surface-subtle) if defined and needed */
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif; /* Kept from original */
+    font-size: 0.9rem; /* Kept from original */
+    z-index: 1;
   }
 
-  #mascot-container.is-banner-feature #mascot-speech-bubble { /* Ensure overlay speech bubble is hidden */
-    display: none !important;
-  }
-  /* --- End Chat History Window Styles --- */
-
-  /* --- Chat Message Styles (from old Bleepy.astro) --- */
+  /* --- Chat Message Styles --- */
   #mascot-container.is-banner-feature #chat-history-window .chat-message {
-    padding: 0.6em 1em;
-    border-radius: 15px;
+    padding: var(--speech-bubble-padding);
+    border-radius: var(--speech-bubble-radius);
     margin-bottom: 0.5em;
     max-width: 75%;
     word-wrap: break-word;
-    position: relative; /* For potential pseudo-elements if re-added */
     line-height: 1.4;
   }
 
   #mascot-container.is-banner-feature #chat-history-window .user-message {
     background-color: var(--primary);
-    color: white; /* Assuming --primary has good contrast with white */
-    margin-left: auto; /* Aligns to the right */
-    border-bottom-right-radius: 5px; /* Slightly different rounding for "tail" effect */
+    color: var(--user-message-text-color);
+    margin-left: auto;
+    align-self: flex-end;
+    border-bottom-right-radius: 5px;
   }
 
   #mascot-container.is-banner-feature #chat-history-window .bleepy-message {
-    background-color: var(--speech-bubble-bg);
-    color: var(--speech-bubble-text);
-    border: 1px solid var(--speech-bubble-border);
-    margin-right: auto; /* Aligns to the left */
-    border-bottom-left-radius: 5px; /* Slightly different rounding for "tail" effect */
+    background-color: var(--bleepy-message-bg);
+    color: var(--bleepy-message-text-color);
+    /* border: 1px solid var(--border-color); /* Optional: use general border or a specific --bleepy-message-border */
+    margin-right: auto;
+    align-self: flex-start;
+    border-bottom-left-radius: 5px;
   }
 
-  /* Strong tag styling within messages */
   #mascot-container.is-banner-feature #chat-history-window .chat-message strong {
-    display: block; /* Or inline-block if preferred */
+    display: block;
     margin-bottom: 0.2em;
-    font-weight: 600; /* Slightly bolder than normal if base font-weight is 400 */
+    font-weight: 600;
+    /* Color is inherited from parent .chat-message, ensuring it's themed */
   }
 
-  /* Clearfix for chat history window */
-  #mascot-container.is-banner-feature #chat-history-window::after {
-    content: "";
-    clear: both;
-    display: table;
+  /* --- Chat Input UI Container --- */
+  #mascot-container.is-banner-feature #mascot-chat-ui {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--surface-1); /* Can be same as main banner or slightly different if --surface-1-alt is defined */
+    border-top: 1px solid var(--border-color);
+    box-sizing: border-box;
+    z-index: 2; /* Above chat history */
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
   }
-  /* Note: The dark mode override for .bleepy-message within the old CSS block was commented out,
-     as derived variables --speech-bubble-bg etc. are expected to handle dark mode.
-     This is consistent with the new variable definitions. */
-  /* --- End Chat Message Styles --- */
+
+  #mascot-container.is-banner-feature #mascot-chat-input {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--input-border-actual);
+    border-radius: var(--radius-medium);
+    flex-grow: 1;
+    min-width: 0;
+    background-color: var(--input-bg-actual);
+    color: var(--input-text-actual);
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+  }
+
+  #mascot-container.is-banner-feature #mascot-chat-input::placeholder {
+    color: var(--input-placeholder-actual);
+    opacity: 1;
+  }
+   #mascot-container.is-banner-feature #mascot-chat-input:focus-visible {
+    outline: none;
+    border-color: var(--primary); /* Highlight with primary color on focus */
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 30%, transparent);
+  }
+
+
+  #mascot-container.is-banner-feature #mascot-chat-send {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.8rem;
+    flex-shrink: 0;
+    background-color: var(--primary);
+    color: var(--text-on-primary);
+    border: none;
+    border-radius: var(--radius-medium);
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+
+  #mascot-container.is-banner-feature #mascot-chat-send:hover {
+    background-color: var(--primary-hover, color-mix(in srgb, var(--primary) 85%, black));
+  }
+  #mascot-container.is-banner-feature #mascot-chat-send:focus-visible {
+    outline: none;
+    background-color: var(--primary-hover, color-mix(in srgb, var(--primary) 85%, black));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 40%, transparent);
+  }
+
+  /* Hide elements not relevant to banner mode or already removed from HTML */
+  #mascot-container.is-banner-feature #mascot-speech-bubble, /* Old overlay bubble, if selector still exists */
+  #mascot-container.is-banner-feature #dismiss-mascot-button,
+  #mascot-container.is-banner-feature ~ #bring-back-mascot-button,
+  #mascot-container.is-banner-feature #mobile-mascot-function-card {
+    display: none !important;
+  }
+  
+  /* Fallback for mascot-speech-text if it's used elsewhere, though likely not in this context */
+  #mascot-speech-text {
+    margin: 0;
+    padding: 0;
+  }
 
 </style>
 
@@ -332,7 +281,7 @@ const { backgroundImageUrl } = Astro.props;
     bleepyPersonaString,
     bleepyRandomDialogues,
     bleepyDismissDialogues,
-    type BleepyMascotName
+    type MascotName
   } from '../../config/bleepyConfig.ts';
 
   // --- DOM Elements ---
@@ -482,9 +431,9 @@ function addMessageToHistory(text: string, sender: 'user' | 'bleepy') {
       addMessageToHistory(userMessage, 'user'); 
     }
     
-    const currentMascot = bleepyMascotData; 
-    const currentMascotName = currentMascot.name as BleepyMascotName; 
-    const currentMascotPersonaString = bleepyPersonaString; 
+    const currentMascot = bleepyMascotData;
+    const currentMascotName = currentMascot.name as MascotName;
+    const currentMascotPersonaString = bleepyPersonaString;
     const pageCtx = getPageContextForBleepy();
     let promptForWorker: string;
 
@@ -555,9 +504,9 @@ function addMessageToHistory(text: string, sender: 'user' | 'bleepy') {
     }
 
     const randomNumber = Math.random();
-    const currentMascot = bleepyMascotData; 
-    const currentMascotName = currentMascot.name as BleepyMascotName; 
-    const currentMascotPersonaString = bleepyPersonaString; 
+    const currentMascot = bleepyMascotData;
+    const currentMascotName = currentMascot.name as MascotName;
+    const currentMascotPersonaString = bleepyPersonaString;
 
     if (randomNumber < 0.7) { 
       if (bleepyRandomDialogues && bleepyRandomDialogues.length > 0) { 

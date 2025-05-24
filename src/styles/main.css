@@ -17,8 +17,31 @@
         --primary: #007bff; /* Example: Bright Blue */
         --primary-hover: #0056b3; /* Example: Darker Blue for hover or secondary glow */
         --primary-rgb: 0, 123, 255; /* RGB version for use in rgba() if needed */
+        --hue: 210; /* Default hue */
+        --card-bg: oklch(0.98 0.01 var(--hue));
+        --text-color: oklch(0.2 0.01 var(--hue));
+        --border-color: oklch(0.8 0.01 var(--hue));
+        --surface-1: oklch(0.95 0.01 var(--hue));
+        --surface-2: oklch(0.92 0.02 var(--hue));
+        --input-bg: oklch(0.96 0.01 var(--hue));
+        --input-border-color: oklch(0.7 0.01 var(--hue));
+        --text-on-primary: oklch(0.98 0.01 var(--hue));
+        --text-color-muted: oklch(0.5 0.01 var(--hue));
     }
     
+@media (prefers-color-scheme: dark) {
+    :root {
+        --card-bg: oklch(0.15 0.01 var(--hue));
+        --text-color: oklch(0.9 0.01 var(--hue));
+        --border-color: oklch(0.3 0.01 var(--hue));
+        --surface-1: oklch(0.2 0.01 var(--hue));
+        --surface-2: oklch(0.25 0.02 var(--hue));
+        --input-bg: oklch(0.18 0.01 var(--hue));
+        --input-border-color: oklch(0.4 0.01 var(--hue));
+        --text-on-primary: oklch(0.98 0.01 var(--hue));
+        --text-color-muted: oklch(0.6 0.01 var(--hue));
+    }
+}
     /* Keep existing card-base but add opacity and backdrop blur */
     .card-base {
         @apply rounded-[var(--radius-large)] overflow-hidden transition;
