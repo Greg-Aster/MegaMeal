@@ -276,13 +276,13 @@ const { backgroundImageUrl } = Astro.props;
 
 
 <script>
-  import {
+  /* import {
     bleepyMascotData,
     bleepyPersonaString,
     bleepyRandomDialogues,
     bleepyDismissDialogues,
     type MascotName
-  } from '../../config/bleepyConfig.ts';
+  } from '../../config/bleepyConfig.ts'; */
 
   // --- DOM Elements ---
   const mascotContainer = document.getElementById('mascot-container') as HTMLElement | null;
@@ -292,7 +292,8 @@ const { backgroundImageUrl } = Astro.props;
   const chatHistoryWindow = document.getElementById('chat-history-window') as HTMLElement | null;
 
   // --- State Variables ---
-  let activeMascot: any = bleepyMascotData; 
+  // let activeMascot: any = bleepyMascotData;
+  let activeMascot: any = {}; // Initialize with an empty object to avoid further errors
   let inactivityTimer: NodeJS.Timeout | undefined; // Retained, but its usage in event listeners is commented out
   let hoverTimeout: NodeJS.Timeout | undefined; // Retained, but its usage in event listeners is commented out
   // let dialogueCycleInterval: NodeJS.Timeout | number | undefined; // Not used
@@ -311,7 +312,7 @@ const { backgroundImageUrl } = Astro.props;
   // --- Core Functions ---
   function loadMascot() { 
     if (!mascotVisualArea) return;
-    activeMascot = bleepyMascotData; 
+    // activeMascot = bleepyMascotData;
     conversationHistory = []; 
 
     const mascotImageDisplay = document.getElementById('mascot-image-display') as HTMLImageElement | null;
@@ -431,15 +432,19 @@ function addMessageToHistory(text: string, sender: 'user' | 'bleepy') {
       addMessageToHistory(userMessage, 'user'); 
     }
     
-    const currentMascot = bleepyMascotData;
-    const currentMascotName = currentMascot.name as MascotName;
-    const currentMascotPersonaString = bleepyPersonaString;
+    // const currentMascot = bleepyMascotData;
+    // const currentMascotName = currentMascot.name as MascotName;
+    // const currentMascotPersonaString = bleepyPersonaString;
+    const currentMascot = activeMascot; // Use the initialized activeMascot
+    const currentMascotName = currentMascot?.name; // Add optional chaining
+    const currentMascotPersonaString = "default persona"; // Provide a default
     const pageCtx = getPageContextForBleepy();
     let promptForWorker: string;
 
     let historyString = "Previous Conversation (if any):\n";
     if (conversationHistory.length > 0) {
-      historyString += conversationHistory.map(entry => `${entry.sender === 'user' ? 'User' : bleepyMascotData.name}: ${entry.text}`).join('\n') + '\n\n';
+      // historyString += conversationHistory.map(entry => `${entry.sender === 'user' ? 'User' : bleepyMascotData.name}: ${entry.text}`).join('\n') + '\n\n';
+      historyString += conversationHistory.map(entry => `${entry.sender === 'user' ? 'User' : currentMascotName || 'Mascot'}: ${entry.text}`).join('\n') + '\n\n';
     } else {
       historyString = ""; 
     }
@@ -504,18 +509,21 @@ function addMessageToHistory(text: string, sender: 'user' | 'bleepy') {
     }
 
     const randomNumber = Math.random();
-    const currentMascot = bleepyMascotData;
-    const currentMascotName = currentMascot.name as MascotName;
-    const currentMascotPersonaString = bleepyPersonaString;
+    // const currentMascot = bleepyMascotData; // Original commented line
+    // const currentMascotName = currentMascot.name as MascotName; // Original commented line
+    // const currentMascotPersonaString = bleepyPersonaString; // Original commented line
+    const currentMascot = activeMascot;
+    const currentMascotName = currentMascot?.name || 'Mascot';
+    const currentMascotPersonaString = "default persona";
 
-    if (randomNumber < 0.7) { 
-      if (bleepyRandomDialogues && bleepyRandomDialogues.length > 0) { 
-        const randomIndex = Math.floor(Math.random() * bleepyRandomDialogues.length);
-        const selectedDialogue = bleepyRandomDialogues[randomIndex];
-        displayEphemeralSpeech(selectedDialogue);
-      } else {
+    if (randomNumber < 0.7) {
+      // if (bleepyRandomDialogues && bleepyRandomDialogues.length > 0) {
+      //   const randomIndex = Math.floor(Math.random() * bleepyRandomDialogues.length);
+      //   const selectedDialogue = bleepyRandomDialogues[randomIndex];
+      //   displayEphemeralSpeech(selectedDialogue);
+      // } else {
         displayEphemeralSpeech("...");
-      }
+      // }
     } else { 
       const pageContext = getPageContextForBleepy();
       let thoughtInstruction = "";
@@ -552,7 +560,8 @@ Generate a brief, spontaneous, in-character statement, observation, or dark joke
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: thoughtInstruction,
-          persona: currentMascotPersonaString
+          // persona: currentMascotPersonaString
+          persona: "default persona" // Provide a default
         })
       })
       .then(response => response.json())
@@ -561,22 +570,22 @@ Generate a brief, spontaneous, in-character statement, observation, or dark joke
           displayEphemeralSpeech(data.reply);
         } else {
           console.error('Proactive AI thought error:', data.error || 'No reply from worker');
-          if (bleepyRandomDialogues && bleepyRandomDialogues.length > 0) { 
-            const randomIndex = Math.floor(Math.random() * bleepyRandomDialogues.length);
-            displayEphemeralSpeech(bleepyRandomDialogues[randomIndex]);
-          } else {
+          // if (bleepyRandomDialogues && bleepyRandomDialogues.length > 0) {
+          //   const randomIndex = Math.floor(Math.random() * bleepyRandomDialogues.length);
+          //   displayEphemeralSpeech(bleepyRandomDialogues[randomIndex]);
+          // } else {
             displayEphemeralSpeech("Hmm...");
-          }
+          // }
         }
       })
       .catch(error => {
         console.error('Error calling mascot worker for proactive thought:', error);
-         if (bleepyRandomDialogues && bleepyRandomDialogues.length > 0) { 
-            const randomIndex = Math.floor(Math.random() * bleepyRandomDialogues.length);
-            displayEphemeralSpeech(bleepyRandomDialogues[randomIndex]);
-          } else {
-            displayEphemeralSpeech("My thoughts are tangled!");
-          }
+        // if (bleepyRandomDialogues && bleepyRandomDialogues.length > 0) {
+        //    const randomIndex = Math.floor(Math.random() * bleepyRandomDialogues.length);
+        //    displayEphemeralSpeech(bleepyRandomDialogues[randomIndex]);
+        //  } else {
+           displayEphemeralSpeech("My thoughts are tangled!");
+        //  }
       });
     }
     startProactiveDialogueTimer();

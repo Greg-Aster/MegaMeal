@@ -8,7 +8,7 @@ import {
   // bleepyGreetingMessages is also available in bleepyConfig.ts if needed later.
 } from '../../config/bleepyConfig.ts';
 
-export function setupBleepy(mascotContextPropValue?: string, instanceId?: string) {
+export function setupCuppy(mascotContextPropValue?: string, instanceId?: string) {
   console.log(`Client (${instanceId || 'UNKNOWN'}): mascotContextPropValue received by script:`, mascotContextPropValue);
   // General types like SurrealAnimationData, CuppyCakeSurrealAnimation, etc.,
   // are removed as Bleepy is an image-set mascot and does not use them.
@@ -109,7 +109,7 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
       startProactiveDialogueTimer(); // MOVED HERE: Restart proactive dialogue when mascot is shown
     }, 50); // Delay for CSS transition
     (bringBackButton as HTMLElement).style.display = 'none'; // Hide original bring back button
-    sessionStorage.removeItem('bleepyDismissed');
+    sessionStorage.removeItem('cuppyDismissed');
     sessionStorage.removeItem('lastSelectedMascot'); // Clear any old session storage for this
     conversationHistory = []; // Reset conversation history when mascot is shown
 
@@ -131,7 +131,7 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
     if (!mascotContainer || !bringBackButton || !mascotVisualArea) return;
 
     if (isDismissal) {
-      sessionStorage.setItem('bleepyDismissed', 'true');
+      sessionStorage.setItem('cuppyDismissed', 'true');
       (bringBackButton as HTMLElement).style.display = 'flex'; // Show original spoon (will be hidden on mobile by CSS)
 
       // Mobile card state
@@ -150,7 +150,7 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
       const onVisualFadeEnd = () => {
         (mascotVisualArea as HTMLElement).style.opacity = '0';
         setTimeout(() => {
-          if (sessionStorage.getItem('bleepyDismissed') === 'true') {
+          if (sessionStorage.getItem('cuppyDismissed') === 'true') {
             (mascotContainer as HTMLElement).style.display = 'none';
           }
           mascotContainer.classList.remove('visible');
@@ -318,7 +318,7 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
         pageContext: pageContextForPayload
       };
 
-      // console.log('Client: mascotContextPropValue before fetch:', mascotContextPropValue); // Redundant with the one at the start of setupBleepy
+      // console.log('Client: mascotContextPropValue before fetch:', mascotContextPropValue); // Redundant with the one at the start of setupCuppy
       console.log(`Client (${instanceId || 'UNKNOWN'}): payload being sent:`, payload);
 
       const response = await fetch(workerUrl, {
@@ -482,12 +482,12 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
           handleSendMessage();
         }
       });
-      // Pass instanceId to setupBleepy in Bleepy.astro
+      // Pass instanceId to setupCuppy in Bleepy.astro
       // The script tag in Bleepy.astro should be:
       // <script define:vars={{ mascotContextPropValue: mascotContext, instanceId: instanceIdentifier }}>
       //   async function init() {
-      //     const { setupBleepy } = await import('/src/components/bleepy/bleepy-client-setup.ts');
-      //     setupBleepy(mascotContextPropValue, instanceId); // Pass instanceId here
+      //     const { setupCuppy } = await import('/src/components/bleepy/bleepy-client-setup.ts');
+      //     setupCuppy(mascotContextPropValue, instanceId); // Pass instanceId here
       //   }
       //   // ... rest of init logic
       // </script>
@@ -521,7 +521,7 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
     mainMascotContainer.style.setProperty('--mascot-background-image', 'none');
   }
 
-  if (sessionStorage.getItem('bleepyDismissed') === 'true') {
+  if (sessionStorage.getItem('cuppyDismissed') === 'true') {
     hideMascot(false); // Pass false for initial hide without dismissal message
     if (bringBackButton) (bringBackButton as HTMLElement).style.display = 'flex'; // Show spoon
     if (mainMascotContainer) mainMascotContainer.style.display = 'none'; // Hide container
@@ -532,7 +532,7 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
 
   // astro:page-load listener for logging (original lines 1167-1179)
   // This can be part of the setup if desired, or kept separate in Astro component
-  // For simplicity, including it here to run once when setupBleepy is called.
+  // For simplicity, including it here to run once when setupCuppy is called.
   document.addEventListener('astro:page-load', () => {
     const mobileCard = document.getElementById('mobile-mascot-function-card');
     if (mobileCard) {

@@ -86,7 +86,7 @@ const { mascotContext } = Astro.props;
 
   /**
    * Applies a random visual effect (wiggle or expression change) to the mascot image.
-   * Mirrors the logic from Bleepy.astro.
+   * Mirrors the logic from Cuppy.astro.
    */
   function tryPlayRandomVisualEffectOnMascot() {
     const mascotImg = widgetMascotImageDisplay;
@@ -123,7 +123,7 @@ const { mascotContext } = Astro.props;
         }
         // Else (20% chance): do nothing
     }
-    // SVG mascot types are not currently handled by BleepyPostWidget's loadMascot
+    // SVG mascot types are not currently handled by CuppyPostWidget's loadMascot
 }
 
   function addMessageToHistory(text: string, sender: 'user' | 'cuppy') {
@@ -230,10 +230,10 @@ const { mascotContext } = Astro.props;
     // Clear input
     chatInputElement.value = '';
 
-    // Construct prompt using the imported bleepyPersonaString
+    // Construct prompt using the imported cuppyPersonaString
 
     try {
-      // Add a thinking indicator for Bleepy
+      // Add a thinking indicator for Cuppy
       const thinkingMessage = "Cuppy is thinking...";
       addMessageToHistory(thinkingMessage, 'cuppy');
       const thinkingElement = chatHistoryElement?.lastChild as HTMLElement;
@@ -287,7 +287,7 @@ const { mascotContext } = Astro.props;
     if (siteMascotContainer) {
       siteMascotContainer.style.display = 'none';
       // Optionally, also set the sessionStorage item to mimic dismissal
-      sessionStorage.setItem('bleepyDismissed', 'true');
+      sessionStorage.setItem('cuppyDismissed', 'true');
 
       // Optionally, hide the bring back button as well
       const bringBackSiteMascotButton = document.getElementById('bring-back-mascot-button');

@@ -61,8 +61,8 @@ export const cuppyPersonaString = "You are CUPPY, a cute but insane cupcake masc
 
 export const cuppyGreetingMessages = [
   "Psst! You look like you could use a pickle-flavored ice cream!",
-  "Bleepy's here! Did someone say 'experimental snacks'?",
-  "Bleep bloop! Bleepy's online and ready to talk snacks!"
+  "Cuppy's here! Did someone say 'experimental snacks'?",
+  "Cuppy's online and ready to talk snacks!"
 ];
 
 export const cuppyRandomDialogues = [
