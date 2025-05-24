@@ -1,8 +1,8 @@
 import {
-  bleepyMascotData,
-  bleepyPersonaString,
-  bleepyRandomDialogues,
-  bleepyDismissDialogues,
+  cuppyMascotData,
+  cuppyPersonaString,
+  cuppyRandomDialogues,
+  cuppyDismissDialogues,
   type MascotName,
   currentAiProvider
   // bleepyGreetingMessages is also available in bleepyConfig.ts if needed later.
@@ -39,7 +39,7 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
 
 
   // --- State Variables ---
-  let activeMascot: any = bleepyMascotData; // Bleepy is now the only mascot, sourced from correct import
+  let activeMascot: any = cuppyMascotData; // Bleepy is now the only mascot, sourced from correct import
   // let currentMascotIndex = 0; // No longer needed
   let inactivityTimer: NodeJS.Timeout | undefined;
   let hoverTimeout: NodeJS.Timeout | undefined;
@@ -60,7 +60,7 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
   // --- Core Functions ---
   function loadMascot() { // Index no longer needed
     if (!mascotVisualArea) return;
-    activeMascot = bleepyMascotData; // Always Bleepy, sourced from correct import
+    activeMascot = cuppyMascotData; // Always Bleepy, sourced from correct import
     // currentMascotIndex = 0; // Implicitly Bleepy
     conversationHistory = []; // Reset conversation history
 
@@ -114,7 +114,7 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
     conversationHistory = []; // Reset conversation history when mascot is shown
 
     // Load Bleepy
-    loadMascot(); // This function now correctly uses the imported bleepyMascotData
+    loadMascot(); // This function now correctly uses the imported cuppyMascotData
 
     // Mobile card state
     if (mobileMascotFunctionCard) {
@@ -286,9 +286,9 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
         console.warn(`Client (${instanceId || 'UNKNOWN'}): handleSendMessage: Speech bubble elements not found for overlay mode.`);
     }
 
-    const currentMascot = bleepyMascotData;
+    const currentMascot = cuppyMascotData;
     const currentMascotName = currentMascot.name as MascotName;
-    const currentMascotPersonaString = bleepyPersonaString;
+    const currentMascotPersonaString = cuppyPersonaString;
 
     const historyForWorker = [...conversationHistory];
     const messageForWorker = userMessage;
@@ -351,9 +351,9 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
     if (!mascotContainer?.classList.contains('visible')) {
       return;
     }
-    if (bleepyRandomDialogues && bleepyRandomDialogues.length > 0) {
-      const randomIndex = Math.floor(Math.random() * bleepyRandomDialogues.length);
-      const selectedDialogue = bleepyRandomDialogues[randomIndex];
+    if (cuppyRandomDialogues && cuppyRandomDialogues.length > 0) {
+      const randomIndex = Math.floor(Math.random() * cuppyRandomDialogues.length);
+      const selectedDialogue = cuppyRandomDialogues[randomIndex];
       displayEphemeralSpeech(selectedDialogue);
     } else {
       displayEphemeralSpeech("...");
@@ -461,8 +461,8 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
     if (!dismissButton || !bringBackButton || !mascotContainer || !mascotChatSendButton || !mascotChatInput) return;
     dismissButton.addEventListener('click', () => {
       clearTimeout(proactiveDialogueTimer);
-      if (bleepyDismissDialogues && bleepyDismissDialogues.length > 0) {
-        const dismissalMessage = bleepyDismissDialogues[Math.floor(Math.random() * bleepyDismissDialogues.length)];
+      if (cuppyDismissDialogues && cuppyDismissDialogues.length > 0) {
+        const dismissalMessage = cuppyDismissDialogues[Math.floor(Math.random() * cuppyDismissDialogues.length)];
         displayEphemeralSpeech(dismissalMessage);
       }
       hideMascot(true);
@@ -498,8 +498,8 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
     if (dismissMascotButtonMobile) {
       dismissMascotButtonMobile.addEventListener('click', () => {
         clearTimeout(proactiveDialogueTimer);
-        if (bleepyDismissDialogues && bleepyDismissDialogues.length > 0) {
-          const dismissalMessage = bleepyDismissDialogues[Math.floor(Math.random() * bleepyDismissDialogues.length)];
+        if (cuppyDismissDialogues && cuppyDismissDialogues.length > 0) {
+          const dismissalMessage = cuppyDismissDialogues[Math.floor(Math.random() * cuppyDismissDialogues.length)];
           displayEphemeralSpeech(dismissalMessage);
         }
         hideMascot(true);

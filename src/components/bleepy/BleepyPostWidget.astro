@@ -9,7 +9,7 @@ const { mascotContext } = Astro.props;
 
 <div id="bleepy-post-widget" class="widget-container rounded-lg p-4 flex flex-row gap-4" data-page-context={mascotContext || ''}>
   <div id="widget-mascot-visual-area" class="w-1/3 flex items-center justify-start">
-    <img id="widget-mascot-image-display" alt="Bleepy" class="max-w-full max-h-full object-contain" style="display: none;" />
+    <img id="widget-mascot-image-display" alt="Cuppy" class="max-w-full max-h-full object-contain" style="display: none;" />
     <!-- SVG mascot content will be injected here by JavaScript -->
   </div>
   <div class="flex flex-col flex-grow gap-2">
@@ -24,7 +24,7 @@ const { mascotContext } = Astro.props;
 </div>
 
 <script>
-  import { bleepyPersonaString, bleepyRandomDialogues, mascots, currentAiProvider } from '../../config/bleepyConfig.ts';
+  import { cuppyPersonaString, cuppyRandomDialogues, mascots, currentAiProvider } from '../../config/bleepyConfig.ts';
   import type { Mascot, MascotName, MascotImageSet, AiProvider } from '../../config/bleepyConfig.ts';
 
   let proactiveDialogueTimer: ReturnType<typeof setTimeout> | undefined;
@@ -126,7 +126,7 @@ const { mascotContext } = Astro.props;
     // SVG mascot types are not currently handled by BleepyPostWidget's loadMascot
 }
 
-  function addMessageToHistory(text: string, sender: 'user' | 'bleepy') {
+  function addMessageToHistory(text: string, sender: 'user' | 'cuppy') {
     if (!chatHistoryElement) return;
     const messageElement = document.createElement('div');
     messageElement.textContent = text;
@@ -135,16 +135,16 @@ const { mascotContext } = Astro.props;
     if (sender === 'user') {
       messageElement.classList.add('widget-user-message', 'ml-auto', 'text-right');
     } else {
-      messageElement.classList.add('widget-bleepy-message', 'mr-auto', 'text-left');
+      messageElement.classList.add('widget-cuppy-message', 'mr-auto', 'text-left');
     }
     chatHistoryElement.appendChild(messageElement);
     chatHistoryElement.scrollTop = chatHistoryElement.scrollHeight; // Scroll to bottom
   }
 
   function triggerProactiveDialogue() {
-    if (bleepyRandomDialogues && bleepyRandomDialogues.length > 0) {
-      const selectedDialogue = bleepyRandomDialogues[Math.floor(Math.random() * bleepyRandomDialogues.length)];
-      addMessageToHistory(selectedDialogue, 'bleepy');
+    if (cuppyRandomDialogues && cuppyRandomDialogues.length > 0) {
+      const selectedDialogue = cuppyRandomDialogues[Math.floor(Math.random() * cuppyRandomDialogues.length)];
+      addMessageToHistory(selectedDialogue, 'cuppy');
 
       if (activeMascot && activeMascot.type === 'image-set' && activeMascot.images && activeMascot.images.openmouth && widgetMascotImageDisplay) {
         const originalSrc = widgetMascotImageDisplay.src;
@@ -234,8 +234,8 @@ const { mascotContext } = Astro.props;
 
     try {
       // Add a thinking indicator for Bleepy
-      const thinkingMessage = "Bleepy is thinking...";
-      addMessageToHistory(thinkingMessage, 'bleepy');
+      const thinkingMessage = "Cuppy is thinking...";
+      addMessageToHistory(thinkingMessage, 'cuppy');
       const thinkingElement = chatHistoryElement?.lastChild as HTMLElement;
 
 
@@ -248,7 +248,7 @@ const { mascotContext } = Astro.props;
           message: userInput,
           history: historyForApi,
           provider: currentAiProvider,
-          persona: bleepyPersonaString,
+          persona: cuppyPersonaString,
           // Conditionally add pageContext if it's available and not empty
           ...(pageContextFromData && pageContextFromData.trim() !== '' ? { pageContext: pageContextFromData } : {}),
         }),
@@ -256,27 +256,27 @@ const { mascotContext } = Astro.props;
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Bleepy API Error:', response.status, errorText);
+        console.error('Cuppy API Error:', response.status, errorText);
         if (thinkingElement) thinkingElement.remove(); // Remove thinking message
-        addMessageToHistory(`Sorry, I encountered an error: ${response.status}. Please try again.`, 'bleepy');
+        addMessageToHistory(`Sorry, I encountered an error: ${response.status}. Please try again.`, 'cuppy');
         conversationHistory.push({ role: 'assistant', content: `Error: ${response.status}` } as ChatMessage);
         return;
       }
 
       const data = await response.json();
-      const bleepyReply = data.reply || "I'm not sure how to respond to that.";
+      const cuppyReply = data.reply || "I'm not sure how to respond to that.";
 
       if (thinkingElement) thinkingElement.remove(); // Remove thinking message
-      addMessageToHistory(bleepyReply, 'bleepy');
-      conversationHistory.push({ role: 'assistant', content: bleepyReply } as ChatMessage);
+      addMessageToHistory(cuppyReply, 'cuppy');
+      conversationHistory.push({ role: 'assistant', content: cuppyReply } as ChatMessage);
 
     } catch (error) {
-      console.error('Failed to send message to Bleepy:', error);
-      const thinkingElement = chatHistoryElement?.querySelector('.widget-bleepy-message:last-child'); // Attempt to find it again
-      if (thinkingElement && thinkingElement.textContent === "Bleepy is thinking...") {
+      console.error('Failed to send message to Cuppy:', error);
+      const thinkingElement = chatHistoryElement?.querySelector('.widget-cuppy-message:last-child'); // Attempt to find it again
+      if (thinkingElement && thinkingElement.textContent === "Cuppy is thinking...") {
         thinkingElement.remove();
       }
-      addMessageToHistory('Sorry, I could not connect to the assistant. Please check your connection and try again.', 'bleepy');
+      addMessageToHistory('Sorry, I could not connect to the assistant. Please check your connection and try again.', 'cuppy');
       conversationHistory.push({ role: 'assistant', content: 'Connection error' } as ChatMessage);
     }
   }
@@ -390,7 +390,7 @@ const { mascotContext } = Astro.props;
        are still applied by Tailwind classes added in JavaScript */
   }
 
-  #bleepy-post-widget .widget-bleepy-message {
+  #bleepy-post-widget .widget-cuppy-message {
     background-color: var(--surface-2);
     color: var(--text-color);
     /* Base layout styles (p-2, rounded-lg, mb-2, max-w-[80%], mr-auto, text-left)
