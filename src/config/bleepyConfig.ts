@@ -48,7 +48,7 @@ export const cuppyMascotData: Mascot = {
   name: "CUPPY",
   type: "image-set",
   images: cuppyImages,
-  cssClasses: ["bleepy-image-styles"] // Ensure it's an array if cssClasses in Mascot type is string[]
+  cssClasses: ["cuppy-image-styles"] // Ensure it's an array if cssClasses in Mascot type is string[]
 };
 
 export const mascots: Mascot[] = [cuppyMascotData]; // Exporting mascots array

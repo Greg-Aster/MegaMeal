@@ -8,7 +8,7 @@ import {
   // bleepyGreetingMessages is also available in bleepyConfig.ts if needed later.
 } from '../../config/bleepyConfig.ts';
 
-export function setupCuppy(mascotContextPropValue?: string, instanceId?: string) {
+export function setupBleepy(mascotContextPropValue?: string, instanceId?: string) {
   console.log(`Client (${instanceId || 'UNKNOWN'}): mascotContextPropValue received by script:`, mascotContextPropValue);
   // General types like SurrealAnimationData, CuppyCakeSurrealAnimation, etc.,
   // are removed as Bleepy is an image-set mascot and does not use them.
