@@ -15,7 +15,7 @@ import { getDir } from '../utils/url-utils';
 import TimelineController from '../components/timeline/TimelineBanner.astro';
 import '../styles/timeline-styles.css';
 
-import BleepyOverlay from '@components/bleepy/Bleepy.astro';
+import Bleepy from '@components/bleepy/Bleepy.astro';
 import BleepyBanner from '@components/bleepy/BleepyBanner.astro';
 
 // Import banner configuration and helper functions
@@ -42,6 +42,7 @@ interface Props {
   post?: any
   bannerLink?: string
   isPostPage?: boolean // Added for explicit post page identification
+  pageMascotContext?: string;
 }
 
 // Update the Props destructuring in MainGridLayout.astro
@@ -56,6 +57,9 @@ const {
   bannerLink = '',
   isPostPage = false // Destructure isPostPage, default to false
 } = Astro.props
+
+console.log('MAIN_GRID_LAYOUT - isPostPage prop received:', Astro.props.isPostPage);
+console.log('MAIN_GRID_LAYOUT - pageMascotContext prop received:', Astro.props.pageMascotContext);
 
 // Get the banner link from post data if available (for cases where post data is passed directly)
 const bannerLinkFromPost = post?.data?.bannerLink || '';
@@ -378,11 +382,7 @@ style={`margin-top: 1.5rem;`}>
   {contextForBleepy && (
     <div id="bleepy-page-context" style="display: none;" data-context={JSON.stringify(contextForBleepy)}></div>
   )}
-  {/* Render Bleepy as a fixed overlay ONLY if not an assistant banner AND the page doesn't provide its own mascotContext */}
-  {/* Render Bleepy as a fixed overlay ONLY if not an assistant banner AND not a post page (which handles its own Bleepy) */}
-  {!hasAssistantBanner && !isPostPage && (
-    <BleepyOverlay instanceIdentifier="LAYOUT_BLEEPY" />
-  )}
+  <Bleepy mascotContext={Astro.props.pageMascotContext} instanceIdentifier="LAYOUT_BLEEPY" />
 </Layout>
 
 

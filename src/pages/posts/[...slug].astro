@@ -62,9 +62,10 @@ const jsonLd = {
   lang={post.data.lang} 
   setOGTypeArticle={true} 
   headings={headings}
-  post={post} 
-  bannerLink={post.data.bannerLink} 
-
+  post={post}
+  bannerLink={post.data.bannerLink}
+  isPostPage={true}
+  pageMascotContext={mascotCtx}
 >
 
 <!-- Add these meta tags for better date extraction -->
@@ -130,8 +131,6 @@ const jsonLd = {
             {post.data.image && post.data.showImageOnPost !== false && post.data.bannerType !== 'assistant' &&
               <ImageWrapper id="post-cover" src={post.data.image} basePath={path.join("content/posts/", getDir(post.id))} class="mb-8 rounded-xl banner-container onload-animation"/>
             }
-            {post.data.bannerType === 'assistant' && (<Bleepy mascotContext={mascotCtx} />)}
-
             <Markdown class="mb-6 markdown-content onload-animation">
                 <Content />
             </Markdown>

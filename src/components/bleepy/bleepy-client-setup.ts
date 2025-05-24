@@ -7,7 +7,8 @@ import {
   // bleepyGreetingMessages is also available in bleepyConfig.ts if needed later.
 } from '../../config/bleepyConfig.ts';
 
-export function setupBleepy(mascotContextPropValue?: string) {
+export function setupBleepy(mascotContextPropValue?: string, instanceId?: string) {
+  console.log(`Client (${instanceId || 'UNKNOWN'}): mascotContextPropValue received by script:`, mascotContextPropValue);
   // General types like SurrealAnimationData, CuppyCakeSurrealAnimation, etc.,
   // are removed as Bleepy is an image-set mascot and does not use them.
   // If mascotData.ts still holds other universally needed types (e.g. BaseAnimation),
@@ -274,14 +275,14 @@ export function setupBleepy(mascotContextPropValue?: string) {
     }
 
     if (!currentInput) {
-      console.warn("handleSendMessage: No valid input field found.");
+      console.warn(`Client (${instanceId || 'UNKNOWN'}): handleSendMessage: No valid input field found.`);
       return;
     }
     userMessage = currentInput.value.trim();
     if (!userMessage) return;
     
     if (!mascotSpeechBubble || !mascotSpeechText) {
-        console.warn("handleSendMessage: Speech bubble elements not found for overlay mode.");
+        console.warn(`Client (${instanceId || 'UNKNOWN'}): handleSendMessage: Speech bubble elements not found for overlay mode.`);
     }
 
     const currentMascot = bleepyMascotData;
@@ -296,22 +297,28 @@ export function setupBleepy(mascotContextPropValue?: string) {
 
     const workerUrl = 'https://my-mascot-worker-service.greggles.workers.dev';
     try {
+      const pageContextForPayload = mascotContextPropValue && mascotContextPropValue.trim() !== ''
+        ? mascotContextPropValue
+        : "Default context: No specific page information available.";
+      
+      console.log(`Client (${instanceId || 'UNKNOWN'}): pageContextForPayload being used:`, pageContextForPayload);
+
       const payload: {
         message: string;
         persona: string;
         history: HistoryMessage[];
         provider: string;
-        pageContext: string | null;
+        pageContext: string; // Changed from string | null
       } = {
         message: messageForWorker,
         persona: currentMascotPersonaString,
         history: historyForWorker,
         provider: "google",
-        pageContext: typeof mascotContextPropValue !== 'undefined' ? mascotContextPropValue : null
+        pageContext: pageContextForPayload
       };
 
-      console.log('Client: mascotContextPropValue before fetch:', mascotContextPropValue);
-      console.log('Client: payload being sent:', payload);
+      // console.log('Client: mascotContextPropValue before fetch:', mascotContextPropValue); // Redundant with the one at the start of setupBleepy
+      console.log(`Client (${instanceId || 'UNKNOWN'}): payload being sent:`, payload);
 
       const response = await fetch(workerUrl, {
         method: 'POST',
@@ -335,7 +342,7 @@ export function setupBleepy(mascotContextPropValue?: string) {
       const connectErrorMessage = 'Could not connect to the mascot.';
       conversationHistory.push({ role: 'assistant', content: connectErrorMessage });
       displayEphemeralSpeech(connectErrorMessage);
-      console.error('Error calling mascot worker:', error);
+      console.error(`Client (${instanceId || 'UNKNOWN'}): Error calling mascot worker:`, error);
     }
   }
 
@@ -474,6 +481,15 @@ export function setupBleepy(mascotContextPropValue?: string) {
           handleSendMessage();
         }
       });
+      // Pass instanceId to setupBleepy in Bleepy.astro
+      // The script tag in Bleepy.astro should be:
+      // <script define:vars={{ mascotContextPropValue: mascotContext, instanceId: instanceIdentifier }}>
+      //   async function init() {
+      //     const { setupBleepy } = await import('/src/components/bleepy/bleepy-client-setup.ts');
+      //     setupBleepy(mascotContextPropValue, instanceId); // Pass instanceId here
+      //   }
+      //   // ... rest of init logic
+      // </script>
     }
     if (mascotChatSendMobile) {
       mascotChatSendMobile.addEventListener('click', handleSendMessage);
@@ -521,14 +537,14 @@ export function setupBleepy(mascotContextPropValue?: string) {
     if (mobileCard) {
       // console.log("Mobile card #mobile-mascot-function-card FOUND in DOM for logging.");
     } else {
-      console.error("Mobile card #mobile-mascot-function-card NOT FOUND in DOM for logging.");
+      console.error(`Client (${instanceId || 'UNKNOWN'}): Mobile card #mobile-mascot-function-card NOT FOUND in DOM for logging.`);
     }
 
     const desktopChatUi = document.getElementById('mascot-chat-ui');
     if (desktopChatUi) {
       // console.log("Desktop #mascot-chat-ui FOUND in DOM for logging.");
     } else {
-      console.error("Desktop #mascot-chat-ui NOT FOUND in DOM for logging.");
+      console.error(`Client (${instanceId || 'UNKNOWN'}): Desktop #mascot-chat-ui NOT FOUND in DOM for logging.`);
     }
   });
 }
