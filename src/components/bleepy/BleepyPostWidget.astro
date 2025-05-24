@@ -1,11 +1,13 @@
 ---
 interface Props {
   // backgroundImageUrl?: string; // Prop removed, will be hardcoded
+  mascotContext?: string;
 }
 // const { backgroundImageUrl = '/src/content/mascot/kitchen.png' } = Astro.props; // Prop removed
+const { mascotContext } = Astro.props;
 ---
 
-<div id="bleepy-post-widget" class="widget-container rounded-lg p-4 flex flex-row gap-4">
+<div id="bleepy-post-widget" class="widget-container rounded-lg p-4 flex flex-row gap-4" data-page-context={mascotContext || ''}>
   <div id="widget-mascot-visual-area" class="w-1/3 flex items-center justify-start">
     <img id="widget-mascot-image-display" alt="Bleepy" class="max-w-full max-h-full object-contain" style="display: none;" />
     <!-- SVG mascot content will be injected here by JavaScript -->
@@ -28,6 +30,7 @@ interface Props {
   let proactiveDialogueTimer: ReturnType<typeof setTimeout> | undefined;
   let activeMascot: Mascot | null = null;
   let currentMascotIndex: number = 0;
+  let pageContextFromData: string | undefined; // For page-specific context
 
   let randomExpressionTimeoutWidget: ReturnType<typeof setTimeout> | undefined;
   const widgetMascotVisualArea = document.getElementById('widget-mascot-visual-area');
@@ -218,6 +221,7 @@ interface Props {
     if (!chatInputElement || !chatInputElement.value.trim()) return;
 
     const userInput = chatInputElement.value.trim();
+    const historyForApi = [...conversationHistory]; // Snapshot of history *before* current user input for the 'history' field
     addMessageToHistory(userInput, 'user');
     // Explicitly type the object being pushed
     conversationHistory.push({ role: 'user', content: userInput } as ChatMessage);
@@ -227,10 +231,6 @@ interface Props {
     chatInputElement.value = '';
 
     // Construct prompt using the imported bleepyPersonaString
-    const promptMessages: ChatMessage[] = [
-      { role: 'system', content: bleepyPersonaString },
-      ...conversationHistory
-    ];
 
     try {
       // Add a thinking indicator for Bleepy
@@ -245,10 +245,12 @@ interface Props {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          // Ensure the worker expects this structure.
-          // Adjust if the worker expects a different format, e.g., just `promptMessages` or `messages`.
-          messages: promptMessages,
-          // No specific mascot for this widget, so we don't send `activeMascot`
+          message: userInput,
+          history: historyForApi,
+          provider: "google",
+          persona: bleepyPersonaString,
+          // Conditionally add pageContext if it's available and not empty
+          ...(pageContextFromData && pageContextFromData.trim() !== '' ? { pageContext: pageContextFromData } : {}),
         }),
       });
 
@@ -296,6 +298,9 @@ interface Props {
 
     // Apply background image
     const widgetContainer = document.getElementById('bleepy-post-widget');
+    if (widgetContainer && typeof widgetContainer.dataset.pageContext === 'string') {
+      pageContextFromData = widgetContainer.dataset.pageContext;
+    }
     const hardcodedBgImageUrl = '/src/content/mascot/kitchen.png';
     if (widgetContainer && hardcodedBgImageUrl) {
       widgetContainer.style.backgroundImage = `url(${hardcodedBgImageUrl})`;

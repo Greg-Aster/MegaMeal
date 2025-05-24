@@ -39,8 +39,9 @@ interface Props {
   lang?: string
   setOGTypeArticle?: boolean
   headings?: MarkdownHeading[]
-  post?: any 
+  post?: any
   bannerLink?: string
+  isPostPage?: boolean // Added for explicit post page identification
 }
 
 // Update the Props destructuring in MainGridLayout.astro
@@ -52,7 +53,8 @@ const {
   setOGTypeArticle, 
   headings = [], 
   post,
-  bannerLink = ''
+  bannerLink = '',
+  isPostPage = false // Destructure isPostPage, default to false
 } = Astro.props
 
 // Get the banner link from post data if available (for cases where post data is passed directly)
@@ -376,9 +378,10 @@ style={`margin-top: 1.5rem;`}>
   {contextForBleepy && (
     <div id="bleepy-page-context" style="display: none;" data-context={JSON.stringify(contextForBleepy)}></div>
   )}
-  {/* Render Bleepy as a fixed overlay ONLY if not an assistant banner */}
-  {!hasAssistantBanner && (
-    <BleepyOverlay />
+  {/* Render Bleepy as a fixed overlay ONLY if not an assistant banner AND the page doesn't provide its own mascotContext */}
+  {/* Render Bleepy as a fixed overlay ONLY if not an assistant banner AND not a post page (which handles its own Bleepy) */}
+  {!hasAssistantBanner && !isPostPage && (
+    <BleepyOverlay instanceIdentifier="LAYOUT_BLEEPY" />
   )}
 </Layout>
 

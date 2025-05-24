@@ -11,6 +11,7 @@ import { Icon } from 'astro-icon/components'
 import { licenseConfig } from '../../config/config'
 import PostMetadata from '../../components/PostMeta.astro'
 import ImageWrapper from '../../components/misc/ImageWrapper.astro'
+import Bleepy from '../../components/bleepy/Bleepy.astro';
 import { profileConfig, siteConfig } from '../../config/config'
 import { formatDateToYYYYMMDD } from '../../utils/date-utils'
 
@@ -23,6 +24,17 @@ export async function getStaticPaths() {
 }
 
 const { post } = Astro.props; // Destructure `post` instead of `entry`
+console.log('SLUG PAGE - mascotContext from frontmatter:', post.data.mascotContext);
+const mascotCtx = post.data.mascotContext;
+const bannerTypeCtx = post.data.bannerType;
+const shouldRenderAssistantBleepy = bannerTypeCtx === 'assistant';
+const hasMascotContext = !!mascotCtx;
+console.log('SLUG PAGE - mascotContext value for Bleepy prop (from post.data.mascotContext):', mascotCtx);
+console.log('SLUG PAGE - typeof mascotContext value for Bleepy prop:', typeof mascotCtx);
+console.log('SLUG PAGE - bannerType value (from post.data.bannerType):', bannerTypeCtx);
+console.log('SLUG PAGE - Condition for rendering Bleepy (bannerTypeCtx === "assistant"):', bannerTypeCtx === 'assistant');
+console.log('SLUG PAGE - shouldRenderAssistantBleepy:', shouldRenderAssistantBleepy);
+console.log('SLUG PAGE - hasMascotContext:', hasMascotContext);
 const { Content, headings } = await post.render()
 
 const { remarkPluginFrontmatter } = await post.render()
@@ -118,7 +130,7 @@ const jsonLd = {
             {post.data.image && post.data.showImageOnPost !== false && post.data.bannerType !== 'assistant' &&
               <ImageWrapper id="post-cover" src={post.data.image} basePath={path.join("content/posts/", getDir(post.id))} class="mb-8 rounded-xl banner-container onload-animation"/>
             }
-
+            {post.data.bannerType === 'assistant' && (<Bleepy mascotContext={mascotCtx} />)}
 
             <Markdown class="mb-6 markdown-content onload-animation">
                 <Content />

@@ -17,6 +17,8 @@ const postsCollection = defineCollection({
     category: z.string().optional().default(''),
     lang: z.string().optional().default(''),
     showImageOnPost: z.boolean().optional(),
+    mascotContext: z.string().optional(),
+
     
     // Add bannerType field
     bannerType: z.enum(['image', 'video', 'timeline', 'assistant']).optional(),
@@ -42,7 +44,6 @@ const postsCollection = defineCollection({
     timelineLocation: z.string().optional(),
     isKeyEvent: z.boolean().optional(),
     yIndex: z.number().optional(),
-    mascotContext: z.string().optional(),
 
     /* For internal use */
     prevTitle: z.string().default(''),
