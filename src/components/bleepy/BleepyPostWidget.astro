@@ -148,8 +148,8 @@ interface Props {
         widgetMascotImageDisplay.src = activeMascot.images.openmouth;
         setTimeout(() => {
           // Ensure activeMascot and activeMascot.images are still valid before accessing openmouth
-          if (activeMascot && activeMascot.images && widgetMascotImageDisplay.src === activeMascot.images.openmouth) { // Check if it hasn't changed again
-            widgetMascotImageDisplay.src = originalSrc;
+          if (activeMascot && activeMascot.images && activeMascot.images.standard && widgetMascotImageDisplay.src === activeMascot.images.openmouth) { // Check if it hasn't changed again
+            widgetMascotImageDisplay.src = activeMascot.images.standard;
           }
         }, 1500); // Display open mouth for 1.5 seconds
       }
@@ -280,6 +280,20 @@ interface Props {
   }
 
   function initializeWidget() {
+    // Hide the main site mascot
+    const siteMascotContainer = document.getElementById('mascot-container');
+    if (siteMascotContainer) {
+      siteMascotContainer.style.display = 'none';
+      // Optionally, also set the sessionStorage item to mimic dismissal
+      sessionStorage.setItem('bleepyDismissed', 'true');
+
+      // Optionally, hide the bring back button as well
+      const bringBackSiteMascotButton = document.getElementById('bring-back-mascot-button');
+      if (bringBackSiteMascotButton) {
+        bringBackSiteMascotButton.style.display = 'none';
+      }
+    }
+
     // Apply background image
     const widgetContainer = document.getElementById('bleepy-post-widget');
     const hardcodedBgImageUrl = '/src/content/mascot/kitchen.png';
@@ -332,47 +346,46 @@ interface Props {
   @import './mascotAnimations.css';
 
   /* Widget container */
-  .widget-container {
+  #bleepy-post-widget.widget-container {
     border: 1px solid var(--border-color);
     /* background-image, background-size, etc. are set by JS, keep them */
   }
 
   /* Chat input */
-  .widget-chat-input {
-    border: 1px solid var(--border-color);
+  #bleepy-post-widget .widget-chat-input {
+    border: 1px solid var(--input-border-color);
     background-color: var(--input-bg);
     color: var(--text-color);
     /* p-2, rounded-lg are from existing Tailwind classes in the HTML */
   }
-  .widget-chat-input::placeholder {
+  #bleepy-post-widget .widget-chat-input::placeholder {
     color: var(--text-color-muted);
   }
-  .widget-chat-input:focus {
+  #bleepy-post-widget .widget-chat-input:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 50%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 30%, transparent);
     outline: none;
   }
 
   /* Chat send button */
-  .widget-chat-send {
+  #bleepy-post-widget .widget-chat-send {
     background-color: var(--primary);
     color: var(--text-on-primary);
     /* p-2, rounded-lg are from existing Tailwind classes in the HTML */
   }
-  .widget-chat-send:hover {
-    /* This replicates the original hover:bg-opacity-80 */
-    background-color: color-mix(in srgb, var(--primary) 80%, transparent);
+  #bleepy-post-widget .widget-chat-send:hover {
+    background-color: var(--primary-hover); /* Assuming --primary-hover is defined in main.css */
   }
 
   /* Chat messages */
-  .widget-user-message {
+  #bleepy-post-widget .widget-user-message {
     background-color: var(--primary);
     color: var(--text-on-primary);
     /* Base layout styles (p-2, rounded-lg, mb-2, max-w-[80%], ml-auto, text-right)
        are still applied by Tailwind classes added in JavaScript */
   }
 
-  .widget-bleepy-message {
+  #bleepy-post-widget .widget-bleepy-message {
     background-color: var(--surface-2);
     color: var(--text-color);
     /* Base layout styles (p-2, rounded-lg, mb-2, max-w-[80%], mr-auto, text-left)
