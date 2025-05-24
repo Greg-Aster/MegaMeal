@@ -249,8 +249,8 @@ export function setupBleepy(mascotContextPropValue?: string, instanceId?: string
     const onAppearAnimationEnd = (event: AnimationEvent) => {
       if (event.animationName !== 'speech-appear') return;
       const words = text.split(/\s+/).length;
-      let currentLingerDuration = (words / 2.5) * 1000 + 1500;
-      currentLingerDuration = Math.max(2500, Math.min(currentLingerDuration, 10000));
+      let currentLingerDuration = (words / 2.5) * 1000 + 2000;
+      currentLingerDuration = Math.max(3000, Math.min(currentLingerDuration, 17000));
       speechLingerTimeout = setTimeout(() => {
         if (!mascotSpeechBubble || !mascotSpeechText) return;
         mascotSpeechBubble.classList.remove('appearing');
