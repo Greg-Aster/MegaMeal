@@ -479,11 +479,15 @@ console.log(`BLEEPY.ASTRO (${instanceIdentifier || 'UNKNOWN'}) - Typeof mascotCo
 </style>
 
 
-<script define:vars={{ mascotContextPropValue: mascotContext, instanceId: instanceIdentifier }}>
+<script type="module" define:vars={{ mascotContextPropValue: mascotContext, instanceId: instanceIdentifier }}>
   async function init() {
-    // mascotContextPropValue is directly available here thanks to define:vars
-    const { setupBleepy } = await import('/src/components/bleepy/bleepy-client-setup.ts');
-    setupBleepy(mascotContextPropValue, instanceId);
+    try {
+      // Use a relative path with '../' to navigate up from the current page location
+      const { setupBleepy } = await import('../../../src/components/bleepy/bleepy-client-setup.ts');
+      setupBleepy(mascotContextPropValue, instanceId);
+    } catch (error) {
+      console.error('Failed to import bleepy-client-setup.ts:', error);
+    }
   }
 
   if (document.readyState === 'loading') {
