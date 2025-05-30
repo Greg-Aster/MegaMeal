@@ -1,0 +1,420 @@
+---
+interface Props {
+  // backgroundImageUrl?: string; // Prop removed, will be hardcoded
+  mascotContext?: string;
+}
+// const { backgroundImageUrl = '/src/content/mascot/kitchen.png' } = Astro.props; // Prop removed
+const { mascotContext } = Astro.props;
+---
+
+<div id="bleepy-post-widget" class="widget-container rounded-lg p-4 flex flex-row gap-4" data-page-context={mascotContext || ''}>
+  <div id="widget-mascot-visual-area" class="w-1/3 flex items-center justify-start">
+    <img id="widget-mascot-image-display" alt="Cuppy" class="max-w-full max-h-full object-contain" style="display: none;" />
+    <!-- SVG mascot content will be injected here by JavaScript -->
+  </div>
+  <div class="flex flex-col flex-grow gap-2">
+    <div id="widget-chat-history" class="h-64 overflow-y-auto flex-grow">
+      <!-- Chat messages will be appended here -->
+    </div>
+    <div id="widget-chat-ui" class="flex gap-2 p-2">
+      <input type="text" id="widget-chat-input" class="widget-chat-input flex-grow p-2 rounded-lg" placeholder="Type your message..." />
+      <button id="widget-chat-send" class="widget-chat-send p-2 rounded-lg">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { cuppyPersonaString, cuppyRandomDialogues, mascots, currentAiProvider } from '../../config/bleepyConfig.ts';
+  import type { Mascot, MascotName, MascotImageSet, AiProvider } from '../../config/bleepyConfig.ts';
+
+  let proactiveDialogueTimer: ReturnType<typeof setTimeout> | undefined;
+  let activeMascot: Mascot | null = null;
+  let currentMascotIndex: number = 0;
+  let pageContextFromData: string | undefined; // For page-specific context
+
+  let randomExpressionTimeoutWidget: ReturnType<typeof setTimeout> | undefined;
+  const widgetMascotVisualArea = document.getElementById('widget-mascot-visual-area');
+  const widgetMascotImageDisplay = document.getElementById('widget-mascot-image-display') as HTMLImageElement;
+
+
+  interface ChatMessage {
+    role: 'user' | 'assistant' | 'system';
+    content: string;
+  }
+
+  const chatHistoryElement = document.getElementById('widget-chat-history');
+  const chatInputElement = document.getElementById('widget-chat-input') as HTMLInputElement;
+  const chatSendButton = document.getElementById('widget-chat-send');
+
+  let conversationHistory: ChatMessage[] = [];
+
+  /**
+   * Changes the mascot's image to a random expression and reverts after a timeout.
+   */
+  function playRandomImageExpressionOnMascot() {
+    if (!activeMascot || activeMascot.type !== "image-set" || !widgetMascotImageDisplay || !activeMascot.images) {
+      return;
+    }
+
+    // Ensure activeMascot.images is defined before trying to get its keys
+    const currentImages = activeMascot.images;
+    if (!currentImages) return;
+
+    const expressionKeys = Object.keys(currentImages).filter(
+      key => key !== "standard" && key !== "openmouth" && currentImages[key as keyof MascotImageSet]
+    ) as (keyof MascotImageSet)[];
+
+    if (expressionKeys.length === 0) return;
+
+    const randomKey = expressionKeys[Math.floor(Math.random() * expressionKeys.length)];
+    const expressionImageSrc = currentImages[randomKey];
+
+    if (!expressionImageSrc) return; // Should not happen if filter works, but good check
+    widgetMascotImageDisplay.src = expressionImageSrc;
+
+    clearTimeout(randomExpressionTimeoutWidget);
+    randomExpressionTimeoutWidget = setTimeout(() => {
+      // Re-check activeMascot and its images as they might have changed
+      if (activeMascot && activeMascot.images && activeMascot.images.standard && widgetMascotImageDisplay) {
+        // Check if the src is still the random expression before reverting
+        if (widgetMascotImageDisplay.src === expressionImageSrc) {
+            widgetMascotImageDisplay.src = activeMascot.images.standard;
+        }
+      }
+    }, Math.random() * 700 + 1200); // 1200ms to 1900ms
+  }
+
+  /**
+   * Applies a random visual effect (wiggle or expression change) to the mascot image.
+   * Mirrors the logic from Cuppy.astro.
+   */
+  function tryPlayRandomVisualEffectOnMascot() {
+    const mascotImg = widgetMascotImageDisplay;
+    if (!mascotImg || mascotImg.style.display === 'none' || !activeMascot) {
+        return;
+    }
+
+    const randomNumber = Math.random();
+
+    if (activeMascot.type === "image-set") {
+        if (randomNumber < 0.4) { // 40% chance to wiggle
+            if (mascotImg.classList.contains('wiggling')) {
+                mascotImg.classList.remove('wiggling');
+                void mascotImg.offsetWidth; // Force reflow
+            }
+            mascotImg.classList.add('wiggling');
+
+            const animationEndHandler = () => {
+                if (mascotImg.classList.contains('wiggling')) {
+                    mascotImg.classList.remove('wiggling');
+                }
+            };
+            mascotImg.addEventListener('animationend', animationEndHandler, { once: true });
+
+            setTimeout(() => {
+                mascotImg.removeEventListener('animationend', animationEndHandler);
+                if (mascotImg.classList.contains('wiggling')) {
+                    mascotImg.classList.remove('wiggling');
+                }
+            }, 1000); // .wiggling animation is 0.6s, 1s fallback
+
+        } else if (randomNumber < 0.8) { // 40% chance for random expression
+            playRandomImageExpressionOnMascot();
+        }
+        // Else (20% chance): do nothing
+    }
+    // SVG mascot types are not currently handled by CuppyPostWidget's loadMascot
+}
+
+  function addMessageToHistory(text: string, sender: 'user' | 'cuppy') {
+    if (!chatHistoryElement) return;
+    const messageElement = document.createElement('div');
+    messageElement.textContent = text;
+    messageElement.classList.add('p-2', 'rounded-lg', 'mb-2', 'max-w-[80%]');
+
+    if (sender === 'user') {
+      messageElement.classList.add('widget-user-message', 'ml-auto', 'text-right');
+    } else {
+      messageElement.classList.add('widget-cuppy-message', 'mr-auto', 'text-left');
+    }
+    chatHistoryElement.appendChild(messageElement);
+    chatHistoryElement.scrollTop = chatHistoryElement.scrollHeight; // Scroll to bottom
+  }
+
+  function triggerProactiveDialogue() {
+    if (cuppyRandomDialogues && cuppyRandomDialogues.length > 0) {
+      const selectedDialogue = cuppyRandomDialogues[Math.floor(Math.random() * cuppyRandomDialogues.length)];
+      addMessageToHistory(selectedDialogue, 'cuppy');
+
+      if (activeMascot && activeMascot.type === 'image-set' && activeMascot.images && activeMascot.images.openmouth && widgetMascotImageDisplay) {
+        const originalSrc = widgetMascotImageDisplay.src;
+        widgetMascotImageDisplay.src = activeMascot.images.openmouth;
+        setTimeout(() => {
+          // Ensure activeMascot and activeMascot.images are still valid before accessing openmouth
+          if (activeMascot && activeMascot.images && activeMascot.images.standard && widgetMascotImageDisplay.src === activeMascot.images.openmouth) { // Check if it hasn't changed again
+            widgetMascotImageDisplay.src = activeMascot.images.standard;
+          }
+        }, 1500); // Display open mouth for 1.5 seconds
+      }
+    }
+    tryPlayRandomVisualEffectOnMascot(); // Play visual effect
+    startProactiveDialogueTimer(); // Reschedule next proactive message
+  }
+
+  function loadMascot(mascotIndex: number) {
+    if (!mascots || mascots.length === 0) {
+      console.warn("No mascots configured or loaded.");
+      return;
+    }
+    currentMascotIndex = mascotIndex % mascots.length; // Ensure index is within bounds
+    activeMascot = mascots[currentMascotIndex];
+
+    if (!widgetMascotVisualArea || !widgetMascotImageDisplay) {
+      console.error("Mascot display areas not found in DOM.");
+      return;
+    }
+
+    // Clear previous mascot content and classes
+    widgetMascotVisualArea.innerHTML = ''; // Clear first, then re-add image display if needed
+    widgetMascotVisualArea.className = "w-1/3 flex items-center justify-start"; // Reset to default classes for side-by-side layout
+
+    if (activeMascot.type === "image-set") {
+      if (activeMascot.images && activeMascot.images.standard) {
+        widgetMascotImageDisplay.src = activeMascot.images.standard;
+      }
+      widgetMascotImageDisplay.style.display = 'block';
+      if (!widgetMascotVisualArea.contains(widgetMascotImageDisplay)) {
+        widgetMascotVisualArea.appendChild(widgetMascotImageDisplay);
+      }
+    } else if (activeMascot.type === "svg") {
+      widgetMascotImageDisplay.style.display = 'none'; // Hide the img tag
+      // If the img tag was previously appended, ensure it's not the only thing cleared by innerHTML
+      if (widgetMascotVisualArea.contains(widgetMascotImageDisplay)) {
+         widgetMascotVisualArea.removeChild(widgetMascotImageDisplay);
+      }
+      if (activeMascot.svgHTML) {
+        widgetMascotVisualArea.innerHTML = activeMascot.svgHTML;
+      } else {
+        widgetMascotVisualArea.innerHTML = ''; // Clear content if svgHTML is undefined
+      }
+    }
+
+    if (activeMascot.cssClasses && activeMascot.cssClasses.length > 0) {
+      widgetMascotVisualArea.classList.add(...activeMascot.cssClasses);
+    }
+  }
+
+  function startProactiveDialogueTimer() {
+    if (proactiveDialogueTimer) {
+      clearTimeout(proactiveDialogueTimer);
+    }
+    // Set a new timeout for 45-60 seconds
+    const randomDelay = Math.random() * (60000 - 45000) + 45000;
+    proactiveDialogueTimer = setTimeout(triggerProactiveDialogue, randomDelay);
+  }
+
+  function resetProactiveDialogueTimer() {
+    startProactiveDialogueTimer(); // This effectively clears and restarts the timer
+  }
+
+  async function handleSendMessage() {
+    if (!chatInputElement || !chatInputElement.value.trim()) return;
+
+    const userInput = chatInputElement.value.trim();
+    const historyForApi = [...conversationHistory]; // Snapshot of history *before* current user input for the 'history' field
+    addMessageToHistory(userInput, 'user');
+    // Explicitly type the object being pushed
+    conversationHistory.push({ role: 'user', content: userInput } as ChatMessage);
+    resetProactiveDialogueTimer(); // Reset timer on user message
+
+    // Clear input
+    chatInputElement.value = '';
+
+    // Construct prompt using the imported cuppyPersonaString
+
+    try {
+      // Add a thinking indicator for Cuppy
+      const thinkingMessage = "Cuppy is thinking...";
+      addMessageToHistory(thinkingMessage, 'cuppy');
+      const thinkingElement = chatHistoryElement?.lastChild as HTMLElement;
+
+
+      const response = await fetch('https://my-mascot-worker-service.greggles.workers.dev', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userInput,
+          history: historyForApi,
+          provider: currentAiProvider,
+          persona: cuppyPersonaString,
+          // Conditionally add pageContext if it's available and not empty
+          ...(pageContextFromData && pageContextFromData.trim() !== '' ? { pageContext: pageContextFromData } : {}),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Cuppy API Error:', response.status, errorText);
+        if (thinkingElement) thinkingElement.remove(); // Remove thinking message
+        addMessageToHistory(`Sorry, I encountered an error: ${response.status}. Please try again.`, 'cuppy');
+        conversationHistory.push({ role: 'assistant', content: `Error: ${response.status}` } as ChatMessage);
+        return;
+      }
+
+      const data = await response.json();
+      const cuppyReply = data.reply || "I'm not sure how to respond to that.";
+
+      if (thinkingElement) thinkingElement.remove(); // Remove thinking message
+      addMessageToHistory(cuppyReply, 'cuppy');
+      conversationHistory.push({ role: 'assistant', content: cuppyReply } as ChatMessage);
+
+    } catch (error) {
+      console.error('Failed to send message to Cuppy:', error);
+      const thinkingElement = chatHistoryElement?.querySelector('.widget-cuppy-message:last-child'); // Attempt to find it again
+      if (thinkingElement && thinkingElement.textContent === "Cuppy is thinking...") {
+        thinkingElement.remove();
+      }
+      addMessageToHistory('Sorry, I could not connect to the assistant. Please check your connection and try again.', 'cuppy');
+      conversationHistory.push({ role: 'assistant', content: 'Connection error' } as ChatMessage);
+    }
+  }
+
+  function initializeWidget() {
+    // Hide the main site mascot
+    const siteMascotContainer = document.getElementById('mascot-container');
+    if (siteMascotContainer) {
+      siteMascotContainer.style.display = 'none';
+      // Optionally, also set the sessionStorage item to mimic dismissal
+      sessionStorage.setItem('cuppyDismissed', 'true');
+
+      // Optionally, hide the bring back button as well
+      const bringBackSiteMascotButton = document.getElementById('bring-back-mascot-button');
+      if (bringBackSiteMascotButton) {
+        bringBackSiteMascotButton.style.display = 'none';
+      }
+    }
+
+    // Apply background image
+    const widgetContainer = document.getElementById('bleepy-post-widget');
+    if (widgetContainer && typeof widgetContainer.dataset.pageContext === 'string') {
+      pageContextFromData = widgetContainer.dataset.pageContext;
+    }
+    const hardcodedBgImageUrl = '/src/content/mascot/kitchen.png';
+    if (widgetContainer && hardcodedBgImageUrl) {
+      widgetContainer.style.backgroundImage = `url(${hardcodedBgImageUrl})`;
+      widgetContainer.style.backgroundSize = 'cover';
+      widgetContainer.style.backgroundPosition = 'center';
+      widgetContainer.style.backgroundRepeat = 'no-repeat';
+    }
+
+    if (chatSendButton) {
+      chatSendButton.addEventListener('click', handleSendMessage);
+    }
+    if (chatInputElement) {
+      chatInputElement.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+          handleSendMessage();
+        }
+      });
+    }
+    startProactiveDialogueTimer(); // Initialize proactive dialogue timer
+    loadMascot(0); // Load the default mascot
+  }
+
+  let widgetInitialized = false;
+  function runOnceInitializeWidget() {
+    if (!widgetInitialized) {
+      initializeWidget();
+      widgetInitialized = true;
+    }
+  }
+
+  // Astro's primary lifecycle event
+  document.addEventListener('astro:page-load', runOnceInitializeWidget);
+
+  // Standard DOM ready event as a fallback or for non-Astro environments
+  document.addEventListener('DOMContentLoaded', runOnceInitializeWidget);
+
+  // Fallback for scenarios where the script is loaded after DOMContentLoaded
+  // has already fired, or for ensuring initialization with view transitions.
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    // Using setTimeout to queue the initialization after the current execution stack.
+    // This can help ensure that all DOM elements are fully available.
+    setTimeout(runOnceInitializeWidget, 0);
+  }
+
+</script>
+
+<style is:global>
+  @import './mascotAnimations.css';
+
+  /* Widget container */
+  #bleepy-post-widget.widget-container {
+    border: 1px solid var(--border-color);
+    /* background-image, background-size, etc. are set by JS, keep them */
+  }
+
+  /* Chat input */
+  #bleepy-post-widget .widget-chat-input {
+    border: 1px solid var(--input-border-color);
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    /* p-2, rounded-lg are from existing Tailwind classes in the HTML */
+  }
+  #bleepy-post-widget .widget-chat-input::placeholder {
+    color: var(--text-color-muted);
+  }
+  #bleepy-post-widget .widget-chat-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 30%, transparent);
+    outline: none;
+  }
+
+  /* Chat send button */
+  #bleepy-post-widget .widget-chat-send {
+    background-color: var(--primary);
+    color: var(--text-on-primary);
+    /* p-2, rounded-lg are from existing Tailwind classes in the HTML */
+  }
+  #bleepy-post-widget .widget-chat-send:hover {
+    background-color: var(--primary-hover); /* Assuming --primary-hover is defined in main.css */
+  }
+
+  /* Chat messages */
+  #bleepy-post-widget .widget-user-message {
+    background-color: var(--primary);
+    color: var(--text-on-primary);
+    /* Base layout styles (p-2, rounded-lg, mb-2, max-w-[80%], ml-auto, text-right)
+       are still applied by Tailwind classes added in JavaScript */
+  }
+
+  #bleepy-post-widget .widget-cuppy-message {
+    background-color: var(--surface-2);
+    color: var(--text-color);
+    /* Base layout styles (p-2, rounded-lg, mb-2, max-w-[80%], mr-auto, text-left)
+       are still applied by Tailwind classes added in JavaScript */
+  }
+
+  /* Ensure chat history is scrollable - Updated scrollbar variables */
+  #widget-chat-history {
+    scrollbar-width: thin; /* For Firefox */
+    scrollbar-color: var(--surface-2) var(--surface-1); /* Changed --surface-3 to --surface-2 */
+  }
+
+  #widget-chat-history::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  #widget-chat-history::-webkit-scrollbar-track {
+    background: var(--surface-1);
+    border-radius: 4px;
+  }
+
+  #widget-chat-history::-webkit-scrollbar-thumb {
+    background-color: var(--surface-2); /* Changed --surface-3 to --surface-2 */
+    border-radius: 4px;
+    border: 2px solid var(--surface-1);
+  }
+</style>

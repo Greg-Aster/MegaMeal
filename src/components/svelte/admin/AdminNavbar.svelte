@@ -2,8 +2,7 @@
   import { onMount } from 'svelte';
   import { slide } from 'svelte/transition';
   import LoginForm from './LoginForm.svelte';
-  import { isAuthenticated, logout } from '../../../utils/password';
-  
+
   // Props
   export let siteTitle = 'Blog';
   
@@ -32,6 +31,11 @@
   
   // Handle successful login
   function handleLogin() {
+    isAuthenticatedState = true;
+  }
+  
+  // Handle successful setup
+  function handleSetup() {
     isAuthenticatedState = true;
   }
   
@@ -149,7 +153,7 @@
 </div>
 
 <!-- Login Form Component -->
-<LoginForm bind:this={loginFormRef} on:login={handleLogin} />
+<LoginForm bind:this={loginFormRef} on:login={handleLogin} on:setup={handleSetup} />
 </div>
 
 <style>

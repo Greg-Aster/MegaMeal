@@ -76,10 +76,10 @@ app.post('/api/save-config', async (req, res) => {
     
     // Map config types to file paths
     const configPaths = {
-      siteConfig: './src/config.ts',
-      navBarConfig: './src/config.ts',
-      profileConfig: './src/config.ts',
-      licenseConfig: './src/config.ts',
+      siteConfig: './src/config/config.ts',
+      navBarConfig: './src/config/config.ts',
+      profileConfig: './src/config/config.ts',
+      licenseConfig: './src/config/config.ts',
       timelineConfig: './src/TimelineConfig.ts'
     };
     

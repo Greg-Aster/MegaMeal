@@ -1,5 +1,5 @@
 // TimelineService.client.ts - Client-safe version without astro:content dependencies
-import { 
+import {
   defaultEraConfig,
   defaultEraDisplayNames,
   defaultTimelineViewConfig,
@@ -10,14 +10,14 @@ import {
   groupEventsByEra,
   getTimelineStatistics,
   getEraConfigForYear
-} from './TimelineConfig';
+} from '../config/timelineconfig';
 // Use 'import type' for types and interfaces
-import type { 
+import type {
   TimelineEvent,
   EraConfig,
   EraConfigMap,
   TimelineViewConfig
-} from './TimelineConfig';
+} from '../config/timelineconfig';
 
 // Function to safely handle date serialization issues (client-specific)
 export function safeJSONParse(jsonString: string): any {

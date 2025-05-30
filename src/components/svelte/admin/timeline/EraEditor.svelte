@@ -171,7 +171,7 @@
               step="0.1"
               min="0.5"
               max="5"
-              class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+              class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
               placeholder="e.g. 2.5"
             />
             <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
@@ -187,7 +187,7 @@
               type="number" 
               id="pan-to-year" 
               bind:value={formData.panToYear}
-              class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+              class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
               placeholder="e.g. 1500"
             />
             <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
@@ -206,7 +206,7 @@
           type="text" 
           id="background-image" 
           bind:value={formData.backgroundImage}
-          class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+          class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
           placeholder="/posts/timeline/golden-era.png"
         />
         <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
@@ -224,7 +224,7 @@
             type="text" 
             id="color-class" 
             bind:value={formData.colorClass}
-            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
             placeholder="e.g. 'text-blue-500'"
           />
           <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
@@ -240,7 +240,7 @@
             type="text" 
             id="badge-class" 
             bind:value={formData.badgeClass}
-            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
             placeholder="e.g. 'bg-blue-100 text-blue-800'"
           />
           <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">

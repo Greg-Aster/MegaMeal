@@ -73,7 +73,7 @@
             step="0.1"
             min="0.5"
             max="5"
-            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
           />
           <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
             Initial zoom level when the timeline loads
@@ -93,7 +93,7 @@
               step="0.1"
               min="0.1"
               max="1"
-              class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+              class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
             />
           </div>
           <div>
@@ -108,7 +108,7 @@
               step="0.1"
               min="1"
               max="10"
-              class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+              class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
             />
           </div>
         </div>
@@ -125,7 +125,7 @@
             step="0.05"
             min="0.05"
             max="0.5"
-            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
           />
           <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
             Amount to zoom in/out for each step
@@ -144,7 +144,7 @@
             step="1"
             min="0"
             max="50"
-            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
           />
           <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
             Percentage padding on timeline edges
@@ -170,7 +170,7 @@
             id="very-small-threshold" 
             bind:value={settings.zoomRatioThresholds.verySmall}
             on:change={handleChange}
-            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
           />
           <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
             &lt; {1/settings.zoomRatioThresholds.verySmall * 100}% of timeline visible
@@ -186,7 +186,7 @@
             id="small-threshold" 
             bind:value={settings.zoomRatioThresholds.small}
             on:change={handleChange}
-            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
           />
           <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
             {1/settings.zoomRatioThresholds.verySmall * 100}% - {1/settings.zoomRatioThresholds.small * 100}% of timeline visible
@@ -202,7 +202,7 @@
             id="medium-threshold" 
             bind:value={settings.zoomRatioThresholds.medium}
             on:change={handleChange}
-            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
           />
           <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
             {1/settings.zoomRatioThresholds.small * 100}% - {1/settings.zoomRatioThresholds.medium * 100}% of timeline visible
@@ -218,7 +218,7 @@
             id="large-threshold" 
             bind:value={settings.zoomRatioThresholds.large}
             on:change={handleChange}
-            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
           />
           <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
             {1/settings.zoomRatioThresholds.medium * 100}% - {1/settings.zoomRatioThresholds.large * 100}% of timeline visible
@@ -234,7 +234,7 @@
             id="very-large-threshold" 
             bind:value={settings.zoomRatioThresholds.veryLarge}
             on:change={handleChange}
-            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
           />
           <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
             {1/settings.zoomRatioThresholds.large * 100}% - {1/settings.zoomRatioThresholds.veryLarge * 100}% of timeline visible
@@ -264,7 +264,7 @@
           step="0.1"
           min="1"
           max="10"
-          class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+          class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
         />
       </div>
       
@@ -280,7 +280,7 @@
           step="0.1"
           min="1"
           max="10"
-          class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+          class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
         />
       </div>
       
@@ -296,7 +296,7 @@
           step="0.1"
           min="1"
           max="10"
-          class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+          class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
         />
       </div>
       
@@ -312,7 +312,7 @@
           step="0.1"
           min="1"
           max="10"
-          class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+          class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
         />
       </div>
       
@@ -328,7 +328,7 @@
           step="0.1"
           min="1"
           max="10"
-          class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+          class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
         />
       </div>
       
@@ -344,7 +344,7 @@
           step="0.1"
           min="1"
           max="10"
-          class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+          class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
         />
       </div>
     </div>

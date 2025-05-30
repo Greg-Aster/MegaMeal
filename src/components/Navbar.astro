@@ -2,7 +2,7 @@
 import { Icon } from 'astro-icon/components'
 import DisplaySettings from './widget/DisplaySettings.svelte'
 import { LinkPreset, type NavBarLink } from '../types/config'
-import { navBarConfig, siteConfig } from '../config'
+import { navBarConfig, siteConfig } from '../config/config'
 import NavMenuPanel from './widget/NavMenuPanel.astro'
 import Search from './Search.svelte'
 import { LinkPresets } from '../constants/link-presets'
@@ -84,9 +84,16 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
                         <Icon name="material-symbols:palette-outline" class="text-[1.25rem]"></Icon>
                     </button>
             )}
+            <!-- Mascot Controls -->
             <LightDarkSwitch client:load></LightDarkSwitch>
             <button aria-label="Menu" name="Nav Menu" class="btn-plain scale-animation rounded-lg w-11 h-11 active:scale-90 md:!hidden" id="nav-menu-switch">
                 <Icon name="material-symbols:menu-rounded" class="text-[1.25rem]"></Icon>
+            </button>
+            <button aria-label="Dismiss Mascot" title="Dismiss Mascot" id="navbar-dismiss-mascot-button" class="btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90">
+                🍴
+            </button>
+            <button aria-label="Bring back mascot" title="Bring back mascot" id="navbar-bring-back-mascot-button" class="btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90" style="display: none;">
+                🥄
             </button>
         </div>
         
@@ -96,6 +103,8 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
 </div>
 
 <script>
+let dismissMascotBtn: HTMLElement | null = null;
+let bringBackMascotBtn: HTMLElement | null = null;
 function switchTheme() {
     if (localStorage.theme === 'dark') {
         document.documentElement.classList.remove('dark');
@@ -136,7 +145,56 @@ function loadButtonScript() {
             }
         });
     }
+    // Mascot Controls
+    dismissMascotBtn = document.getElementById("navbar-dismiss-mascot-button");
+    bringBackMascotBtn = document.getElementById("navbar-bring-back-mascot-button");
+
+    if (dismissMascotBtn) {
+        dismissMascotBtn.addEventListener("click", function () {
+            document.dispatchEvent(new CustomEvent('bleepy:hide'));
+            // Optionally, directly update button visibility here for immediate feedback,
+            // though the 'bleepy:visibilityChanged' listener will also handle this.
+            // dismissMascotBtn.style.display = 'none';
+            // if (bringBackMascotBtn) bringBackMascotBtn.style.display = 'flex'; // Or 'inline-flex' or 'block' depending on styling
+        });
+    }
+
+    if (bringBackMascotBtn) {
+        bringBackMascotBtn.addEventListener("click", function () {
+            document.dispatchEvent(new CustomEvent('bleepy:show'));
+            // Optionally, directly update button visibility here
+            // bringBackMascotBtn.style.display = 'none';
+            // if (dismissMascotBtn) dismissMascotBtn.style.display = 'flex';
+        });
+    }
+
+    // Initial Button State for Mascot Controls
+    // Inside loadButtonScript() or a similar init function
+    if (dismissMascotBtn && bringBackMascotBtn) {
+        const mascotDismissed = sessionStorage.getItem('cuppyDismissed') === 'true';
+        if (mascotDismissed) {
+            dismissMascotBtn.style.display = 'none';
+            bringBackMascotBtn.style.display = 'flex'; // Or appropriate display value
+        } else {
+            dismissMascotBtn.style.display = 'flex'; // Or appropriate display value
+            bringBackMascotBtn.style.display = 'none';
+        }
+    }
 }
+
+document.addEventListener('bleepy:visibilityChanged', (event: Event) => {
+    const customEvent = event as CustomEvent;
+    const { visible } = customEvent.detail;
+    if (dismissMascotBtn && bringBackMascotBtn) {
+        if (visible) {
+            dismissMascotBtn.style.display = 'flex'; // Or appropriate display value
+            bringBackMascotBtn.style.display = 'none';
+        } else {
+            dismissMascotBtn.style.display = 'none';
+            bringBackMascotBtn.style.display = 'flex'; // Or appropriate display value
+        }
+    }
+});
 
 loadButtonScript();
 </script>

@@ -1,0 +1,21 @@
+---
+import { Content, frontmatter } from '@/content/posts/store/store-placeholder.mdx';
+import StoreLayout from '@/layouts/store/StoreLayout.astro';
+import Layout from '@/layouts/Layout.astro';
+
+const isStorePagination404 = Astro.url.pathname.startsWith('/store/page/');
+---
+
+{isStorePagination404 ? (
+  <StoreLayout title={frontmatter.title} description={frontmatter.description}>
+    <Content />
+  </StoreLayout>
+) : (
+  <Layout title="404: Not Found" description="Page not found.">
+    <main class="container">
+      <h1>404: Not Found</h1>
+      <p>The page you're looking for doesn't exist.</p>
+      <a href="/">Go back home</a>
+    </main>
+  </Layout>
+)}

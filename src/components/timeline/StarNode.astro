@@ -1,0 +1,228 @@
+---
+// src/components/timeline/StarNode.astro
+export interface Props {
+  era?: string;
+  isKeyEvent?: boolean;
+  isSelected?: boolean;
+  isHovered?: boolean;
+  size?: number;
+  identifier?: string;
+  useEraColors?: boolean;
+  triggerHighlightAnimation?: boolean;
+}
+
+const {
+  era,
+  isKeyEvent = false,
+  isSelected = false,
+  isHovered = false,
+  size = 8,
+  identifier = Math.random().toString(36).substring(2, 10),
+  useEraColors = false,
+  triggerHighlightAnimation = false,
+} = Astro.props;
+
+// Era color mapping
+type EraKey = keyof typeof eraColorMap;
+
+const eraColorMap = {
+  'ancient-epoch': '#3b82f6',        // Blue
+  'awakening-era': '#8b5cf6',        // Purple
+  'golden-age': '#6366f1',           // Indigo (formerly Orange)
+  'conflict-epoch': '#ec4899',       // Pink
+  'singularity-conflict': '#ef4444', // Red
+  'transcendent-age': '#14b8a6',     // Teal
+  'final-epoch': '#22c55e',          // Green
+  'unknown': '#6366f1'               // Indigo
+};
+
+const colorSpectrum = [
+  '#ef4444', '#f43f5e', '#f97316', '#f59e0b', '#eab308', '#facc15',
+  '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6',
+  '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
+];
+
+const starTypes = [
+  'point', 'classic', 'sparkle', 'refraction', 'halo', 'subtle'
+];
+
+function hashCode(str: string): number {
+  if (!str) return 0;
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function getStarColor(id: string, currentEra?: string, shouldUseEraColors?: boolean): string {
+  if (shouldUseEraColors && currentEra && eraColorMap[currentEra as EraKey]) {
+    return eraColorMap[currentEra as EraKey];
+  }
+  const hash = hashCode(id);
+  return colorSpectrum[hash % colorSpectrum.length];
+}
+
+function getStarType(id: string, keyEvent: boolean): string {
+  const hash = hashCode(id);
+  if (keyEvent) {
+    return ['classic', 'sparkle', 'refraction', 'halo'][hash % 4];
+  }
+  return starTypes[hash % starTypes.length];
+}
+
+function getSizeFactor(keyEvent: boolean): number {
+  return keyEvent ? 1.2 : 0.85 + (Math.random() * 0.3); // Math.random will run on server; for client-side variation, move to script
+}
+
+function getAnimationDuration(id: string): number {
+  const hash = hashCode(id);
+  return 4 + (hash % 5);
+}
+
+const uniqueId = `star-${identifier}-${isKeyEvent ? 'key' : 'normal'}`;
+const starType = getStarType(uniqueId, isKeyEvent);
+const sizeFactor = getSizeFactor(isKeyEvent); // Consider if this needs to be client-side for true randomness per instance
+const finalSize = size * sizeFactor;
+const mainColor = getStarColor(uniqueId, era, useEraColors);
+const animationDuration = getAnimationDuration(uniqueId);
+
+const wrapperId = `star-wrapper-${uniqueId}`;
+---
+
+<div
+  id={wrapperId}
+  class:list={[
+    "star-wrapper",
+    { "is-selected": isSelected },
+    { "is-hovered": isHovered },
+    { "is-key-event": isKeyEvent },
+    // "is-initialized" will be added by client script
+  ]}
+  data-star-type={starType}
+  data-trigger-highlight={triggerHighlightAnimation}
+  style={`
+    --animation-duration: ${animationDuration}s;
+    --star-size: ${finalSize}px;
+    --star-color: ${mainColor};
+    --secondary-color: ${mainColor};
+  `}
+>
+  <div class="star-backing-plate"></div>
+  <div class="star-glow"></div>
+  <div class="star-rays"></div>
+
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    width={finalSize * 2}
+    height={finalSize * 2}
+    class="star-shape"
+  >
+    {starType === 'point' && (
+      <circle cx="12" cy="12" r="1.8" fill={mainColor} />
+    )}
+    {starType === 'classic' && (
+      <path d="M12 5l1.5 3.5 3.5 0.5-2.5 2.5 0.5 3.5-3-1.5-3 1.5 0.5-3.5-2.5-2.5 3.5-0.5z" fill={mainColor} />
+    )}
+    {starType === 'sparkle' && (
+      <>
+        <path d="M12 5l0.7 3 2.8 0.5-2 2 0.5 3-2-1.5-2 1.5 0.5-3-2-2 2.8-0.5z" fill={mainColor} />
+        <path d="M12 3v18M3 12h18" stroke={mainColor} stroke-width="0.4" opacity="0.4" />
+      </>
+    )}
+    {starType === 'refraction' && (
+      <>
+        <circle cx="12" cy="12" r="1.5" fill={mainColor} />
+        <path d="M12 6v12M6 12h12" stroke={mainColor} stroke-width="0.7" opacity="0.6" class="refraction-lines" />
+        <path d="M8 8l8 8M8 16l8-8" stroke={mainColor} stroke-width="0.3" opacity="0.3" class="refraction-lines" />
+      </>
+    )}
+    {starType === 'halo' && (
+      <>
+        <circle cx="12" cy="12" r="1.5" fill={mainColor} />
+        <circle cx="12" cy="12" r="2.5" fill={mainColor} opacity="0.4" />
+        <circle cx="12" cy="12" r="3.5" fill={mainColor} opacity="0.15" />
+      </>
+    )}
+    {starType !== 'point' && starType !== 'classic' && starType !== 'sparkle' && starType !== 'refraction' && starType !== 'halo' && ( // Default/Subtle
+      <>
+        <circle cx="12" cy="12" r="1.2" fill={mainColor} />
+        <path d="M10 9l4 6M9 12l6 0" stroke={mainColor} stroke-width="0.4" opacity="0.5" />
+      </>
+    )}
+    {isKeyEvent && (
+      <circle cx="12" cy="12" r="2" fill={mainColor} opacity="0.5" class="inner-glow" />
+    )}
+  </svg>
+
+  <div class="orbital-effect">
+    <div class="orbital-ring orbital-base orbital-ring-1"></div>
+    {isSelected && (
+      <>
+        <div class="orbital-ring orbital-selected orbital-ring-1"></div>
+        <div class="orbital-ring orbital-selected orbital-ring-2"></div>
+      </>
+    )}
+    {/* Initialization and highlight orbitals will be managed by client script */}
+    <div class="orbital-ring orbital-init" style="display: none;"></div>
+    <div class="orbital-ring orbital-init random-highlight-animation" style="display: none;"></div>
+  </div>
+</div>
+
+<script define:vars={{ wrapperId }}>
+  const starWrapper = document.getElementById(wrapperId);
+
+  if (starWrapper) {
+    let showInitAnimation = true;
+    let playRandomHighlight = false;
+
+    const initOrbital = starWrapper.querySelector('.orbital-init:not(.random-highlight-animation)');
+    const highlightOrbital = starWrapper.querySelector('.orbital-init.random-highlight-animation');
+
+    // Initial animation
+    starWrapper.classList.add('is-initialized');
+    if (initOrbital) initOrbital.style.display = 'block';
+
+    setTimeout(() => {
+      showInitAnimation = false;
+      if (initOrbital && !playRandomHighlight) initOrbital.style.display = 'none';
+    }, 3000); // Match orbital-init animation duration
+
+    // Function to handle highlight
+    function handleHighlight(shouldHighlight) {
+      if (shouldHighlight && !playRandomHighlight) {
+        playRandomHighlight = true;
+        if (highlightOrbital) highlightOrbital.style.display = 'block';
+        if (initOrbital && showInitAnimation) initOrbital.style.display = 'none'; // Hide init if highlight starts
+
+        setTimeout(() => {
+          playRandomHighlight = false;
+          if (highlightOrbital) highlightOrbital.style.display = 'none';
+          // Restore initOrbital if it was supposed to be showing and highlight is done
+          if (initOrbital && showInitAnimation && !playRandomHighlight) {
+            initOrbital.style.display = 'block';
+          }
+        }, 3000); // Match animation duration
+      } else if (!shouldHighlight && playRandomHighlight) {
+        // This case might be tricky if the prop changes mid-animation
+        // For simplicity, we let the animation finish
+      }
+    }
+
+    // Initial check for triggerHighlightAnimation
+    handleHighlight(starWrapper.dataset.triggerHighlight === 'true');
+
+    // Observe changes to data-trigger-highlight attribute
+    const observer = new MutationObserver(mutationsList => {
+      for (const mutation of mutationsList) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'data-trigger-highlight') {
+          handleHighlight(starWrapper.dataset.triggerHighlight === 'true');
+        }
+      }
+    });
+
+    observer.observe(starWrapper, { attributes: true });
+  }
+</script>

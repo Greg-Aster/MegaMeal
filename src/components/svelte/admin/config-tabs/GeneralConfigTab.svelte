@@ -46,7 +46,7 @@
             id="site-title" 
             bind:value={siteConfig.title}
             on:change={handleChange}
-            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition" 
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100" 
             placeholder="Your Site Title"
           />
         </div>
@@ -60,7 +60,7 @@
             id="site-subtitle" 
             bind:value={siteConfig.subtitle}
             on:change={handleChange}
-            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition" 
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100" 
             placeholder="Your site subtitle or tagline"
           />
         </div>
@@ -73,7 +73,7 @@
             id="site-language" 
             bind:value={siteConfig.lang}
             on:change={handleChange}
-            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
           >
             {#each availableLanguages as language}
               <option value={language.code}>{language.name}</option>
@@ -113,7 +113,7 @@
             bind:value={siteConfig.toc.depth}
             on:change={handleChange}
             disabled={!siteConfig.toc.enable}
-            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition {!siteConfig.toc.enable ? 'opacity-50 cursor-not-allowed' : ''}"
+            class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100 {!siteConfig.toc.enable ? 'opacity-50 cursor-not-allowed' : ''}"
           >
             {#each tocDepthOptions as option}
               <option value={option.value}>{option.label}</option>
@@ -155,7 +155,7 @@
               bind:value={licenseConfig.name}
               on:change={handleChange}
               disabled={!licenseConfig.enable}
-              class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition {!licenseConfig.enable ? 'opacity-50 cursor-not-allowed' : ''}" 
+              class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100 {!licenseConfig.enable ? 'opacity-50 cursor-not-allowed' : ''}" 
               placeholder="e.g. CC BY-NC-SA 4.0"
             />
           </div>
@@ -170,7 +170,7 @@
               bind:value={licenseConfig.url}
               on:change={handleChange}
               disabled={!licenseConfig.enable}
-              class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition {!licenseConfig.enable ? 'opacity-50 cursor-not-allowed' : ''}" 
+              class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100 {!licenseConfig.enable ? 'opacity-50 cursor-not-allowed' : ''}" 
               placeholder="https://creativecommons.org/licenses/by-nc-sa/4.0/"
             />
           </div>

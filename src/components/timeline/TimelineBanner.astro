@@ -1,9 +1,22 @@
 ---
-import TimelineController from './TimelineController.svelte';
-import { getTimelineEvents } from '../../services/TimelineService';
+// src/components/timeline/TimelineBanner.astro
+// RESTORED CONTROLLER COMPONENT - All features working
 
-// Define props interface
-interface Props {
+import TimelineView from './TimelineViewModes/TimelineView.astro';
+import StarMapView from './TimelineViewModes/StarMapView.astro';
+import ListView from './TimelineViewModes/ListView.astro';
+import TreeView from './TimelineViewModes/TreeView.astro';
+import MapView from './TimelineViewModes/MapView.astro';
+import InfoCard from './InfoCard.astro';
+
+import type { TimelineEvent } from '../../services/TimelineService.client';
+import { getTimelineEvents } from '../../services/TimelineService';
+import { extractEraConfig, type EraConfigMap } from '../../services/TimelineService.client';
+import { defaultTimelineViewConfig } from '../../config/timelineconfig';
+import type { TimelineFact } from '../../config/timelineFacts';
+import { megaMealUniverseFacts } from '../../config/timelineFacts';
+
+export interface Props {
   id?: string;
   class?: string;
   category?: string;
@@ -13,180 +26,495 @@ interface Props {
   compact?: boolean;
   asBanner?: boolean;
   bannerHeight?: string;
-  mobileHeight?: string; // Added mobile height prop
+  mobileHeight?: string;
+  initialViewMode?: "timeline" | "list" | "tree" | "map" | "starmap";
+  useEraColorsForStars?: boolean;
+  initialScale?: number;
+  initialOffsetX?: number;
+  initialOffsetY?: number;
+  useEraColors?: boolean;
 }
 
-// Extract props with defaults
-const { 
-  id = "timeline-banner",
-  class: className = "",
+const {
+  id = "unified-timeline-area",
+  class: classList = "",
   category = "",
-  startYear,
-  endYear,
-  background = "/assets/banner/0001.png",
+  startYear: propStartYear,
+  endYear: propEndYear,
+  background: initialBackground = "/assets/banner/0001.png",
   compact = false,
-  asBanner = false,
+  asBanner = true,
   bannerHeight = "500px",
-  mobileHeight = "600px" // Default mobile height
+  mobileHeight = "400px",
+  initialViewMode = "timeline",
+  useEraColorsForStars = false,
+  useEraColors = false,
+  initialScale = defaultTimelineViewConfig.defaultZoom,
+  initialOffsetX = 0,
+  initialOffsetY = 0,
 } = Astro.props;
 
-// Pre-fetch initial data on the server
-let initialEvents = [];
-let bannerBackground = background;
+// Server-side data fetching & processing
+let events: TimelineEvent[] = [];
+let currentBackground = initialBackground;
 
 try {
-  // This gives us better performance and SEO since the basic timeline structure 
-  // will be in the initial HTML
-  initialEvents = await getTimelineEvents({
+  events = await getTimelineEvents({
     category: category || undefined,
-    startYear,
-    endYear,
+    startYear: propStartYear,
+    endYear: propEndYear,
     includeBanners: true
   });
-
-  // Find any banner posts to use their metadata
-  const bannerPost = initialEvents.find(event => event.bannerData);
-  if (bannerPost?.bannerData?.background) {
-    bannerBackground = bannerPost.bannerData.background;
+  
+  const bannerPostWithBg = events.find(event => event.bannerData?.background);
+  if (bannerPostWithBg?.bannerData?.background) {
+    currentBackground = bannerPostWithBg.bannerData.background;
   }
 } catch (error) {
   console.error("Error fetching timeline events:", error);
 }
 
-// Helper function to safely stringify events for client-side hydration
-function safeStringify(obj) {
-  return JSON.stringify(obj, (key, value) => {
-    // Handle Date objects
-    if (value instanceof Date) {
-      return {
-        __type: "Date",
-        iso: value.toISOString()
-      };
-    }
-    
-    // Remove any functions that might cause hydration issues
-    if (typeof value === 'function') {
-      return undefined;
-    }
-    
-    // Handle circular references 
-    const seen = new WeakSet();
-    if (typeof value === 'object' && value !== null) {
-      if (seen.has(value)) {
-        return '[Circular]';
-      }
-      seen.add(value);
-    }
-    return value;
-  });
+// Configuration Extraction
+const eraConfig: EraConfigMap = extractEraConfig(events);
+const initialEra = Object.keys(eraConfig).length > 0 ? 'all-eras' : '';
+
+// Determine Effective Background
+let effectiveBackground = currentBackground;
+if (events.length > 0 && !effectiveBackground) {
+  const firstEraKey = Object.keys(eraConfig).find(key => key !== 'all-eras' && key !== 'all-time');
+  if (firstEraKey && eraConfig[firstEraKey]?.backgroundImage) {
+    effectiveBackground = eraConfig[firstEraKey].backgroundImage;
+  } else if (eraConfig['all-eras']?.backgroundImage) {
+    effectiveBackground = eraConfig['all-eras'].backgroundImage;
+  }
 }
 
-// Serialize the events for client-side use to avoid astro:content import issues
-const serializedEvents = safeStringify(initialEvents);
+// Determine Year Range
+let startYear = propStartYear;
+let endYear = propEndYear;
+if (!startYear || !endYear) {
+  if (events.length > 0) {
+    const years = events.map(event => event.year);
+    const minYear = Math.min(...years);
+    const maxYear = Math.max(...years);
+    const yearPadding = Math.max(5, Math.ceil((maxYear - minYear) * 0.1));
+    if (!startYear) startYear = minYear - yearPadding;
+    if (!endYear) endYear = maxYear + yearPadding;
+  } else {
+    startYear = startYear || 2000;
+    endYear = endYear || 2100;
+  }
+}
+
+// Generate Unique IDs
+const wrapperId = `${id}-wrapper`;
+const timelineViewId = `${id}-timeline-view`;
+const starmapViewId = `${id}-starmap-view`;
+const listViewId = `${id}-list-view`;
+const treeViewId = `${id}-tree-view`;
+const mapViewId = `${id}-map-view`;
+const factsInfoCardId = `${id}-facts-infocard`;
+
+// Initial fact for info card
+const initialFact: TimelineFact | null = megaMealUniverseFacts.length > 0
+  ? megaMealUniverseFacts[Math.floor(Math.random() * megaMealUniverseFacts.length)]
+  : null;
+
+const factsInfoCardFact = initialFact ? {
+  ...initialFact,
+  bgColorClass: 'bg-slate-800/90',
+  textColorClass: 'text-white',
+  headlineColorClass: 'text-white',
+  ctaButtonClass: 'bg-sky-600 hover:bg-sky-500 text-white'
+} : undefined;
+
+// View modes configuration
+const viewModes = [
+  { id: "starmap", label: "StarMap", svgPath: "M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.31h5.418a.562.562 0 0 1 .321.988l-4.204 3.055a.563.563 0 0 0-.182.635l2.125 5.11a.563.563 0 0 1-.84.622l-4.204-3.055a.563.563 0 0 0-.652 0l-4.204 3.055a.563.563 0 0 1-.84-.622l2.125-5.11a.563.563 0 0 0-.182-.635L2.499 9.98a.562.562 0 0 1 .321-.988H8.24a.563.563 0 0 0 .475-.31l2.125-5.111Z" },
+  { id: "timeline", label: "Timeline", svgPath: "M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" },
+  { id: "list", label: "List", svgPath: "M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" },
+  { id: "tree", label: "Tree", svgPath: "M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" },
+  { id: "map", label: "Map", svgPath: "M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c-.317-.159-.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" },
+];
 ---
 
-<div id={id} 
-     class={`timeline-banner ${className}`} 
-     data-bannertype="timeline" 
-     style={`
-       --desktop-height: ${bannerHeight};
-       --mobile-height: ${mobileHeight};
-     `}
+<div
+  class:list={["timeline-wrapper relative w-full overflow-hidden", asBanner ? "timeline-banner-mode" : "", classList]}
+  id={wrapperId}
+  style={`height: ${bannerHeight}; overflow-x: hidden !important;`}
 >
-  <!-- Use client:only to completely skip server-side rendering -->
-  <TimelineController
-    client:only="svelte"
-    {id}
-    {category}
-    {startYear}
-    {endYear}
-    background={bannerBackground}
-    {compact}
-    {asBanner}
-    bannerHeight={bannerHeight}
-    initialEvents={serializedEvents}
-  />
+  <div class="relative w-full h-full">
+    <div class="timeline-viewport w-full h-full overflow-hidden" style="overflow-x: hidden !important;">
+      
+      <!-- Timeline View -->
+      <div id={timelineViewId} class={`timeline-view-container w-full h-full ${initialViewMode === 'timeline' ? '' : 'hidden'}`}>
+        <TimelineView
+          id={`${id}-timeline`}
+          events={events}
+          background={effectiveBackground}
+          compact={compact}
+          initialScale={initialScale}
+          initialOffsetX={initialOffsetX}
+          initialOffsetY={initialOffsetY}
+          useEraColors={useEraColors}
+          startYear={startYear}
+          endYear={endYear}
+          eraConfig={eraConfig}
+        />
+      </div>
+
+      <!-- Starmap View -->
+      <div id={starmapViewId} class={`starmap-view-container w-full h-full ${initialViewMode === 'starmap' ? '' : 'hidden'}`}>
+        <StarMapView
+          id={`${id}-starmap`}
+          events={events}
+          useEraColors={useEraColorsForStars}
+        />
+      </div>
+
+      <!-- List View -->
+      <div id={listViewId} class={`list-view-container w-full h-full ${initialViewMode === 'list' ? '' : 'hidden'}`}>
+        <ListView events={events} background={effectiveBackground} selectedEventSlug={null} />
+      </div>
+
+      <!-- Tree View -->
+      <div id={treeViewId} class={`tree-view-container w-full h-full ${initialViewMode === 'tree' ? '' : 'hidden'}`}>
+        <TreeView events={events} background={effectiveBackground} selectedEventSlug={null} />
+      </div>
+
+      <!-- Map View -->
+      <div id={mapViewId} class={`map-view-container w-full h-full ${initialViewMode === 'map' ? '' : 'hidden'}`}>
+        <MapView events={events} background={effectiveBackground} selectedEventSlug={null} />
+      </div>
+    </div>
+
+    <!-- InfoCard for Facts/Ads -->
+    <InfoCard 
+      cardId={factsInfoCardId}
+      initialFact={factsInfoCardFact}
+      initialIsVisible={false}
+    />
+
+    <!-- Timeline Controls -->
+    <div id="timelineTopControls" class="timeline-custom-controls absolute top-0 left-0 right-0 flex flex-row items-center justify-between p-2 z-[999] gap-4" style="background-color: rgba(0,0,0,0.4); backdrop-filter: blur(4px); color: white;">
+      <div class="flex items-center space-x-2">
+        <label for={id + '-era-select'} class="text-sm sr-only">Select Era:</label>
+        <select id={id + '-era-select'} name="era" class="era-select p-1 bg-gray-800 text-white rounded text-xs sm:text-sm focus:ring-sky-500 focus:border-sky-500">
+          {Object.entries(eraConfig).map(([key, era]) => (
+            <option value={key} selected={key === initialEra}>{era.displayName}</option>
+          ))}
+        </select>
+      </div>
+      <div class="flex space-x-1">
+        {viewModes.map(vm => (
+          <button 
+            data-viewmode={vm.id} 
+            class:list={[
+              "view-switcher-button p-1 px-1 sm:px-2 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50 rounded text-xs sm:text-sm", 
+              initialViewMode === vm.id && "bg-sky-600 text-white"
+            ]} 
+            title={vm.label}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 sm:w-5 sm:h-5 inline-block">
+              <path fill-rule="evenodd" d={vm.svgPath} clip-rule="evenodd"></path>
+            </svg>
+            <span class="hidden md:inline ml-1">{vm.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <!-- Bottom Controls (for timeline zoom) -->
+    <div id="timelineBottomControls" class="timeline-custom-controls absolute bottom-0 left-0 right-0 flex items-center justify-between p-2 z-[999]" style="background-color: rgba(0,0,0,0.4); backdrop-filter: blur(4px); color: white; height: 44px; overflow: hidden;">
+      <div class="timeline-zoom-controls flex items-center space-x-2" style="display: none;">
+        <button class="zoom-out p-1 hover:bg-gray-700 rounded" title="Zoom Out">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path>
+          </svg>
+        </button>
+        <button class="zoom-in p-1 hover:bg-gray-700 rounded" title="Zoom In">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"></path>
+          </svg>
+        </button>
+        <button class="reset-view p-1 hover:bg-gray-700 rounded" title="Reset View">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<script>
-  // Handle Astro page transitions
-  const handlePageLoad = () => {
-    document.querySelectorAll('.timeline-banner').forEach(banner => {
-      const id = banner.id;
-      const isInitialized = banner.hasAttribute('data-initialized');
-      
-      if (!isInitialized) {
-        console.log(`Initializing timeline banner: ${id}`);
-        banner.setAttribute('data-initialized', 'true');
+<script define:vars={{
+  controllerId: id,
+  wrapperId,
+  timelineViewId,
+  starmapViewId,
+  listViewId,
+  treeViewId,
+  mapViewId,
+  factsInfoCardId,
+  initialViewMode,
+  initialEra,
+  eraConfig,
+  events: JSON.stringify(events),
+  megaMealFactsData: megaMealUniverseFacts,
+  effectiveBackground,
+  startYear,
+  endYear,
+  timelineContainerId: `${id}-timeline-container`,
+  starmapContainerId: `${id}-starmap-three-container`,
+}}>
+  // Timeline Banner Controller Script - RESTORED VERSION
+
+  // --- Global Variables & DOM Elements ---
+  const views = {
+    timeline: document.getElementById(timelineViewId),
+    starmap: document.getElementById(starmapViewId),
+    list: document.getElementById(listViewId),
+    tree: document.getElementById(treeViewId),
+    map: document.getElementById(mapViewId),
+  };
+  
+  const eraSelectElement = document.getElementById(controllerId + '-era-select');
+  const viewSwitcherButtons = document.querySelectorAll(`#timelineTopControls .view-switcher-button`);
+  const zoomControls = document.querySelector('.timeline-zoom-controls');
+
+  let currentViewMode = initialViewMode;
+  let currentEvents = JSON.parse(events);
+  let currentBackground = effectiveBackground;
+  let currentEra = initialEra;
+
+  // InfoCard (for facts) state
+  let showInfoCard = false;
+  let infoCardTimerId = null;
+  let infoCardsDismissedForSession = false;
+
+  // --- View Management ---
+  function updateViewSwitcherButtonStates(activeMode) {
+    viewSwitcherButtons.forEach(button => {
+      if (button.dataset.viewmode === activeMode) {
+        button.classList.add('bg-sky-600', 'text-white');
+        button.classList.remove('bg-gray-700');
+      } else {
+        button.classList.remove('bg-sky-600', 'text-white');
+        button.classList.add('bg-gray-700');
       }
     });
-  };
-
-  // This works with both Astro and document load events
-  if (document.readyState === 'complete') {
-    handlePageLoad();
-  } else {
-    document.addEventListener('astro:page-load', handlePageLoad);
-    window.addEventListener('load', handlePageLoad);
   }
-  
-  // Add resize handler to update any responsive elements
-  window.addEventListener('resize', () => {
-    // Use requestAnimationFrame to avoid performance issues
-    requestAnimationFrame(() => {
-      document.querySelectorAll('.timeline-banner').forEach(banner => {
-        // Dispatch a resize event that Svelte components can listen for
-        banner.dispatchEvent(new CustomEvent('timeline:resize'));
+
+  function setActiveView(mode) {
+    currentViewMode = mode;
+
+    Object.keys(views).forEach(viewKey => {
+      if (views[viewKey]) {
+        views[viewKey].classList.toggle('hidden', viewKey !== mode);
+      }
+    });
+
+    updateViewSwitcherButtonStates(mode);
+
+    if (zoomControls) {
+      zoomControls.style.display = mode === 'timeline' ? 'flex' : 'none';
+    }
+
+    // Handle view-specific initialization
+    if (mode === 'timeline') {
+      const timelineCore = window[`timelineCore_${timelineContainerId}`];
+      if (timelineCore) {
+        timelineCore.updateBackground(currentBackground);
+        const currentEraConfig = eraConfig[currentEra];
+        if (currentEraConfig && currentEraConfig.startYear && currentEraConfig.endYear) {
+          timelineCore.navigateToEraRange(currentEraConfig.startYear, currentEraConfig.endYear);
+        }
+      }
+    }
+
+    if (mode === 'starmap') {
+      const starmap = window[`starmap_${starmapContainerId}`];
+      if (!starmap || !starmap.isInitialized()) {
+        // Starmap will auto-initialize when visible
+        console.log('Starmap view activated, waiting for initialization...');
+      }
+    }
+  }
+
+  // --- Era Management ---
+  function handleEraChange(selectedEraKey) {
+    currentEra = selectedEraKey;
+    const config = eraConfig[selectedEraKey];
+    let newBackground = effectiveBackground;
+
+    if (config && config.backgroundImage) {
+      newBackground = config.backgroundImage;
+    }
+    currentBackground = newBackground;
+
+    // Filter events based on era
+    const allEventsUnfiltered = JSON.parse(events);
+    if (selectedEraKey === 'all-eras' || selectedEraKey === 'all-time' || !config || !config.startYear || !config.endYear) {
+      currentEvents = allEventsUnfiltered;
+    } else {
+      currentEvents = allEventsUnfiltered.filter(event => {
+        return event.year >= config.startYear && event.year <= config.endYear;
+      });
+    }
+
+    // Update timeline view
+    if (currentViewMode === 'timeline') {
+      const timelineCore = window[`timelineCore_${timelineContainerId}`];
+      if (timelineCore) {
+        timelineCore.updateBackground(currentBackground);
+        timelineCore.updateEvents(currentEvents);
+        if (config && config.startYear !== undefined && config.endYear !== undefined) {
+          timelineCore.navigateToEraRange(config.startYear, config.endYear);
+        } else {
+          timelineCore.resetView();
+        }
+      }
+    }
+
+    // Update starmap view
+    if (currentViewMode === 'starmap') {
+      const starmap = window[`starmap_${starmapContainerId}`];
+      if (starmap && starmap.isInitialized()) {
+        starmap.updateEvents(currentEvents);
+      }
+    }
+
+    // TODO: Update other views (list, tree, map) when they support dynamic updates
+  }
+
+  // --- InfoCard (Facts) Management ---
+  function showNextFactOrAd() {
+    if (infoCardsDismissedForSession || megaMealFactsData.length === 0) return;
+
+    const displayFact = () => {
+      const currentFact = megaMealFactsData[Math.floor(Math.random() * megaMealFactsData.length)];
+      
+      // Prepare fact with custom styling for dark theme
+      const factWithStyling = {
+        ...currentFact,
+        bgColorClass: 'bg-slate-800/90',
+        textColorClass: 'text-white',
+        headlineColorClass: 'text-white',
+        ctaButtonClass: 'bg-sky-600 hover:bg-sky-500 text-white'
+      };
+
+      // Dispatch event to update InfoCard
+      document.body.dispatchEvent(new CustomEvent('displayStarInfoCard', {
+        detail: {
+          fact: factWithStyling,
+          cardIdToTarget: factsInfoCardId
+        }
+      }));
+      
+      showInfoCard = true;
+    };
+
+    displayFact();
+  }
+
+  function handleDismissInfoCard() {
+    showInfoCard = false;
+    infoCardsDismissedForSession = true;
+    if (infoCardTimerId) {
+      clearInterval(infoCardTimerId);
+      infoCardTimerId = null;
+    }
+  }
+
+  // --- Event Listeners & Initialization ---
+  function initialize() {
+    // Set initial view
+    setActiveView(currentViewMode);
+
+    // Era selector
+    if (eraSelectElement) {
+      eraSelectElement.addEventListener('change', (event) => handleEraChange(event.target.value));
+      if (eraSelectElement.value !== currentEra) {
+        handleEraChange(eraSelectElement.value);
+      } else if (initialViewMode !== 'starmap') {
+        handleEraChange(currentEra);
+      }
+    } else {
+      handleEraChange(currentEra);
+    }
+
+    // View switcher buttons
+    viewSwitcherButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const viewMode = button.dataset.viewmode;
+        if (viewMode) setActiveView(viewMode);
       });
     });
-  });
+
+    // Zoom controls
+    const zoomInBtn = document.querySelector(`#${wrapperId} .zoom-in`);
+    const zoomOutBtn = document.querySelector(`#${wrapperId} .zoom-out`);
+    const resetViewBtn = document.querySelector(`#${wrapperId} .reset-view`);
+
+    if (zoomInBtn) {
+      zoomInBtn.addEventListener('click', () => {
+        const timelineCore = window[`timelineCore_${timelineContainerId}`];
+        if (timelineCore) timelineCore.zoomIn();
+      });
+    }
+    if (zoomOutBtn) {
+      zoomOutBtn.addEventListener('click', () => {
+        const timelineCore = window[`timelineCore_${timelineContainerId}`];
+        if (timelineCore) timelineCore.zoomOut();
+      });
+    }
+    if (resetViewBtn) {
+      resetViewBtn.addEventListener('click', () => {
+        const timelineCore = window[`timelineCore_${timelineContainerId}`];
+        if (timelineCore) timelineCore.resetView();
+      });
+    }
+
+    // InfoCard close button
+    const infoCardElement = document.getElementById(factsInfoCardId);
+    if (infoCardElement) {
+      const closeButton = infoCardElement.querySelector('.info-card-close-button');
+      if (closeButton) {
+        closeButton.addEventListener('click', handleDismissInfoCard);
+      }
+    }
+
+    // Start facts rotation
+    if (megaMealFactsData.length > 0) {
+      setTimeout(showNextFactOrAd, 5000 + Math.random() * 2000);
+      infoCardTimerId = setInterval(showNextFactOrAd, 15000 + Math.random() * 5000);
+    }
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialize);
+  } else {
+    initialize();
+  }
 </script>
 
-<style>
-  /* Base styles for the timeline banner container */
-  .timeline-banner {
+<style is:global>
+  /* Import external timeline styles */
+  @import '../../styles/timeline-styles.css';
+  
+  /* Additional controller-specific styles */
+  .timeline-wrapper {
+    position: relative;
+  }
+  
+  .timeline-viewport {
     position: relative;
     width: 100%;
-    overflow-x: hidden;
-    margin-bottom: 1rem;
-    border-radius: var(--radius-large, 12px);
+    height: 100%;
   }
   
-  /* Specifically for banner mode (full-width/height) */
-  [data-bannertype="timeline"] {
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-  }
-  
-  /* Match site's card shadow style */
-  .timeline-banner {
-    box-shadow: var(--card-shadow, 0 2px 4px rgba(0,0,0,0.005));
-  }
-  
-  /* Mobile height handling */
-  @media (max-width: 767px) {
-    .timeline-banner {
-      height: var(--mobile-height) !important;
-    }
-  }
-  
-  @media (min-width: 768px) {
-    .timeline-banner {
-      height: var(--desktop-height);
-    }
-  }
-  
-  /* Quality of life improvements */
-  @media (prefers-reduced-motion: no-preference) {
-    .timeline-banner {
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .timeline-banner:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
+  .view-switcher-button.bg-sky-600 {
+    background-color: rgb(2 132 199) !important;
   }
 </style>

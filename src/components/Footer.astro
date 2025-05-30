@@ -1,6 +1,6 @@
 ---
 
-import { profileConfig } from '../config'
+import { profileConfig } from '../config/config'
 import { url } from '../utils/url-utils'
 const currentYear = new Date().getFullYear()
 ---
@@ -14,7 +14,6 @@ const currentYear = new Date().getFullYear()
         <a class="transition link text-[var(--primary)] font-medium" target="_blank" href={url('rss.xml')}>RSS</a> /
         <a class="transition link text-[var(--primary)] font-medium" target="_blank" href={url('sitemap-index.xml')}>Sitemap</a><br>
         Powered by
-        <a class="transition link text-[var(--primary)] font-medium" target="_blank" href="https://astro.build">Love</a> &
-        <a class="transition link text-[var(--primary)] font-medium" target="_blank" href="https://dndiy.org">Magic</a>
+        <a class="transition link text-[var(--primary)] font-medium" target="_blank" href="https://github.com/dndiy/Temporal-Flow">Temporal Flow</a>
     </div>
 </div>

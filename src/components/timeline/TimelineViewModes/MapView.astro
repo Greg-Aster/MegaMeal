@@ -1,0 +1,295 @@
+---
+// src/components/timeline/TimelineViewModes/MapView.astro
+import type { TimelineEvent } from '../../../services/TimelineService.client';
+import { getEraDisplayName, getEraClasses } from '../../../services/TimelineService.client';
+import TimelineCard from '../TimelineCard.astro';
+
+export interface Props {
+  events?: TimelineEvent[];
+  background?: string;
+  selectedEventSlug?: string | null;
+}
+
+const {
+  events = [],
+  background = '/assets/banner/0001.png', // Consider a night sky image here
+  selectedEventSlug = null,
+} = Astro.props;
+
+const eventsWithLocations = events.filter(event => event.location);
+
+function getLocationCoordinates(location: string | undefined) {
+  if (!location) return { x: 50, y: 50 }; // Default if no location
+  const hash = [...location].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 0);
+  const x = 50 + (hash % 300); // Spread across 0-350 range for x
+  const y = 50 + ((hash * 17) % 200); // Spread across 0-250 range for y. Ensures "above horizon" if y=0 is top.
+  return { x, y };
+}
+
+const mapViewId = `map-view-${Math.random().toString(36).substring(2,9)}`;
+---
+
+<style>
+  .pin-circle {
+    transition: all 700ms ease-in-out; /* Slower, smoother transition */
+  }
+  .sky-transform-wrapper {
+    transition: transform 300ms ease-out; /* Smooth zoom transition */
+    width: 100%;
+    height: 100%;
+    transform-origin: center center; /* Default origin, will be updated by JS */
+    position: relative; /* To contain absolutely positioned children properly */
+  }
+  .sky-viewport { /* The main container for the sky view, handles overflow */
+    /* Ensure this container captures wheel events if children have pointer-events-none */
+  }
+</style>
+
+<div class="map-view relative" id={mapViewId}>
+  <div class="relative z-10 overflow-y-auto scrollbar-timeline" style="max-height: calc(100vh - 160px);">
+    <div class="px-4">
+      {/* Renamed map-container to sky-viewport for conceptual clarity */}
+      <div
+        class="sky-viewport relative card-base bg-[oklch(0.1_0.01_var(--hue))/80] dark:bg-[oklch(0.05_0.01_var(--hue))/80] backdrop-blur-sm rounded-md overflow-hidden"
+        style="height: calc(70vh - 140px); min-height: 300px;"
+      >
+        <div class="sky-transform-wrapper"> {/* This div will be scaled for zoom */}
+          <div class="absolute inset-0 -z-10"> {/* Kept -z-10, ensure it's behind SVG + Pins */}
+            <img src={background} alt="Sky background" class="w-full h-full object-cover opacity-30 dark:opacity-20" /> {/* Adjusted opacity */}
+            <div class="absolute inset-0 bg-gradient-to-b from-transparent to-[oklch(0.05_0.01_var(--hue))] opacity-70"></div> {/* Example: Horizon gradient */}
+          </div>
+
+          <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" class="w-full h-full absolute inset-0 pointer-events-none z-0"> {/* z-0, between bg and pins */}
+            <defs>
+              <pattern id="map-grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="0.5" class="text-[var(--primary)]" opacity="0.1" /> {/* Subtler grid */}
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#map-grid-pattern)" class="text-[var(--primary)]" />
+            {/* Original decorative paths - these will scale with the zoom */}
+            <path d="M 80,50 C 100,40 150,30 200,50 C 250,70 280,90 300,70 C 320,50 350,60 350,80 C 350,100 320,120 300,150 C 280,180 250,190 200,180 C 150,170 120,190 100,170 C 80,150 60,130 80,100 C 100,70 80,50 80,50 Z"
+                  fill="oklch(0.3 0.05 var(--hue))" fill-opacity="0.3" stroke="oklch(0.4 0.1 var(--hue))" stroke-width="1" />
+            <path d="M 30,200 C 40,180 70,170 100,190 C 130,210 160,200 170,220 C 180,240 150,260 120,250 C 90,240 60,250 50,230 C 40,210 30,200 30,200 Z"
+                  fill="oklch(0.25 0.08 var(--hue))" fill-opacity="0.3" stroke="oklch(0.4 0.1 var(--hue))" stroke-width="1" />
+          </svg>
+
+          <div class="absolute inset-0 z-10"> {/* z-10, above SVG grid */}
+            {eventsWithLocations.map(event => {
+              const coords = getLocationCoordinates(event.location);
+              const posXPercent = (coords.x / 400) * 100;
+              const posYPercent = (coords.y / 300) * 100;
+              return (
+                <div
+                  class="map-pin absolute cursor-pointer pointer-events-auto"
+                  style={`left: ${posXPercent}%; top: ${posYPercent}%; transform: translate(-50%, -50%);`}
+                  data-slug={event.slug}
+                  data-title={event.title}
+                >
+                  <div
+                    class:list={[
+                      "pin-circle w-6 h-6 rounded-full flex items-center justify-center", // Removed transition from here, added via <style>
+                      (selectedEventSlug === event.slug) ? 'scale-150 shadow-glow' : ''
+                    ]}
+                    style={`background-color: ${event.isKeyEvent ? 'oklch(0.8 0.2 var(--hue))' : 'oklch(0.7 0.1 var(--hue))'}`} // Brighter default for "stars"
+                  >
+                    {/* Simpler star look: a glowing dot or a smaller inner dot */}
+                    <div class="w-2 h-2 rounded-full bg-white/90 shadow-sm"></div>
+                  </div>
+                  <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs font-bold text-white/80 bg-[oklch(0.1_0.02_var(--hue))/60] px-1 py-0.5 rounded backdrop-blur-sm">
+                    {event.year}
+                  </div>
+                  {(selectedEventSlug === event.slug) && (
+                    <div class="absolute z-20 timeline-card-container" style={`top: ${coords.y < 150 ? '120%' : '-220%'}; left: -50%; width: 200px;`}>
+                        <TimelineCard
+                          event={event}
+                          isSelected={selectedEventSlug === event.slug}
+                          compact={false}
+                          position={coords.y < 150 ? 'bottom' : 'top'}
+                          isVisible={true}
+                        />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div> {/* End of sky-transform-wrapper */}
+
+        {/* UI Elements that should NOT zoom/pan - Placed outside the transform wrapper */}
+        <div class="absolute top-4 right-4 bg-[oklch(0.9_0.03_var(--hue))/90] dark:bg-[oklch(0.2_0.05_var(--hue))/90] p-3 rounded-md text-sm text-75 backdrop-blur-sm shadow-md z-30">
+          <div class="font-bold mb-2">Sky Legend</div> {/* Renamed */}
+          <div class="flex items-center mb-2">
+            <div class="w-4 h-4 rounded-full bg-[oklch(0.7_0.1_var(--hue))] mr-2"></div> {/* Adjusted color */}
+            <span>Event</span>
+          </div>
+          <div class="flex items-center">
+            <div class="w-5 h-5 rounded-full bg-[oklch(0.8_0.2_var(--hue))] mr-1"></div>
+            <span>Key Event</span>
+          </div>
+        </div>
+
+        {eventsWithLocations.length === 0 && (
+          <div class="absolute inset-0 flex items-center justify-center z-30">
+            <div class="text-center p-8 bg-[oklch(0.95_0.03_var(--hue))/80] dark:bg-[oklch(0.2_0.03_var(--hue))/80] backdrop-blur-sm rounded-xl shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-[var(--primary)] mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                 {/* Placeholder for a more thematic icon, e.g., telescope, stars */}
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c-1.933 0-3.5 1.567-3.5 3.5S10.067 10 12 10s3.5-1.567 3.5-3.5S13.933 3 12 3zm0 14c-1.933 0-3.5 1.567-3.5 3.5S10.067 24 12 24s3.5-1.567 3.5-3.5S13.933 17 12 17zm7-7c-1.933 0-3.5 1.567-3.5 3.5S17.067 17 19 17s3.5-1.567 3.5-3.5S20.933 10 19 10zm-14 0c-1.933 0-3.5 1.567-3.5 3.5S3.067 17 5 17s3.5-1.567 3.5-3.5S6.933 10 5 10z" />
+              </svg>
+              <p class="text-75 font-bold text-lg">No Celestial Events Found</p>
+              <p class="text-50 mt-2">Add timelineLocation to your posts to place events in the sky.</p>
+            </div>
+          </div>
+        )}
+      </div> {/* End of sky-viewport */}
+
+      {/* List of locations - kept outside the main sky view for now */}
+      <div class="timeline-map-events mt-4">
+        <h3 class="font-bold text-75 mb-2">Timeline Locations</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {eventsWithLocations.map(event => (
+            <button
+              class:list={[
+                "location-card flex items-center p-2 hover:bg-[var(--btn-card-bg-hover)] rounded-md transition-colors text-left",
+                selectedEventSlug === event.slug ? 'bg-[oklch(0.95_0.025_var(--hue))/50] dark:bg-[oklch(0.25_0.025_var(--hue))/50]' : ''
+              ]}
+              data-slug={event.slug}
+              data-era={event.era}
+              data-title={event.title}
+            >
+              <div class="location-icon mr-2 text-[var(--primary)]">
+                {/* Icon can be changed to something more celestial/star-like */}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2L9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5z" />
+                </svg>
+              </div>
+              <div class="location-info">
+                <div class="font-bold text-75 text-sm">{event.title} ({event.year})</div>
+                <div class="text-50 text-xs">{event.location}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div class="h-40"></div> {/* Padding */}
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ mapViewId, initialSelectedSlug: selectedEventSlug }}>
+  const rootElement = document.getElementById(mapViewId);
+  let currentSelectedSlug = initialSelectedSlug;
+  let hoveredPinSlug = null;
+
+  //* if (rootElement) {
+  //  console.log("MapView.astro (Night Sky enhanced) script loaded for:", mapViewId);
+
+ //   const skyViewport = rootElement.querySelector('.sky-viewport');
+    const skyTransformWrapper = rootElement.querySelector('.sky-transform-wrapper');
+
+    let currentScale = 1;
+    const minScale = 1; // Min zoom out
+    const maxScale = 1; // Max zoom in
+    const zoomStep = 0.1; // How much to zoom per wheel event
+
+    function updatePinAndCardStates() {
+        const pins = rootElement.querySelectorAll('.map-pin');
+        pins.forEach(pin => {
+            const slug = pin.dataset.slug;
+            const pinCircle = pin.querySelector('.pin-circle');
+            const cardContainer = pin.querySelector('.timeline-card-container');
+
+            const isSelected = slug === currentSelectedSlug;
+            const isHovered = slug === hoveredPinSlug;
+
+            if (pinCircle) {
+                pinCircle.classList.toggle('scale-150', isSelected || isHovered);
+                pinCircle.classList.toggle('shadow-glow', isSelected || isHovered);
+            }
+            if (cardContainer) {
+                cardContainer.style.display = (isSelected || isHovered) ? 'block' : 'none';
+            }
+        });
+
+        const locationCards = rootElement.querySelectorAll('.location-card');
+        locationCards.forEach(card => {
+            card.classList.toggle('bg-[oklch(0.95_0.025_var(--hue))/50]', card.dataset.slug === currentSelectedSlug);
+            card.classList.toggle('dark:bg-[oklch(0.25_0.025_var(--hue))/50]', card.dataset.slug === currentSelectedSlug);
+        });
+    } 
+  
+
+    function handlePinOrCardInteraction(slug, isDblClick = false) {
+        if (isDblClick || (currentSelectedSlug && currentSelectedSlug === slug)) {
+            console.log(`MapView.astro: Navigating to /posts/${slug}/`);
+            window.location.href = `/posts/${slug}/`;
+            return;
+        }
+        currentSelectedSlug = slug;
+        hoveredPinSlug = null;
+        updatePinAndCardStates();
+
+        const selectEvent = new CustomEvent('map:select', { // Ensure this event name is still relevant or update as needed
+            detail: { slug },
+            bubbles: true,
+            composed: true
+        });
+        rootElement.dispatchEvent(selectEvent);
+    }
+
+    rootElement.addEventListener('click', (e) => {
+      const interactiveElement = e.target.closest('.map-pin, .location-card');
+      if (interactiveElement && interactiveElement.dataset.slug) {
+        handlePinOrCardInteraction(interactiveElement.dataset.slug);
+      }
+    });
+
+    rootElement.addEventListener('dblclick', (e) => {
+      const interactiveElement = e.target.closest('.map-pin, .location-card');
+      if (interactiveElement && interactiveElement.dataset.slug) {
+        handlePinOrCardInteraction(interactiveElement.dataset.slug, true);
+      }
+    });
+
+    rootElement.addEventListener('mouseover', (e) => {
+        const pinElement = e.target.closest('.map-pin');
+        if (pinElement && pinElement.dataset.slug) {
+            hoveredPinSlug = pinElement.dataset.slug;
+            updatePinAndCardStates();
+        }
+    });
+
+    rootElement.addEventListener('mouseout', (e) => {
+        const pinElement = e.target.closest('.map-pin');
+        if (pinElement && hoveredPinSlug === pinElement.dataset.slug) {
+            hoveredPinSlug = null;
+            updatePinAndCardStates();
+        }
+    });
+
+    // Zoom functionality
+    if (skyViewport && skyTransformWrapper) {
+        skyViewport.addEventListener('wheel', (event) => {
+            event.preventDefault(); // Prevent page from scrolling
+
+            const delta = event.deltaY > 0 ? -zoomStep : zoomStep;
+            const oldScale = currentScale;
+            
+            currentScale = Math.max(minScale, Math.min(maxScale, currentScale + delta));
+
+            if (currentScale !== oldScale) {
+                const rect = skyViewport.getBoundingClientRect(); // Use viewport for mouse relative to unscaled container
+                
+                // Mouse position relative to the skyViewport
+                const mouseX = event.clientX - rect.left;
+                const mouseY = event.clientY - rect.top;
+
+                // Set transform origin to where the mouse is, so it zooms towards the mouse
+                // The origin is a percentage of the skyTransformWrapper's size
+                skyTransformWrapper.style.transformOrigin = `${(mouseX / rect.width) * 100}% ${(mouseY / rect.height) * 100}%`;
+                skyTransformWrapper.style.transform = `scale(${currentScale})`;
+            }
+        }, { passive: false }); // passive: false is important for preventDefault to work
+    }
+    updatePinAndCardStates(); // Initial state
+  }
+</script>

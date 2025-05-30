@@ -1,9 +1,92 @@
 @tailwind components;
 
 @layer components {
-    .card-base {
-        @apply rounded-[var(--radius-large)] overflow-hidden bg-[var(--card-bg)] transition;
+
+    :root {
+    /* Global transparency controls */
+        --bg-opacity: 0.85; /* Default transparency value */
+    /* Card border opacity control */
+        --card-border-opacity: 0.2; /* Default opacity (0.0 to 1.0) for general cards */
+        --card-border-subtle-opacity: 0.1; /* Opacity for subtle border on general cards */
+
+    /* Timeline Banner specific opacity controls */
+        --timeline-banner-border-line-opacity: .3;  /* Opacity for the solid border line (0.0 to 1.0) */
+        --timeline-banner-glow-opacity: 0.7;       /* Opacity for the glow effect (0.0 to 1.0) */
+
+    /* Theme Colors for Product Card Glow (Example: Vibrant Blue) */
+        --primary: #007bff; /* Example: Bright Blue */
+        --primary-hover: #0056b3; /* Example: Darker Blue for hover or secondary glow */
+        --primary-rgb: 0, 123, 255; /* RGB version for use in rgba() if needed */
+        --hue: 210; /* Default hue */
+        --card-bg: oklch(0.98 0.01 var(--hue));
+        --text-color: oklch(0.2 0.01 var(--hue));
+        --border-color: oklch(0.8 0.01 var(--hue));
+        --surface-1: oklch(0.95 0.01 var(--hue));
+        --surface-2: oklch(0.92 0.02 var(--hue));
+        --input-bg: oklch(0.96 0.01 var(--hue));
+        --input-border-color: oklch(0.7 0.01 var(--hue));
+        --text-on-primary: oklch(0.98 0.01 var(--hue));
+        --text-color-muted: oklch(0.5 0.01 var(--hue));
     }
+    
+@media (prefers-color-scheme: dark) {
+    :root {
+        --card-bg: oklch(0.15 0.01 var(--hue));
+        --text-color: oklch(0.9 0.01 var(--hue));
+        --border-color: oklch(0.3 0.01 var(--hue));
+        --surface-1: oklch(0.2 0.01 var(--hue));
+        --surface-2: oklch(0.25 0.02 var(--hue));
+        --input-bg: oklch(0.18 0.01 var(--hue));
+        --input-border-color: oklch(0.4 0.01 var(--hue));
+        --text-on-primary: oklch(0.98 0.01 var(--hue));
+        --text-color-muted: oklch(0.6 0.01 var(--hue));
+    }
+}
+    /* Keep existing card-base but add opacity and backdrop blur */
+    .card-base {
+        @apply rounded-[var(--radius-large)] overflow-hidden transition;
+        background-color: color-mix(in srgb, var(--card-bg), transparent calc((1 - var(--bg-opacity)) * 100%));
+        backdrop-filter: blur(3px);
+        box-sizing: border-box;
+        /* padding: 2px; */ /* Padding removed, space created by transparent shadow layer */
+        border: none;
+        box-shadow:
+          /* Transparent 2px inset to create space for the glow */
+          inset 0 0 0 2px transparent,
+          /* Bright center line, inset by 2px (to sit inside transparent layer), 1px thick */
+          inset 0 0 0 2px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 100%), transparent),
+          /* Inner glow / falloff, starting from the 3px inset */
+          inset 0 0 5px 3px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 70%), transparent),
+          /* Softer, wider inner glow */
+          inset 0 0 7px 3px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 40%), transparent);
+    }
+
+    .card-base2 {
+        @apply rounded-[var(--radius-large)] overflow-hidden transition;
+        background-color: color-mix(in srgb, var(--card-bg), transparent calc((1 - var(--bg-opacity)) * 100%));
+        backdrop-filter: blur(3px);
+        box-sizing: border-box;
+        border: 1px solid color-mix(in srgb, var(--primary) calc(var(--card-border-subtle-opacity) * 100%), transparent);
+        /* No complex box-shadow for glow, just a subtle border */
+    }
+    .card-base3 {
+        @apply rounded-[var(--radius-large)] overflow-hidden transition;
+        background-color: color-mix(in srgb, var(--card-bg), transparent calc((1 - var(--bg-opacity)) * 100%));
+        backdrop-filter: blur(3px);
+        box-sizing: border-box;
+        /* padding: 2px; */ /* Padding removed, space created by transparent shadow layer */
+        border: none;
+        box-shadow:
+          /* Transparent 2px inset to create space for the glow */
+          inset 0 0 0 2px transparent,
+          /* Bright center line, inset by 2px (to sit inside transparent layer), 1px thick */
+          inset 0 0 0 2px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 100%), transparent),
+          /* Inner glow / falloff, starting from the 3px inset */
+          inset 0 0 5px 3px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 70%), transparent),
+          /* Softer, wider inner glow */
+          inset 0 0 7px 3px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 40%), transparent);
+    }
+
     h1, h2, h3, h4, h5, h6, p, a, span, li, ul, ol, blockquote, code, pre, table, th, td, strong {
         @apply transition;
     }
@@ -172,6 +255,55 @@
         animation: trickle 2s ease-out forwards;
       }
 
+    /* Keep default browser autofill in light mode, fix dark mode only */
+        input:-webkit-autofill {
+            transition: color 9999s ease-out, background-color 9999s ease-out;
+        }
+        
+        .dark input:-webkit-autofill {
+            -webkit-text-fill-color: oklch(0.85 0.01 var(--hue)) !important;
+            /* Apply a semi-transparent version of your dark card background */
+            box-shadow: 0 0 0px 1000px oklch(0.25 0.01 var(--hue), 0.7) inset !important;
+        }
+        
+        @-moz-document url-prefix() {
+            .dark input:-moz-autofill {
+                color: oklch(0.85 0.01 var(--hue)) !important;
+                background-color: oklch(0.25 0.01 var(--hue), 0.7) !important;
+            }
+        }
+        
+    /* Parallax background styles */
+        .parallax-bg {
+            transform: translateZ(0);
+            position: absolute;
+            top: 0vh;
+            left: 0;
+            width: 100%;
+            height: 130vh;
+            will-change: transform;
+            /* Remove the initial transform that's causing the jump */
+            /* transform: translate3d(0, var(--parallax-offset, 0), 0); */
+            /* Modify the transition to only affect opacity */
+            transition: opacity 0.3s ease-out;
+            /* Start at full opacity but invisible due to parent container */
+            opacity: 1;
+        }
+        
+        /* Add this new class for the container */
+        #parallax-banner {
+            opacity: 0;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        #parallax-banner.loaded {
+            opacity: 1;
+        }
+    
+    @keyframes fadeInParallax {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
 }
 
 .custom-md img, #post-cover img {
@@ -200,4 +332,33 @@
 
 .collapsed {
     height: var(--collapsedHeight);
+}
+
+/* Styles for selected and expanded product cards */
+.product-card.selected {
+  box-shadow: 0 0 20px 7px var(--primary), 0 0 10px 3px var(--primary-hover); /* Glowing effect */
+  transform: scale(1.03); /* Slight expansion */
+  z-index: 10; /* Ensure it's above other cards */
+}
+
+.product-card.expanded .product-description-short {
+  display: none;
+}
+
+.product-card.expanded .product-description-full,
+.product-card.expanded .product-additional-details {
+  display: block;
+  max-height: 1000px; /* Large enough to accommodate content */
+  opacity: 1;
+  overflow: visible;
+}
+
+/* Initial state for full description and additional details (hidden) */
+.product-description-full,
+.product-additional-details {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
+  opacity: 0;
+  display: none; /* Start as display: none and switch to block when expanded */
 }

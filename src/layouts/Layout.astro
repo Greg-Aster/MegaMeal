@@ -5,11 +5,10 @@ import '@fontsource/roboto/700.css';
 import '@fontsource/sriracha/400.css';
 import '@fontsource-variable/jetbrains-mono';
 
-import { profileConfig, siteConfig } from '@/config'
+import { profileConfig, siteConfig } from '@/config/config'
 import ConfigCarrier from '@components/ConfigCarrier.astro'
 import {
   AUTO_MODE,
-  DEFAULT_THEME,
   DARK_MODE,
   LIGHT_MODE,
   PAGE_WIDTH,
@@ -91,7 +90,7 @@ const configHue = siteConfig.themeColor.hue
         <meta property="article:published_time" content={post.data.published.toISOString()}>
         )}
     
-    <!-- Twitter -->
+    <!-- twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content={Astro.url}>
     <meta name="twitter:title" content={pageTitle}>
@@ -113,9 +112,9 @@ const configHue = siteConfig.themeColor.hue
     ))}
 
     <!-- Set the theme before the page is rendered to avoid a flash -->
-    <script is:inline define:vars={{DEFAULT_THEME, LIGHT_MODE, DARK_MODE, AUTO_MODE, PAGE_WIDTH, configHue}}>
+        <script is:inline define:vars={{LIGHT_MODE, DARK_MODE, AUTO_MODE, PAGE_WIDTH, configHue, defaultTheme: siteConfig.defaultTheme}}>
         // Load the theme from local storage
-        const theme = localStorage.getItem('theme') || DEFAULT_THEME;
+        const theme = localStorage.getItem('theme') || defaultTheme;
         switch (theme) {
             case LIGHT_MODE:
                 document.documentElement.classList.remove('dark');
@@ -163,7 +162,7 @@ const configHue = siteConfig.themeColor.hue
 @tailwind components;
 @layer components {
   #top-row {
-    @apply h-[4.5rem] transition-all duration-300;
+    @apply h-[0rem] transition-all duration-300;
   }
   
   .navbar-hidden {
@@ -197,13 +196,20 @@ function setClickOutsideToClose(panel: string, ignores: string[]) {
         let panelDom = document.getElementById(panel);
         let tDom = event.target;
         if (!(tDom instanceof Node)) return;
+        
+        // Debug logging
+        if (!panelDom) {
+            console.warn(`[Layout Debug] Panel element '${panel}' not found in DOM`);
+            return;
+        }
+        
         for (let ig of ignores) {
             let ie = document.getElementById(ig)
             if (ie == tDom || (ie?.contains(tDom))) {
                 return;
             }
         }
-        panelDom!.classList.add("float-panel-closed");
+        panelDom.classList.add("float-panel-closed");
     });
 }
 setClickOutsideToClose("display-setting", ["display-setting", "display-settings-switch"])
@@ -356,7 +362,6 @@ let toc = document.getElementById('toc-wrapper');
 let navbar = document.getElementById('navbar-wrapper');
 
 function scrollFunction() {
-    // Back-to-top button visibility
 // Back-to-top button visibility
 if (backToTopBtn) {
     if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {

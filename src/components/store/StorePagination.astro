@@ -1,0 +1,92 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  currentPage: number;    // from page.currentPage
+  totalPages: number;     // from page.lastPage
+  pageUrlPrev?: string;   // from page.url.prev, can be undefined or null
+  pageUrlNext?: string;   // from page.url.next, can be undefined or null
+  storeBaseUrl: string;   // e.g., "/store", for numbered links
+  class?: string;
+  style?: string;
+}
+
+const { style } = Astro.props; // currentPage, totalPages, pageUrlPrev, pageUrlNext, storeBaseUrl removed
+const className = Astro.props.class;
+
+// --- Pagination Logic (Temporarily Disabled) ---
+// const HIDDEN = -1;
+// const ADJ_DIST = 2;
+// const VISIBLE = ADJ_DIST * 2 + 1;
+//
+// let pages: number[] = [];
+//
+// if (totalPages > 0) { // Only calculate if there are pages
+//   let count = 1;
+//   let l = currentPage;
+//   let r = currentPage;
+//
+//   // Expand left and right while within bounds and VISIBLE limit
+//   while (l - 1 > 0 && r + 1 <= totalPages && count + 2 <= VISIBLE) {
+//     count += 2;
+//     l--;
+//     r++;
+//   }
+//   // Expand left if space remaining
+//   while (l - 1 > 0 && count < VISIBLE) {
+//     count++;
+//     l--;
+//   }
+//   // Expand right if space remaining
+//   while (r + 1 <= totalPages && count < VISIBLE) {
+//     count++;
+//     r++;
+//   }
+//
+//   // Construct pages array based on l and r
+//   if (l > 1) pages.push(1);
+//   if (l === 3) pages.push(2);
+//   if (l > 3) pages.push(HIDDEN);
+//
+//   for (let i = l; i <= r; i++) {
+//     pages.push(i);
+//   }
+//
+//   if (r < totalPages - 1) pages.push(HIDDEN);
+//   if (r === totalPages - 2) pages.push(totalPages - 1);
+//   if (r < totalPages) pages.push(totalPages);
+// }
+//
+// // URL generation for individual page numbers, specific to store structure
+// const getPageUrl = (pageNumber: number): string => {
+//   if (pageNumber === 1) {
+//     return storeBaseUrl; // e.g., /store
+//   }
+//   return `${storeBaseUrl}/page/${pageNumber}`; // e.g., /store/page/2
+// };
+// --- End of Disabled Pagination Logic ---
+---
+
+{/* Simplified Pagination - Always renders non-functional placeholder */}
+<div class:list={[className, "flex flex-row gap-3 justify-center"]} style={style}>
+  {/* Previous Button: Always disabled */}
+  <div class:list={[
+      "btn-card overflow-hidden rounded-lg text-[var(--primary)] w-11 h-11 flex items-center justify-center",
+      "opacity-50 cursor-not-allowed" // Visually greyed out and non-interactive
+    ]} aria-disabled="true">
+    <Icon name="material-symbols:chevron-left-rounded" class="text-[1.75rem]"></Icon>
+  </div>
+
+  {/* Central Block: Infinity Symbol Placeholder */}
+  <div class="bg-[var(--card-bg)] flex flex-row rounded-lg items-center text-neutral-500 dark:text-neutral-500 font-bold px-4 h-11">
+    <span class="text-2xl">&infin;</span>
+  </div>
+
+  {/* Next Button: Always disabled */}
+  <div class:list={[
+      "btn-card overflow-hidden rounded-lg text-[var(--primary)] w-11 h-11 flex items-center justify-center",
+      "opacity-50 cursor-not-allowed" // Visually greyed out and non-interactive
+    ]} aria-disabled="true">
+    <Icon name="material-symbols:chevron-right-rounded" class="text-[1.75rem]"></Icon>
+  </div>
+</div>
