@@ -64,6 +64,8 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
     '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
   ];
 
+  const starTypes = ['point', 'classic', 'sparkle', 'refraction', 'halo', 'subtle'];
+
   function hashCode(str) {
     if (!str) return 0;
     let hash = 0;
@@ -82,6 +84,14 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
     return colorSpectrum[hash % colorSpectrum.length];
   }
 
+  function getStarType(id, keyEvent) {
+    const hash = hashCode(id);
+    if (keyEvent) {
+      return ['classic', 'sparkle', 'refraction', 'halo'][hash % 4];
+    }
+    return starTypes[hash % starTypes.length];
+  }
+
   // Starmap state
   let THREE, OrbitControls;
   let scene, camera, renderer, controls, gridGroup, starsGroup;
@@ -92,45 +102,188 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
   let raycaster, mouse;
   let starSprites = new Map(); // Map of slug -> sprite for easy lookup
 
-  // Create star texture canvas
-  function createStarTexture(color, isKeyEvent = false, size = 64) {
+  // Enhanced star texture creation with StarNode-inspired graphics
+  function createEnhancedStarTexture(color, starType, isKeyEvent = false, size = 128) {
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d');
     
     const center = size / 2;
-    const radius = isKeyEvent ? size * 0.4 : size * 0.3;
+    const baseRadius = isKeyEvent ? size * 0.15 : size * 0.12;
     
-    // Create radial gradient for star glow
-    const gradient = ctx.createRadialGradient(center, center, 0, center, center, radius);
-    gradient.addColorStop(0, color);
-    gradient.addColorStop(0.3, color + '88'); // Semi-transparent
-    gradient.addColorStop(0.7, color + '44'); // More transparent
-    gradient.addColorStop(1, color + '00'); // Fully transparent
+    // Clear canvas
+    ctx.clearRect(0, 0, size, size);
     
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, size, size);
+    // Create multi-layered glow effect
+    const glowLayers = [
+      { radius: baseRadius * 8, opacity: 0.05, blur: 20 },
+      { radius: baseRadius * 5, opacity: 0.1, blur: 15 },
+      { radius: baseRadius * 3, opacity: 0.2, blur: 10 },
+      { radius: baseRadius * 2, opacity: 0.3, blur: 5 },
+    ];
     
-    // Add bright center point
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(center, center, isKeyEvent ? 3 : 2, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Add cross pattern for key events
-    if (isKeyEvent) {
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1;
+    // Draw glow layers
+    glowLayers.forEach(layer => {
+      ctx.save();
+      ctx.filter = `blur(${layer.blur}px)`;
+      const gradient = ctx.createRadialGradient(center, center, 0, center, center, layer.radius);
+      gradient.addColorStop(0, color + Math.floor(layer.opacity * 255).toString(16).padStart(2, '0'));
+      gradient.addColorStop(0.5, color + Math.floor(layer.opacity * 127).toString(16).padStart(2, '0'));
+      gradient.addColorStop(1, color + '00');
+      ctx.fillStyle = gradient;
       ctx.beginPath();
-      ctx.moveTo(center - 8, center);
-      ctx.lineTo(center + 8, center);
-      ctx.moveTo(center, center - 8);
-      ctx.lineTo(center, center + 8);
-      ctx.stroke();
+      ctx.arc(center, center, layer.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+    
+    // Draw star type-specific shapes
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    
+    switch (starType) {
+      case 'point':
+        // Simple bright point
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(center, center, baseRadius * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+        
+      case 'classic':
+        // Classic 5-pointed star
+        drawStar(ctx, center, center, 5, baseRadius * 1.2, baseRadius * 0.6, color);
+        break;
+        
+      case 'sparkle':
+        // Sparkle with cross rays
+        drawStar(ctx, center, center, 4, baseRadius * 1.1, baseRadius * 0.5, color);
+        // Add cross lines
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(center - baseRadius * 2, center);
+        ctx.lineTo(center + baseRadius * 2, center);
+        ctx.moveTo(center, center - baseRadius * 2);
+        ctx.lineTo(center, center + baseRadius * 2);
+        ctx.stroke();
+        break;
+        
+      case 'refraction':
+        // Central core with refraction lines
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(center, center, baseRadius * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Refraction lines
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.moveTo(center - baseRadius * 2.5, center);
+        ctx.lineTo(center + baseRadius * 2.5, center);
+        ctx.moveTo(center, center - baseRadius * 2.5);
+        ctx.lineTo(center, center + baseRadius * 2.5);
+        ctx.stroke();
+        
+        // Diagonal refraction lines
+        ctx.globalAlpha = 0.4;
+        ctx.beginPath();
+        ctx.moveTo(center - baseRadius * 1.8, center - baseRadius * 1.8);
+        ctx.lineTo(center + baseRadius * 1.8, center + baseRadius * 1.8);
+        ctx.moveTo(center - baseRadius * 1.8, center + baseRadius * 1.8);
+        ctx.lineTo(center + baseRadius * 1.8, center - baseRadius * 1.8);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        break;
+        
+      case 'halo':
+        // Multiple concentric circles
+        const haloRings = [
+          { radius: baseRadius * 0.6, opacity: 1 },
+          { radius: baseRadius * 1.2, opacity: 0.6 },
+          { radius: baseRadius * 1.8, opacity: 0.3 },
+          { radius: baseRadius * 2.4, opacity: 0.15 }
+        ];
+        
+        haloRings.forEach(ring => {
+          ctx.globalAlpha = ring.opacity;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(center, center, ring.radius, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+        break;
+        
+      default: // subtle
+        // Subtle star with small cross
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(center, center, baseRadius * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(center - baseRadius * 1.5, center);
+        ctx.lineTo(center + baseRadius * 1.5, center);
+        ctx.moveTo(center, center - baseRadius * 1.5);
+        ctx.lineTo(center, center + baseRadius * 1.5);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        break;
     }
     
+    // Add enhanced center glow for key events
+    if (isKeyEvent) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      const centerGlow = ctx.createRadialGradient(center, center, 0, center, center, baseRadius * 1.5);
+      centerGlow.addColorStop(0, color);
+      centerGlow.addColorStop(0.3, color + '88');
+      centerGlow.addColorStop(1, color + '00');
+      ctx.fillStyle = centerGlow;
+      ctx.beginPath();
+      ctx.arc(center, center, baseRadius * 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    
+    ctx.restore();
+    
     return new THREE.CanvasTexture(canvas);
+  }
+  
+  // Helper function to draw star shapes
+  function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius, color) {
+    let rot = Math.PI / 2 * 3;
+    let x = cx;
+    let y = cy;
+    const step = Math.PI / spikes;
+    
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - outerRadius);
+    
+    for (let i = 0; i < spikes; i++) {
+      x = cx + Math.cos(rot) * outerRadius;
+      y = cy + Math.sin(rot) * outerRadius;
+      ctx.lineTo(x, y);
+      rot += step;
+      
+      x = cx + Math.cos(rot) * innerRadius;
+      y = cy + Math.sin(rot) * innerRadius;
+      ctx.lineTo(x, y);
+      rot += step;
+    }
+    
+    ctx.lineTo(cx, cy - outerRadius);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
   }
 
   // Card rendering function
@@ -193,31 +346,6 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
     selectedEvent = eventData;
   }
 
-  /*
-   * CONSTELLATION LAYOUT DESIGN:
-   * 
-   * The sky is divided into 8 regions, each representing an era's constellation:
-   * 
-   *           Transcendent (300°)    Final (340°)    Ancient (0°)    Awakening (60°)
-   *                    \                 |                |              /
-   *                     \               /|\              /|\            /
-   *                      \             / | \            / | \          /
-   *                       \___________/  |  \__________/  |  \________/
-   *                                     \|/              \|/
-   *                                      |                |
-   *                            Conflict (180°)        Golden (120°)
-   *                                      |                |
-   *                                     /|\              /|\
-   *                                    / | \            / | \
-   *                                   /  |  \__________/  |  \
-   *                                  /   |             \  |   \
-   *                                 /    |              \ |    \
-   *                        Singularity (240°)          Unknown (30°)
-   * 
-   * All constellations are positioned above 30° elevation to ensure visibility
-   * within the camera's viewing constraints (120° to 170° polar angle).
-   */
-
   // Constellation configuration for each era
   const constellationConfig = {
     'ancient-epoch': {
@@ -270,7 +398,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
     }
   };
 
-  // Constellation patterns - define relative positions within each constellation
+  // Constellation patterns
   const constellationPatterns = {
     ancient_wisdom: [
       { azOffset: 0, elOffset: 0 },
@@ -350,7 +478,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
     ]
   };
 
-  // Create or update stars as era-based constellations
+  // Create or update stars as era-based constellations with enhanced graphics
   function createOrUpdateStars(eventsToDisplay = currentEvents) {
     if (!starsGroup || !THREE) {
       console.warn('Starmap: createOrUpdateStars called before initialization.');
@@ -363,14 +491,13 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
     }
     starSprites.clear();
     
-    // Group events by era with debugging
+    // Group events by era
     const eventsByEra = {};
     const unassignedEvents = [];
     
     eventsToDisplay.forEach(event => {
       const era = event.era || 'unknown';
       
-      // Check if era has a constellation config
       if (!constellationConfig[era]) {
         console.warn(`Event "${event.title}" has era "${era}" but no constellation config exists. Adding to 'unknown'.`);
         unassignedEvents.push(event);
@@ -387,11 +514,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
       eventsByEra[era].push(event);
     });
 
-    // Log debugging info
     console.log('Starmap: Events grouped by era:', Object.keys(eventsByEra).map(era => `${era}: ${eventsByEra[era].length}`).join(', '));
-    if (unassignedEvents.length > 0) {
-      console.warn(`Starmap: ${unassignedEvents.length} events had unknown/missing eras:`, unassignedEvents.map(e => `"${e.title}" (era: ${e.era})`));
-    }
 
     // Create constellations for each era
     Object.entries(eventsByEra).forEach(([era, eraEvents]) => {
@@ -424,9 +547,10 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
 
           const uniqueStarId = `${event.slug}-${event.year}-${eventIndex}`;
           const mainColor = getStarColor(uniqueStarId, event.era, useEraColors);
+          const starType = getStarType(uniqueStarId, event.isKeyEvent);
           
-          // Create star sprite texture
-          const starTexture = createStarTexture(mainColor, event.isKeyEvent);
+          // Create enhanced star sprite texture
+          const starTexture = createEnhancedStarTexture(mainColor, starType, event.isKeyEvent);
           const spriteMaterial = new THREE.SpriteMaterial({ 
             map: starTexture, 
             transparent: true,
@@ -441,7 +565,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
           sprite.position.setFromSphericalCoords(radius, polarAngleRad, azimuthRad);
           
           // Scale based on importance and add slight variation
-          const baseScale = event.isKeyEvent ? 14 : 9;
+          const baseScale = event.isKeyEvent ? 18 : 12;
           const scaleVariation = 0.8 + (Math.random() * 0.4); // 0.8 to 1.2 multiplier
           sprite.scale.setScalar(baseScale * scaleVariation);
           
@@ -449,6 +573,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
           sprite.userData = {
             ...event,
             mainColor,
+            starType,
             uniqueId: uniqueStarId,
             era: era,
             constellationPosition: patternPosition
@@ -532,7 +657,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
     
     // Update visual states
     starsGroup.children.forEach(sprite => {
-      if (sprite.material) {
+      if (sprite.material && sprite.material.opacity !== undefined) {
         sprite.material.opacity = sprite === intersectedSprite ? 1.0 : 0.7;
       }
     });
@@ -541,7 +666,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
       // Clicking same star - deselect
       renderCard(null);
       starsGroup.children.forEach(sprite => {
-        if (sprite.material) sprite.material.opacity = 1.0;
+        if (sprite.material && sprite.material.opacity !== undefined) sprite.material.opacity = 1.0;
       });
     } else {
       // Select new star
@@ -694,7 +819,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
         // Clicked empty space - deselect
         renderCard(null);
         starsGroup.children.forEach(sprite => {
-          if (sprite.material) sprite.material.opacity = 1.0;
+          if (sprite.material && sprite.material.opacity !== undefined) sprite.material.opacity = 1.0;
         });
       }
     }
