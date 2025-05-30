@@ -221,49 +221,49 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
   // Constellation configuration for each era
   const constellationConfig = {
     'ancient-epoch': {
-      centerAzimuth: 0,           // 0° - North
-      centerElevation: 45,        // 45° above horizon
-      spread: 40,                 // ±40° spread
-      pattern: 'ancient_wisdom'   // Constellation pattern type
+      centerAzimuth: 0,
+      centerElevation: 45,
+      spread: 40,
+      pattern: 'ancient_wisdom'
     },
     'awakening-era': {
-      centerAzimuth: 60,          // 60° - Northeast  
+      centerAzimuth: 60,
       centerElevation: 50,
       spread: 35,
       pattern: 'rising_dawn'
     },
     'golden-age': {
-      centerAzimuth: 120,         // 120° - Southeast
+      centerAzimuth: 120,
       centerElevation: 55,
       spread: 45,
       pattern: 'crown'
     },
     'conflict-epoch': {
-      centerAzimuth: 180,         // 180° - South
+      centerAzimuth: 180,
       centerElevation: 40,
       spread: 40,
       pattern: 'crossed_swords'
     },
     'singularity-conflict': {
-      centerAzimuth: 240,         // 240° - Southwest
+      centerAzimuth: 240,
       centerElevation: 45,
       spread: 35,
       pattern: 'supernova'
     },
     'transcendent-age': {
-      centerAzimuth: 300,         // 300° - Northwest
+      centerAzimuth: 300,
       centerElevation: 60,
       spread: 40,
       pattern: 'ascension'
     },
     'final-epoch': {
-      centerAzimuth: 340,         // 340° - North-Northwest
+      centerAzimuth: 340,
       centerElevation: 65,
       spread: 30,
       pattern: 'omega'
     },
     'unknown': {
-      centerAzimuth: 30,          // 30° - Between ancient and awakening
+      centerAzimuth: 30,
       centerElevation: 35,
       spread: 25,
       pattern: 'scattered'
@@ -273,75 +273,75 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
   // Constellation patterns - define relative positions within each constellation
   const constellationPatterns = {
     ancient_wisdom: [
-      { azOffset: 0, elOffset: 0 },      // Center star
-      { azOffset: -15, elOffset: 10 },   // Upper left
-      { azOffset: 15, elOffset: 8 },     // Upper right  
-      { azOffset: -8, elOffset: -12 },   // Lower left
-      { azOffset: 12, elOffset: -10 },   // Lower right
-      { azOffset: 0, elOffset: 20 },     // Top
-      { azOffset: -20, elOffset: -5 },   // Far left
-      { azOffset: 25, elOffset: -8 }     // Far right
+      { azOffset: 0, elOffset: 0 },
+      { azOffset: -15, elOffset: 10 },
+      { azOffset: 15, elOffset: 8 },
+      { azOffset: -8, elOffset: -12 },
+      { azOffset: 12, elOffset: -10 },
+      { azOffset: 0, elOffset: 20 },
+      { azOffset: -20, elOffset: -5 },
+      { azOffset: 25, elOffset: -8 }
     ],
     rising_dawn: [
-      { azOffset: -10, elOffset: -15 },  // Base
-      { azOffset: 0, elOffset: 0 },      // Center
-      { azOffset: 10, elOffset: 15 },    // Peak
-      { azOffset: -5, elOffset: 8 },     // Left wing
-      { azOffset: 5, elOffset: 8 },      // Right wing
-      { azOffset: 15, elOffset: 25 },    // High right
-      { azOffset: -15, elOffset: 20 }    // High left
+      { azOffset: -10, elOffset: -15 },
+      { azOffset: 0, elOffset: 0 },
+      { azOffset: 10, elOffset: 15 },
+      { azOffset: -5, elOffset: 8 },
+      { azOffset: 5, elOffset: 8 },
+      { azOffset: 15, elOffset: 25 },
+      { azOffset: -15, elOffset: 20 }
     ],
     crown: [
-      { azOffset: 0, elOffset: 15 },     // Central peak
-      { azOffset: -12, elOffset: 8 },    // Left peak
-      { azOffset: 12, elOffset: 8 },     // Right peak
-      { azOffset: -6, elOffset: 0 },     // Left base
-      { azOffset: 6, elOffset: 0 },      // Right base
-      { azOffset: -20, elOffset: -5 },   // Left extent
-      { azOffset: 20, elOffset: -5 },    // Right extent
-      { azOffset: 0, elOffset: -10 }     // Center base
+      { azOffset: 0, elOffset: 15 },
+      { azOffset: -12, elOffset: 8 },
+      { azOffset: 12, elOffset: 8 },
+      { azOffset: -6, elOffset: 0 },
+      { azOffset: 6, elOffset: 0 },
+      { azOffset: -20, elOffset: -5 },
+      { azOffset: 20, elOffset: -5 },
+      { azOffset: 0, elOffset: -10 }
     ],
     crossed_swords: [
-      { azOffset: -15, elOffset: 15 },   // Upper left blade
-      { azOffset: 15, elOffset: -15 },   // Lower right blade
-      { azOffset: 15, elOffset: 15 },    // Upper right blade
-      { azOffset: -15, elOffset: -15 },  // Lower left blade
-      { azOffset: 0, elOffset: 0 },      // Center crossing
-      { azOffset: -25, elOffset: 10 },   // Left hilt
-      { azOffset: 25, elOffset: -10 }    // Right hilt
+      { azOffset: -15, elOffset: 15 },
+      { azOffset: 15, elOffset: -15 },
+      { azOffset: 15, elOffset: 15 },
+      { azOffset: -15, elOffset: -15 },
+      { azOffset: 0, elOffset: 0 },
+      { azOffset: -25, elOffset: 10 },
+      { azOffset: 25, elOffset: -10 }
     ],
     supernova: [
-      { azOffset: 0, elOffset: 0 },      // Core
-      { azOffset: 0, elOffset: 20 },     // North ray
-      { azOffset: 17, elOffset: 10 },    // Northeast ray
-      { azOffset: 20, elOffset: 0 },     // East ray
-      { azOffset: 17, elOffset: -10 },   // Southeast ray
-      { azOffset: 0, elOffset: -20 },    // South ray
-      { azOffset: -17, elOffset: -10 },  // Southwest ray
-      { azOffset: -20, elOffset: 0 },    // West ray
-      { azOffset: -17, elOffset: 10 }    // Northwest ray
+      { azOffset: 0, elOffset: 0 },
+      { azOffset: 0, elOffset: 20 },
+      { azOffset: 17, elOffset: 10 },
+      { azOffset: 20, elOffset: 0 },
+      { azOffset: 17, elOffset: -10 },
+      { azOffset: 0, elOffset: -20 },
+      { azOffset: -17, elOffset: -10 },
+      { azOffset: -20, elOffset: 0 },
+      { azOffset: -17, elOffset: 10 }
     ],
     ascension: [
-      { azOffset: 0, elOffset: 25 },     // Apex
-      { azOffset: -8, elOffset: 15 },    // Upper left
-      { azOffset: 8, elOffset: 15 },     // Upper right
-      { azOffset: -15, elOffset: 5 },    // Mid left
-      { azOffset: 15, elOffset: 5 },     // Mid right
-      { azOffset: -20, elOffset: -10 },  // Lower left
-      { azOffset: 20, elOffset: -10 },   // Lower right
-      { azOffset: 0, elOffset: -5 }      // Center
+      { azOffset: 0, elOffset: 25 },
+      { azOffset: -8, elOffset: 15 },
+      { azOffset: 8, elOffset: 15 },
+      { azOffset: -15, elOffset: 5 },
+      { azOffset: 15, elOffset: 5 },
+      { azOffset: -20, elOffset: -10 },
+      { azOffset: 20, elOffset: -10 },
+      { azOffset: 0, elOffset: -5 }
     ],
     omega: [
-      { azOffset: -10, elOffset: 10 },   // Left curve top
-      { azOffset: 10, elOffset: 10 },    // Right curve top
-      { azOffset: -15, elOffset: 0 },    // Left curve mid
-      { azOffset: 15, elOffset: 0 },     // Right curve mid
-      { azOffset: -8, elOffset: -10 },   // Left curve bottom
-      { azOffset: 8, elOffset: -10 },    // Right curve bottom
-      { azOffset: 0, elOffset: 5 }       // Center top
+      { azOffset: -10, elOffset: 10 },
+      { azOffset: 10, elOffset: 10 },
+      { azOffset: -15, elOffset: 0 },
+      { azOffset: 15, elOffset: 0 },
+      { azOffset: -8, elOffset: -10 },
+      { azOffset: 8, elOffset: -10 },
+      { azOffset: 0, elOffset: 5 }
     ],
     scattered: [
-      { azOffset: 5, elOffset: 8 },      // Random scattered pattern
+      { azOffset: 5, elOffset: 8 },
       { azOffset: -12, elOffset: -5 },
       { azOffset: 18, elOffset: 12 },
       { azOffset: -8, elOffset: 15 },

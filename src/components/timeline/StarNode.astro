@@ -73,7 +73,7 @@ function getStarType(id: string, keyEvent: boolean): string {
 }
 
 function getSizeFactor(keyEvent: boolean): number {
-  return keyEvent ? 1.2 : 0.85 + (Math.random() * 0.3); // Math.random will run on server; for client-side variation, move to script
+  return keyEvent ? 1.2 : 0.85 + (Math.random() * 0.3);
 }
 
 function getAnimationDuration(id: string): number {
@@ -83,7 +83,7 @@ function getAnimationDuration(id: string): number {
 
 const uniqueId = `star-${identifier}-${isKeyEvent ? 'key' : 'normal'}`;
 const starType = getStarType(uniqueId, isKeyEvent);
-const sizeFactor = getSizeFactor(isKeyEvent); // Consider if this needs to be client-side for true randomness per instance
+const sizeFactor = getSizeFactor(isKeyEvent);
 const finalSize = size * sizeFactor;
 const mainColor = getStarColor(uniqueId, era, useEraColors);
 const animationDuration = getAnimationDuration(uniqueId);
@@ -109,8 +109,13 @@ const wrapperId = `star-wrapper-${uniqueId}`;
     --secondary-color: ${mainColor};
   `}
 >
+  <!-- Backing plate for contrast -->
   <div class="star-backing-plate"></div>
+
+  <!-- Glow effect -->
   <div class="star-glow"></div>
+  
+  <!-- Light rays effect -->
   <div class="star-rays"></div>
 
   <svg
@@ -146,7 +151,7 @@ const wrapperId = `star-wrapper-${uniqueId}`;
         <circle cx="12" cy="12" r="3.5" fill={mainColor} opacity="0.15" />
       </>
     )}
-    {starType !== 'point' && starType !== 'classic' && starType !== 'sparkle' && starType !== 'refraction' && starType !== 'halo' && ( // Default/Subtle
+    {starType !== 'point' && starType !== 'classic' && starType !== 'sparkle' && starType !== 'refraction' && starType !== 'halo' && (
       <>
         <circle cx="12" cy="12" r="1.2" fill={mainColor} />
         <path d="M10 9l4 6M9 12l6 0" stroke={mainColor} stroke-width="0.4" opacity="0.5" />
@@ -157,15 +162,19 @@ const wrapperId = `star-wrapper-${uniqueId}`;
     )}
   </svg>
 
+  <!-- Enhanced orbital effects -->
   <div class="orbital-effect">
+    <!-- Base orbital for all stars -->
     <div class="orbital-ring orbital-base orbital-ring-1"></div>
+    
     {isSelected && (
       <>
         <div class="orbital-ring orbital-selected orbital-ring-1"></div>
         <div class="orbital-ring orbital-selected orbital-ring-2"></div>
       </>
     )}
-    {/* Initialization and highlight orbitals will be managed by client script */}
+    
+    <!-- Initialization and highlight orbitals will be managed by client script -->
     <div class="orbital-ring orbital-init" style="display: none;"></div>
     <div class="orbital-ring orbital-init random-highlight-animation" style="display: none;"></div>
   </div>
@@ -188,26 +197,22 @@ const wrapperId = `star-wrapper-${uniqueId}`;
     setTimeout(() => {
       showInitAnimation = false;
       if (initOrbital && !playRandomHighlight) initOrbital.style.display = 'none';
-    }, 3000); // Match orbital-init animation duration
+    }, 3000);
 
     // Function to handle highlight
     function handleHighlight(shouldHighlight) {
       if (shouldHighlight && !playRandomHighlight) {
         playRandomHighlight = true;
         if (highlightOrbital) highlightOrbital.style.display = 'block';
-        if (initOrbital && showInitAnimation) initOrbital.style.display = 'none'; // Hide init if highlight starts
+        if (initOrbital && showInitAnimation) initOrbital.style.display = 'none';
 
         setTimeout(() => {
           playRandomHighlight = false;
           if (highlightOrbital) highlightOrbital.style.display = 'none';
-          // Restore initOrbital if it was supposed to be showing and highlight is done
           if (initOrbital && showInitAnimation && !playRandomHighlight) {
             initOrbital.style.display = 'block';
           }
-        }, 3000); // Match animation duration
-      } else if (!shouldHighlight && playRandomHighlight) {
-        // This case might be tricky if the prop changes mid-animation
-        // For simplicity, we let the animation finish
+        }, 3000);
       }
     }
 
@@ -226,3 +231,412 @@ const wrapperId = `star-wrapper-${uniqueId}`;
     observer.observe(starWrapper, { attributes: true });
   }
 </script>
+
+<style>
+  /* Base star styles */
+  .star-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    --star-color: var(--primary, #3b82f6);
+    --star-size: 8px;
+    --animation-duration: 4s;
+    filter:
+      drop-shadow(0 0 3px var(--star-color))
+      drop-shadow(0 0 8px color-mix(in oklch, var(--star-color), transparent 50%));
+    transition: transform 0.3s ease, filter 0.3s ease;
+  }
+
+  /* Backing plate for contrast */
+  .star-backing-plate {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(var(--star-size) * 2.5);
+    height: calc(var(--star-size) * 2.5);
+    background-color: rgba(0, 0, 0, 0.4);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease;
+    opacity: 0.85;
+    backdrop-filter: blur(3px);
+  }
+
+  .star-wrapper.is-hovered .star-backing-plate,
+  .star-wrapper.is-selected .star-backing-plate {
+    opacity: 0.95;
+    background-color: rgba(0, 0, 0, 0.5);
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+
+  /* Enhanced glow effect */
+  .star-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(var(--star-size) * 2.5);
+    height: calc(var(--star-size) * 2.5);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, var(--star-color) 0%, rgba(255, 255, 255, 0) 70%);
+    opacity: 0.5;
+    animation: colorShiftGlow var(--animation-duration, 4s) infinite alternate ease-in-out;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    z-index: 1;
+  }
+
+  /* Advanced color shifting glow animation */
+  @keyframes colorShiftGlow {
+    0% { 
+      opacity: 0.4; 
+      transform: translate(-50%, -50%) scale(0.9); 
+      filter: hue-rotate(0deg) brightness(1);
+    }
+    25% { 
+      opacity: 0.6; 
+      transform: translate(-50%, -50%) scale(1.0); 
+      filter: hue-rotate(15deg) brightness(1.1);
+    }
+    50% { 
+      opacity: 0.7; 
+      transform: translate(-50%, -50%) scale(1.1); 
+      filter: hue-rotate(30deg) brightness(1.2);
+    }
+    75% { 
+      opacity: 0.6; 
+      transform: translate(-50%, -50%) scale(1.0); 
+      filter: hue-rotate(15deg) brightness(1.1);
+    }
+    100% { 
+      opacity: 0.4; 
+      transform: translate(-50%, -50%) scale(0.9); 
+      filter: hue-rotate(0deg) brightness(1);
+    }
+  }
+
+  /* Light rays effect */
+  .star-rays {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(var(--star-size) * 6);
+    height: calc(var(--star-size) * 6);
+    transform: translate(-50%, -50%);
+    background-image: repeating-conic-gradient(var(--star-color) 0deg, transparent 1.5deg, transparent 18deg, var(--star-color) 20deg);
+    opacity: 0.15;
+    border-radius: 50%;
+    pointer-events: none;
+    display: none;
+    animation: rotateRays 12s linear infinite;
+    z-index: 2;
+  }
+
+  /* Show rays for important stars */
+  .star-wrapper.is-key-event .star-rays {
+    display: block;
+    opacity: 0.2;
+  }
+
+  .star-wrapper.is-hovered .star-rays {
+    display: block;
+    opacity: 0.18;
+  }
+
+  .star-wrapper.is-selected .star-rays {
+    display: block;
+    opacity: 0.3;
+    animation-duration: 8s;
+  }
+
+  @keyframes rotateRays {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  /* Enhanced star shape with shimmer */
+  .star-shape {
+    position: relative;
+    z-index: 3;
+    width: calc(var(--star-size) * 1.5);
+    height: calc(var(--star-size) * 1.5);
+    filter: drop-shadow(0 0 1px var(--star-color));
+    animation: starShimmer calc(var(--animation-duration) * 0.8) infinite ease-in-out;
+  }
+
+  @keyframes starShimmer {
+    0%, 100% { 
+      filter: drop-shadow(0 0 1px var(--star-color)) brightness(1);
+    }
+    50% { 
+      filter: drop-shadow(0 0 2px var(--star-color)) brightness(1.3);
+    }
+  }
+
+  /* Inner glow animation for key events */
+  .inner-glow {
+    animation: innerGlowPulse var(--animation-duration, 3s) infinite alternate ease-in-out;
+  }
+
+  @keyframes innerGlowPulse {
+    0% { opacity: 0.4; r: 2.5; }
+    50% { opacity: 0.6; r: 3.2; }
+    100% { opacity: 0.4; r: 2.5; }
+  }
+
+  /* Enhanced hover state */
+  .star-wrapper.is-hovered {
+    filter:
+      drop-shadow(0 0 4px var(--star-color))
+      drop-shadow(0 0 10px color-mix(in oklch, var(--star-color), transparent 40%));
+    z-index: 5;
+  }
+
+  /* Enhanced key event state */
+  .star-wrapper.is-key-event {
+    filter:
+      drop-shadow(0 0 4px var(--star-color))
+      drop-shadow(0 0 12px color-mix(in oklch, var(--star-color), transparent 30%));
+  }
+
+  /* Enhanced selected state */
+  .star-wrapper.is-selected {
+    filter:
+      drop-shadow(0 0 5px var(--star-color))
+      drop-shadow(0 0 10px var(--star-color))
+      drop-shadow(0 0 15px color-mix(in oklch, var(--star-color), white 30%)) !important;
+    z-index: 10;
+    transform: scale(1.25);
+  }
+
+  .star-wrapper.is-selected .star-glow {
+    opacity: 0.8;
+    width: calc(var(--star-size) * 2);
+    height: calc(var(--star-size) * 2);
+  }
+
+  /* Star type-specific glow effects */
+  .star-wrapper[data-star-type="refraction"] .star-glow {
+    background: radial-gradient(
+      circle,
+      var(--star-color) 0%,
+      rgba(255,255,255,0) 80%
+    ), 
+    linear-gradient(
+      to right,
+      rgba(255,255,255,0) 35%,
+      var(--star-color) 50%,
+      rgba(255,255,255,0) 65%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(255,255,255,0) 35%,
+      var(--star-color) 50%,
+      rgba(255,255,255,0) 65%
+    );
+    opacity: 0.4;
+    width: calc(var(--star-size) * 5);
+    height: calc(var(--star-size) * 5);
+  }
+
+  .star-wrapper[data-star-type="halo"] .star-glow {
+    background: radial-gradient(
+      circle,
+      var(--star-color) 0%,
+      var(--star-color) 10%,
+      rgba(255,255,255,0) 70%
+    );
+    opacity: 0.5;
+    width: calc(var(--star-size) * 4);
+    height: calc(var(--star-size) * 4);
+    animation: haloBreathing var(--animation-duration, 6s) infinite alternate ease-in-out;
+  }
+
+  .star-wrapper[data-star-type="sparkle"] .star-glow {
+    background: 
+      radial-gradient(
+        circle,
+        var(--star-color) 0%,
+        rgba(255,255,255,0) 60%
+      ),
+      linear-gradient(
+        to right,
+        rgba(255,255,255,0) 45%,
+        var(--star-color) 50%,
+        rgba(255,255,255,0) 55%
+      ),
+      linear-gradient(
+        to bottom,
+        rgba(255,255,255,0) 45%,
+        var(--star-color) 50%,
+        rgba(255,255,255,0) 55%
+      );
+    opacity: 0.4;
+    width: calc(var(--star-size) * 6);
+    height: calc(var(--star-size) * 6);
+  }
+
+  .star-wrapper[data-star-type="classic"] .star-glow {
+    background: radial-gradient(
+      circle,
+      var(--star-color) 0%,
+      rgba(255,255,255,0) 70%
+    );
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+
+  .star-wrapper[data-star-type="point"] .star-glow {
+    background: radial-gradient(
+      circle,
+      var(--star-color) 0%,
+      rgba(255,255,255,0) 50%
+    );
+    opacity: 0.4;
+    width: calc(var(--star-size) * 2.5);
+    height: calc(var(--star-size) * 2.5);
+  }
+
+  @keyframes haloBreathing {
+    0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.4; }
+    50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.6; }
+    100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.4; }
+  }
+
+  /* Refraction animation */
+  .refraction-lines {
+    animation: refractionTwinkle var(--animation-duration, 4s) infinite alternate ease-in-out;
+  }
+
+  @keyframes refractionTwinkle {
+    0% { opacity: 0.2; }
+    25% { opacity: 0.5; }
+    50% { opacity: 0.3; }
+    75% { opacity: 0.6; }
+    100% { opacity: 0.2; }
+  }
+
+  /* Enhanced orbital effects */
+  .orbital-effect {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  .orbital-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 50%;
+    border: 1px solid var(--star-color);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    box-shadow: 0 0 2px var(--star-color);
+  }
+
+  /* Base orbital for all stars */
+  .orbital-base {
+    width: calc(var(--star-size) * 1.5);
+    height: calc(var(--star-size) * 1.5);
+    animation: orbital-pulse-enhanced 8s infinite ease-in-out;
+    opacity: 0.1;
+    border-color: var(--star-color);
+  }
+
+  /* Enhanced orbitals only for selected stars */
+  .orbital-selected.orbital-ring-1 {
+    width: calc(var(--star-size) * 5);
+    height: calc(var(--star-size) * 5);
+    animation: orbital-pulse 4s infinite ease-in-out;
+  }
+
+  .orbital-selected.orbital-ring-2 {
+    width: calc(var(--star-size) * 4.5);
+    height: calc(var(--star-size) * 4.5);
+    animation: orbital-pulse 4s infinite ease-in-out;
+    animation-delay: 2s;
+  }
+
+  /* Initialization orbital effect */
+  .orbital-init {
+    width: calc(var(--star-size) * 5);
+    height: calc(var(--star-size) * 5);
+    animation: orbital-init 3s ease-out forwards;
+    border-color: var(--star-color);
+    border-width: 2px;
+    box-shadow: 0 0 3px var(--star-color);
+  }
+
+  /* Enhanced orbital animations */
+  @keyframes orbital-pulse-enhanced {
+    0% {
+      transform: translate(-50%, -50%) scale(0.9) rotate(0deg);
+      opacity: 0.1;
+      border-width: 1px;
+    }
+    20% {
+      transform: translate(-50%, -50%) scale(1) rotate(22.5deg);
+      opacity: 0.3;
+      border-width: 1.5px;
+      box-shadow: 0 0 3px var(--star-color);
+    }
+    60% {
+      transform: translate(-50%, -50%) scale(1.1) rotate(67.5deg);
+      opacity: 0.2;
+      border-width: 1px;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1.2) rotate(90deg);
+      opacity: 0.1;
+      border-width: 0.5px;
+    }
+  }
+
+  @keyframes orbital-pulse {
+    0% {
+      transform: translate(-50%, -50%) scale(0.9) rotate(0deg);
+      opacity: 0.3;
+      border-width: 1.5px;
+      box-shadow: 0 0 3px color-mix(in oklch, var(--star-color), white 20%);
+    }
+    20% {
+      transform: translate(-50%, -50%) scale(1) rotate(45deg);
+      opacity: 0.8;
+      border-width: 1.5px;
+    }
+    60% {
+      transform: translate(-50%, -50%) scale(1.2) rotate(135deg);
+      opacity: 0.4;
+      border-width: 1px;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1.5) rotate(180deg);
+      opacity: 0;
+      border-width: 0.5px;
+    }
+  }
+
+  @keyframes orbital-init {
+    0% {
+      transform: translate(-50%, -50%) scale(0.2);
+      opacity: 0.9;
+      box-shadow: 0 0 4px var(--star-color);
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.5);
+      opacity: 0.7;
+      box-shadow: 0 0 2px var(--star-color);
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(3);
+      opacity: 0;
+      box-shadow: 0 0 1px var(--star-color);
+    }
+  }
+</style>
