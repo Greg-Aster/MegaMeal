@@ -1103,3 +1103,30 @@
     width: 1.5rem;
   }
 }
+
+/* =================================================================================
+ * Starmap-Specific Styles
+ * 
+ * Minimal styles for the unified 3D canvas starmap approach.
+ * Stars are now rendered as Three.js sprites, not DOM elements.
+ * ================================================================================= */
+
+/* Force hardware acceleration for smooth starmap rendering */
+.starmap-three-container {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Floating card styles for starmap */
+.starmap-floating-card {
+  pointer-events: none;
+}
+
+.starmap-floating-card .timeline-card {
+  pointer-events: auto;
+}
+
+/* Ensure canvas is interactive */
+.starmap-three-container canvas {
+  cursor: pointer;
+}
