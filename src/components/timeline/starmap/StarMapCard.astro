@@ -1,0 +1,24 @@
+---
+// src/components/timeline/starmap/StarMapCard.astro
+import type { TimelineEvent } from '../../../services/TimelineService.client';
+
+export interface Props {
+  event: TimelineEvent | null;
+  screenPosition?: { x: number; y: number; isInFront: boolean } | null;
+}
+
+const { event, screenPosition } = Astro.props;
+---
+
+{event && screenPosition && screenPosition.isInFront && (
+  <div class="starmap-floating-card-content">
+    <div class="timeline-card card-base absolute z-30 timeline-card-bottom bg-[var(--card-bg)] backdrop-blur-sm shadow-lg w-[200px] p-3">
+      <div class="font-bold text-75 text-sm mb-1 card-title">{event.title}</div>
+      <div class="text-50 text-xs line-clamp-2 card-description">{event.description || ''}</div>
+      <a href={`/posts/${event.slug}/#post-container`} class="timeline-link text-[0.65rem] mt-1 inline-block py-0.5 px-1.5 rounded-full bg-[oklch(0.9_0.05_var(--hue))/0.1] dark:bg-[oklch(0.3_0.05_var(--hue))/0.2] text-[oklch(0.4_0.05_var(--hue))] dark:text-[oklch(0.9_0.05_var(--hue))]">
+        View Event &rarr;
+      </a>
+      <div class="card-pointer absolute bg-inherit"></div>
+    </div>
+  </div>
+)}
