@@ -46,7 +46,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
   skyboxImageUrl,
   useEraColors,
 }}>
-  // Star appearance helpers
+  // Star appearance helpers - from StarNode.astro
   const eraColorMap = {
     'ancient-epoch': '#3b82f6',
     'awakening-era': '#8b5cf6',
@@ -92,6 +92,15 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
     return starTypes[hash % starTypes.length];
   }
 
+  function getSizeFactor(keyEvent) {
+    return keyEvent ? 1.2 : 0.85 + (Math.random() * 0.3);
+  }
+
+  function getAnimationDuration(id) {
+    const hash = hashCode(id);
+    return 4 + (hash % 5);
+  }
+
   // Starmap state
   let THREE, OrbitControls;
   let scene, camera, renderer, controls, gridGroup, starsGroup;
@@ -101,36 +110,238 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
   let floatingCard = null;
   let raycaster, mouse;
   let starSprites = new Map(); // Map of slug -> sprite for easy lookup
+  let orbitalRings = new Map(); // Map of slug -> orbital ring objects
+  let animationStartTime = Date.now();
 
-  // Enhanced star texture creation with StarNode-inspired graphics
-  function createEnhancedStarTexture(color, starType, isKeyEvent = false, size = 128) {
+  // Create orbital ring texture
+  function createOrbitalRingTexture(color, ringType = 'base', size = 256) {
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d');
     
     const center = size / 2;
-    const baseRadius = isKeyEvent ? size * 0.15 : size * 0.12;
+    const outerRadius = size * 0.45;
+    const innerRadius = size * 0.35;
     
     // Clear canvas
     ctx.clearRect(0, 0, size, size);
     
-    // Create multi-layered glow effect
+    // Create ring gradient
+    const gradient = ctx.createRadialGradient(center, center, innerRadius, center, center, outerRadius);
+    
+    if (ringType === 'selected') {
+      gradient.addColorStop(0, color + '00');
+      gradient.addColorStop(0.3, color + '80');
+      gradient.addColorStop(0.7, color + 'CC');
+      gradient.addColorStop(1, color + '00');
+    } else if (ringType === 'init') {
+      gradient.addColorStop(0, color + '00');
+      gradient.addColorStop(0.2, color + 'AA');
+      gradient.addColorStop(0.8, color + 'DD');
+      gradient.addColorStop(1, color + '00');
+    } else { // base
+      gradient.addColorStop(0, color + '00');
+      gradient.addColorStop(0.4, color + '20');
+      gradient.addColorStop(0.6, color + '40');
+      gradient.addColorStop(1, color + '00');
+    }
+    
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(center, center, outerRadius, 0, Math.PI * 2);
+    ctx.arc(center, center, innerRadius, 0, Math.PI * 2, true); // Cut out center
+    ctx.fill();
+    
+    return new THREE.CanvasTexture(canvas);
+  }
+
+  // Create orbital rings for a star
+  function createOrbitalRingsForStar(starSprite, eventData) {
+    const rings = [];
+    const color = eventData.mainColor;
+    
+    // Base orbital ring (always present, very subtle)
+    const baseRingTexture = createOrbitalRingTexture(color, 'base');
+    const baseRingMaterial = new THREE.SpriteMaterial({ 
+      map: baseRingTexture, 
+      transparent: true,
+      opacity: 0.1,
+      blending: THREE.AdditiveBlending
+    });
+    const baseRing = new THREE.Sprite(baseRingMaterial);
+    baseRing.position.copy(starSprite.position);
+    baseRing.scale.setScalar(starSprite.scale.x * 1.5);
+    baseRing.userData = {
+      type: 'base',
+      parentStar: eventData.slug,
+      animationPhase: Math.random() * Math.PI * 2,
+      rotationSpeed: 0.0005
+    };
+    rings.push(baseRing);
+    
+    // Selected rings (shown when star is selected)
+    if (eventData.isSelected) {
+      for (let i = 0; i < 2; i++) {
+        const selectedRingTexture = createOrbitalRingTexture(color, 'selected');
+        const selectedRingMaterial = new THREE.SpriteMaterial({ 
+          map: selectedRingTexture, 
+          transparent: true,
+          opacity: 0.8,
+          blending: THREE.AdditiveBlending
+        });
+        const selectedRing = new THREE.Sprite(selectedRingMaterial);
+        selectedRing.position.copy(starSprite.position);
+        selectedRing.scale.setScalar(starSprite.scale.x * (2.5 + i * 0.5));
+        selectedRing.userData = {
+          type: 'selected',
+          parentStar: eventData.slug,
+          animationPhase: Math.random() * Math.PI * 2 + i * Math.PI,
+          rotationSpeed: 0.001 * (i + 1),
+          pulseSpeed: 0.002,
+          scaleBase: starSprite.scale.x * (2.5 + i * 0.5)
+        };
+        rings.push(selectedRing);
+      }
+    }
+    
+    // Initialization ring (expanding ring effect)
+    if (!orbitalRings.has(eventData.slug)) { // Only on first creation
+      const initRingTexture = createOrbitalRingTexture(color, 'init');
+      const initRingMaterial = new THREE.SpriteMaterial({ 
+        map: initRingTexture, 
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending
+      });
+      const initRing = new THREE.Sprite(initRingMaterial);
+      initRing.position.copy(starSprite.position);
+      initRing.scale.setScalar(starSprite.scale.x * 0.2);
+      initRing.userData = {
+        type: 'init',
+        parentStar: eventData.slug,
+        startTime: Date.now(),
+        duration: 3000, // 3 seconds
+        scaleStart: starSprite.scale.x * 0.2,
+        scaleEnd: starSprite.scale.x * 5
+      };
+      rings.push(initRing);
+    }
+    
+    return rings;
+  }
+
+  // Update orbital ring animations
+  function updateOrbitalRings() {
+    const currentTime = Date.now();
+    
+    orbitalRings.forEach((rings, starSlug) => {
+      rings.forEach((ring, index) => {
+        const userData = ring.userData;
+        
+        if (userData.type === 'base') {
+          // Gentle rotation and subtle pulse
+          userData.animationPhase += userData.rotationSpeed;
+          ring.rotation.z = userData.animationPhase;
+          
+          const pulse = 0.1 + Math.sin(currentTime * 0.001 + userData.animationPhase) * 0.05;
+          ring.material.opacity = pulse;
+          
+        } else if (userData.type === 'selected') {
+          // Expanding pulse animation
+          userData.animationPhase += userData.rotationSpeed;
+          ring.rotation.z = userData.animationPhase;
+          
+          const pulsePhase = Math.sin(currentTime * userData.pulseSpeed + userData.animationPhase);
+          const scale = userData.scaleBase * (0.9 + pulsePhase * 0.3);
+          ring.scale.setScalar(scale);
+          
+          const opacity = 0.3 + Math.abs(pulsePhase) * 0.5;
+          ring.material.opacity = opacity;
+          
+        } else if (userData.type === 'init') {
+          // Expanding initialization effect
+          const elapsed = currentTime - userData.startTime;
+          const progress = Math.min(elapsed / userData.duration, 1);
+          
+          if (progress >= 1) {
+            // Remove completed init rings
+            if (ring.parent) ring.parent.remove(ring);
+            rings.splice(index, 1);
+            return;
+          }
+          
+          // Expanding scale with easing
+          const easeOut = 1 - Math.pow(1 - progress, 3);
+          const scale = userData.scaleStart + (userData.scaleEnd - userData.scaleStart) * easeOut;
+          ring.scale.setScalar(scale);
+          
+          // Fading opacity
+          ring.material.opacity = 0.9 * (1 - progress);
+        }
+      });
+    });
+  }
+
+  // Advanced StarNode-inspired texture creation with full animation support
+  function createAdvancedStarTexture(color, starType, isKeyEvent = false, isSelected = false, isHovered = false, animationTime = 0, size = 512) {
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    
+    const center = size / 2;
+    const baseRadius = isKeyEvent ? size * 0.04 : size * 0.03;
+    const sizeFactor = getSizeFactor(isKeyEvent);
+    const finalRadius = baseRadius * sizeFactor;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, size, size);
+    
+    // Slower animation calculations
+    const glowPhase = (Math.sin(animationTime * 0.0008) + 1) / 2; // 0-1 oscillation (slower)
+    const shimmerPhase = (Math.sin(animationTime * 0.001) + 1) / 2;
+    const orbitalPhase = animationTime * 0.0004;
+    const raysRotation = animationTime * 0.0003;
+    
+    // Backing plate (from StarNode) - enhanced for 3D
+    const backingRadius = finalRadius * 4;
+    const backingGradient = ctx.createRadialGradient(center, center, 0, center, center, backingRadius);
+    const backingOpacity = isSelected ? 0.95 : (isHovered ? 0.9 : 0.7);
+    backingGradient.addColorStop(0, `rgba(0,0,0,${backingOpacity})`);
+    backingGradient.addColorStop(0.7, `rgba(0,0,0,${backingOpacity * 0.6})`);
+    backingGradient.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = backingGradient;
+    ctx.beginPath();
+    ctx.arc(center, center, backingRadius, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Enhanced multi-layer glow with proper boundary fadeout
     const glowLayers = [
-      { radius: baseRadius * 8, opacity: 0.05, blur: 20 },
-      { radius: baseRadius * 5, opacity: 0.1, blur: 15 },
-      { radius: baseRadius * 3, opacity: 0.2, blur: 10 },
-      { radius: baseRadius * 2, opacity: 0.3, blur: 5 },
+      { radius: finalRadius * 20, opacity: 0.02 + glowPhase * 0.01, blur: 30 },
+      { radius: finalRadius * 15, opacity: 0.04 + glowPhase * 0.02, blur: 25 },
+      { radius: finalRadius * 12, opacity: 0.06 + glowPhase * 0.03, blur: 20 },
+      { radius: finalRadius * 8, opacity: 0.1 + glowPhase * 0.05, blur: 15 },
+      { radius: finalRadius * 5, opacity: 0.15 + glowPhase * 0.08, blur: 10 },
+      { radius: finalRadius * 3, opacity: 0.25 + glowPhase * 0.1, blur: 5 },
     ];
     
-    // Draw glow layers
-    glowLayers.forEach(layer => {
+    // Color shifting effect (slower)
+    const hueShift = Math.sin(animationTime * 0.0004) * 20; // ±20 degree hue shift (slower)
+    const brightness = 1 + Math.sin(animationTime * 0.0006) * 0.15; // brightness oscillation (slower)
+    
+    glowLayers.forEach((layer, index) => {
       ctx.save();
-      ctx.filter = `blur(${layer.blur}px)`;
+      ctx.filter = `blur(${layer.blur}px) hue-rotate(${hueShift * (index + 1) / glowLayers.length}deg) brightness(${brightness})`;
+      
       const gradient = ctx.createRadialGradient(center, center, 0, center, center, layer.radius);
-      gradient.addColorStop(0, color + Math.floor(layer.opacity * 255).toString(16).padStart(2, '0'));
-      gradient.addColorStop(0.5, color + Math.floor(layer.opacity * 127).toString(16).padStart(2, '0'));
-      gradient.addColorStop(1, color + '00');
+      const alpha = Math.floor(layer.opacity * 255).toString(16).padStart(2, '0');
+      gradient.addColorStop(0, color + alpha);
+      gradient.addColorStop(0.2, color + Math.floor(layer.opacity * 180).toString(16).padStart(2, '0'));
+      gradient.addColorStop(0.5, color + Math.floor(layer.opacity * 100).toString(16).padStart(2, '0'));
+      gradient.addColorStop(0.8, color + Math.floor(layer.opacity * 40).toString(16).padStart(2, '0'));
+      gradient.addColorStop(1, color + '00'); // Completely transparent at edge
+      
       ctx.fillStyle = gradient;
       ctx.beginPath();
       ctx.arc(center, center, layer.radius, 0, Math.PI * 2);
@@ -138,117 +349,176 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
       ctx.restore();
     });
     
-    // Draw star type-specific shapes
+    // Light rays effect (from StarNode) - animated rotation
+    if (isKeyEvent || isSelected || isHovered) {
+      ctx.save();
+      ctx.translate(center, center);
+      ctx.rotate(raysRotation);
+      ctx.translate(-center, -center);
+      
+      const raysRadius = finalRadius * 10;
+      const raysOpacity = isSelected ? 0.3 : (isHovered ? 0.18 : (isKeyEvent ? 0.2 : 0.15));
+      
+      // Create repeating conic gradient for rays
+      const rayCount = 8;
+      for (let i = 0; i < rayCount; i++) {
+        const angle = (i / rayCount) * Math.PI * 2;
+        const rayLength = raysRadius * (0.8 + Math.sin(animationTime * 0.003 + i) * 0.2);
+        
+        ctx.strokeStyle = color + Math.floor(raysOpacity * 255).toString(16).padStart(2, '0');
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.lineTo(
+          center + Math.cos(angle) * rayLength,
+          center + Math.sin(angle) * rayLength
+        );
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    
+    // Orbital rings (from StarNode orbital effects)
+    if (isSelected || isHovered) {
+      const orbitalRings = isSelected ? [
+        { radius: finalRadius * 8, opacity: 0.8, speed: 1, width: 2 },
+        { radius: finalRadius * 6.5, opacity: 0.6, speed: -0.7, width: 1.5 },
+      ] : [
+        { radius: finalRadius * 6, opacity: 0.4, speed: 0.8, width: 1 },
+      ];
+      
+      orbitalRings.forEach((ring, index) => {
+        ctx.save();
+        const ringPhase = orbitalPhase * ring.speed + index * Math.PI;
+        const ringOpacity = ring.opacity * (0.7 + Math.sin(ringPhase * 2) * 0.3);
+        const ringRadius = ring.radius * (0.9 + Math.sin(ringPhase * 1.5) * 0.1);
+        
+        ctx.strokeStyle = color + Math.floor(ringOpacity * 255).toString(16).padStart(2, '0');
+        ctx.lineWidth = ring.width;
+        ctx.setLineDash([3, 2]);
+        ctx.lineDashOffset = ringPhase * 10;
+        ctx.beginPath();
+        ctx.arc(center, center, ringRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      });
+    }
+    
+    // Main star shape with shimmer effect (from StarNode)
     ctx.save();
     ctx.globalCompositeOperation = 'source-over';
     
+    // Shimmer brightness calculation
+    const shimmerBrightness = 1 + shimmerPhase * 0.3;
+    ctx.filter = `brightness(${shimmerBrightness}) drop-shadow(0 0 ${finalRadius * 0.5}px ${color})`;
+    
     switch (starType) {
       case 'point':
-        // Simple bright point
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(center, center, baseRadius * 0.8, 0, Math.PI * 2);
+        ctx.arc(center, center, finalRadius * 1.2, 0, Math.PI * 2);
         ctx.fill();
         break;
         
       case 'classic':
-        // Classic 5-pointed star
-        drawStar(ctx, center, center, 5, baseRadius * 1.2, baseRadius * 0.6, color);
+        drawStar(ctx, center, center, 5, finalRadius * 2, finalRadius * 1, color);
         break;
         
       case 'sparkle':
-        // Sparkle with cross rays
-        drawStar(ctx, center, center, 4, baseRadius * 1.1, baseRadius * 0.5, color);
-        // Add cross lines
-        ctx.strokeStyle = color;
+        drawStar(ctx, center, center, 4, finalRadius * 1.8, finalRadius * 0.8, color);
+        // Add animated cross lines
+        const crossOpacity = 0.4 + shimmerPhase * 0.6;
+        ctx.strokeStyle = color + Math.floor(crossOpacity * 255).toString(16).padStart(2, '0');
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(center - baseRadius * 2, center);
-        ctx.lineTo(center + baseRadius * 2, center);
-        ctx.moveTo(center, center - baseRadius * 2);
-        ctx.lineTo(center, center + baseRadius * 2);
+        ctx.moveTo(center - finalRadius * 3, center);
+        ctx.lineTo(center + finalRadius * 3, center);
+        ctx.moveTo(center, center - finalRadius * 3);
+        ctx.lineTo(center, center + finalRadius * 3);
         ctx.stroke();
         break;
         
       case 'refraction':
-        // Central core with refraction lines
+        // Central core
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(center, center, baseRadius * 0.8, 0, Math.PI * 2);
+        ctx.arc(center, center, finalRadius * 1.2, 0, Math.PI * 2);
         ctx.fill();
         
-        // Refraction lines
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1.5;
-        ctx.globalAlpha = 0.7;
+        // Animated refraction lines (from StarNode refractionTwinkle)
+        const refractionOpacity = 0.2 + Math.sin(animationTime * 0.0025) * 0.4;
+        ctx.strokeStyle = color + Math.floor(refractionOpacity * 255).toString(16).padStart(2, '0');
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(center - baseRadius * 2.5, center);
-        ctx.lineTo(center + baseRadius * 2.5, center);
-        ctx.moveTo(center, center - baseRadius * 2.5);
-        ctx.lineTo(center, center + baseRadius * 2.5);
+        ctx.moveTo(center - finalRadius * 4, center);
+        ctx.lineTo(center + finalRadius * 4, center);
+        ctx.moveTo(center, center - finalRadius * 4);
+        ctx.lineTo(center, center + finalRadius * 4);
         ctx.stroke();
         
         // Diagonal refraction lines
-        ctx.globalAlpha = 0.4;
+        const diagOpacity = refractionOpacity * 0.6;
+        ctx.strokeStyle = color + Math.floor(diagOpacity * 255).toString(16).padStart(2, '0');
         ctx.beginPath();
-        ctx.moveTo(center - baseRadius * 1.8, center - baseRadius * 1.8);
-        ctx.lineTo(center + baseRadius * 1.8, center + baseRadius * 1.8);
-        ctx.moveTo(center - baseRadius * 1.8, center + baseRadius * 1.8);
-        ctx.lineTo(center + baseRadius * 1.8, center - baseRadius * 1.8);
+        ctx.moveTo(center - finalRadius * 2.8, center - finalRadius * 2.8);
+        ctx.lineTo(center + finalRadius * 2.8, center + finalRadius * 2.8);
+        ctx.moveTo(center - finalRadius * 2.8, center + finalRadius * 2.8);
+        ctx.lineTo(center + finalRadius * 2.8, center - finalRadius * 2.8);
         ctx.stroke();
-        ctx.globalAlpha = 1;
         break;
         
       case 'halo':
-        // Multiple concentric circles
+        // Multiple breathing halos (from StarNode haloBreathing)
+        const breathingPhase = Math.sin(animationTime * 0.0015);
         const haloRings = [
-          { radius: baseRadius * 0.6, opacity: 1 },
-          { radius: baseRadius * 1.2, opacity: 0.6 },
-          { radius: baseRadius * 1.8, opacity: 0.3 },
-          { radius: baseRadius * 2.4, opacity: 0.15 }
+          { radius: finalRadius * (1.2 + breathingPhase * 0.2), opacity: 1 },
+          { radius: finalRadius * (2 + breathingPhase * 0.3), opacity: 0.6 },
+          { radius: finalRadius * (2.8 + breathingPhase * 0.4), opacity: 0.3 },
+          { radius: finalRadius * (3.6 + breathingPhase * 0.5), opacity: 0.15 }
         ];
         
         haloRings.forEach(ring => {
-          ctx.globalAlpha = ring.opacity;
-          ctx.fillStyle = color;
+          const ringOpacity = ring.opacity * (0.4 + breathingPhase * 0.2);
+          ctx.fillStyle = color + Math.floor(ringOpacity * 255).toString(16).padStart(2, '0');
           ctx.beginPath();
           ctx.arc(center, center, ring.radius, 0, Math.PI * 2);
           ctx.fill();
         });
-        ctx.globalAlpha = 1;
         break;
         
       default: // subtle
-        // Subtle star with small cross
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(center, center, baseRadius * 0.7, 0, Math.PI * 2);
+        ctx.arc(center, center, finalRadius * 1.1, 0, Math.PI * 2);
         ctx.fill();
         
-        ctx.strokeStyle = color;
+        const subtleOpacity = 0.6 + shimmerPhase * 0.4;
+        ctx.strokeStyle = color + Math.floor(subtleOpacity * 255).toString(16).padStart(2, '0');
         ctx.lineWidth = 1;
-        ctx.globalAlpha = 0.6;
         ctx.beginPath();
-        ctx.moveTo(center - baseRadius * 1.5, center);
-        ctx.lineTo(center + baseRadius * 1.5, center);
-        ctx.moveTo(center, center - baseRadius * 1.5);
-        ctx.lineTo(center, center + baseRadius * 1.5);
+        ctx.moveTo(center - finalRadius * 2.5, center);
+        ctx.lineTo(center + finalRadius * 2.5, center);
+        ctx.moveTo(center, center - finalRadius * 2.5);
+        ctx.lineTo(center, center + finalRadius * 2.5);
         ctx.stroke();
-        ctx.globalAlpha = 1;
         break;
     }
     
-    // Add enhanced center glow for key events
+    // Enhanced center glow for key events (from StarNode innerGlowPulse)
     if (isKeyEvent) {
       ctx.save();
       ctx.globalCompositeOperation = 'screen';
-      const centerGlow = ctx.createRadialGradient(center, center, 0, center, center, baseRadius * 1.5);
+      const pulsePhase = Math.sin(animationTime * 0.002);
+      const glowRadius = finalRadius * (2.5 + pulsePhase * 0.7);
+      const glowOpacity = 0.4 + pulsePhase * 0.2;
+      
+      const centerGlow = ctx.createRadialGradient(center, center, 0, center, center, glowRadius);
       centerGlow.addColorStop(0, color);
-      centerGlow.addColorStop(0.3, color + '88');
+      centerGlow.addColorStop(0.3, color + Math.floor(glowOpacity * 255).toString(16).padStart(2, '0'));
       centerGlow.addColorStop(1, color + '00');
       ctx.fillStyle = centerGlow;
       ctx.beginPath();
-      ctx.arc(center, center, baseRadius * 1.5, 0, Math.PI * 2);
+      ctx.arc(center, center, glowRadius, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
@@ -478,18 +748,19 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
     ]
   };
 
-  // Create or update stars as era-based constellations with enhanced graphics
+  // Create or update stars as era-based constellations with full StarNode graphics
   function createOrUpdateStars(eventsToDisplay = currentEvents) {
     if (!starsGroup || !THREE) {
       console.warn('Starmap: createOrUpdateStars called before initialization.');
       return;
     }
 
-    // Clear existing stars
+    // Clear existing stars and orbital rings
     while (starsGroup.children.length > 0) {
       starsGroup.remove(starsGroup.children[0]);
     }
     starSprites.clear();
+    orbitalRings.clear();
     
     // Group events by era
     const eventsByEra = {};
@@ -549,8 +820,8 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
           const mainColor = getStarColor(uniqueStarId, event.era, useEraColors);
           const starType = getStarType(uniqueStarId, event.isKeyEvent);
           
-          // Create enhanced star sprite texture
-          const starTexture = createEnhancedStarTexture(mainColor, starType, event.isKeyEvent);
+          // Create advanced star sprite texture with initial state
+          const starTexture = createAdvancedStarTexture(mainColor, starType, event.isKeyEvent, false, false, animationStartTime);
           const spriteMaterial = new THREE.SpriteMaterial({ 
             map: starTexture, 
             transparent: true,
@@ -565,22 +836,31 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
           sprite.position.setFromSphericalCoords(radius, polarAngleRad, azimuthRad);
           
           // Scale based on importance and add slight variation
-          const baseScale = event.isKeyEvent ? 18 : 12;
+          const baseScale = event.isKeyEvent ? 22 : 16;
           const scaleVariation = 0.8 + (Math.random() * 0.4); // 0.8 to 1.2 multiplier
           sprite.scale.setScalar(baseScale * scaleVariation);
           
-          // Store event data on the sprite for interaction
+          // Store event data and animation state on the sprite for interaction
           sprite.userData = {
             ...event,
             mainColor,
             starType,
             uniqueId: uniqueStarId,
             era: era,
-            constellationPosition: patternPosition
+            constellationPosition: patternPosition,
+            isSelected: false,
+            isHovered: false,
+            animationStartTime: Date.now(),
+            lastUpdateTime: Date.now()
           };
           
           starsGroup.add(sprite);
           starSprites.set(event.slug, sprite);
+          
+          // Create orbital rings for this star
+          const rings = createOrbitalRingsForStar(sprite, sprite.userData);
+          rings.forEach(ring => starsGroup.add(ring));
+          orbitalRings.set(event.slug, rings);
         } catch (error) {
           console.error(`Error creating star for event "${event.title}":`, error);
         }
@@ -651,22 +931,70 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
     });
   }
 
-  // Handle star interactions
+  // Update star animations and states
+  function updateStarAnimations() {
+    const currentTime = Date.now();
+    
+    starSprites.forEach((sprite, slug) => {
+      const userData = sprite.userData;
+      if (!userData) return;
+      
+      const timeSinceCreation = currentTime - userData.animationStartTime;
+      
+      // Regenerate texture with current animation state (less frequently for performance)
+      if (currentTime - userData.lastUpdateTime > 150) { // Update every 150ms instead of 100ms
+        const newTexture = createAdvancedStarTexture(
+          userData.mainColor,
+          userData.starType,
+          userData.isKeyEvent,
+          userData.isSelected,
+          userData.isHovered,
+          timeSinceCreation
+        );
+        
+        // Update material
+        if (sprite.material && sprite.material.map) {
+          sprite.material.map.dispose();
+          sprite.material.map = newTexture;
+          sprite.material.needsUpdate = true;
+        }
+        
+        userData.lastUpdateTime = currentTime;
+      }
+    });
+    
+    // Update orbital rings
+    updateOrbitalRings();
+  }
+
+  // Handle star interactions with state management and orbital rings
   function handleStarClick(intersectedSprite) {
     const eventData = intersectedSprite.userData;
     
-    // Update visual states
-    starsGroup.children.forEach(sprite => {
+    // Update selection states and manage orbital rings
+    starSprites.forEach((sprite, slug) => {
+      const wasSelected = sprite.userData.isSelected;
+      sprite.userData.isSelected = sprite === intersectedSprite;
+      sprite.userData.isHovered = false;
+      
+      // Update visual opacity
       if (sprite.material && sprite.material.opacity !== undefined) {
         sprite.material.opacity = sprite === intersectedSprite ? 1.0 : 0.7;
+      }
+      
+      // Manage orbital rings for selection changes
+      if (wasSelected !== sprite.userData.isSelected) {
+        updateOrbitalRingsForStar(sprite, sprite.userData);
       }
     });
     
     if (selectedEvent && selectedEvent.slug === eventData.slug) {
       // Clicking same star - deselect
       renderCard(null);
-      starsGroup.children.forEach(sprite => {
+      starSprites.forEach((sprite, slug) => {
+        sprite.userData.isSelected = false;
         if (sprite.material && sprite.material.opacity !== undefined) sprite.material.opacity = 1.0;
+        updateOrbitalRingsForStar(sprite, sprite.userData);
       });
     } else {
       // Select new star
@@ -684,6 +1012,54 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
         bubbles: true,
         composed: true
       }));
+    }
+  }
+
+  // Update orbital rings for a specific star based on its state
+  function updateOrbitalRingsForStar(starSprite, eventData) {
+    const currentRings = orbitalRings.get(eventData.slug) || [];
+    
+    // Remove existing selected rings
+    currentRings.forEach((ring, index) => {
+      if (ring.userData.type === 'selected') {
+        if (ring.parent) ring.parent.remove(ring);
+        currentRings.splice(index, 1);
+      }
+    });
+    
+    // Add new selected rings if star is selected
+    if (eventData.isSelected) {
+      for (let i = 0; i < 2; i++) {
+        const selectedRingTexture = createOrbitalRingTexture(eventData.mainColor, 'selected');
+        const selectedRingMaterial = new THREE.SpriteMaterial({ 
+          map: selectedRingTexture, 
+          transparent: true,
+          opacity: 0.8,
+          blending: THREE.AdditiveBlending
+        });
+        const selectedRing = new THREE.Sprite(selectedRingMaterial);
+        selectedRing.position.copy(starSprite.position);
+        selectedRing.scale.setScalar(starSprite.scale.x * (2.5 + i * 0.5));
+        selectedRing.userData = {
+          type: 'selected',
+          parentStar: eventData.slug,
+          animationPhase: Math.random() * Math.PI * 2 + i * Math.PI,
+          rotationSpeed: 0.001 * (i + 1),
+          pulseSpeed: 0.002,
+          scaleBase: starSprite.scale.x * (2.5 + i * 0.5)
+        };
+        currentRings.push(selectedRing);
+        starsGroup.add(selectedRing);
+      }
+    }
+    
+    orbitalRings.set(eventData.slug, currentRings);
+  }
+
+  // Handle star hover states
+  function handleStarHover(intersectedSprite, isHovering) {
+    if (intersectedSprite && intersectedSprite.userData) {
+      intersectedSprite.userData.isHovered = isHovering;
     }
   }
 
@@ -804,7 +1180,35 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
       camera.updateProjectionMatrix();
     }, { passive: false });
 
-    // Mouse interaction
+    // Mouse interaction with hover support
+    let hoveredSprite = null;
+    
+    function onMouseMove(event) {
+      const rect = container.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(starsGroup.children);
+
+      if (intersects.length > 0 && intersects[0].object !== hoveredSprite) {
+        // Unhover previous sprite
+        if (hoveredSprite) {
+          handleStarHover(hoveredSprite, false);
+        }
+        
+        // Hover new sprite
+        hoveredSprite = intersects[0].object;
+        handleStarHover(hoveredSprite, true);
+        container.style.cursor = 'pointer';
+      } else if (intersects.length === 0 && hoveredSprite) {
+        // Unhover when no intersections
+        handleStarHover(hoveredSprite, false);
+        hoveredSprite = null;
+        container.style.cursor = 'default';
+      }
+    }
+
     function onMouseClick(event) {
       const rect = container.getBoundingClientRect();
       mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -818,12 +1222,15 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
       } else {
         // Clicked empty space - deselect
         renderCard(null);
-        starsGroup.children.forEach(sprite => {
+        starSprites.forEach((sprite, slug) => {
+          sprite.userData.isSelected = false;
           if (sprite.material && sprite.material.opacity !== undefined) sprite.material.opacity = 1.0;
+          updateOrbitalRingsForStar(sprite, sprite.userData);
         });
       }
     }
 
+    container.addEventListener('mousemove', onMouseMove);
     container.addEventListener('click', onMouseClick);
     window.addEventListener('resize', onWindowResize);
     animate();
@@ -863,7 +1270,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
     }
   }
 
-  // Animation loop
+  // Animation loop with star animation updates
   function animate() {
     requestAnimationFrame(animate);
     if (!initialized || !controls || !renderer || !scene || !camera) return;
@@ -872,6 +1279,12 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
       controls.update();
       renderer.render(scene, camera);
       updateCardPosition();
+      
+      // Update star animations every few frames for performance
+      const currentTime = Date.now();
+      if (currentTime % 150 < 16) { // Update approximately every 150ms (slower)
+        updateStarAnimations();
+      }
     } catch (e) {
       console.error('Starmap: Error in animate loop:', e);
     }
