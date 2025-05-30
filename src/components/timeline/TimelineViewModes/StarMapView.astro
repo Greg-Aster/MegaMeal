@@ -102,7 +102,6 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
   // Starmap state
   let THREE, OrbitControls;
   let scene, camera, renderer, controls, gridGroup, starsGroup;
-  let backgroundStarsGroup; // <<< ADDED: For non-interactive background stars
   let initialized = false;
   let currentEvents = JSON.parse(starmapEventsJson);
   let selectedEvent = null;
@@ -123,8 +122,10 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
     const outerRadius = size * 0.45;
     const innerRadius = size * 0.35;
     
+    // Clear canvas
     ctx.clearRect(0, 0, size, size);
     
+    // Create ring gradient
     const gradient = ctx.createRadialGradient(center, center, innerRadius, center, center, outerRadius);
     
     if (ringType === 'selected') {
@@ -137,7 +138,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
       gradient.addColorStop(0.2, color + 'AA');
       gradient.addColorStop(0.8, color + 'DD');
       gradient.addColorStop(1, color + '00');
-    } else { 
+    } else { // base
       gradient.addColorStop(0, color + '00');
       gradient.addColorStop(0.4, color + '20');
       gradient.addColorStop(0.6, color + '40');
@@ -147,7 +148,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
     ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.arc(center, center, outerRadius, 0, Math.PI * 2);
-    ctx.arc(center, center, innerRadius, 0, Math.PI * 2, true); 
+    ctx.arc(center, center, innerRadius, 0, Math.PI * 2, true); // Cut out center
     ctx.fill();
     
     return new THREE.CanvasTexture(canvas);
@@ -158,6 +159,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
     const rings = [];
     const color = eventData.mainColor;
     
+    // Base orbital ring (always present, very subtle)
     const baseRingTexture = createOrbitalRingTexture(color, 'base');
     const baseRingMaterial = new THREE.SpriteMaterial({ 
       map: baseRingTexture, 
@@ -168,9 +170,15 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
     const baseRing = new THREE.Sprite(baseRingMaterial);
     baseRing.position.copy(starSprite.position);
     baseRing.scale.setScalar(starSprite.scale.x * 1.5);
-    baseRing.userData = { type: 'base', parentStar: eventData.slug, animationPhase: Math.random() * Math.PI * 2, rotationSpeed: 0.0005 };
+    baseRing.userData = {
+      type: 'base',
+      parentStar: eventData.slug,
+      animationPhase: Math.random() * Math.PI * 2,
+      rotationSpeed: 0.0005
+    };
     rings.push(baseRing);
     
+    // Selected rings (shown when star is selected)
     if (eventData.isSelected) {
       for (let i = 0; i < 2; i++) {
         const selectedRingTexture = createOrbitalRingTexture(color, 'selected');
@@ -183,12 +191,20 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
         const selectedRing = new THREE.Sprite(selectedRingMaterial);
         selectedRing.position.copy(starSprite.position);
         selectedRing.scale.setScalar(starSprite.scale.x * (2.5 + i * 0.5));
-        selectedRing.userData = { type: 'selected', parentStar: eventData.slug, animationPhase: Math.random() * Math.PI * 2 + i * Math.PI, rotationSpeed: 0.001 * (i + 1), pulseSpeed: 0.002, scaleBase: starSprite.scale.x * (2.5 + i * 0.5) };
+        selectedRing.userData = {
+          type: 'selected',
+          parentStar: eventData.slug,
+          animationPhase: Math.random() * Math.PI * 2 + i * Math.PI,
+          rotationSpeed: 0.001 * (i + 1),
+          pulseSpeed: 0.002,
+          scaleBase: starSprite.scale.x * (2.5 + i * 0.5)
+        };
         rings.push(selectedRing);
       }
     }
     
-    if (!orbitalRings.has(eventData.slug)) { 
+    // Initialization ring (expanding ring effect)
+    if (!orbitalRings.has(eventData.slug)) { // Only on first creation
       const initRingTexture = createOrbitalRingTexture(color, 'init');
       const initRingMaterial = new THREE.SpriteMaterial({ 
         map: initRingTexture, 
@@ -199,7 +215,14 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
       const initRing = new THREE.Sprite(initRingMaterial);
       initRing.position.copy(starSprite.position);
       initRing.scale.setScalar(starSprite.scale.x * 0.2);
-      initRing.userData = { type: 'init', parentStar: eventData.slug, startTime: Date.now(), duration: 3000, scaleStart: starSprite.scale.x * 0.2, scaleEnd: starSprite.scale.x * 5 };
+      initRing.userData = {
+        type: 'init',
+        parentStar: eventData.slug,
+        startTime: Date.now(),
+        duration: 3000, // 3 seconds
+        scaleStart: starSprite.scale.x * 0.2,
+        scaleEnd: starSprite.scale.x * 5
+      };
       rings.push(initRing);
     }
     
@@ -209,29 +232,49 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
   // Update orbital ring animations
   function updateOrbitalRings() {
     const currentTime = Date.now();
-    orbitalRings.forEach((rings) => {
+    
+    orbitalRings.forEach((rings, starSlug) => {
       rings.forEach((ring, index) => {
         const userData = ring.userData;
+        
         if (userData.type === 'base') {
+          // Gentle rotation and subtle pulse
           userData.animationPhase += userData.rotationSpeed;
           ring.rotation.z = userData.animationPhase;
-          ring.material.opacity = 0.1 + Math.sin(currentTime * 0.001 + userData.animationPhase) * 0.05;
+          
+          const pulse = 0.1 + Math.sin(currentTime * 0.001 + userData.animationPhase) * 0.05;
+          ring.material.opacity = pulse;
+          
         } else if (userData.type === 'selected') {
+          // Expanding pulse animation
           userData.animationPhase += userData.rotationSpeed;
           ring.rotation.z = userData.animationPhase;
+          
           const pulsePhase = Math.sin(currentTime * userData.pulseSpeed + userData.animationPhase);
-          ring.scale.setScalar(userData.scaleBase * (0.9 + pulsePhase * 0.3));
-          ring.material.opacity = 0.3 + Math.abs(pulsePhase) * 0.5;
+          const scale = userData.scaleBase * (0.9 + pulsePhase * 0.3);
+          ring.scale.setScalar(scale);
+          
+          const opacity = 0.3 + Math.abs(pulsePhase) * 0.5;
+          ring.material.opacity = opacity;
+          
         } else if (userData.type === 'init') {
+          // Expanding initialization effect
           const elapsed = currentTime - userData.startTime;
           const progress = Math.min(elapsed / userData.duration, 1);
+          
           if (progress >= 1) {
+            // Remove completed init rings
             if (ring.parent) ring.parent.remove(ring);
-            rings.splice(index, 1); // This modifies the array being iterated, safer to iterate backwards or filter
+            rings.splice(index, 1);
             return;
           }
+          
+          // Expanding scale with easing
           const easeOut = 1 - Math.pow(1 - progress, 3);
-          ring.scale.setScalar(userData.scaleStart + (userData.scaleEnd - userData.scaleStart) * easeOut);
+          const scale = userData.scaleStart + (userData.scaleEnd - userData.scaleStart) * easeOut;
+          ring.scale.setScalar(scale);
+          
+          // Fading opacity
           ring.material.opacity = 0.9 * (1 - progress);
         }
       });
@@ -250,13 +293,16 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
     const sizeFactor = getSizeFactor(isKeyEvent);
     const finalRadius = baseRadius * sizeFactor;
     
+    // Clear canvas
     ctx.clearRect(0, 0, size, size);
     
-    const glowPhase = (Math.sin(animationTime * 0.0008) + 1) / 2;
+    // Slower animation calculations
+    const glowPhase = (Math.sin(animationTime * 0.0008) + 1) / 2; // 0-1 oscillation (slower)
     const shimmerPhase = (Math.sin(animationTime * 0.001) + 1) / 2;
     const orbitalPhase = animationTime * 0.0004;
     const raysRotation = animationTime * 0.0003;
     
+    // Backing plate (from StarNode) - enhanced for 3D
     const backingRadius = finalRadius * 4;
     const backingGradient = ctx.createRadialGradient(center, center, 0, center, center, backingRadius);
     const backingOpacity = isSelected ? 0.95 : (isHovered ? 0.9 : 0.7);
@@ -268,25 +314,32 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
     ctx.arc(center, center, backingRadius, 0, Math.PI * 2);
     ctx.fill();
     
+    // Enhanced multi-layer glow with proper boundary fadeout
     const glowLayers = [
-      { radius: finalRadius * 20, opacity: 0.02 + glowPhase * 0.01, blur: 30 }, { radius: finalRadius * 15, opacity: 0.04 + glowPhase * 0.02, blur: 25 },
-      { radius: finalRadius * 12, opacity: 0.06 + glowPhase * 0.03, blur: 20 }, { radius: finalRadius * 8, opacity: 0.1 + glowPhase * 0.05, blur: 15 },
-      { radius: finalRadius * 5, opacity: 0.15 + glowPhase * 0.08, blur: 10 }, { radius: finalRadius * 3, opacity: 0.25 + glowPhase * 0.1, blur: 5 },
+      { radius: finalRadius * 20, opacity: 0.02 + glowPhase * 0.01, blur: 30 },
+      { radius: finalRadius * 15, opacity: 0.04 + glowPhase * 0.02, blur: 25 },
+      { radius: finalRadius * 12, opacity: 0.06 + glowPhase * 0.03, blur: 20 },
+      { radius: finalRadius * 8, opacity: 0.1 + glowPhase * 0.05, blur: 15 },
+      { radius: finalRadius * 5, opacity: 0.15 + glowPhase * 0.08, blur: 10 },
+      { radius: finalRadius * 3, opacity: 0.25 + glowPhase * 0.1, blur: 5 },
     ];
     
-    const hueShift = Math.sin(animationTime * 0.0004) * 20;
-    const brightness = 1 + Math.sin(animationTime * 0.0006) * 0.15;
+    // Color shifting effect (slower)
+    const hueShift = Math.sin(animationTime * 0.0004) * 20; // ±20 degree hue shift (slower)
+    const brightness = 1 + Math.sin(animationTime * 0.0006) * 0.15; // brightness oscillation (slower)
     
     glowLayers.forEach((layer, index) => {
       ctx.save();
       ctx.filter = `blur(${layer.blur}px) hue-rotate(${hueShift * (index + 1) / glowLayers.length}deg) brightness(${brightness})`;
+      
       const gradient = ctx.createRadialGradient(center, center, 0, center, center, layer.radius);
       const alpha = Math.floor(layer.opacity * 255).toString(16).padStart(2, '0');
       gradient.addColorStop(0, color + alpha);
       gradient.addColorStop(0.2, color + Math.floor(layer.opacity * 180).toString(16).padStart(2, '0'));
       gradient.addColorStop(0.5, color + Math.floor(layer.opacity * 100).toString(16).padStart(2, '0'));
       gradient.addColorStop(0.8, color + Math.floor(layer.opacity * 40).toString(16).padStart(2, '0'));
-      gradient.addColorStop(1, color + '00');
+      gradient.addColorStop(1, color + '00'); // Completely transparent at edge
+      
       ctx.fillStyle = gradient;
       ctx.beginPath();
       ctx.arc(center, center, layer.radius, 0, Math.PI * 2);
@@ -294,148 +347,296 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
       ctx.restore();
     });
     
+    // Light rays effect (from StarNode) - animated rotation
     if (isKeyEvent || isSelected || isHovered) {
       ctx.save();
-      ctx.translate(center, center); ctx.rotate(raysRotation); ctx.translate(-center, -center);
+      ctx.translate(center, center);
+      ctx.rotate(raysRotation);
+      ctx.translate(-center, -center);
+      
       const raysRadius = finalRadius * 10;
       const raysOpacity = isSelected ? 0.3 : (isHovered ? 0.18 : (isKeyEvent ? 0.2 : 0.15));
+      
+      // Create repeating conic gradient for rays
       const rayCount = 8;
       for (let i = 0; i < rayCount; i++) {
         const angle = (i / rayCount) * Math.PI * 2;
         const rayLength = raysRadius * (0.8 + Math.sin(animationTime * 0.003 + i) * 0.2);
+        
         ctx.strokeStyle = color + Math.floor(raysOpacity * 255).toString(16).padStart(2, '0');
-        ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(center, center);
-        ctx.lineTo(center + Math.cos(angle) * rayLength, center + Math.sin(angle) * rayLength);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.lineTo(
+          center + Math.cos(angle) * rayLength,
+          center + Math.sin(angle) * rayLength
+        );
         ctx.stroke();
       }
       ctx.restore();
     }
     
+    // Orbital rings (from StarNode orbital effects)
     if (isSelected || isHovered) {
-      const orbitalRingsDef = isSelected ? 
-        [ { radius: finalRadius * 8, opacity: 0.8, speed: 1, width: 2 }, { radius: finalRadius * 6.5, opacity: 0.6, speed: -0.7, width: 1.5 } ] : 
-        [ { radius: finalRadius * 6, opacity: 0.4, speed: 0.8, width: 1 } ];
+      const orbitalRingsDef = isSelected ? [ // Renamed from original orbitalRings
+        { radius: finalRadius * 8, opacity: 0.8, speed: 1, width: 2 },
+        { radius: finalRadius * 6.5, opacity: 0.6, speed: -0.7, width: 1.5 },
+      ] : [
+        { radius: finalRadius * 6, opacity: 0.4, speed: 0.8, width: 1 },
+      ];
+      
       orbitalRingsDef.forEach((ring, index) => {
         ctx.save();
         const ringPhase = orbitalPhase * ring.speed + index * Math.PI;
         const ringOpacity = ring.opacity * (0.7 + Math.sin(ringPhase * 2) * 0.3);
         const ringRadius = ring.radius * (0.9 + Math.sin(ringPhase * 1.5) * 0.1);
+        
         ctx.strokeStyle = color + Math.floor(ringOpacity * 255).toString(16).padStart(2, '0');
-        ctx.lineWidth = ring.width; ctx.setLineDash([3, 2]); ctx.lineDashOffset = ringPhase * 10;
-        ctx.beginPath(); ctx.arc(center, center, ringRadius, 0, Math.PI * 2); ctx.stroke();
+        ctx.lineWidth = ring.width;
+        ctx.setLineDash([3, 2]);
+        ctx.lineDashOffset = ringPhase * 10;
+        ctx.beginPath();
+        ctx.arc(center, center, ringRadius, 0, Math.PI * 2);
+        ctx.stroke();
         ctx.restore();
       });
     }
     
+    // Main star shape with shimmer effect (from StarNode)
     ctx.save();
     ctx.globalCompositeOperation = 'source-over';
+    
+    // Shimmer brightness calculation
     const shimmerBrightness = 1 + shimmerPhase * 0.3;
     ctx.filter = `brightness(${shimmerBrightness}) drop-shadow(0 0 ${finalRadius * 0.5}px ${color})`;
     
     switch (starType) {
-      case 'point': ctx.fillStyle = color; ctx.beginPath(); ctx.arc(center, center, finalRadius * 1.2, 0, Math.PI * 2); ctx.fill(); break;
-      case 'classic': drawStar(ctx, center, center, 5, finalRadius * 2, finalRadius * 1, color); break;
+      case 'point':
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(center, center, finalRadius * 1.2, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+        
+      case 'classic':
+        drawStar(ctx, center, center, 5, finalRadius * 2, finalRadius * 1, color);
+        break;
+        
       case 'sparkle':
         drawStar(ctx, center, center, 4, finalRadius * 1.8, finalRadius * 0.8, color);
+        // Add animated cross lines
         const crossOpacity = 0.4 + shimmerPhase * 0.6;
         ctx.strokeStyle = color + Math.floor(crossOpacity * 255).toString(16).padStart(2, '0');
-        ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(center - finalRadius * 3, center); ctx.lineTo(center + finalRadius * 3, center);
-        ctx.moveTo(center, center - finalRadius * 3); ctx.lineTo(center, center + finalRadius * 3); ctx.stroke();
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(center - finalRadius * 3, center);
+        ctx.lineTo(center + finalRadius * 3, center);
+        ctx.moveTo(center, center - finalRadius * 3);
+        ctx.lineTo(center, center + finalRadius * 3);
+        ctx.stroke();
         break;
+        
       case 'refraction':
-        ctx.fillStyle = color; ctx.beginPath(); ctx.arc(center, center, finalRadius * 1.2, 0, Math.PI * 2); ctx.fill();
+        // Central core
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(center, center, finalRadius * 1.2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Animated refraction lines (from StarNode refractionTwinkle)
         const refractionOpacity = 0.2 + Math.sin(animationTime * 0.0025) * 0.4;
         ctx.strokeStyle = color + Math.floor(refractionOpacity * 255).toString(16).padStart(2, '0');
-        ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(center - finalRadius * 4, center); ctx.lineTo(center + finalRadius * 4, center);
-        ctx.moveTo(center, center - finalRadius * 4); ctx.lineTo(center, center + finalRadius * 4); ctx.stroke();
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(center - finalRadius * 4, center);
+        ctx.lineTo(center + finalRadius * 4, center);
+        ctx.moveTo(center, center - finalRadius * 4);
+        ctx.lineTo(center, center + finalRadius * 4);
+        ctx.stroke();
+        
+        // Diagonal refraction lines
         const diagOpacity = refractionOpacity * 0.6;
         ctx.strokeStyle = color + Math.floor(diagOpacity * 255).toString(16).padStart(2, '0');
-        ctx.beginPath(); ctx.moveTo(center - finalRadius * 2.8, center - finalRadius * 2.8); ctx.lineTo(center + finalRadius * 2.8, center + finalRadius * 2.8);
-        ctx.moveTo(center - finalRadius * 2.8, center + finalRadius * 2.8); ctx.lineTo(center + finalRadius * 2.8, center - finalRadius * 2.8); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(center - finalRadius * 2.8, center - finalRadius * 2.8);
+        ctx.lineTo(center + finalRadius * 2.8, center + finalRadius * 2.8);
+        ctx.moveTo(center - finalRadius * 2.8, center + finalRadius * 2.8);
+        ctx.lineTo(center + finalRadius * 2.8, center - finalRadius * 2.8);
+        ctx.stroke();
         break;
+        
       case 'halo':
+        // Multiple breathing halos (from StarNode haloBreathing)
         const breathingPhase = Math.sin(animationTime * 0.0015);
         const haloRings = [
-          { radius: finalRadius * (1.2 + breathingPhase * 0.2), opacity: 1 }, { radius: finalRadius * (2 + breathingPhase * 0.3), opacity: 0.6 },
-          { radius: finalRadius * (2.8 + breathingPhase * 0.4), opacity: 0.3 }, { radius: finalRadius * (3.6 + breathingPhase * 0.5), opacity: 0.15 }
+          { radius: finalRadius * (1.2 + breathingPhase * 0.2), opacity: 1 },
+          { radius: finalRadius * (2 + breathingPhase * 0.3), opacity: 0.6 },
+          { radius: finalRadius * (2.8 + breathingPhase * 0.4), opacity: 0.3 },
+          { radius: finalRadius * (3.6 + breathingPhase * 0.5), opacity: 0.15 }
         ];
+        
         haloRings.forEach(ring => {
           const ringOpacity = ring.opacity * (0.4 + breathingPhase * 0.2);
           ctx.fillStyle = color + Math.floor(ringOpacity * 255).toString(16).padStart(2, '0');
-          ctx.beginPath(); ctx.arc(center, center, ring.radius, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath();
+          ctx.arc(center, center, ring.radius, 0, Math.PI * 2);
+          ctx.fill();
         });
         break;
+        
       default: // subtle
-        ctx.fillStyle = color; ctx.beginPath(); ctx.arc(center, center, finalRadius * 1.1, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(center, center, finalRadius * 1.1, 0, Math.PI * 2);
+        ctx.fill();
+        
         const subtleOpacity = 0.6 + shimmerPhase * 0.4;
         ctx.strokeStyle = color + Math.floor(subtleOpacity * 255).toString(16).padStart(2, '0');
-        ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(center - finalRadius * 2.5, center); ctx.lineTo(center + finalRadius * 2.5, center);
-        ctx.moveTo(center, center - finalRadius * 2.5); ctx.lineTo(center, center + finalRadius * 2.5); ctx.stroke();
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(center - finalRadius * 2.5, center);
+        ctx.lineTo(center + finalRadius * 2.5, center);
+        ctx.moveTo(center, center - finalRadius * 2.5);
+        ctx.lineTo(center, center + finalRadius * 2.5);
+        ctx.stroke();
         break;
     }
+    
+    // Enhanced center glow for key events (from StarNode innerGlowPulse)
     if (isKeyEvent) {
-      ctx.save(); ctx.globalCompositeOperation = 'screen';
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
       const pulsePhase = Math.sin(animationTime * 0.002);
       const glowRadius = finalRadius * (2.5 + pulsePhase * 0.7);
       const glowOpacity = 0.4 + pulsePhase * 0.2;
+      
       const centerGlow = ctx.createRadialGradient(center, center, 0, center, center, glowRadius);
       centerGlow.addColorStop(0, color);
       centerGlow.addColorStop(0.3, color + Math.floor(glowOpacity * 255).toString(16).padStart(2, '0'));
       centerGlow.addColorStop(1, color + '00');
-      ctx.fillStyle = centerGlow; ctx.beginPath(); ctx.arc(center, center, glowRadius, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = centerGlow;
+      ctx.beginPath();
+      ctx.arc(center, center, glowRadius, 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
     }
+    
     ctx.restore();
+    
     return new THREE.CanvasTexture(canvas);
   }
   
+  // Helper function to draw star shapes
   function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius, color) {
-    let rot = Math.PI / 2 * 3; let x = cx; let y = cy;
+    let rot = Math.PI / 2 * 3;
+    let x = cx;
+    let y = cy;
     const step = Math.PI / spikes;
-    ctx.beginPath(); ctx.moveTo(cx, cy - outerRadius);
+    
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - outerRadius);
+    
     for (let i = 0; i < spikes; i++) {
-      x = cx + Math.cos(rot) * outerRadius; y = cy + Math.sin(rot) * outerRadius; ctx.lineTo(x, y); rot += step;
-      x = cx + Math.cos(rot) * innerRadius; y = cy + Math.sin(rot) * innerRadius; ctx.lineTo(x, y); rot += step;
+      x = cx + Math.cos(rot) * outerRadius;
+      y = cy + Math.sin(rot) * outerRadius;
+      ctx.lineTo(x, y);
+      rot += step;
+      
+      x = cx + Math.cos(rot) * innerRadius;
+      y = cy + Math.sin(rot) * innerRadius;
+      ctx.lineTo(x, y);
+      rot += step;
     }
-    ctx.lineTo(cx, cy - outerRadius); ctx.closePath();
-    ctx.fillStyle = color; ctx.fill();
+    
+    ctx.lineTo(cx, cy - outerRadius);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
   }
 
+  // Card rendering function
+  // Replace your existing renderCard function with this one:
   function renderCard(eventData, screenPosition) {
     floatingCard = floatingCard || document.getElementById(floatingCardId);
     if (!floatingCard) return;
 
+    // Hide card if no event data, no screen position, or if the event is not in front of the camera
     if (!eventData || !screenPosition || !screenPosition.isInFront) {
-      floatingCard.style.opacity = '0'; floatingCard.style.pointerEvents = 'none';
-      floatingCard.innerHTML = ''; selectedEvent = null; return;
+      floatingCard.style.opacity = '0';
+      floatingCard.style.pointerEvents = 'none';
+      floatingCard.innerHTML = ''; // Clear content when hiding
+      selectedEvent = null;
+      return;
     }
 
     const container = document.getElementById(mapId);
     const rect = container.getBoundingClientRect();
-    const { x: eventX, y: eventY } = screenPosition;
+    const { x: eventX, y: eventY } = screenPosition; // These are the 2D coordinates of the clicked 3D event
 
-    const cardWidth = 200; const cardHeight = 100; const edgeMargin = 10;
-    const offsetX = -35; const offsetY = -35; // User adjusted values
+    // --- Configuration for card size and spacing ---
+    const cardWidth = 200;    // Assumed width of your card
+    const cardHeight = 100;   // Assumed height of your card
+    const edgeMargin = 10;    // Minimum distance the card should keep from viewport edges
+
+    // --- Preferred Initial Placement: "closer to the event, below, and a little to the right" ---
+    // Adjust offsetX and offsetY to control the position.
+    // These offsets determine the position of the card's TOP-LEFT corner
+    // relative to the event's screen coordinates (eventX, eventY).
+    
+    // Positive offsetX moves the card's left edge to the right of the event point.
+    // Positive offsetY moves the card's top edge below the event point.
+    const offsetX = -35; // <<< TRY ADJUSTING THIS (e.g., 5, 15, 25). Smaller means closer horizontally.
+    const offsetY = -35; // <<< TRY ADJUSTING THIS (e.g., 5, 15, 25). Smaller means closer vertically.
 
     let cardX = eventX + offsetX;
     let cardY = eventY + offsetY;
 
-    if (cardX + cardWidth > rect.width - edgeMargin) cardX = rect.width - cardWidth - edgeMargin;
-    if (cardX < edgeMargin) cardX = edgeMargin;
-    if (cardY + cardHeight > rect.height - edgeMargin) cardY = rect.height - cardHeight - edgeMargin;
-    if (cardY < edgeMargin) cardY = edgeMargin;
+    // --- Simple Edge Clamping ---
+    // If the preferred position goes off-screen, clamp it to the edge.
+    
+    // Right edge
+    if (cardX + cardWidth > rect.width - edgeMargin) {
+      cardX = rect.width - cardWidth - edgeMargin;
+    }
+    // Left edge
+    if (cardX < edgeMargin) {
+      cardX = edgeMargin;
+    }
+    // Bottom edge
+    if (cardY + cardHeight > rect.height - edgeMargin) {
+      cardY = rect.height - cardHeight - edgeMargin;
+    }
+    // Top edge
+    if (cardY < edgeMargin) {
+      cardY = edgeMargin;
+    }
 
-    let positionClass = 'timeline-card-bottom'; 
+    // --- Determine positionClass for the pointer arrow ---
+    // This logic tries to pick the best existing class based on the final
+    // position of the card relative to the event point.
+    let positionClass = 'timeline-card-bottom'; // Default assumption
+
     const cardCenterX = cardX + cardWidth / 2;
     const cardCenterY = cardY + cardHeight / 2;
+
+    // Determine if the event point is predominantly to the left/right or top/bottom of the card's center
     const deltaX = eventX - cardCenterX;
     const deltaY = eventY - cardCenterY;
 
-    if (Math.abs(deltaX) > Math.abs(deltaY) * 1.2) { 
+    if (Math.abs(deltaX) > Math.abs(deltaY) * 1.2) { // If horizontal distance is significantly greater
       positionClass = (deltaX > 0) ? 'timeline-card-left' : 'timeline-card-right';
-    } else { 
+      // If event is to the right of card center, card is to the left of event -> pointer on card's right ('timeline-card-left')
+      // If event is to the left of card center, card is to the right of event -> pointer on card's left ('timeline-card-right')
+    } else { // Primarily vertical difference, or diagonal
       positionClass = (deltaY > 0) ? 'timeline-card-top' : 'timeline-card-bottom';
+      // If event is below card center, card is above event -> pointer on card's bottom ('timeline-card-top')
+      // If event is above card center, card is below event -> pointer on card's top ('timeline-card-bottom')
     }
+    // For a true "below and to the right" placement, the event point would be above and to the left of the card.
+    // This would ideally need a pointer on the top-left corner of the card.
+    // The logic above will pick 'timeline-card-bottom' (pointer on top) if event is mostly above,
+    // or 'timeline-card-right' (pointer on left) if event is mostly to the left.
+    // You might need a custom CSS class (e.g., 'timeline-card-pointer-top-left') for a perfect diagonal pointer.
 
     const cardHTML = `
       <div class="timeline-card card-base absolute z-30 ${positionClass} bg-[var(--card-bg)] backdrop-blur-sm shadow-lg w-[200px] p-3">
@@ -443,268 +644,822 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
         <div class="text-50 text-xs line-clamp-2 card-description">${eventData.description || ''}</div>
         <a href="/posts/${eventData.slug}/#post-container" class="timeline-link text-[0.65rem] mt-1 inline-block py-0.5 px-1.5 rounded-full bg-[oklch(0.9_0.05_var(--hue))/0.1] dark:bg-[oklch(0.3_0.05_var(--hue))/0.2] text-[oklch(0.4_0.05_var(--hue))] dark:text-[oklch(0.9_0.05_var(--hue))]">View Event &rarr;</a>
         <div class="card-pointer absolute bg-inherit"></div>
-      </div>`;
+      </div>
+    `;
     
     floatingCard.innerHTML = cardHTML;
-    floatingCard.style.left = `${cardX}px`; floatingCard.style.top = `${cardY}px`;
-    floatingCard.style.opacity = '1'; floatingCard.style.pointerEvents = 'auto';
+    floatingCard.style.left = `${cardX}px`;
+    floatingCard.style.top = `${cardY}px`;
+    floatingCard.style.opacity = '1';
+    floatingCard.style.pointerEvents = 'auto';
+    
     selectedEvent = eventData;
   }
 
-  const constellationConfig = { /* ... Omitted for brevity, use your existing config ... */ };
-  const constellationPatterns = { /* ... Omitted for brevity, use your existing patterns ... */ };
+  // Constellation configuration for each era
+  const constellationConfig = {
+    'ancient-epoch': { centerAzimuth: 0, centerElevation: 45, spread: 40, pattern: 'ancient_wisdom' },
+    'awakening-era': { centerAzimuth: 60, centerElevation: 50, spread: 35, pattern: 'rising_dawn' },
+    'golden-age': { centerAzimuth: 120, centerElevation: 55, spread: 45, pattern: 'crown' },
+    'conflict-epoch': { centerAzimuth: 180, centerElevation: 40, spread: 40, pattern: 'crossed_swords' },
+    'singularity-conflict': { centerAzimuth: 240, centerElevation: 45, spread: 35, pattern: 'supernova' },
+    'transcendent-age': { centerAzimuth: 300, centerElevation: 60, spread: 40, pattern: 'ascension' },
+    'final-epoch': { centerAzimuth: 340, centerElevation: 65, spread: 30, pattern: 'omega' },
+    'unknown': { centerAzimuth: 30, centerElevation: 35, spread: 25, pattern: 'scattered' }
+  };
 
+  // Constellation patterns
+  const constellationPatterns = {
+    ancient_wisdom: [ { azOffset: 0, elOffset: 0 }, { azOffset: -15, elOffset: 10 }, { azOffset: 15, elOffset: 8 }, { azOffset: -8, elOffset: -12 }, { azOffset: 12, elOffset: -10 }, { azOffset: 0, elOffset: 20 }, { azOffset: -20, elOffset: -5 }, { azOffset: 25, elOffset: -8 } ],
+    rising_dawn: [ { azOffset: -10, elOffset: -15 }, { azOffset: 0, elOffset: 0 }, { azOffset: 10, elOffset: 15 }, { azOffset: -5, elOffset: 8 }, { azOffset: 5, elOffset: 8 }, { azOffset: 15, elOffset: 25 }, { azOffset: -15, elOffset: 20 } ],
+    crown: [ { azOffset: 0, elOffset: 15 }, { azOffset: -12, elOffset: 8 }, { azOffset: 12, elOffset: 8 }, { azOffset: -6, elOffset: 0 }, { azOffset: 6, elOffset: 0 }, { azOffset: -20, elOffset: -5 }, { azOffset: 20, elOffset: -5 }, { azOffset: 0, elOffset: -10 } ],
+    crossed_swords: [ { azOffset: -15, elOffset: 15 }, { azOffset: 15, elOffset: -15 }, { azOffset: 15, elOffset: 15 }, { azOffset: -15, elOffset: -15 }, { azOffset: 0, elOffset: 0 }, { azOffset: -25, elOffset: 10 }, { azOffset: 25, elOffset: -10 } ],
+    supernova: [ { azOffset: 0, elOffset: 0 }, { azOffset: 0, elOffset: 20 }, { azOffset: 17, elOffset: 10 }, { azOffset: 20, elOffset: 0 }, { azOffset: 17, elOffset: -10 }, { azOffset: 0, elOffset: -20 }, { azOffset: -17, elOffset: -10 }, { azOffset: -20, elOffset: 0 }, { azOffset: -17, elOffset: 10 } ],
+    ascension: [ { azOffset: 0, elOffset: 25 }, { azOffset: -8, elOffset: 15 }, { azOffset: 8, elOffset: 15 }, { azOffset: -15, elOffset: 5 }, { azOffset: 15, elOffset: 5 }, { azOffset: -20, elOffset: -10 }, { azOffset: 20, elOffset: -10 }, { azOffset: 0, elOffset: -5 } ],
+    omega: [ { azOffset: -10, elOffset: 10 }, { azOffset: 10, elOffset: 10 }, { azOffset: -15, elOffset: 0 }, { azOffset: 15, elOffset: 0 }, { azOffset: -8, elOffset: -10 }, { azOffset: 8, elOffset: -10 }, { azOffset: 0, elOffset: 5 } ],
+    scattered: [ { azOffset: 5, elOffset: 8 }, { azOffset: -12, elOffset: -5 }, { azOffset: 18, elOffset: 12 }, { azOffset: -8, elOffset: 15 }, { azOffset: 10, elOffset: -10 }, { azOffset: -15, elOffset: 3 } ]
+  };
+
+  // Create or update stars as era-based constellations with full StarNode graphics
   function createOrUpdateStars(eventsToDisplay = currentEvents) {
-    if (!starsGroup || !THREE) { console.warn('...'); return; }
-    while (starsGroup.children.length > 0) { starsGroup.remove(starsGroup.children[0]); }
-    starSprites.clear(); orbitalRings.clear();
-    const eventsByEra = {}; const unassignedEvents = [];
-    eventsToDisplay.forEach(event => { /* ... Omitted grouping logic for brevity ... */ 
+    if (!starsGroup || !THREE) {
+      console.warn('Starmap: createOrUpdateStars called before initialization.');
+      return;
+    }
+
+    // Clear existing stars and orbital rings
+    while (starsGroup.children.length > 0) {
+      starsGroup.remove(starsGroup.children[0]);
+    }
+    starSprites.clear();
+    orbitalRings.clear();
+    
+    // Group events by era
+    const eventsByEra = {};
+    const unassignedEvents = [];
+    
+    eventsToDisplay.forEach(event => {
       const era = event.era || 'unknown';
-      if (!constellationConfig[era]) { unassignedEvents.push(event); if (!eventsByEra['unknown']) eventsByEra['unknown'] = []; eventsByEra['unknown'].push(event); return; }
-      if (!eventsByEra[era]) eventsByEra[era] = []; eventsByEra[era].push(event);
+      
+      if (!constellationConfig[era]) {
+        console.warn(`Event "${event.title}" has era "${era}" but no constellation config exists. Adding to 'unknown'.`);
+        unassignedEvents.push(event);
+        if (!eventsByEra['unknown']) {
+          eventsByEra['unknown'] = [];
+        }
+        eventsByEra['unknown'].push(event);
+        return;
+      }
+      
+      if (!eventsByEra[era]) {
+        eventsByEra[era] = [];
+      }
+      eventsByEra[era].push(event);
     });
+
+    console.log('Starmap: Events grouped by era:', Object.keys(eventsByEra).map(era => `${era}: ${eventsByEra[era].length}`).join(', '));
+
+    // Create constellations for each era
     Object.entries(eventsByEra).forEach(([era, eraEvents]) => {
-      const config = constellationConfig[era]; if (!config) { return; }
+      const config = constellationConfig[era];
+      if (!config) {
+        console.error(`No constellation config for era: ${era}`);
+        return;
+      }
+
       const pattern = constellationPatterns[config.pattern] || constellationPatterns.scattered;
+      
       eraEvents.forEach((event, eventIndex) => {
         try {
-          const patternIndex = eventIndex % pattern.length; const patternPosition = pattern[patternIndex];
-          const extraVariation = eventIndex >= pattern.length ? { azOffset: (Math.random() - 0.5) * 30, elOffset: (Math.random() - 0.5) * 20 } : { azOffset: 0, elOffset: 0 };
+          // Get position within constellation pattern
+          const patternIndex = eventIndex % pattern.length;
+          const patternPosition = pattern[patternIndex];
+          
+          // Add some variation for events beyond the pattern length
+          const extraVariation = eventIndex >= pattern.length ? 
+            { azOffset: (Math.random() - 0.5) * 30, elOffset: (Math.random() - 0.5) * 20 } : 
+            { azOffset: 0, elOffset: 0 };
+
+          // Calculate final position
           const azimuthDeg = config.centerAzimuth + patternPosition.azOffset + extraVariation.azOffset;
           const elevationDeg = Math.max(30, Math.min(80, config.centerElevation + patternPosition.elOffset + extraVariation.elOffset));
-          const azimuthRad = THREE.MathUtils.degToRad(azimuthDeg); const elevationRad = THREE.MathUtils.degToRad(elevationDeg);
+          
+          const azimuthRad = (azimuthDeg * Math.PI) / 180;
+          const elevationRad = (elevationDeg * Math.PI) / 180;
           const polarAngleRad = Math.PI/2 - elevationRad;
+
           const uniqueStarId = `${event.slug}-${event.year}-${eventIndex}`;
           const mainColor = getStarColor(uniqueStarId, event.era, useEraColors);
           const starType = getStarType(uniqueStarId, event.isKeyEvent);
+          
+          // Create advanced star sprite texture with initial state
           const starTexture = createAdvancedStarTexture(mainColor, starType, event.isKeyEvent, false, false, animationStartTime);
-          const spriteMaterial = new THREE.SpriteMaterial({ map: starTexture, transparent: true, alphaTest: 0.01, blending: THREE.AdditiveBlending });
+          const spriteMaterial = new THREE.SpriteMaterial({ 
+            map: starTexture, 
+            transparent: true,
+            alphaTest: 0.01,
+            blending: THREE.AdditiveBlending
+          });
+          
           const sprite = new THREE.Sprite(spriteMaterial);
-          const radius = 995; sprite.position.setFromSphericalCoords(radius, polarAngleRad, azimuthRad);
-          const baseScale = event.isKeyEvent ? 44 : 32; // User updated baseScale
-          const scaleVariation = 0.8 + (Math.random() * 0.4);
+          
+          // Position on the same sphere as skybox (but slightly closer to avoid z-fighting)
+          const radius = 995; // Slightly inside the skybox
+          sprite.position.setFromSphericalCoords(radius, polarAngleRad, azimuthRad);
+          
+          // Scale based on importance and add slight variation
+          const baseScale = event.isKeyEvent ? 44 : 32; // Base scale for key events vs regular stars
+          const scaleVariation = 0.8 + (Math.random() * 0.4); // 0.8 to 1.2 multiplier
           sprite.scale.setScalar(baseScale * scaleVariation);
-          sprite.userData = { ...event, mainColor, starType, uniqueId: uniqueStarId, era, constellationPosition: patternPosition, isSelected: false, isHovered: false, animationStartTime: Date.now(), lastUpdateTime: Date.now() };
-          starsGroup.add(sprite); starSprites.set(event.slug, sprite);
+          
+          // Store event data and animation state on the sprite for interaction
+          sprite.userData = {
+            ...event,
+            mainColor,
+            starType,
+            uniqueId: uniqueStarId,
+            era: era,
+            constellationPosition: patternPosition,
+            isSelected: false,
+            isHovered: false,
+            animationStartTime: Date.now(),
+            lastUpdateTime: Date.now()
+          };
+          
+          starsGroup.add(sprite);
+          starSprites.set(event.slug, sprite);
+          
+          // Create orbital rings for this star
           const rings = createOrbitalRingsForStar(sprite, sprite.userData);
-          rings.forEach(ring => starsGroup.add(ring)); orbitalRings.set(event.slug, rings);
-        } catch (error) { console.error(`Error creating star for event "${event.title}":`, error); }
+          rings.forEach(ring => starsGroup.add(ring));
+          orbitalRings.set(event.slug, rings);
+        } catch (error) {
+          console.error(`Error creating star for event "${event.title}":`, error);
+        }
       });
     });
+    
+    console.log(`Starmap: Created constellations for ${Object.keys(eventsByEra).length} eras with ${eventsToDisplay.length} total stars`);
+    
+    // Create constellation connecting lines
     createConstellationLines(eventsByEra);
   }
 
+  // Create connecting lines between stars in the same constellation
   function createConstellationLines(eventsByEra) {
-    Object.entries(eventsByEra).forEach(([era, eraEvents]) => { /* ... Omitted for brevity ... */ 
-        if (eraEvents.length < 2) return; const config = constellationConfig[era]; if (!config) return;
-        const connectionPatterns = { ancient_wisdom: [[0,1],[0,2],[1,5],[2,5],[0,3],[0,4]], rising_dawn: [[0,1],[1,2],[1,3],[1,4],[2,5],[2,6]], crown: [[0,1],[0,2],[1,3],[2,4],[3,7],[4,7],[5,6]], crossed_swords: [[0,4],[1,4],[2,4],[3,4],[4,5],[4,6]], supernova: [[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7],[0,8]], ascension: [[0,1],[0,2],[1,3],[2,4],[3,5],[4,6],[7,1],[7,2]], omega: [[0,1],[2,3],[4,5],[0,6],[1,6],[2,4],[3,5]], scattered: [[0,1],[1,2],[2,3]] };
-        const connections = connectionPatterns[config.pattern] || connectionPatterns.scattered; const linePositions = [];
-        connections.forEach(([startIdx, endIdx]) => { if (startIdx < eraEvents.length && endIdx < eraEvents.length) { const startSprite = starSprites.get(eraEvents[startIdx].slug); const endSprite = starSprites.get(eraEvents[endIdx].slug); if (startSprite && endSprite) { linePositions.push(startSprite.position.clone()); linePositions.push(endSprite.position.clone()); } } });
-        if (linePositions.length > 0) { const lineGeometry = new THREE.BufferGeometry().setFromPoints(linePositions); const lineMaterial = new THREE.LineDashedMaterial({ color: eraColorMap[era] || '#6366f1', transparent: true, opacity: 0.2, linewidth: 2, dashSize: 3, gapSize: 2 }); const constellationLine = new THREE.LineSegments(lineGeometry, lineMaterial); constellationLine.computeLineDistances(); starsGroup.add(constellationLine); }
+    Object.entries(eventsByEra).forEach(([era, eraEvents]) => {
+      if (eraEvents.length < 2) return;
+      
+      const config = constellationConfig[era];
+      if (!config) {
+        console.warn(`No constellation config found for era: ${era}`);
+        return;
+      }
+      
+      // Define constellation connection patterns for each type
+      const connectionPatterns = {
+        ancient_wisdom: [[0,1], [0,2], [1,5], [2,5], [0,3], [0,4]], // Star formation
+        rising_dawn: [[0,1], [1,2], [1,3], [1,4], [2,5], [2,6]], // Rising pattern
+        crown: [[0,1], [0,2], [1,3], [2,4], [3,7], [4,7], [5,6]], // Crown shape
+        crossed_swords: [[0,4], [1,4], [2,4], [3,4], [4,5], [4,6]], // Cross pattern
+        supernova: [[0,1], [0,2], [0,3], [0,4], [0,5], [0,6], [0,7], [0,8]], // Radial
+        ascension: [[0,1], [0,2], [1,3], [2,4], [3,5], [4,6], [7,1], [7,2]], // Ascending
+        omega: [[0,1], [2,3], [4,5], [0,6], [1,6], [2,4], [3,5]], // Omega shape
+        scattered: [[0,1], [1,2], [2,3]] // Simple connections
+      };
+      
+      const connections = connectionPatterns[config.pattern] || connectionPatterns.scattered;
+      const linePositions = [];
+      
+      connections.forEach(([startIdx, endIdx]) => {
+        if (startIdx < eraEvents.length && endIdx < eraEvents.length) {
+          const startSprite = starSprites.get(eraEvents[startIdx].slug);
+          const endSprite = starSprites.get(eraEvents[endIdx].slug);
+          
+          if (startSprite && endSprite) {
+            linePositions.push(startSprite.position.clone());
+            linePositions.push(endSprite.position.clone());
+          }
+        }
+      });
+      
+      if (linePositions.length > 0) {
+        const lineGeometry = new THREE.BufferGeometry().setFromPoints(linePositions);
+        
+        // Create dashed line material for better constellation visibility
+        const lineMaterial = new THREE.LineDashedMaterial({ 
+          color: eraColorMap[era] || '#6366f1',
+          transparent: true,
+          opacity: 0.2,
+          linewidth: 2,
+          dashSize: 3,
+          gapSize: 2
+        });
+        
+        const constellationLine = new THREE.LineSegments(lineGeometry, lineMaterial);
+        constellationLine.computeLineDistances(); // Required for dashed lines
+        starsGroup.add(constellationLine);
+      }
     });
   }
 
-  function updateStarAnimations() { /* ... Omitted for brevity, use your existing code ... */ 
-    const currentTime = Date.now(); starSprites.forEach((sprite) => { const userData = sprite.userData; if (!userData) return; const timeSinceCreation = currentTime - userData.animationStartTime; if (currentTime - userData.lastUpdateTime > 150) { const newTexture = createAdvancedStarTexture( userData.mainColor, userData.starType, userData.isKeyEvent, userData.isSelected, userData.isHovered, timeSinceCreation ); if (sprite.material && sprite.material.map) { sprite.material.map.dispose(); sprite.material.map = newTexture; sprite.material.needsUpdate = true; } userData.lastUpdateTime = currentTime; } }); updateOrbitalRings();
-  }
-  function handleStarClick(intersectedSprite) { /* ... Omitted for brevity, use your existing code ... */ 
-    const eventData = intersectedSprite.userData; starSprites.forEach((sprite) => { const wasSelected = sprite.userData.isSelected; sprite.userData.isSelected = sprite === intersectedSprite; sprite.userData.isHovered = false; if (sprite.material && sprite.material.opacity !== undefined) sprite.material.opacity = sprite === intersectedSprite ? 1.0 : 0.7; if (wasSelected !== sprite.userData.isSelected) updateOrbitalRingsForStar(sprite, sprite.userData); }); if (selectedEvent && selectedEvent.slug === eventData.slug) { renderCard(null); starSprites.forEach((sprite) => { sprite.userData.isSelected = false; if (sprite.material && sprite.material.opacity !== undefined) sprite.material.opacity = 1.0; updateOrbitalRingsForStar(sprite, sprite.userData); }); } else { const screenPosition = getScreenPosition(intersectedSprite); renderCard(eventData, screenPosition); const container = document.getElementById(mapId); container.dispatchEvent(new CustomEvent('starmap:selectstar', { detail: { slug: eventData.slug, eventData, screenPosition }, bubbles: true, composed: true })); }
-  }
-  function updateOrbitalRingsForStar(starSprite, eventData) { /* ... Omitted for brevity, use your existing code ... */ 
-    const currentRings = orbitalRings.get(eventData.slug) || []; currentRings.forEach((ring, index) => { if (ring.userData.type === 'selected') { if (ring.parent) ring.parent.remove(ring); currentRings.splice(index, 1); } }); if (eventData.isSelected) { for (let i = 0; i < 2; i++) { const selectedRingTexture = createOrbitalRingTexture(eventData.mainColor, 'selected'); const selectedRingMaterial = new THREE.SpriteMaterial({ map: selectedRingTexture, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending }); const selectedRing = new THREE.Sprite(selectedRingMaterial); selectedRing.position.copy(starSprite.position); selectedRing.scale.setScalar(starSprite.scale.x * (2.5 + i * 0.5)); selectedRing.userData = { type: 'selected', parentStar: eventData.slug, animationPhase: Math.random() * Math.PI * 2 + i * Math.PI, rotationSpeed: 0.001 * (i + 1), pulseSpeed: 0.002, scaleBase: starSprite.scale.x * (2.5 + i * 0.5) }; currentRings.push(selectedRing); starsGroup.add(selectedRing); } } orbitalRings.set(eventData.slug, currentRings);
-  }
-  function handleStarHover(intersectedSprite, isHovering) { /* ... Omitted for brevity, use your existing code ... */ 
-    if (intersectedSprite && intersectedSprite.userData) intersectedSprite.userData.isHovered = isHovering;
-  }
-  function getScreenPosition(object3D) { /* ... Omitted for brevity, use your existing code ... */ 
-    const container = document.getElementById(mapId); const vector = new THREE.Vector3(); vector.setFromMatrixPosition(object3D.matrixWorld); vector.project(camera); const widthHalf = container.clientWidth / 2; const heightHalf = container.clientHeight / 2; return { x: (vector.x * widthHalf) + widthHalf, y: -(vector.y * heightHalf) + heightHalf, isInFront: vector.z < 1 };
-  }
-  function updateCardPosition() { /* ... Omitted for brevity, use your existing code ... */ 
-    if (!selectedEvent || !floatingCard || floatingCard.style.opacity === '0') return; const selectedSprite = starSprites.get(selectedEvent.slug); if (selectedSprite) { const screenPosData = getScreenPosition(selectedSprite); if (screenPosData.isInFront) { const cardWidth = floatingCard.offsetWidth || 200; const cardHeight = floatingCard.offsetHeight || 100; const margin = 20; let xPos = screenPosData.x; let yPos = screenPosData.y; let finalX = xPos - cardWidth / 2; let finalY = yPos - cardHeight - margin; const containerRect = document.getElementById(mapId).getBoundingClientRect(); if (finalX < margin) finalX = xPos + margin; else if (finalX + cardWidth > containerRect.width - margin) finalX = xPos - cardWidth - margin; if (finalY < margin) finalY = yPos + margin; floatingCard.style.left = `${finalX}px`; floatingCard.style.top = `${finalY}px`; floatingCard.style.opacity = '1'; } else { renderCard(null); } } else { renderCard(null); }
+  // Update star animations and states
+  function updateStarAnimations() {
+    const currentTime = Date.now();
+    
+    starSprites.forEach((sprite, slug) => {
+      const userData = sprite.userData;
+      if (!userData) return;
+      
+      const timeSinceCreation = currentTime - userData.animationStartTime;
+      
+      // Regenerate texture with current animation state (less frequently for performance)
+      if (currentTime - userData.lastUpdateTime > 150) { // Update every 150ms instead of 100ms
+        const newTexture = createAdvancedStarTexture(
+          userData.mainColor,
+          userData.starType,
+          userData.isKeyEvent,
+          userData.isSelected,
+          userData.isHovered,
+          timeSinceCreation
+        );
+        
+        // Update material
+        if (sprite.material && sprite.material.map) {
+          sprite.material.map.dispose();
+          sprite.material.map = newTexture;
+          sprite.material.needsUpdate = true;
+        }
+        
+        userData.lastUpdateTime = currentTime;
+      }
+    });
+    
+    // Update orbital rings
+    updateOrbitalRings();
   }
 
+  // Handle star interactions with state management and orbital rings
+  function handleStarClick(intersectedSprite) {
+    const eventData = intersectedSprite.userData;
+    
+    // Update selection states and manage orbital rings
+    starSprites.forEach((sprite, slug) => {
+      const wasSelected = sprite.userData.isSelected;
+      sprite.userData.isSelected = sprite === intersectedSprite;
+      sprite.userData.isHovered = false;
+      
+      // Update visual opacity
+      if (sprite.material && sprite.material.opacity !== undefined) {
+        sprite.material.opacity = sprite === intersectedSprite ? 1.0 : 0.7;
+      }
+      
+      // Manage orbital rings for selection changes
+      if (wasSelected !== sprite.userData.isSelected) {
+        updateOrbitalRingsForStar(sprite, sprite.userData);
+      }
+    });
+    
+    if (selectedEvent && selectedEvent.slug === eventData.slug) {
+      // Clicking same star - deselect
+      renderCard(null);
+      starSprites.forEach((sprite, slug) => {
+        sprite.userData.isSelected = false;
+        if (sprite.material && sprite.material.opacity !== undefined) sprite.material.opacity = 1.0;
+        updateOrbitalRingsForStar(sprite, sprite.userData);
+      });
+    } else {
+      // Select new star
+      const screenPosition = getScreenPosition(intersectedSprite);
+      renderCard(eventData, screenPosition);
+      
+      // Dispatch event
+      const container = document.getElementById(mapId);
+      container.dispatchEvent(new CustomEvent('starmap:selectstar', {
+        detail: { 
+          slug: eventData.slug, 
+          eventData: eventData,
+          screenPosition: screenPosition
+        },
+        bubbles: true,
+        composed: true
+      }));
+    }
+  }
+
+  // Update orbital rings for a specific star based on its state
+  function updateOrbitalRingsForStar(starSprite, eventData) {
+    const currentRings = orbitalRings.get(eventData.slug) || [];
+    
+    // Remove existing selected rings
+    currentRings.forEach((ring, index) => {
+      if (ring.userData.type === 'selected') {
+        if (ring.parent) ring.parent.remove(ring);
+        currentRings.splice(index, 1);
+      }
+    });
+    
+    // Add new selected rings if star is selected
+    if (eventData.isSelected) {
+      for (let i = 0; i < 2; i++) {
+        const selectedRingTexture = createOrbitalRingTexture(eventData.mainColor, 'selected');
+        const selectedRingMaterial = new THREE.SpriteMaterial({ 
+          map: selectedRingTexture, 
+          transparent: true,
+          opacity: 0.8,
+          blending: THREE.AdditiveBlending
+        });
+        const selectedRing = new THREE.Sprite(selectedRingMaterial);
+        selectedRing.position.copy(starSprite.position);
+        selectedRing.scale.setScalar(starSprite.scale.x * (2.5 + i * 0.5));
+        selectedRing.userData = {
+          type: 'selected',
+          parentStar: eventData.slug,
+          animationPhase: Math.random() * Math.PI * 2 + i * Math.PI,
+          rotationSpeed: 0.001 * (i + 1),
+          pulseSpeed: 0.002,
+          scaleBase: starSprite.scale.x * (2.5 + i * 0.5)
+        };
+        currentRings.push(selectedRing);
+        starsGroup.add(selectedRing);
+      }
+    }
+    
+    orbitalRings.set(eventData.slug, currentRings);
+  }
+
+  // Handle star hover states
+  function handleStarHover(intersectedSprite, isHovering) {
+    if (intersectedSprite && intersectedSprite.userData) {
+      intersectedSprite.userData.isHovered = isHovering;
+    }
+  }
+
+  // Get screen position of 3D object
+  function getScreenPosition(object3D) {
+    const container = document.getElementById(mapId);
+    const vector = new THREE.Vector3();
+    
+    vector.setFromMatrixPosition(object3D.matrixWorld);
+    vector.project(camera);
+    
+    const widthHalf = container.clientWidth / 2;
+    const heightHalf = container.clientHeight / 2;
+    
+    return {
+      x: (vector.x * widthHalf) + widthHalf,
+      y: -(vector.y * heightHalf) + heightHalf,
+      isInFront: vector.z < 1 // Added this to check if object is in front
+    };
+  }
+
+  // Update card position during camera movement
+  function updateCardPosition() {
+    if (!selectedEvent || !floatingCard || floatingCard.style.opacity === '0') return;
+    
+    const selectedSprite = starSprites.get(selectedEvent.slug);
+    if (selectedSprite) {
+      const screenPosData = getScreenPosition(selectedSprite); // Get full data including isInFront
+      
+      if (screenPosData.isInFront) { // Star is in front of camera
+        // Apply original card positioning logic.
+        // The card position is relative to its top-left corner.
+        // The 'x' from getScreenPosition is the center of the 3D object on screen.
+        // Adjust to place the card relative to this point.
+        const cardWidth = floatingCard.offsetWidth || 200; 
+        const cardHeight = floatingCard.offsetHeight || 100;
+        const margin = 20; // From original renderCard logic
+
+        let xPos = screenPosData.x;
+        let yPos = screenPosData.y;
+
+        // Simplified positioning logic based on renderCard to keep card near star
+        // Prefer top, then adjust to avoid edges (this is a common pattern)
+        let finalX = xPos - cardWidth / 2; // Default: center horizontally
+        let finalY = yPos - cardHeight - margin; // Default: place above
+
+        const containerRect = document.getElementById(mapId).getBoundingClientRect();
+
+        // Adjust horizontal
+        if (finalX < margin) finalX = xPos + margin; // Too left, place right
+        else if (finalX + cardWidth > containerRect.width - margin) finalX = xPos - cardWidth - margin; // Too right, place left
+        
+        // Adjust vertical
+        if (finalY < margin) finalY = yPos + margin; // Too high, place below
+        // else if (finalY + cardHeight > containerRect.height - margin) finalY = yPos - cardHeight - margin; // Already handled by preferring above
+        
+        floatingCard.style.left = `${finalX}px`;
+        floatingCard.style.top = `${finalY}px`;
+        floatingCard.style.opacity = '1'; // Ensure visible if it was hidden
+      } else {
+        // Star is behind camera - hide card
+        renderCard(null); // This will set selectedEvent to null and hide the card
+      }
+    } else {
+       renderCard(null); // Selected sprite no longer exists, hide card
+    }
+  }
+
+  // Initialize scene and objects
   function initSceneAndObjects() {
     const container = document.getElementById(mapId);
     if (!container || !THREE) return;
 
-    const width = container.clientWidth; const height = container.clientHeight;
-    if (width === 0 || height === 0) console.warn(`Starmap: Container dimensions are zero.`);
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    
+    if (width === 0 || height === 0) {
+      console.warn(`Starmap: Container dimensions are zero (W: ${width}, H: ${height}).`);
+    }
 
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(60, width / Math.max(1, height), 0.1, 2000);
-    // camera.position.set(0, -260, 150); // User confirmed original value was fine before this change
-    const initialCameraRadius = 400; 
-    const initialPolarAngle = THREE.MathUtils.degToRad(170); 
-    const initialAzimuthalAngle = 0; 
-    camera.position.setFromSphericalCoords(initialCameraRadius, initialPolarAngle, initialAzimuthalAngle);
-    camera.lookAt(0, 0, 0); 
-
+    camera.position.set(0, -260, 150);
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, Math.max(1, height));
     renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
 
-    raycaster = new THREE.Raycaster(); mouse = new THREE.Vector2();
+    // Setup raycaster for star interaction
+    raycaster = new THREE.Raycaster();
+    mouse = new THREE.Vector2();
 
+    // Load skybox
     const textureLoader = new THREE.TextureLoader();
-    const skyTexture = textureLoader.load(skyboxImageUrl, () => console.log('Starmap: Skybox loaded.'), undefined, (err) => console.error('Skybox error:', err));
+    const skyTexture = textureLoader.load(skyboxImageUrl,
+      () => { console.log('Starmap: Skybox texture loaded.') },
+      undefined,
+      (err) => console.error('Starmap: Error loading skybox texture:', err)
+    );
     skyTexture.mapping = THREE.EquirectangularReflectionMapping;
-    scene.add(new THREE.Mesh(new THREE.SphereGeometry(1000, 60, 40), new THREE.MeshBasicMaterial({ map: skyTexture, side: THREE.BackSide, depthWrite: false })));
+    const skyMaterial = new THREE.MeshBasicMaterial({ map: skyTexture, side: THREE.BackSide, depthWrite: false }); // Added depthWrite: false
+    scene.add(new THREE.Mesh(new THREE.SphereGeometry(1000, 60, 40), skyMaterial));
 
-    starsGroup = new THREE.Group(); scene.add(starsGroup);
-    gridGroup = new THREE.Group(); scene.add(gridGroup);
-    // <<< ADDED: Initialize and add backgroundStarsGroup >>>
-    backgroundStarsGroup = new THREE.Group(); 
-    scene.add(backgroundStarsGroup);          
+    // Create groups
+    starsGroup = new THREE.Group();
+    scene.add(starsGroup);
+    
+    gridGroup = new THREE.Group();
+    scene.add(gridGroup);
     
     createGrid();
     createOrUpdateStars();
-    createBackgroundStars(); // <<< ADDED: Call to create background stars >>>
 
+    // Setup controls
     controls = new OrbitControls(camera, renderer.domElement);
-    Object.assign(controls, { enableDamping: true, dampingFactor: 0.25, rotateSpeed: -0.15, enablePan: false, enableZoom: false, minPolarAngle: THREE.MathUtils.degToRad(120), maxPolarAngle: THREE.MathUtils.degToRad(170), autoRotate: true, autoRotateSpeed: 0.05 });
-    controls.target.set(0, 0, 0); controls.update();
+    Object.assign(controls, {
+      enableDamping: true,
+      dampingFactor: 0.25,
+      rotateSpeed: -0.15,
+      enablePan: false,
+      enableZoom: true,
+      minDistance: 50,
+      maxDistance: 900,
+      minPolarAngle: THREE.MathUtils.degToRad(120), // Adjusted from 120 to allow looking up more
+      maxPolarAngle: THREE.MathUtils.degToRad(170), // Adjusted from 170 to allow looking down more
+      autoRotate: true,
+      autoRotateSpeed: 0.05
+    });
+    controls.target.set(0, 0, 0);
+    controls.update();
 
-    const minFov = 15, maxFov = 45, fovStep = 2;
-    renderer.domElement.addEventListener('wheel', (event) => { /* ... FOV zoom logic ... */ 
-        event.preventDefault(); camera.fov = THREE.MathUtils.clamp(camera.fov + (event.deltaY < 0 ? -fovStep : fovStep), minFov, maxFov); camera.updateProjectionMatrix();
+    // FOV Zoom
+    const minFov = 15;
+    const maxFov = 45; // Increased max FOV slightly
+    const fovStep = 2;
+
+    renderer.domElement.addEventListener('wheel', (event) => {
+      event.preventDefault();
+      if (event.deltaY < 0) {
+        camera.fov = Math.max(minFov, camera.fov - fovStep);
+      } else {
+        camera.fov = Math.min(maxFov, camera.fov + fovStep);
+      }
+      camera.updateProjectionMatrix();
     }, { passive: false });
 
-    let currentHoveredSprite = null; 
-    function onMouseMove(event) { /* ... Omitted for brevity, use your existing code ... */ 
-        const rect = container.getBoundingClientRect(); mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1; mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1; raycaster.setFromCamera(mouse, camera); const intersects = raycaster.intersectObjects(starsGroup.children); if (intersects.length > 0 && intersects[0].object !== currentHoveredSprite) { if (currentHoveredSprite) handleStarHover(currentHoveredSprite, false); currentHoveredSprite = intersects[0].object; if(currentHoveredSprite.userData.uniqueId){ handleStarHover(currentHoveredSprite, true); container.style.cursor = 'pointer'; } else { currentHoveredSprite = null; container.style.cursor = 'default'; } } else if (intersects.length === 0 && currentHoveredSprite) { handleStarHover(currentHoveredSprite, false); currentHoveredSprite = null; container.style.cursor = 'default'; }
-    }
-    function onMouseClick(event) { /* ... Omitted for brevity, use your existing code ... */ 
-        const rect = container.getBoundingClientRect(); mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1; mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1; raycaster.setFromCamera(mouse, camera); const intersects = raycaster.intersectObjects(starsGroup.children); if (intersects.length > 0 && intersects[0].object.userData.uniqueId) { handleStarClick(intersects[0].object); } else { if (selectedEvent) { const spriteToDeselect = starSprites.get(selectedEvent.slug); if(spriteToDeselect) { spriteToDeselect.userData.isSelected = false; if (spriteToDeselect.material) spriteToDeselect.material.opacity = 1.0; updateOrbitalRingsForStar(spriteToDeselect, spriteToDeselect.userData); } } renderCard(null); }
+    // Mouse interaction with hover support
+    let currentHoveredSprite = null; // Renamed from hoveredSprite to avoid conflict
+    
+    function onMouseMove(event) {
+      const rect = container.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(starsGroup.children); // Original intersection logic
+
+      if (intersects.length > 0 && intersects[0].object !== currentHoveredSprite) {
+        // Unhover previous sprite
+        if (currentHoveredSprite) {
+          handleStarHover(currentHoveredSprite, false);
+        }
+        
+        // Hover new sprite
+        currentHoveredSprite = intersects[0].object;
+        if(currentHoveredSprite.userData.uniqueId){ // Ensure it's a star, not a line/ring
+            handleStarHover(currentHoveredSprite, true);
+            container.style.cursor = 'pointer';
+        } else {
+            currentHoveredSprite = null; // Not a hoverable star
+            container.style.cursor = 'default';
+        }
+      } else if (intersects.length === 0 && currentHoveredSprite) {
+        // Unhover when no intersections
+        handleStarHover(currentHoveredSprite, false);
+        currentHoveredSprite = null;
+        container.style.cursor = 'default';
+      }
     }
 
-    container.addEventListener('mousemove', onMouseMove); container.addEventListener('click', onMouseClick);
+    function onMouseClick(event) {
+      const rect = container.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(starsGroup.children); // Original intersection logic
+
+      if (intersects.length > 0 && intersects[0].object.userData.uniqueId) { // Ensure it's a star
+        handleStarClick(intersects[0].object);
+      } else {
+        // Clicked empty space - deselect current star if one is selected
+        if (selectedEvent) {
+            const spriteToDeselect = starSprites.get(selectedEvent.slug);
+            if(spriteToDeselect) {
+                spriteToDeselect.userData.isSelected = false;
+                if (spriteToDeselect.material) spriteToDeselect.material.opacity = 1.0; // Reset opacity
+                updateOrbitalRingsForStar(spriteToDeselect, spriteToDeselect.userData);
+            }
+        }
+        renderCard(null); // This will also set selectedEvent to null
+      }
+    }
+
+    function onTouchEnd(event) {
+        // Prevent default touch behavior (e.g., scrolling, zooming, or triggering a click event after touch)
+        event.preventDefault();
+
+        if (!event.changedTouches || event.changedTouches.length === 0) {
+            return;
+        }
+        const touch = event.changedTouches[0];
+        // 'container' is in scope from initSceneAndObjects
+        const rect = container.getBoundingClientRect();
+        
+        // Update mouse vector with touch coordinates
+        mouse.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(starsGroup.children);
+        
+        if (intersects.length > 0 && intersects[0].object.userData && intersects[0].object.userData.uniqueId) {
+            // A star was tapped
+            handleStarClick(intersects[0].object);
+        } else {
+            // Tap occurred elsewhere, deselect if a star was selected
+            if (selectedEvent) {
+                const spriteToDeselect = starSprites.get(selectedEvent.slug);
+                if (spriteToDeselect) {
+                    spriteToDeselect.userData.isSelected = false;
+                    if (spriteToDeselect.material) spriteToDeselect.material.opacity = 1.0;
+                    updateOrbitalRingsForStar(spriteToDeselect, spriteToDeselect.userData);
+                }
+            }
+            renderCard(null); // Hide any visible card
+        }
+    }
+
+    container.addEventListener('mousemove', onMouseMove);
+    container.addEventListener('click', onMouseClick); container.addEventListener('touchend', onTouchEnd);
     window.addEventListener('resize', onWindowResize);
     animate();
-    initialized = true; console.log('Starmap: Initialization complete');
+    
+    initialized = true;
+    console.log('Starmap: Initialization complete');
     const loadingMessageEl = container.querySelector('.starmap-loading-message');
     if(loadingMessageEl) loadingMessageEl.style.display = 'none';
   }
 
-  function createGrid() { /* ... Omitted for brevity, use your existing code ... */ 
-    if (!gridGroup || !THREE) return; gridGroup.clear(); const gridMaterial = new THREE.LineBasicMaterial({ color: 0x224466, transparent: true, opacity: 0.05 }); const gridRadius = 940; for (let i = 0; i < 12; i++) { const phi = (i / 12) * Math.PI * 2; const points = []; for (let j = 0; j <= 50; j++) points.push(new THREE.Vector3().setFromSphericalCoords(gridRadius, (j / 50) * Math.PI, phi)); gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), gridMaterial)); } for (let i = -2; i <= 2; i++) { const polarAngleRad = Math.PI / 2 - THREE.MathUtils.degToRad(i * 30); if (polarAngleRad < 0.01 || polarAngleRad > Math.PI - 0.01) continue; const points = []; for (let j = 0; j <= 60; j++) points.push(new THREE.Vector3().setFromSphericalCoords(gridRadius, polarAngleRad, (j / 60) * Math.PI * 2)); points.push(points[0]); gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), gridMaterial)); }
-  }
-  function animate() { /* ... Omitted for brevity, use your existing code ... */ 
-    requestAnimationFrame(animate); if (!initialized || !controls || !renderer || !scene || !camera) return; const currentTime = performance.now(); try { controls.update(); renderer.render(scene, camera); updateCardPosition(); if (currentTime - lastFrameTime >= targetFrameInterval) { updateStarAnimations(); lastFrameTime = currentTime - ((currentTime - lastFrameTime) % targetFrameInterval); } } catch (e) { console.error('Starmap: Error in animate loop:', e); }
-  }
-  let lastFrameTime = 0; const targetFrameInterval = 1000 / 30; // Moved these near animate
-
-  function onWindowResize() { /* ... Omitted for brevity, use your existing code ... */ 
-    const container = document.getElementById(mapId); if (!container || !camera || !renderer) return; const width = container.clientWidth; const height = container.clientHeight; if (width === 0 || height === 0) return; camera.aspect = width / height; camera.updateProjectionMatrix(); renderer.setSize(width, height);
-  }
-
-  window[`starmap_${mapId}`] = { /* ... Omitted for brevity, use your existing code ... */ 
-    updateEvents: (newEvents) => { currentEvents = newEvents || JSON.parse(starmapEventsJson); if(initialized) createOrUpdateStars(currentEvents); }, isInitialized: () => initialized, resetView: () => { if (controls) { controls.reset(); camera.fov = 60; camera.updateProjectionMatrix(); } }, getConstellationInfo: () => { const eventsByEra = {}; (currentEvents || []).forEach(event => { const era = event.era || 'unknown'; if (!eventsByEra[era]) eventsByEra[era] = []; eventsByEra[era].push(event); }); return { constellations: Object.keys(eventsByEra).map(era => ({ era, events: eventsByEra[era].length, config: constellationConfig[era], color: eraColorMap[era] })) }; }
-  };
-
-  async function initializeThreeStarmap() { /* ... Omitted for brevity, use your existing loading code ... */ 
-    if (initialized) return; const container = document.getElementById(mapId); if (!container) { console.error(`Starmap: Container with ID #${mapId} not found.`); return; } const loadingMessageEl = container.querySelector('.starmap-loading-message'); try { const loadScript = (src, integrity, crossorigin) => { return new Promise((resolve, reject) => { if (src.includes('three.min.js') && window.THREE) { THREE = window.THREE; resolve(); return; } if (src.includes('OrbitControls.js') && window.THREE && window.THREE.OrbitControls) { OrbitControls = window.THREE.OrbitControls; resolve(); return; } let existingScript = document.querySelector(`script[src="${src}"]`); if (existingScript) { if (existingScript.dataset.loaded === 'true') { resolve(); return; } if (existingScript.dataset.error === 'true') { reject(new Error(`Previously failed: ${src}`)); return; } existingScript.addEventListener('load', () => { existingScript.dataset.loaded = 'true'; resolve(); }); existingScript.addEventListener('error', (e) => { existingScript.dataset.error = 'true'; reject(e); }); return; } const script = document.createElement('script'); script.src = src; if (src.includes('OrbitControls.js')) {} else if (integrity && crossorigin && !src.includes('three.min.js')) { script.integrity = integrity; script.crossOrigin = crossorigin; } script.onload = () => { script.dataset.loaded = 'true'; resolve(); }; script.onerror = (e) => { script.dataset.error = 'true'; reject(new Error(`Failed to load script: ${src}`)); }; document.head.appendChild(script); }); }; if (!window.THREE) { console.log('Loading Three.js r128...'); await loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'); THREE = window.THREE; } else { THREE = window.THREE; } if (!THREE) throw new Error("Three.js main library failed to attach to window.THREE."); if (!THREE.OrbitControls) { console.log('Loading OrbitControls for r128...'); await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js'); OrbitControls = THREE.OrbitControls; } else { OrbitControls = THREE.OrbitControls; } if (!OrbitControls) throw new Error("Three.js OrbitControls failed to load or attach."); console.log('Starmap: Three.js and OrbitControls ready.'); initSceneAndObjects(); } catch (error) { console.error('Starmap: Error during Three.js or OrbitControls initialization:', error); if (container && loadingMessageEl) { loadingMessageEl.textContent = 'Error loading 3D components. Please refresh.'; loadingMessageEl.style.color = 'red'; loadingMessageEl.style.display = 'block'; } }
-  }
-
-  const observer = new IntersectionObserver((entries) => { /* ... Omitted for brevity, use your existing observer ... */ 
-    entries.forEach(entry => { if (entry.isIntersecting && !initialized) { initializeThreeStarmap(); observer.unobserve(entry.target); } });
-  }, { threshold: 0.01 }); 
-  const containerElement = document.getElementById(mapId);
-  if (containerElement) { observer.observe(containerElement); } else { window.addEventListener('DOMContentLoaded', () => { const el = document.getElementById(mapId); if(el) observer.observe(el); else console.error(`Starmap: Container #${mapId} not found after DOMContentLoaded.`); }); }
-
-  // <<< ADDED: Helper function to generate simple star texture >>>
-  function generateCircularSpriteTexture(size = 32, color = 'white') {
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    const center = size / 2;
-    const radius = size / 2.2; // Make circle slightly smaller than canvas
-
-    // Optional: add a slight radial gradient for a softer edge
-    const gradient = ctx.createRadialGradient(center, center, 0, center, center, radius);
+  // Create grid
+  function createGrid() {
+    if (!gridGroup || !THREE) return;
     
-    // Base color for gradient (without alpha for the solid part)
-    let baseColorPart = color;
-    let finalColorWithAlpha = color;
-
-    if (color.startsWith('rgba')) {
-        baseColorPart = color.substring(0, color.lastIndexOf(',')) + ')'; // Ends with ) not ,0)
-        // Correctly form the transparent end of the gradient
-        finalColorWithAlpha = color.substring(0, color.lastIndexOf(',')) + ', 0)';
-
-    } else if (color.startsWith('#')) { // Hex color
-        if (color.length === 9) { // #RRGGBBAA
-            baseColorPart = color.substring(0, 7); // #RRGGBB
-            finalColorWithAlpha = baseColorPart + '00'; // Transparent version
-        } else if (color.length === 7) { // #RRGGBB
-            baseColorPart = color;
-            finalColorWithAlpha = baseColorPart + '00'; // Transparent version
-        } else if (color.length === 4) { // #RGB
-             baseColorPart = '#' + color[1]+color[1]+color[2]+color[2]+color[3]+color[3];
-             finalColorWithAlpha = baseColorPart + '00';
-        }
+    gridGroup.clear(); 
+    const gridMaterial = new THREE.LineBasicMaterial({ color: 0x224466, transparent: true, opacity: 0.05 });
+    const gridRadius = 940; // Define grid radius
+    
+    for (let i = 0; i < 12; i++) {
+      const phi = (i / 12) * Math.PI * 2; 
+      const points = [];
+      for (let j = 0; j <= 50; j++) { 
+        points.push(new THREE.Vector3().setFromSphericalCoords(gridRadius, (j / 50) * Math.PI, phi));
+      }
+      gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), gridMaterial));
     }
-    // For named colors, it's harder to make them transparent directly in gradient. Defaulting to white if complex.
-    // User specified 'rgba(255, 255, 255, 0.8)' in call.
-
-    gradient.addColorStop(0, color); // Center color as provided (e.g., rgba(255,255,255,0.8))
-    gradient.addColorStop(0.6, color); 
-    gradient.addColorStop(1, finalColorWithAlpha); // Fade to transparent version of the input color
-
-    ctx.fillStyle = gradient;
-
-    ctx.beginPath();
-    ctx.arc(center, center, radius, 0, 2 * Math.PI, false);
-    ctx.fill();
-
-    return new THREE.CanvasTexture(canvas);
+    
+    for (let i = -2; i <= 2; i++) { 
+      const elevationAngleDeg = i * 30;
+      const polarAngleRad = Math.PI / 2 - THREE.MathUtils.degToRad(elevationAngleDeg);
+      
+      if (polarAngleRad < 0.01 || polarAngleRad > Math.PI - 0.01) continue;
+      
+      const points = [];
+      for (let j = 0; j <= 60; j++) { 
+        points.push(new THREE.Vector3().setFromSphericalCoords(gridRadius, polarAngleRad, (j / 60) * Math.PI * 2));
+      }
+      points.push(points[0]); 
+      gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), gridMaterial));
+    }
   }
 
-  // <<< ADDED: Function to create background stars >>>
-  function createBackgroundStars(numStars = 3000) {
-    if (!backgroundStarsGroup || !THREE) {
-        console.warn("Background stars group or THREE not initialized for createBackgroundStars.");
+  // Animation loop with star animation updates
+  function animate() {
+    requestAnimationFrame(animate);
+    if (!initialized || !controls || !renderer || !scene || !camera) return;
+    
+    try {
+      controls.update();
+      renderer.render(scene, camera);
+      updateCardPosition();
+      
+      // Update star animations every few frames for performance
+      const currentTime = Date.now();
+      // Original logic for throttling updateStarAnimations:
+      if (currentTime % 150 < 16) { // Update approximately every 150ms (slower)
+        updateStarAnimations();
+      }
+    } catch (e) {
+      console.error('Starmap: Error in animate loop:', e);
+    }
+  }
+
+  // Window resize handler
+  function onWindowResize() {
+    const container = document.getElementById(mapId);
+    if (!container || !camera || !renderer) return;
+    
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    
+    // Added check for zero dimensions
+    if (width === 0 || height === 0) {
+        console.warn("Starmap: onWindowResize detected zero dimensions. Skipping resize.");
         return;
     }
 
-    while (backgroundStarsGroup.children.length > 0) {
-        const child = backgroundStarsGroup.children[0];
-        backgroundStarsGroup.remove(child);
-        if (child.material) {
-            if (child.material.map) child.material.map.dispose();
-            child.material.dispose();
-        }
-        if (child.geometry) child.geometry.dispose();
-    }
-
-    // Using rgba for the color string to ensure gradient transparency works as intended
-    const starTexture = generateCircularSpriteTexture(32, 'rgba(255, 255, 255, 0.7)'); 
-    const skyboxRadius = 990; 
-
-    for (let i = 0; i < numStars; i++) {
-      const radius = skyboxRadius * (0.98 + Math.random() * 0.04); 
-      const phi = Math.acos(2 * Math.random() - 1); // Polar angle for uniform distribution
-      const theta = Math.random() * Math.PI * 2;    // Azimuthal angle
-
-      const material = new THREE.SpriteMaterial({
-        map: starTexture,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        opacity: 0.15 + Math.random() * 0.35, // Range: 0.15 to 0.5
-        sizeAttenuation: true, 
-        depthWrite: false 
-      });
-
-      const sprite = new THREE.Sprite(material);
-      sprite.position.setFromSphericalCoords(radius, phi, theta);
-      sprite.scale.setScalar(1.5 + Math.random() * 2.5); // Sizes from 1.5 to 4
-
-      backgroundStarsGroup.add(sprite);
-    }
-    console.log(`Starmap: Created ${numStars} background stars.`);
+    camera.aspect = width / height; // Use height directly
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height); // Use height directly
   }
 
+  // Public API
+  window[`starmap_${mapId}`] = {
+    updateEvents: (newEvents) => {
+      currentEvents = newEvents || JSON.parse(starmapEventsJson);
+      if (initialized) { // Only update if initialized
+        createOrUpdateStars(currentEvents);
+      }
+    },
+    isInitialized: () => initialized,
+    resetView: () => {
+      if (controls) {
+        controls.reset();
+        camera.fov = 60; // Reset FOV to default
+        camera.updateProjectionMatrix();
+      }
+    },
+    getConstellationInfo: () => {
+      const eventsByEra = {};
+      currentEvents.forEach(event => {
+        const era = event.era || 'unknown';
+        if (!eventsByEra[era]) eventsByEra[era] = [];
+        eventsByEra[era].push(event);
+      });
+      return {
+        constellations: Object.keys(eventsByEra).map(era => ({
+          era,
+          events: eventsByEra[era].length,
+          config: constellationConfig[era],
+          color: eraColorMap[era]
+        }))
+      };
+    }
+  };
+
+  // === MODIFIED INITIALIZATION FUNCTION TO FIX LOADING ===
+  async function initializeThreeStarmap() {
+    if (initialized) return;
+
+    const container = document.getElementById(mapId);
+    if (!container) {
+      console.error(`Starmap: Container with ID #${mapId} not found.`);
+      return;
+    }
+    
+    const loadingMessageEl = container.querySelector('.starmap-loading-message');
+
+    try {
+      const loadScript = (src, integrity, crossorigin) => { // Integrity and crossorigin are now optional
+        return new Promise((resolve, reject) => {
+          if (src.includes('three.min.js') && window.THREE) {
+            THREE = window.THREE; resolve(); return;
+          }
+          if (src.includes('OrbitControls.js') && window.THREE && window.THREE.OrbitControls) {
+            OrbitControls = window.THREE.OrbitControls; resolve(); return;
+          }
+          
+          let existingScript = document.querySelector(`script[src="${src}"]`);
+          if (existingScript) {
+            if (existingScript.dataset.loaded === 'true') { resolve(); return; }
+            if (existingScript.dataset.error === 'true') { reject(new Error(`Previously failed: ${src}`)); return; }
+            existingScript.addEventListener('load', () => { existingScript.dataset.loaded = 'true'; resolve(); });
+            existingScript.addEventListener('error', (e) => { existingScript.dataset.error = 'true'; reject(e); });
+            return;
+          }
+
+          const script = document.createElement('script');
+          script.src = src;
+          // Remove integrity and crossorigin for Three.js to bypass current issue
+          // For OrbitControls, these were not used in the original, so keep it that way.
+          if (src.includes('OrbitControls.js')) {
+            // No integrity/crossorigin typically set for OrbitControls from examples
+          } else if (integrity && crossorigin && !src.includes('three.min.js')) { // Apply if provided AND NOT three.min.js
+             script.integrity = integrity;
+             script.crossOrigin = crossorigin;
+          }
+          
+          script.onload = () => { script.dataset.loaded = 'true'; resolve(); };
+          script.onerror = (e) => { script.dataset.error = 'true'; reject(new Error(`Failed to load script: ${src}`)); };
+          document.head.appendChild(script);
+        });
+      };
+
+      // Load Three.js - WITHOUT INTEGRITY AND CROSSORIGIN FOR NOW
+      if (!window.THREE) {
+        console.log('Loading Three.js r128...');
+        await loadScript(
+          'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
+          // No integrity, no crossorigin
+        );
+        THREE = window.THREE;
+      } else {
+        THREE = window.THREE; 
+      }
+
+      if (!THREE) {
+        throw new Error("Three.js main library failed to attach to window.THREE.");
+      }
+
+      // Load OrbitControls
+      if (!THREE.OrbitControls) {
+        console.log('Loading OrbitControls for r128...');
+        await loadScript( // OrbitControls from jsdelivr typically doesn't need integrity/crossorigin set here
+          'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js'
+        );
+        OrbitControls = THREE.OrbitControls;
+      } else {
+        OrbitControls = THREE.OrbitControls;
+      }
+
+      if (!OrbitControls) {
+          throw new Error("Three.js OrbitControls failed to load or attach.");
+      }
+      
+      console.log('Starmap: Three.js and OrbitControls ready.');
+      initSceneAndObjects();
+
+    } catch (error) {
+      console.error('Starmap: Error during Three.js or OrbitControls initialization:', error);
+      if (container && loadingMessageEl) {
+        loadingMessageEl.textContent = 'Error loading 3D components. Please refresh.';
+        loadingMessageEl.style.color = 'red';
+        loadingMessageEl.style.display = 'block';
+      }
+    }
+  }
+  // === END OF MODIFIED INITIALIZATION FUNCTION ===
+
+  // Auto-initialize when visible
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !initialized) {
+        initializeThreeStarmap();
+        observer.unobserve(entry.target); 
+      }
+    });
+  }, { threshold: 0.01 }); 
+
+  const containerElement = document.getElementById(mapId);
+  if (containerElement) {
+    observer.observe(containerElement);
+  } else {
+    window.addEventListener('DOMContentLoaded', () => {
+        const el = document.getElementById(mapId);
+        if(el) observer.observe(el);
+        else console.error(`Starmap: Container #${mapId} not found after DOMContentLoaded.`);
+    });
+  }
 </script>
