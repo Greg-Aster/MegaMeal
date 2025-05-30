@@ -1,0 +1,745 @@
+---
+export interface Props {
+  backgroundImageUrl?: string;
+}
+const { backgroundImageUrl } = Astro.props;
+---
+<!-- Main Mascot Container -->
+<div id="mascot-container" class="is-banner-feature" data-background-image-url={backgroundImageUrl}>
+  <div id="mascot-visual-area">
+    <img id="mascot-image-display" src="" alt="Current Mascot Expression" style="max-width: 100%; max-height: 100%; object-fit: contain; display: none;" />
+    <!-- SVG content will be injected here if mascot is SVG type, replacing the img -->
+  </div>
+
+  <!-- NEW: Chat History Window -->
+  <div id="chat-history-window">
+    {/* Messages will be dynamically inserted here by JavaScript */}
+  </div>
+
+  <!-- <div id="mascot-dialogue">[Bleep] bloop! [Bleepy]'s online and ready to talk snacks!</div> -->
+  <div id="mascot-chat-ui">
+    <input type="text" id="mascot-chat-input" placeholder="Talk to me...">
+    <button id="mascot-chat-send">Send</button>
+  </div>
+</div>
+
+<style>
+  @import './mascotAnimations.css';
+
+  /* Structural variables, not theme colors directly */
+  :root {
+    --speech-bubble-max-width: 50rem;
+    --speech-bubble-padding: 0.6em 1em; /* Default padding for messages */
+    --speech-bubble-radius: 15px;      /* Default radius for messages */
+    --speech-bubble-tail-size: 0.7rem; /* If tails were to be re-added */
+    --hue: 270; /* Fallback hue, ideally set globally or by theme switcher */
+    /* Assuming --radius-large and --radius-medium are globally available from main.css or similar */
+    --radius-large: 0.75rem;
+    --radius-medium: 0.4rem;
+  }
+
+  #mascot-container.is-banner-feature {
+    /* Theme variables. These inherit from global scope (e.g. main.css) or provide component-specific theming.
+       --primary, --primary-hover, --card-bg, --bg-opacity, --card-border-subtle-opacity
+       are expected to be available globally.
+    */
+
+    /* Base Theme Colors (Light Mode Defaults) */
+    --text-color-light: oklch(0.15 0.01 var(--hue));
+    --text-color-dark: oklch(0.85 0.01 var(--hue));
+    --text-color: var(--text-color-light);
+
+    --border-color-light: color-mix(in srgb, var(--primary, oklch(0.6 0.2 var(--hue))) calc(var(--card-border-subtle-opacity, 0.1) * 100%), transparent);
+    --border-color-dark: color-mix(in srgb, var(--primary, oklch(0.6 0.2 var(--hue))) calc(var(--card-border-subtle-opacity, 0.1) * 100% + 15%), oklch(0.35 0.02 var(--hue)));
+    --border-color: var(--border-color-light);
+
+    /* Surface colors based on global --card-bg */
+    --surface-1-light: var(--card-bg, oklch(0.98 0.01 var(--hue))); /* Main container bg */
+    --surface-1-dark: var(--card-bg, oklch(0.15 0.02 var(--hue)));
+    --surface-1: var(--surface-1-light);
+
+    --surface-2-light: color-mix(in srgb, var(--surface-1-light), oklch(0 0 0 / 0.04)); /* Bleepy messages bg */
+    --surface-2-dark: color-mix(in srgb, var(--surface-1-dark), oklch(1 1 1 / 0.04));
+    --surface-2: var(--surface-2-light);
+
+    --text-on-primary: white; /* Text on primary-colored elements */
+
+    /* Chat Message Specific Variables */
+    --user-message-text-color: var(--text-on-primary);
+    --bleepy-message-bg: var(--surface-2);
+    --bleepy-message-text-color: var(--text-color);
+    
+    /* Input Field Specific Colors */
+    --input-field-bg-light: oklch(0.97 0.005 var(--hue));
+    --input-field-text-light: oklch(0.18 0.01 var(--hue));
+    --input-field-border-light: color-mix(in srgb, var(--primary, oklch(0.6 0.2 var(--hue))) calc(var(--card-border-subtle-opacity, 0.2) * 100%), transparent);
+    --input-placeholder-text-light: oklch(0.65 0.01 var(--hue));
+
+    --input-field-bg-dark: oklch(0.22 0.015 var(--hue));
+    --input-field-text-dark: oklch(0.92 0.01 var(--hue));
+    --input-field-border-dark: oklch(0.45 0.01 var(--hue));
+    --input-placeholder-text-dark: oklch(0.55 0.01 var(--hue));
+
+    /* Derived input field variables for actual use */
+    --input-bg-actual: var(--input-field-bg-light);
+    --input-text-actual: var(--input-field-text-light);
+    --input-border-actual: var(--input-field-border-light);
+    --input-placeholder-actual: var(--input-placeholder-text-light);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    #mascot-container.is-banner-feature {
+      --text-color: var(--text-color-dark);
+      --border-color: var(--border-color-dark);
+      --surface-1: var(--surface-1-dark);
+      --surface-2: var(--surface-2-dark);
+
+      --input-bg-actual: var(--input-field-bg-dark);
+      --input-text-actual: var(--input-field-text-dark);
+      --input-border-actual: var(--input-field-border-dark);
+      --input-placeholder-actual: var(--input-placeholder-text-dark);
+    }
+  }
+
+  /* --- Banner Feature Styles --- */
+  #mascot-container.is-banner-feature {
+    position: relative;
+    width: 100%;
+    height: 70vh; /* Or as per design */
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1rem;
+    box-sizing: border-box;
+    
+    color: var(--text-color);
+    background-color: var(--surface-1);
+    background-image: var(--mascot-background-image); /* Set by JS */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    backdrop-filter: blur(3px); /* Kept from original for card feel */
+    
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-large);
+    overflow: hidden;
+    transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+    box-shadow: none; /* Remove old complex glow if using simple border */
+  }
+
+  #mascot-container.is-banner-feature #mascot-visual-area {
+    flex: 0 0 30%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1;
+  }
+
+  #mascot-visual-area svg,
+  #mascot-visual-area img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  
+  /* --- Chat History Window Styles --- */
+  #mascot-container.is-banner-feature #chat-history-window {
+    flex: 1 1 auto;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 1rem 4.5rem 1rem; /* Bottom padding for chat input UI (e.g., 3.5rem UI + 1rem space) */
+    overflow-y: auto;
+    box-sizing: border-box;
+    color: var(--text-color);
+    /* background-color: transparent; /* Or var(--surface-subtle) if defined and needed */
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif; /* Kept from original */
+    font-size: 0.9rem; /* Kept from original */
+    z-index: 1;
+  }
+
+  /* --- Chat Message Styles --- */
+  #mascot-container.is-banner-feature #chat-history-window .chat-message {
+    padding: var(--speech-bubble-padding);
+    border-radius: var(--speech-bubble-radius);
+    margin-bottom: 0.5em;
+    max-width: 75%;
+    word-wrap: break-word;
+    line-height: 1.4;
+  }
+
+  #mascot-container.is-banner-feature #chat-history-window .user-message {
+    background-color: var(--primary);
+    color: var(--user-message-text-color);
+    margin-left: auto;
+    align-self: flex-end;
+    border-bottom-right-radius: 5px;
+  }
+
+  #mascot-container.is-banner-feature #chat-history-window .bleepy-message {
+    background-color: var(--bleepy-message-bg);
+    color: var(--bleepy-message-text-color);
+    /* border: 1px solid var(--border-color); /* Optional: use general border or a specific --bleepy-message-border */
+    margin-right: auto;
+    align-self: flex-start;
+    border-bottom-left-radius: 5px;
+  }
+
+  #mascot-container.is-banner-feature #chat-history-window .chat-message strong {
+    display: block;
+    margin-bottom: 0.2em;
+    font-weight: 600;
+    /* Color is inherited from parent .chat-message, ensuring it's themed */
+  }
+
+  /* --- Chat Input UI Container --- */
+  #mascot-container.is-banner-feature #mascot-chat-ui {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--surface-1); /* Can be same as main banner or slightly different if --surface-1-alt is defined */
+    border-top: 1px solid var(--border-color);
+    box-sizing: border-box;
+    z-index: 2; /* Above chat history */
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  #mascot-container.is-banner-feature #mascot-chat-input {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--input-border-actual);
+    border-radius: var(--radius-medium);
+    flex-grow: 1;
+    min-width: 0;
+    background-color: var(--input-bg-actual);
+    color: var(--input-text-actual);
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+  }
+
+  #mascot-container.is-banner-feature #mascot-chat-input::placeholder {
+    color: var(--input-placeholder-actual);
+    opacity: 1;
+  }
+   #mascot-container.is-banner-feature #mascot-chat-input:focus-visible {
+    outline: none;
+    border-color: var(--primary); /* Highlight with primary color on focus */
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 30%, transparent);
+  }
+
+
+  #mascot-container.is-banner-feature #mascot-chat-send {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.8rem;
+    flex-shrink: 0;
+    background-color: var(--primary);
+    color: var(--text-on-primary);
+    border: none;
+    border-radius: var(--radius-medium);
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+
+  #mascot-container.is-banner-feature #mascot-chat-send:hover {
+    background-color: var(--primary-hover, color-mix(in srgb, var(--primary) 85%, black));
+  }
+  #mascot-container.is-banner-feature #mascot-chat-send:focus-visible {
+    outline: none;
+    background-color: var(--primary-hover, color-mix(in srgb, var(--primary) 85%, black));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 40%, transparent);
+  }
+
+  /* Hide elements not relevant to banner mode or already removed from HTML */
+  #mascot-container.is-banner-feature #mascot-speech-bubble, /* Old overlay bubble, if selector still exists */
+  #mascot-container.is-banner-feature #dismiss-mascot-button,
+  #mascot-container.is-banner-feature ~ #bring-back-mascot-button,
+  #mascot-container.is-banner-feature #mobile-mascot-function-card {
+    display: none !important;
+  }
+  
+  /* Fallback for mascot-speech-text if it's used elsewhere, though likely not in this context */
+  #mascot-speech-text {
+    margin: 0;
+    padding: 0;
+  }
+
+</style>
+
+
+<script>
+  /* import {
+    bleepyMascotData,
+    bleepyPersonaString,
+    bleepyRandomDialogues,
+    bleepyDismissDialogues,
+    type MascotName
+  } from '../../config/bleepyConfig.ts'; */
+
+  // --- DOM Elements ---
+  const mascotContainer = document.getElementById('mascot-container') as HTMLElement | null;
+  const mascotVisualArea = document.getElementById('mascot-visual-area') as HTMLElement | null;
+  const mascotChatInput = document.getElementById('mascot-chat-input') as HTMLInputElement | null;
+  const mascotChatSendButton = document.getElementById('mascot-chat-send') as HTMLElement | null;
+  const chatHistoryWindow = document.getElementById('chat-history-window') as HTMLElement | null;
+
+  // --- State Variables ---
+  // let activeMascot: any = bleepyMascotData;
+  let activeMascot: any = {}; // Initialize with an empty object to avoid further errors
+  let inactivityTimer: NodeJS.Timeout | undefined; // Retained, but its usage in event listeners is commented out
+  let hoverTimeout: NodeJS.Timeout | undefined; // Retained, but its usage in event listeners is commented out
+  // let dialogueCycleInterval: NodeJS.Timeout | number | undefined; // Not used
+  let specialAnimationInterval: NodeJS.Timeout | number | undefined;
+  let proactiveDialogueTimer: NodeJS.Timeout | undefined;
+  let mouthOpenTimeout: NodeJS.Timeout | undefined;
+  let randomExpressionTimeout: NodeJS.Timeout | undefined;
+  
+  interface ConversationEntry {
+    sender: 'user' | 'bleepy';
+    text: string;
+  }
+  let conversationHistory: ConversationEntry[] = [];
+
+
+  // --- Core Functions ---
+  function loadMascot() { 
+    if (!mascotVisualArea) return;
+    // activeMascot = bleepyMascotData;
+    conversationHistory = []; 
+
+    const mascotImageDisplay = document.getElementById('mascot-image-display') as HTMLImageElement | null;
+    mascotVisualArea.innerHTML = ''; 
+
+    if (activeMascot.type === "image-set") {
+      if (mascotImageDisplay) {
+        mascotImageDisplay.src = activeMascot.images.standard;
+        mascotImageDisplay.style.display = 'block';
+        mascotVisualArea.appendChild(mascotImageDisplay); 
+      }
+    } else { // SVG type
+      if (mascotImageDisplay) {
+        mascotImageDisplay.style.display = 'none'; 
+      }
+      mascotVisualArea.innerHTML = activeMascot.svgHTML; 
+    }
+    
+    mascotVisualArea.className = ''; 
+    if (activeMascot.cssClasses) {
+      mascotVisualArea.classList.add(activeMascot.cssClasses);
+    }
+
+    clearInterval(specialAnimationInterval as number);
+    specialAnimationInterval = setInterval(tryPlayRandomVisualEffect, 18000 + Math.random() * 5000);
+    
+    restartAnimationsAndDialogue();
+  }
+
+  function clearTimers() {
+    clearTimeout(inactivityTimer);
+    clearTimeout(hoverTimeout);
+    // clearInterval(dialogueCycleInterval); // Not used
+    clearInterval(specialAnimationInterval);
+    clearTimeout(proactiveDialogueTimer);
+  }
+
+  function restartAnimationsAndDialogue() {
+    if (!mascotContainer) return;
+    mascotContainer.classList.remove('jiggle');
+    void mascotContainer.offsetWidth; 
+    mascotContainer.classList.add('jiggle');
+  }
+  
+  // --- Chat History Logic ---
+function addMessageToHistory(text: string, sender: 'user' | 'bleepy') {
+  if (!chatHistoryWindow) return;
+
+  const messageDiv = document.createElement('div');
+  messageDiv.classList.add('chat-message');
+  messageDiv.classList.add(sender === 'user' ? 'user-message' : 'bleepy-message');
+
+  const senderStrong = document.createElement('strong');
+  senderStrong.textContent = sender === 'user' ? 'You: ' : (activeMascot?.name || 'Bleepy') + ': ';
+
+  const textNode = document.createTextNode(text);
+
+  messageDiv.appendChild(senderStrong);
+  messageDiv.appendChild(textNode);
+  chatHistoryWindow.appendChild(messageDiv);
+
+  // Scroll to bottom
+  chatHistoryWindow.scrollTop = chatHistoryWindow.scrollHeight;
+
+  // Store in conversation history (if you have such a system)
+  // conversationHistory.push({ sender, text }); // Example
+}
+
+  // --- Ephemeral Speech Logic (Simplified for Banner) ---
+  function displayEphemeralSpeech(text: string) {
+    // --- Mascot jiggle/mouth animation logic ---
+    const mascotImageDisplay = document.getElementById('mascot-image-display') as HTMLImageElement | null;
+    if (activeMascot && mascotVisualArea && mascotImageDisplay) { // Added mascotVisualArea check
+      if (activeMascot.type === "image-set") {
+        if (activeMascot.images.openmouth) {
+          clearTimeout(mouthOpenTimeout);
+          mascotImageDisplay.src = activeMascot.images.openmouth;
+          mouthOpenTimeout = setTimeout(() => {
+            if (activeMascot && activeMascot.images.standard && mascotImageDisplay) {
+               mascotImageDisplay.src = activeMascot.images.standard;
+            }
+          }, 700);
+        }
+        if (!mascotImageDisplay.classList.contains('wiggling')) { 
+           mascotImageDisplay.classList.remove('jiggle'); 
+           void mascotImageDisplay.offsetWidth;
+           mascotImageDisplay.classList.add('jiggle');
+           setTimeout(() => { if (mascotImageDisplay) mascotImageDisplay.classList.remove('jiggle'); }, 500);
+        }
+      } else { // SVG mascot
+        const svgElement = mascotVisualArea.querySelector('svg');
+        if (svgElement) {
+          svgElement.classList.remove('jiggle');
+          void (svgElement as unknown as HTMLElement).offsetWidth;
+          svgElement.classList.add('jiggle');
+          setTimeout(() => { svgElement.classList.remove('jiggle'); }, 500);
+        }
+      }
+    }
+    // --- End of jiggle/mouth animation logic ---
+
+    // For banner mode, add Bleepy's reply to the history window.
+    addMessageToHistory(text, 'bleepy');
+    // No return needed as it's the end of the function now.
+  }
+
+  // --- Chat Logic ---
+  async function handleSendMessage() {
+    if (!mascotChatInput) {
+      console.warn("handleSendMessage: Mascot chat input not found.");
+      return;
+    }
+    const userMessage = mascotChatInput.value.trim();
+    if (!userMessage) return;
+
+    if (chatHistoryWindow) { 
+      addMessageToHistory(userMessage, 'user'); 
+    }
+    
+    // const currentMascot = bleepyMascotData;
+    // const currentMascotName = currentMascot.name as MascotName;
+    // const currentMascotPersonaString = bleepyPersonaString;
+    const currentMascot = activeMascot; // Use the initialized activeMascot
+    const currentMascotName = currentMascot?.name; // Add optional chaining
+    const currentMascotPersonaString = "default persona"; // Provide a default
+    const pageCtx = getPageContextForBleepy();
+    let promptForWorker: string;
+
+    let historyString = "Previous Conversation (if any):\n";
+    if (conversationHistory.length > 0) {
+      // historyString += conversationHistory.map(entry => `${entry.sender === 'user' ? 'User' : bleepyMascotData.name}: ${entry.text}`).join('\n') + '\n\n';
+      historyString += conversationHistory.map(entry => `${entry.sender === 'user' ? 'User' : currentMascotName || 'Mascot'}: ${entry.text}`).join('\n') + '\n\n';
+    } else {
+      historyString = ""; 
+    }
+
+    let contextString = "";
+    if (pageCtx) {
+      contextString = `Current Page Context:\n- Title: ${pageCtx.title || "N/A"}\n- Description: ${pageCtx.description || "N/A"}\n- Tags: ${(pageCtx.tags && pageCtx.tags.length > 0 ? pageCtx.tags.join(', ') : "N/A")}\n- Category: ${pageCtx.category || "N/A"}\n- Timeline Era: ${pageCtx.timelineEra || "N/A"}\n- Timeline Location: ${pageCtx.timelineLocation || "N/A"}\n- Author's Hint for Mascot: ${pageCtx.mascotContext || "N/A"}\n\n`;
+    }
+
+    promptForWorker = `${historyString}${contextString}Based on the page context (if provided), your persona, AND the previous conversation (if any), respond to the following user message:\nUser: "${userMessage}"`;
+    
+    mascotChatInput.value = '';
+    resetProactiveDialogueTimer();
+
+    const workerUrl = 'https://my-mascot-worker-service.greggles.workers.dev';
+    try {
+      const response = await fetch(workerUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: promptForWorker,
+          persona: currentMascotPersonaString
+        })
+      });
+      const data = await response.json();
+      if (response.ok && data.reply) {
+        // displayEphemeralSpeech already adds to conversationHistory for 'bleepy'
+        displayEphemeralSpeech(data.reply);
+      } else {
+        const errorMessage = data.error || 'Failed to get a response.';
+        displayEphemeralSpeech(errorMessage);
+      }
+    } catch (error) {
+      const connectErrorMessage = 'Could not connect to the mascot.';
+      displayEphemeralSpeech(connectErrorMessage);
+      console.error('Error calling mascot worker:', error);
+    }
+  }
+
+  // --- Page Context Logic ---
+  function getPageContextForBleepy() {
+    const contextDiv = document.getElementById('bleepy-page-context');
+    if (contextDiv) {
+      const contextData = contextDiv.dataset.context;
+      if (contextData) {
+        try {
+          const parsedContext = JSON.parse(contextData);
+          return parsedContext;
+        } catch (e) {
+          console.error("Bleepy: Error parsing page context JSON:", e);
+          return null;
+        }
+      }
+    }
+    return null;
+  }
+  
+  // --- Proactive Dialogue Logic ---
+  function triggerProactiveDialogue() {
+    if (!mascotContainer) { // Simplified check: mascotContainer exists
+      return;
+    }
+
+    const randomNumber = Math.random();
+    // const currentMascot = bleepyMascotData; // Original commented line
+    // const currentMascotName = currentMascot.name as MascotName; // Original commented line
+    // const currentMascotPersonaString = bleepyPersonaString; // Original commented line
+    const currentMascot = activeMascot;
+    const currentMascotName = currentMascot?.name || 'Mascot';
+    const currentMascotPersonaString = "default persona";
+
+    if (randomNumber < 0.7) {
+      // if (bleepyRandomDialogues && bleepyRandomDialogues.length > 0) {
+      //   const randomIndex = Math.floor(Math.random() * bleepyRandomDialogues.length);
+      //   const selectedDialogue = bleepyRandomDialogues[randomIndex];
+      //   displayEphemeralSpeech(selectedDialogue);
+      // } else {
+        displayEphemeralSpeech("...");
+      // }
+    } else { 
+      const pageContext = getPageContextForBleepy();
+      let thoughtInstruction = "";
+  
+      if (pageContext) {
+        const pageMascotContext = pageContext.mascotContext || "N/A";
+        const pageTitle = pageContext.title || "N/A";
+        // ... (rest of context construction as in original)
+        thoughtInstruction = `You are ${currentMascotName}.
+Your primary goal for this random thought is to reflect the SPECIFIC content of the current webpage.
+**Key Focus for This Thought:**
+- Specific Page Context for ${currentMascotName}: ${pageMascotContext}
+Supporting Page Details:
+- Title: ${pageTitle}
+- Description: ${pageContext.description || "N/A"}
+- Tags: ${(pageContext.tags && pageContext.tags.length > 0 ? pageContext.tags.join(', ') : "N/A")}
+- Category: ${pageContext.category || "N/A"}
+- Timeline Era: ${pageContext.timelineEra || "N/A"}
+- Timeline Location: ${pageContext.timelineLocation || "N/A"}
+Instruction:
+Generate a brief, spontaneous, in-character statement, observation, or dark joke.
+1.  **Prioritize**: Your thought MUST be directly and obviously inspired by the "**Key Focus for This Thought**" (${pageMascotContext}) if it is not "N/A". Make a clear connection.
+2.  **Fallback**: If "${pageMascotContext}" is "N/A", then draw your inspiration primarily from the "Supporting Page Details" (especially Title and Description).
+3.  **Style**: Maintain your ${currentMascotName} persona (as fully defined in the system prompt sent separately by the worker). The thought should be a random musing, not a reply to a user. Keep it concise.`;
+      } else {
+        thoughtInstruction = `You are ${currentMascotName}. Generate a brief, spontaneous, in-character statement, observation, or dark joke, consistent with your established persona (which is provided as a system instruction). This is not a reply to a user, but rather a random thought or musing. Keep it concise.`;
+      }
+      
+      displayEphemeralSpeech("Mascot is pondering..."); 
+
+      const workerUrl = 'https://my-mascot-worker-service.greggles.workers.dev';
+      fetch(workerUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: thoughtInstruction,
+          // persona: currentMascotPersonaString
+          persona: "default persona" // Provide a default
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.reply) {
+          displayEphemeralSpeech(data.reply);
+        } else {
+          console.error('Proactive AI thought error:', data.error || 'No reply from worker');
+          // if (bleepyRandomDialogues && bleepyRandomDialogues.length > 0) {
+          //   const randomIndex = Math.floor(Math.random() * bleepyRandomDialogues.length);
+          //   displayEphemeralSpeech(bleepyRandomDialogues[randomIndex]);
+          // } else {
+            displayEphemeralSpeech("Hmm...");
+          // }
+        }
+      })
+      .catch(error => {
+        console.error('Error calling mascot worker for proactive thought:', error);
+        // if (bleepyRandomDialogues && bleepyRandomDialogues.length > 0) {
+        //    const randomIndex = Math.floor(Math.random() * bleepyRandomDialogues.length);
+        //    displayEphemeralSpeech(bleepyRandomDialogues[randomIndex]);
+        //  } else {
+           displayEphemeralSpeech("My thoughts are tangled!");
+        //  }
+      });
+    }
+    startProactiveDialogueTimer();
+  }
+
+  function startProactiveDialogueTimer() {
+    clearTimeout(proactiveDialogueTimer);
+    if (!mascotContainer) { // Simplified check
+      return;
+    }
+    const randomDelay = Math.random() * (60000 - 45000) + 45000; // 45-60 seconds
+    proactiveDialogueTimer = setTimeout(triggerProactiveDialogue, randomDelay);
+  }
+
+  function resetProactiveDialogueTimer() {
+    startProactiveDialogueTimer();
+  }
+
+  // --- New Mascot Animations Logic ---
+  function playRandomImageExpression() {
+    const mascotImageDisplay = document.getElementById('mascot-image-display') as HTMLImageElement | null;
+    if (!activeMascot || activeMascot.type !== "image-set" || !mascotImageDisplay || !activeMascot.images) {
+      return;
+    }
+    const expressionKeys = Object.keys(activeMascot.images).filter(
+      key => key !== "standard" && key !== "openmouth"
+    );
+    if (expressionKeys.length === 0) return;
+    const randomKey = expressionKeys[Math.floor(Math.random() * expressionKeys.length)];
+    mascotImageDisplay.src = activeMascot.images[randomKey];
+    clearTimeout(randomExpressionTimeout);
+    randomExpressionTimeout = setTimeout(() => {
+      if (activeMascot && activeMascot.images.standard && mascotImageDisplay) {
+        mascotImageDisplay.src = activeMascot.images.standard;
+      }
+    }, Math.random() * 500 + 1000); 
+  }
+
+  function playRandomMascotAnimation() { 
+    if (!mascotVisualArea || !mascotContainer) return; // Simplified check
+    if (!activeMascot || activeMascot.type === "image-set") return; 
+
+    const mascotData = activeMascot; 
+    if (!mascotData.uniqueAnimations || mascotData.uniqueAnimations.length === 0) return;
+    const availableAnimations = mascotData.uniqueAnimations;
+    const animToPlay = availableAnimations[Math.floor(Math.random() * availableAnimations.length)];
+    const targetElement = mascotVisualArea.querySelector(animToPlay.targetSelector) as SVGElement | null;
+
+    if (targetElement && !targetElement.classList.contains(animToPlay.animationClass)) {
+      let alreadyAnimating = false;
+      if (targetElement.classList) {
+        for (const anim of availableAnimations) {
+            if (targetElement.classList.contains(anim.animationClass)) {
+                alreadyAnimating = true;
+                break;
+            }
+        }
+      }
+      if (alreadyAnimating) return;
+
+      targetElement.classList.add(animToPlay.animationClass);
+      const onAnimationEnd = (event: Event) => { 
+        const currentTarget = event.currentTarget as HTMLElement;
+        if (animToPlay.cssAnimationName && (event as AnimationEvent).animationName === animToPlay.cssAnimationName &&
+            currentTarget.classList.contains(animToPlay.animationClass)) {
+            currentTarget.classList.remove(animToPlay.animationClass);
+        }
+        currentTarget.removeEventListener('animationcancel', onAnimationCancel);
+      };
+      const onAnimationCancel = (event: Event) => { 
+        const currentTarget = event.currentTarget as HTMLElement;
+        if (animToPlay.cssAnimationName && (event as AnimationEvent).animationName === animToPlay.cssAnimationName &&
+            currentTarget.classList.contains(animToPlay.animationClass)) {
+            currentTarget.classList.remove(animToPlay.animationClass);
+        }
+        currentTarget.removeEventListener('animationend', onAnimationEnd);
+      };
+      targetElement.addEventListener('animationend', onAnimationEnd as EventListener, { once: true });
+      targetElement.addEventListener('animationcancel', onAnimationCancel as EventListener, { once: true });
+    }
+  }
+
+  function tryPlayRandomVisualEffect() { 
+    if (!activeMascot || !mascotContainer) return; // Simplified check
+
+    if (activeMascot.type === "image-set") {
+      const mascotImageEl = document.getElementById('mascot-image-display') as HTMLImageElement | null;
+      if (!mascotImageEl) return;
+      const randomNumber = Math.random();
+      if (randomNumber < 0.4) { 
+        mascotImageEl.classList.add('wiggling');
+        mascotImageEl.addEventListener('animationend', () => {
+          mascotImageEl.classList.remove('wiggling');
+        }, { once: true });
+      } else if (randomNumber < 0.8) { 
+        playRandomImageExpression();
+      }
+    } else { // SVG type
+      if (activeMascot.uniqueAnimations && activeMascot.uniqueAnimations.length > 0) {
+        if (Math.random() < 0.4) { 
+           playRandomMascotAnimation(); 
+        }
+      }
+    }
+  }
+
+  // --- Event Listeners ---
+  function setupEventListeners() {
+    if (!mascotContainer || !mascotChatSendButton || !mascotChatInput) return;
+
+    mascotChatSendButton.addEventListener('click', handleSendMessage);
+    mascotChatInput.addEventListener('keypress', (event) => {
+      if (event.key === 'Enter') {
+        handleSendMessage(); 
+      }
+    });
+    // Commented out listeners from original remain commented:
+    // window.addEventListener('mousemove', resetInactivityBasedDialogueTimer);
+    // window.addEventListener('keypress', resetInactivityBasedDialogueTimer);
+    // mascotContainer.addEventListener('mouseenter', () => { ... });
+    // mascotContainer.addEventListener('mouseleave', () => { ... });
+  }
+
+  // --- Initialization ---
+  function initializeMascotSystem() {
+    if (!mascotContainer) return;
+
+    const backgroundUrlFromDataAttr = mascotContainer.dataset.backgroundImageUrl;
+    if (backgroundUrlFromDataAttr && backgroundUrlFromDataAttr.trim() !== "") {
+      mascotContainer.style.setProperty('--mascot-background-image', `url('${backgroundUrlFromDataAttr}')`);
+    } else {
+      mascotContainer.style.setProperty('--mascot-background-image', 'none');
+    }
+
+    mascotContainer.style.display = 'flex'; 
+
+    loadMascot();
+    startProactiveDialogueTimer();
+    setupEventListeners(); 
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    const desktopChatUi = document.getElementById('mascot-chat-ui'); 
+    if (desktopChatUi) {
+      // console.log("Desktop #mascot-chat-ui FOUND for BleepyBanner.");
+    } else {
+      console.error("Desktop #mascot-chat-ui NOT FOUND for BleepyBanner.");
+    }
+  });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeMascotSystem);
+  } else {
+    initializeMascotSystem(); 
+  }
+
+</script>

@@ -1,0 +1,546 @@
+---
+// src/components/timeline/StarMapView.astro
+import type { TimelineEvent } from '../../../services/TimelineService.client';
+
+export interface Props {
+  id?: string;
+  events: TimelineEvent[];
+  useEraColors?: boolean;
+  skyboxImageUrl?: string;
+}
+
+const {
+  id = "starmap-view",
+  events,
+  useEraColors = false,
+  skyboxImageUrl = "/assets/hdri/sky3.png",
+} = Astro.props;
+
+const mapId = `${id}-three-container`;
+const floatingCardId = `${id}-floating-card`;
+
+// Prepare events for starmap (simplified format)
+const starmapEventsJson = JSON.stringify(events.map(e => ({
+  slug: e.slug,
+  title: e.title,
+  year: e.year,
+  description: e.description || "No description available.",
+  era: e.era,
+  isKeyEvent: e.isKeyEvent || false,
+})));
+---
+
+<div id={mapId} class="starmap-three-container" style="width: 100%; height: 100%; overflow: hidden; background-color: #000510; position: relative;">
+  <p class="starmap-loading-message" style="color: white; text-align: center; padding-top: 20%; font-family: sans-serif;">Loading 3D Starmap...</p>
+  
+  <!-- Floating card for timeline events (like TimelineView) -->
+  <div id={floatingCardId} class="starmap-floating-card" style="position: absolute; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 200;">
+    <!-- Card content will be dynamically inserted here -->
+  </div>
+</div>
+
+<script define:vars={{
+  mapId,
+  floatingCardId,
+  starmapEventsJson,
+  skyboxImageUrl,
+  useEraColors,
+}}>
+  // Star appearance helpers
+  const eraColorMap = {
+    'ancient-epoch': '#3b82f6',
+    'awakening-era': '#8b5cf6',
+    'golden-age': '#6366f1',
+    'conflict-epoch': '#ec4899',
+    'singularity-conflict': '#ef4444',
+    'transcendent-age': '#14b8a6',
+    'final-epoch': '#22c55e',
+    'unknown': '#6366f1'
+  };
+
+  const colorSpectrum = [
+    '#ef4444', '#f43f5e', '#f97316', '#f59e0b', '#eab308', '#facc15',
+    '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6',
+    '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
+  ];
+
+  const starTypes = ['point', 'classic', 'sparkle', 'refraction', 'halo', 'subtle'];
+
+  function hashCode(str) {
+    if (!str) return 0;
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash);
+  }
+
+  function getStarColor(id, currentEra, shouldUseEraColors) {
+    if (shouldUseEraColors && currentEra && eraColorMap[currentEra]) {
+      return eraColorMap[currentEra];
+    }
+    const hash = hashCode(id);
+    return colorSpectrum[hash % colorSpectrum.length];
+  }
+
+  function getStarType(id, isKeyEvent) {
+    const hash = hashCode(id);
+    if (isKeyEvent) {
+      return ['classic', 'sparkle', 'refraction', 'halo'][hash % 4];
+    }
+    return starTypes[hash % starTypes.length];
+  }
+
+  function getStarSVGContent(starType, color, isKeyEvent) {
+    switch(starType) {
+      case 'point': return `<circle cx="12" cy="12" r="1.8" fill="${color}" />`;
+      case 'classic': return `<path d="M12 5l1.5 3.5 3.5 0.5-2.5 2.5 0.5 3.5-3-1.5-3 1.5 0.5-3.5-2.5-2.5 3.5-0.5z" fill="${color}" />`;
+      case 'sparkle': return `<path d="M12 5l0.7 3 2.8 0.5-2 2 0.5 3-2-1.5-2 1.5 0.5-3-2-2 2.8-0.5z" fill="${color}" /><path d="M12 3v18M3 12h18" stroke="${color}" stroke-width="0.4" opacity="0.4" />`;
+      case 'refraction': return `<circle cx="12" cy="12" r="1.5" fill="${color}" /><path d="M12 6v12M6 12h12" stroke="${color}" stroke-width="0.7" opacity="0.6" class="refraction-lines" /><path d="M8 8l8 8M8 16l8-8" stroke="${color}" stroke-width="0.3" opacity="0.3" class="refraction-lines" />`;
+      case 'halo': return `<circle cx="12" cy="12" r="1.5" fill="${color}" /><circle cx="12" cy="12" r="2.5" fill="${color}" opacity="0.4" /><circle cx="12" cy="12" r="3.5" fill="${color}" opacity="0.15" />`;
+      default: return `<circle cx="12" cy="12" r="1.2" fill="${color}" /><path d="M10 9l4 6M9 12l6 0" stroke="${color}" stroke-width="0.4" opacity="0.5" />`;
+    }
+  }
+
+  // Starmap state
+  let THREE, OrbitControls, CSS2DRenderer, CSS2DObject;
+  let scene, camera, renderer, cssRenderer, controls, starsGroup, gridGroup;
+  let initialized = false;
+  let currentEvents = JSON.parse(starmapEventsJson);
+  let selectedEvent = null;
+  let floatingCard = null;
+
+  // Card rendering function (similar to TimelineView)
+  function renderCard(eventData, x, y) {
+    floatingCard = floatingCard || document.getElementById(floatingCardId);
+    if (!floatingCard) return;
+
+    if (!eventData) {
+      // Hide card
+      floatingCard.style.opacity = '0';
+      floatingCard.style.pointerEvents = 'none';
+      floatingCard.innerHTML = '';
+      selectedEvent = null;
+      return;
+    }
+
+    // Calculate position
+    const container = document.getElementById(mapId);
+    const rect = container.getBoundingClientRect();
+    
+    // Determine card position based on screen location
+    let cardX = x;
+    let cardY = y;
+    let positionClass = 'timeline-card-bottom';
+    
+    // Adjust position to avoid edges
+    const cardWidth = 200;
+    const cardHeight = 100; // Approximate
+    const margin = 20;
+    
+    // Adjust these offsets to change where the card appears relative to the star
+    if (x < margin + cardWidth/2) {
+      cardX = x + margin;  // ← Adjust this offset
+      positionClass = 'timeline-card-right';
+    } else if (x > rect.width - margin - cardWidth/2) {
+      cardX = x - cardWidth - margin;  // ← Adjust this offset
+      positionClass = 'timeline-card-left';
+    } else {
+      cardX = x - cardWidth/2;  // ← Centers card horizontally on star
+    }
+
+    if (y < margin + cardHeight) {
+      cardY = y + margin;  // ← Card below star
+      positionClass = 'timeline-card-bottom';
+    } else {
+      cardY = y - cardHeight - margin;  // ← Card above star
+      positionClass = 'timeline-card-top';
+    }
+
+    // Render card HTML (similar to TimelineView)
+    const cardHTML = `
+      <div class="timeline-card card-base absolute z-30 ${positionClass} bg-[var(--card-bg)] backdrop-blur-sm shadow-lg w-[200px] p-3">
+        <div class="font-bold text-75 text-sm mb-1 card-title">${eventData.title}</div>
+        <div class="text-50 text-xs line-clamp-2 card-description">${eventData.description || ''}</div>
+        <a href="/posts/${eventData.slug}/#post-container" class="timeline-link text-[0.65rem] mt-1 inline-block py-0.5 px-1.5 rounded-full bg-[oklch(0.9_0.05_var(--hue))/0.1] dark:bg-[oklch(0.3_0.05_var(--hue))/0.2] text-[oklch(0.4_0.05_var(--hue))] dark:text-[oklch(0.9_0.05_var(--hue))]">View Event &rarr;</a>
+        <div class="card-pointer absolute bg-inherit"></div>
+      </div>
+    `;
+    
+    floatingCard.innerHTML = cardHTML;
+    floatingCard.style.left = `${cardX}px`;
+    floatingCard.style.top = `${cardY}px`;
+    floatingCard.style.opacity = '1';
+    floatingCard.style.pointerEvents = 'auto';
+    
+    selectedEvent = eventData;
+  }
+
+  // Create or update stars
+  function createOrUpdateStars(eventsToDisplay = currentEvents) {
+    const container = document.getElementById(mapId);
+    if (!container || !starsGroup || !THREE || !CSS2DObject) {
+      console.warn('Starmap: createOrUpdateStars called before full initialization.');
+      return;
+    }
+
+    while(starsGroup.children.length > 0) {
+      starsGroup.remove(starsGroup.children[0]);
+    }
+    
+    eventsToDisplay.forEach((event, i) => {
+      const normalizedYear = Math.max(0, Math.min(1, ((event.year || 1) - 1) / (50000 - 1)));
+      const azimuthRad = normalizedYear * Math.PI * 2;
+      const totalEvents = eventsToDisplay.length || 1;
+      const elevationFactor = totalEvents === 1 ? 0.5 : (i / Math.max(1, totalEvents - 1));
+      const elevationFromHorizonRad = (5 + (elevationFactor * 80)) * (Math.PI / 180); 
+      const polarAngleRad = Math.PI/2 - elevationFromHorizonRad;
+
+      const starElement = document.createElement('div');
+      starElement.className = 'star-wrapper starmap-star-node-html';
+      starElement.style.pointerEvents = 'auto';
+      
+      const uniqueStarId = `${event.slug}-${event.year}-${i}`;
+      const mainColor = getStarColor(uniqueStarId, event.era, useEraColors);
+      const starTypeToUse = getStarType(uniqueStarId, event.isKeyEvent);
+      
+      starElement.style.setProperty('--star-color', mainColor);
+      starElement.dataset.starType = starTypeToUse;
+      if (event.isKeyEvent) starElement.classList.add('is-key-event');
+
+      const svgViewBox = "0 0 24 24";
+      const svgWidth = "16px";
+      const svgHeight = "16px";
+      const svgContent = getStarSVGContent(starTypeToUse, mainColor, event.isKeyEvent);
+
+      starElement.innerHTML = `
+        <div class="star-backing-plate"></div>
+        <div class="star-glow"></div>
+        <div class="star-rays"></div>
+        <svg class="star-shape" viewBox="${svgViewBox}" style="width: ${svgWidth}; height: ${svgHeight};">
+          ${svgContent}
+        </svg>
+      `;
+      
+      starElement.dataset.slug = event.slug;
+      starElement.dataset.title = event.title;
+      starElement.dataset.year = String(event.year);
+      starElement.dataset.description = event.description || "";
+      starElement.dataset.era = event.era || "unknown";
+
+      const css2DObject = new CSS2DObject(starElement);
+      // Using 995 to place stars closer to skybox for better alignment
+      css2DObject.position.setFromSphericalCoords(995, polarAngleRad, azimuthRad); 
+      css2DObject.userData = { ...event, mainColor, starType: starTypeToUse };
+
+      // Update star selection state
+      starElement.addEventListener('click', () => {
+        const clickedData = css2DObject.userData;
+        
+        // Update star visual states
+        container.querySelectorAll('.star-wrapper').forEach(sw => {
+          sw.classList.remove('is-selected');
+        });
+        
+        if (selectedEvent && selectedEvent.slug === clickedData.slug) {
+          // Clicking same star again - deselect
+          renderCard(null);
+        } else {
+          // Select new star
+          starElement.classList.add('is-selected');
+          
+          // Get the screen position of the clicked star
+          const vector = new THREE.Vector3();
+          vector.setFromMatrixPosition(css2DObject.matrixWorld);
+          vector.project(camera);
+          
+          const widthHalf = container.clientWidth / 2;
+          const heightHalf = container.clientHeight / 2;
+          
+          const x = (vector.x * widthHalf) + widthHalf;
+          const y = -(vector.y * heightHalf) + heightHalf;
+          
+          // Render card at position
+          renderCard(clickedData, x, y);
+          
+          // Dispatch event
+          container.dispatchEvent(new CustomEvent('starmap:selectstar', {
+            detail: { 
+              slug: clickedData.slug, 
+              eventData: clickedData,
+              screenPosition: { x, y }
+            },
+            bubbles: true,
+            composed: true
+          }));
+        }
+      });
+      
+      starsGroup.add(css2DObject);
+    });
+  }
+
+  // Update card position during animation
+  function updateCardPosition() {
+    if (!selectedEvent || !floatingCard || floatingCard.style.opacity === '0') return;
+    
+    // Find the selected star
+    const container = document.getElementById(mapId);
+    const selectedStar = Array.from(starsGroup.children).find(child => 
+      child.element && child.element.dataset.slug === selectedEvent.slug
+    );
+    
+    if (selectedStar) {
+      const vector = new THREE.Vector3();
+      vector.setFromMatrixPosition(selectedStar.matrixWorld);
+      vector.project(camera);
+      
+      const widthHalf = container.clientWidth / 2;
+      const heightHalf = container.clientHeight / 2;
+      
+      const x = (vector.x * widthHalf) + widthHalf;
+      const y = -(vector.y * heightHalf) + heightHalf;
+      
+      // Update card position smoothly
+      floatingCard.style.left = `${x - 100}px`; // Center card
+      floatingCard.style.top = `${y - 120}px`; // Position above star
+    }
+  }
+
+  // Initialize scene and objects
+  function initSceneAndObjects() {
+    const container = document.getElementById(mapId);
+    if (!container || !THREE) return;
+
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    
+    if (width === 0 || height === 0) {
+      console.warn(`Starmap: Container dimensions are zero (W: ${width}, H: ${height}).`);
+    }
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(60, width / Math.max(1, height), 0.1, 2000);
+    camera.position.set(0, 0, 0.01);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(width, Math.max(1, height));
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(renderer.domElement);
+
+    cssRenderer = new CSS2DRenderer();
+    cssRenderer.setSize(width, Math.max(1, height));
+    cssRenderer.domElement.style.position = 'absolute';
+    cssRenderer.domElement.style.top = '0px';
+    cssRenderer.domElement.style.pointerEvents = 'none';
+    container.appendChild(cssRenderer.domElement);
+
+    const textureLoader = new THREE.TextureLoader();
+    const skyTexture = textureLoader.load(skyboxImageUrl,
+      () => { console.log('Starmap: Skybox texture loaded.') },
+      undefined,
+      (err) => console.error('Starmap: Error loading skybox texture:', err)
+    );
+    skyTexture.mapping = THREE.EquirectangularReflectionMapping;
+    const skyMaterial = new THREE.MeshBasicMaterial({ map: skyTexture, side: THREE.BackSide });
+    scene.add(new THREE.Mesh(new THREE.SphereGeometry(1000, 60, 40), skyMaterial));
+
+    starsGroup = new THREE.Group();
+    scene.add(starsGroup);
+    
+    gridGroup = new THREE.Group();
+    scene.add(gridGroup);
+    
+    createOrUpdateStars();
+    createGrid();
+
+    controls = new OrbitControls(camera, renderer.domElement);
+    Object.assign(controls, {
+      enableDamping: true,
+      dampingFactor: 0.25, // ← Increased from 0.1 for more natural movement
+      rotateSpeed: 0.1,   // ← Reduced from 0.4 for smoother feel
+      enablePan: false,
+      enableZoom: false,
+      minPolarAngle: THREE.MathUtils.degToRad(120),
+      maxPolarAngle: THREE.MathUtils.degToRad(170),
+      autoRotate: true,
+      autoRotateSpeed: 0.05 // ← Reduced from 0.10 for slower auto-rotation
+    });
+    controls.target.set(0, 0, 0);
+    controls.update();
+
+    // FOV Zoom Implementation
+    const minFov = 15;
+    const maxFov = 45;
+    const fovStep = 2;
+
+    renderer.domElement.addEventListener('wheel', (event) => {
+      event.preventDefault();
+      if (event.deltaY < 0) {
+        camera.fov = Math.max(minFov, camera.fov - fovStep);
+      } else {
+        camera.fov = Math.min(maxFov, camera.fov + fovStep);
+      }
+      camera.updateProjectionMatrix();
+    }, { passive: false });
+
+    // Click outside to deselect
+    container.addEventListener('click', (e) => {
+      if (e.target === renderer.domElement) {
+        renderCard(null);
+        container.querySelectorAll('.star-wrapper').forEach(sw => {
+          sw.classList.remove('is-selected');
+        });
+      }
+    });
+
+    window.addEventListener('resize', onWindowResize);
+    animate();
+    
+    // Mark as initialized
+    initialized = true;
+    console.log('Starmap: Initialization complete');
+  }
+
+  // Create grid
+  function createGrid() {
+    if (!gridGroup || !THREE) return;
+    
+    gridGroup.clear(); 
+    const gridMaterial = new THREE.LineBasicMaterial({ color: 0x224466, transparent: true, opacity: 0.25 });
+    
+    for (let i = 0; i < 12; i++) {
+      const phi = (i / 12) * Math.PI * 2; 
+      const points = [];
+      for (let j = 0; j <= 50; j++) { 
+        points.push(new THREE.Vector3().setFromSphericalCoords(940, (j / 50) * Math.PI, phi));
+      }
+      gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), gridMaterial));
+    }
+    
+    for (let i = -2; i <= 2; i++) { 
+      const elevationAngleDeg = i * 30;
+      const polarAngleRad = Math.PI / 2 - THREE.MathUtils.degToRad(elevationAngleDeg);
+      
+      if (polarAngleRad < 0.01 || polarAngleRad > Math.PI - 0.01) continue;
+      
+      const points = [];
+      for (let j = 0; j <= 60; j++) { 
+        points.push(new THREE.Vector3().setFromSphericalCoords(940, polarAngleRad, (j / 60) * Math.PI * 2));
+      }
+      points.push(points[0]); 
+      gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), gridMaterial));
+    }
+  }
+
+  // Animation loop
+  function animate() {
+    requestAnimationFrame(animate);
+    if (!initialized || !controls || !renderer || !scene || !camera || !cssRenderer) return;
+    
+    try {
+      controls.update(); 
+      renderer.render(scene, camera);
+      cssRenderer.render(scene, camera);
+      updateCardPosition(); // Update card position each frame
+    } catch (e) {
+      console.error('Starmap: Error in animate loop:', e);
+    }
+  }
+
+  // Window resize handler
+  function onWindowResize() {
+    const container = document.getElementById(mapId);
+    if (!container || !camera || !renderer || !cssRenderer) return;
+    
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    
+    camera.aspect = width / Math.max(1, height);
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, Math.max(1, height));
+    cssRenderer.setSize(width, Math.max(1, height));
+  }
+
+  // Public API
+  window[`starmap_${mapId}`] = {
+    updateEvents: createOrUpdateStars,
+    isInitialized: () => initialized,
+    resetView: () => {
+      if (controls) {
+        controls.reset();
+      }
+    }
+  };
+
+  // Initialize Three.js
+  async function initializeThreeStarmap() {
+    if (initialized) return;
+
+    const container = document.getElementById(mapId);
+    if (!container) {
+      console.error(`Starmap: Container with ID #${mapId} not found.`);
+      return;
+    }
+    
+    const loadingMessageEl = container.querySelector('.starmap-loading-message');
+    if (loadingMessageEl) loadingMessageEl.style.display = 'none';
+
+    try {
+      // Load Three.js and dependencies from CDN
+      const loadScript = (src) => {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      };
+
+      // Load Three.js core
+      if (!window.THREE) {
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js');
+      }
+      THREE = window.THREE;
+
+      // Load OrbitControls
+      await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js');
+      OrbitControls = window.THREE.OrbitControls;
+
+      // Load CSS2DRenderer
+      await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js');
+      CSS2DRenderer = window.THREE.CSS2DRenderer;
+      CSS2DObject = window.THREE.CSS2DObject;
+
+      console.log('Starmap: Three.js and dependencies loaded successfully');
+      
+      // Now initialize the scene
+      initSceneAndObjects();
+
+    } catch (error) {
+      console.error('Starmap: Error during Three.js dynamic import or initialization:', error);
+      if (container && loadingMessageEl) {
+        loadingMessageEl.textContent = 'Error loading 3D Starmap.';
+        loadingMessageEl.style.color = 'red';
+        loadingMessageEl.style.display = 'block';
+      }
+    }
+  }
+
+  // Auto-initialize when the component is visible
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !initialized) {
+        initializeThreeStarmap();
+        observer.disconnect();
+      }
+    });
+  });
+
+  const containerElement = document.getElementById(mapId);
+  if (containerElement) {
+    observer.observe(containerElement);
+  }
+</script>

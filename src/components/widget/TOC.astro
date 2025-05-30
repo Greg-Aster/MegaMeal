@@ -1,6 +1,6 @@
 ---
 import type { MarkdownHeading } from 'astro';
-import { siteConfig } from "../../config";
+import { siteConfig } from "../../config/config";
 
 interface Props {
   class?: string;
@@ -64,7 +64,7 @@ const maxLevel = siteConfig.toc.depth;
       }]}>{removeTailingHash(heading.text)}</div>
     </a>
   )}
-  <div id="active-indicator" class:list={[{'hidden': headings.length == 0}, "absolute bg-[var(--toc-btn-hover)] left-0 right-0 rounded-xl transition-all group-hover:bg-transparent border-2 border-[var(--toc-btn-hover)] group-hover:border-[var(--toc-btn-active)] border-dashed"]}></div>
+  <div id="active-indicator" class:list={[{'hidden': headings.length == 0}, "absolute bg-[var(--toc-btn-hover)] left-0 right-0 rounded-xl transition-all group-hover:bg-transparent border-2 border-[var(--primary-dimmed)] group-hover:border-[var(--primary)] border-dashed"]}></div>
 </table-of-contents>
 
 <script>
@@ -466,14 +466,23 @@ const maxLevel = siteConfig.toc.depth;
 
 <style>
   /* Add TOC show/hide styles */
-  table-of-contents {
+  table-of-contents.card-base-subtle { /* Made selector more specific */
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease, transform 0.3s ease;
     transform: translateY(10px);
+    /* Explicitly apply the subtle border here to override others */
+    /* This mirrors the border from .card-base-subtle */
+    border: 1px solid color-mix(in srgb, var(--primary) calc(var(--card-border-subtle-opacity, 0.2) * 100%), transparent);
+    /* Ensure other .card-base-subtle properties are respected or re-declared if needed */
+    border-radius: var(--radius-large, 1rem); /* from .card-base */
+    overflow: hidden; /* from .card-base */
+    background-color: color-mix(in srgb, var(--card-bg), transparent calc((1 - var(--bg-opacity, 0.85)) * 100%)); /* from .card-base */
+    backdrop-filter: blur(3px); /* from .card-base */
+    box-sizing: border-box; /* from .card-base */
   }
   
-  table-of-contents.toc-shown {
+  table-of-contents.toc-shown.card-base-subtle { /* Made selector more specific */
     opacity: 1;
     pointer-events: auto;
     transform: translateY(0);

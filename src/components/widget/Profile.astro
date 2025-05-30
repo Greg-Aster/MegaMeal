@@ -1,59 +1,41 @@
 ---
 import ImageWrapper from '../misc/ImageWrapper.astro'
 import { Icon } from 'astro-icon/components'
-import { profileConfig } from '../../config'
+import { profileConfig } from '../../config/config'
+import { avatarConfig, getAvatarIndexFromSlug } from '../../config/avatar.config'
 import { url } from '../../utils/url-utils'
 import { Image } from 'astro:assets';
-
-// Import avatar images
-import avatar from 'src/assets/avatar/avatar.png';
-import avatar2 from 'src/assets/avatar/avatar2.png';
-import avatar3 from 'src/assets/avatar/avatar3.png';
-import avatar4 from 'src/assets/avatar/avatar4.png';
-import avatar5 from 'src/assets/avatar/avatar5.png';
-import avatar6 from 'src/assets/avatar/avatar6.png';
-
-// Define avatar list directly in this component
-const avatarList = [
-  avatar,
-  avatar2,
-  avatar3,
-  avatar4,
-  avatar5,
-  avatar6,
-];
-
-// Determine avatar index from post slug if no custom avatar is specified
-function getAvatarIndexFromSlug(slug: string = ''): number {
-  if (!slug) return 0; // Default to first avatar if no slug
-  
-  // Simple hash function to get consistent avatar for each slug
-  let hash = 0;
-  for (let i = 0; i < slug.length; i++) {
-    hash = ((hash << 5) - hash) + slug.charCodeAt(i);
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  
-  // Ensure positive index and map to available avatars
-  return Math.abs(hash) % avatarList.length;
-}
 
 interface Props {
   slug?: string;           // Post slug to determine avatar
   customAvatar?: string;   // Custom avatar path from frontmatter
   customName?: string;     // Custom author name from frontmatter
   customBio?: string;      // Custom author bio from frontmatter
+  isHomePage?: boolean;    // Flag to determine if we're on the home page
 }
 
 const { 
   slug = '', 
   customAvatar = '',
   customName = '',
-  customBio = '' 
+  customBio = '',
+  isHomePage = false
 } = Astro.props;
 
 const useDefaultAvatars = !customAvatar;
-const activeAvatarIndex = useDefaultAvatars ? getAvatarIndexFromSlug(slug) : 0;
+
+// Determine which avatar to show
+let avatarToShow = avatarConfig.avatarList[0]; // Default fallback
+let activeAvatarIndex = 0;
+
+if (isHomePage && useDefaultAvatars) {
+  // On home page, use the designated home avatar
+  avatarToShow = avatarConfig.homeAvatar;
+} else if (useDefaultAvatars) {
+  // For posts, use the hash function to select a consistent avatar
+  activeAvatarIndex = getAvatarIndexFromSlug(slug, avatarConfig.avatarList.length);
+  avatarToShow = avatarConfig.avatarList[activeAvatarIndex];
+}
 
 // Use custom name/bio or fall back to config defaults
 const displayName = customName || profileConfig.name;
@@ -61,9 +43,12 @@ const displayBio = customBio || profileConfig.bio;
 
 // Get social links from config
 const config = profileConfig;
+
+// Determine if we have multiple avatars for animation
+const hasMultipleAvatars = useDefaultAvatars && avatarConfig.avatarList.length > 1 && !isHomePage;
 ---
 <div class="card-base p-3">
-<!--   <a
+<a
     aria-label="Go to About Page"
     href={url('/about/')}
     class="group block relative mx-auto mt-1 lg:mx-0 lg:mt-0 mb-3 max-w-[12rem] lg:max-w-none overflow-hidden rounded-xl active:scale-95"
@@ -73,25 +58,40 @@ const config = profileConfig;
         name="fa6-regular:address-card"
         class="transition opacity-0 scale-90 group-hover:scale-100 group-hover:opacity-100 text-white text-5xl"
       ></Icon>
-    </div>  -->
+    </div> 
+
     <!-- Image container with relative positioning -->
     <div class="relative w-full aspect-square">
       {useDefaultAvatars ? (
-        // Show default avatar list with the active one visible
-        avatarList.map((src, index) => (
+        isHomePage || !hasMultipleAvatars ? (
+          // For home page or single avatar, show just one avatar
           <Image
-            src={src}
-            alt="Profile Image of the Author"
+            src={isHomePage ? avatarConfig.homeAvatar : avatarToShow}
+            alt="Profile Image of the Site Owner"
             width={512} 
             height={512}
-            fetchpriority={index === activeAvatarIndex ? 'high' : undefined}
-            loading={index === activeAvatarIndex ? 'eager' : 'lazy'}
-            class={`avatar-image absolute inset-0 w-full h-full object-contain transition-opacity duration-1000 ${
-              index === activeAvatarIndex ? 'opacity-100' : 'opacity-0'
-            }`}
-            id={`avatar-${index}`}
+            fetchpriority="high"
+            loading="eager"
+            class="avatar-image w-full h-full object-contain opacity-100"
+            id="avatar-static"
           />
-        ))
+        ) : (
+          // For posts with multiple avatars, show all with the active one visible
+          avatarConfig.avatarList.map((src, index) => (
+            <Image
+              src={src}
+              alt="Profile Image of the Author"
+              width={512} 
+              height={512}
+              fetchpriority={index === activeAvatarIndex ? 'high' : undefined}
+              loading={index === activeAvatarIndex ? 'eager' : 'lazy'}
+              class={`avatar-image absolute inset-0 w-full h-full object-contain transition-opacity duration-1000 ${
+                index === activeAvatarIndex ? 'opacity-100' : 'opacity-0'
+              }`}
+              id={`avatar-${index}`}
+            />
+          ))
+        )
       ) : (
         // Show custom avatar from frontmatter
         <div class="avatar-image absolute inset-0 w-full h-full object-contain opacity-100">
@@ -137,19 +137,22 @@ const config = profileConfig;
   </div>
 </div>
 
-<script>
+<script define:vars={{hasMultipleAvatars, animationInterval: avatarConfig.animationInterval}}>
 document.addEventListener('DOMContentLoaded', () => {
-  // Only run avatar rotation if using the default avatars
-  const customAvatar = document.querySelector('.avatar-image:not([id])');
-  if (customAvatar) return; // Don't animate if using custom avatar
+  // Only run animation if there are multiple avatars to animate
+  if (!hasMultipleAvatars) return;
   
-  const avatarImages = document.querySelectorAll('.avatar-image');
-  if (!avatarImages.length) return;
+  // Don't animate if using custom avatar
+  const customAvatar = document.querySelector('.avatar-image:not([id])');
+  if (customAvatar) return;
+  
+  const avatarImages = document.querySelectorAll('[id^="avatar-"]');
+  if (!avatarImages || avatarImages.length <= 1) return;
   
   // Get the active avatar index from the first visible avatar
   let currentIndex = Array.from(avatarImages).findIndex(
-    img => (img as HTMLImageElement).style.opacity === '1' || 
-           (img as HTMLImageElement).classList.contains('opacity-100')
+    img => window.getComputedStyle(img).opacity === '1' || 
+           img.classList.contains('opacity-100')
   );
   
   // If no visible avatar found, default to first one
@@ -158,23 +161,40 @@ document.addEventListener('DOMContentLoaded', () => {
   let direction = 1; // 1 = downward, -1 = upward
 
   function animateAvatar() {
+    // Safety check - make sure avatarImages is still valid
+    if (!avatarImages.length) return;
+    
     // Reset all images to opacity 0
     avatarImages.forEach((img) => {
-      (img as HTMLImageElement).style.opacity = '0';
+      img.style.opacity = '0';
     });
 
     // Update currentIndex based on direction
     currentIndex += direction;
 
-    // Reverse direction at boundaries
-    if (currentIndex >= avatarImages.length - 1) direction = -1;
-    if (currentIndex <= 0) direction = 1;
+    // Ensure index stays within bounds
+    if (currentIndex >= avatarImages.length) {
+      currentIndex = avatarImages.length - 1;
+      direction = -1;
+    }
+    if (currentIndex < 0) {
+      currentIndex = 0;
+      direction = 1;
+    }
 
-    // Fade in the current image
-    (avatarImages[currentIndex] as HTMLImageElement).style.opacity = '1';
+    // Ensure we have a valid element at this index
+    if (avatarImages[currentIndex]) {
+      // Fade in the current image
+      avatarImages[currentIndex].style.opacity = '1';
+    }
   }
 
   // Start animation
-  setInterval(animateAvatar, 7000); // Adjust timing as needed
+  const animationTimer = setInterval(animateAvatar, animationInterval || 3500);
+  
+  // Clean up on page navigation
+  document.addEventListener('astro:page-load', () => {
+    clearInterval(animationTimer);
+  });
 });
 </script>

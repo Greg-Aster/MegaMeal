@@ -1,0 +1,152 @@
+---
+// src/components/timeline/TimelineViewModes/ListView.astro
+console.log("Loading ListView.astro component");
+
+import type { TimelineEvent } from '../../../services/TimelineService.client';
+import { groupEventsByEra, getEraDisplayName, getEraClasses } from '../../../services/TimelineService.client';
+
+export interface Props {
+  events?: TimelineEvent[];
+  background?: string;
+  selectedEventSlug?: string | null; // Pass slug for easier comparison
+}
+
+const {
+  events = [],
+  background = '/assets/banner/0001.png',
+  selectedEventSlug = null,
+} = Astro.props;
+
+const eventsByEra = groupEventsByEra(events);
+const listViewId = `list-view-${Math.random().toString(36).substring(2,9)}`;
+console.log("ListView.astro: Generated ID:", listViewId);
+---
+
+<div class="list-view relative" id={listViewId}>
+  <div class="absolute inset-0 -z-10 overflow-hidden">
+    <img src={background} alt="Timeline background" class="w-full h-full object-cover opacity-25" />
+    <div class="absolute inset-0 bg-gradient-to-r from-[oklch(0.35_0.05_var(--hue))] to-[oklch(0.25_0.05_var(--hue))] opacity-40 dark:opacity-30"></div>
+  </div>
+
+  <div class="relative z-10 overflow-y-auto scrollbar-timeline" style="max-height: calc(100vh - 160px);"> {/* Adjust max-height as needed */}
+    <div class="px-4">
+      {Object.entries(eventsByEra).map(([era, eraEvents]) => (
+        <div class="timeline-era mb-6">
+          <div class={`era-header px-3 py-2 rounded-md mb-2 font-bold ${getEraClasses(era)}`}>
+            {getEraDisplayName(era)} ({eraEvents[0]?.year} - {eraEvents[eraEvents.length - 1]?.year})
+          </div>
+
+          <div class="era-events">
+            {eraEvents.map(event => (
+              <button
+                class:list={[
+                  "timeline-event-card flex hover:bg-[var(--btn-card-bg-hover)] rounded-md p-2 mb-2 transition-colors text-left w-full",
+                  selectedEventSlug === event.slug ? 'bg-[oklch(0.95_0.025_var(--hue))/50] dark:bg-[oklch(0.25_0.025_var(--hue))/50]' : ''
+                ]}
+                data-era={event.era}
+                data-slug={event.slug}
+                data-title={event.title}
+              >
+                <div class="event-year w-16 font-bold text-center text-[var(--primary)]">
+                  {event.year}
+                </div>
+                <div class="event-connector w-8 flex items-center justify-center relative">
+                  <div class="h-full w-0.5 bg-[var(--primary)] opacity-30"></div>
+                  <div class:list={[
+                    "w-3 h-3 rounded-full absolute",
+                    event.isKeyEvent ? 'bg-[var(--primary)]' : 'border-2 border-[var(--primary)] bg-[var(--card-bg)]'
+                  ]}></div>
+                </div>
+                <div class="event-content flex-1">
+                  <div class="event-title font-bold text-75">{event.title}</div>
+                  <div class="event-description text-50 text-sm">{event.description}</div>
+                  {event.location && (
+                    <div class="event-location text-xs mt-1 text-[var(--primary)]">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="inline-block h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                      </svg>
+                      {event.location}
+                    </div>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {Object.keys(eventsByEra).length === 0 && (
+        <div class="flex flex-col items-center justify-center py-10 text-center card-base p-8">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <div class="text-75 font-bold mt-4">No timeline events found</div>
+          <div class="text-50 text-sm mt-2">
+            Add timelineYear to your posts to see them in this timeline
+          </div>
+        </div>
+      )}
+      <div class="h-40"></div> {/* Padding */}
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ listViewId, initialSelectedSlug: selectedEventSlug }}>
+  const rootElement = document.getElementById(listViewId);
+  let currentSelectedSlug = initialSelectedSlug;
+
+  if (rootElement) {
+    console.log("ListView.astro script loaded for:", listViewId);
+
+    rootElement.addEventListener('click', (e) => {
+      const cardButton = e.target.closest('.timeline-event-card');
+      if (cardButton) {
+        const slug = cardButton.dataset.slug;
+        const title = cardButton.dataset.title;
+
+        if (currentSelectedSlug && currentSelectedSlug === slug) {
+          console.log(`ListView.astro: Navigating to /posts/${slug}/ (previously selected)`);
+          window.location.href = `/posts/${slug}/`;
+          return;
+        }
+
+        console.log(`ListView.astro: Dispatching select event for slug: ${slug}, title: ${title}`);
+        const selectEvent = new CustomEvent('list:select', { // Namespaced event
+          detail: { slug },
+          bubbles: true,
+          composed: true
+        });
+        rootElement.dispatchEvent(selectEvent);
+        // Parent (TimelineController.astro) will update this component's selectedEventSlug prop if needed.
+      }
+    });
+
+    rootElement.addEventListener('dblclick', (e) => {
+      const cardButton = e.target.closest('.timeline-event-card');
+      if (cardButton) {
+        const slug = cardButton.dataset.slug;
+        console.log(`ListView.astro: Double-click navigation to /posts/${slug}/`);
+        window.location.href = `/posts/${slug}/`;
+      }
+    });
+
+    // Update selected state based on prop changes (if Astro re-renders this island)
+    // This is a simplified way; a more robust solution might use a store or explicit re-render signals.
+    const observer = new MutationObserver(() => {
+        const newSelectedSlug = rootElement.dataset.selectedEventSlug; // Assuming parent updates this attribute
+        if (newSelectedSlug !== currentSelectedSlug) {
+            currentSelectedSlug = newSelectedSlug;
+            // Re-apply selected class to buttons
+            rootElement.querySelectorAll('.timeline-event-card').forEach(btn => {
+                btn.classList.toggle('bg-[oklch(0.95_0.025_var(--hue))/50]', btn.dataset.slug === currentSelectedSlug);
+                btn.classList.toggle('dark:bg-[oklch(0.25_0.025_var(--hue))/50]', btn.dataset.slug === currentSelectedSlug);
+            });
+        }
+    });
+    // observer.observe(rootElement, { attributes: true, attributeFilter: ['data-selected-event-slug'] });
+    // Note: Astro's default is MPA-style navigation. For SPA-like updates without full page reload,
+    // you'd rely more on client-side stores (like Nanostores) to sync state across islands.
+    // The data-selected-event-slug attribute observation is a more direct, but potentially less robust, way.
+  }
+</script>

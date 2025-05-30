@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://dndiy.org/sitemap-index.xml
+Sitemap: https://megameal.org/sitemap-index.xml

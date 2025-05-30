@@ -10,6 +10,12 @@ export type SiteConfig = {
     hue: number
     fixed: boolean
   }
+
+    // Add transparency configuration
+    transparency?: number;
+
+    
+  defaultTheme: LIGHT_DARK_MODE 
   banner: {
     enable: boolean
     src: string
@@ -43,6 +49,14 @@ export enum LinkPreset {
   Configs = 5,
   Friends = 6,
   NewPost = 7,
+}
+
+//Password values
+export type PasswordConfig = {
+  username: string;
+  passwordHash: string;
+  needsSetup: boolean; // Flag to indicate if setup is needed
+  createdAt?: string;
 }
 
 //extend NavBarLink type to support dropdown menus
@@ -97,6 +111,8 @@ export type LIGHT_DARK_MODE =
     prevSlug?: string
     nextTitle?: string
     nextSlug?: string
+    bannerLink?: string
+
     // Timeline-specific fields
     timelineYear?: string
     timelineEra?: string
@@ -106,9 +122,13 @@ export type LIGHT_DARK_MODE =
     bannerType?: 'image' | 'video' | 'timeline'
     bannerData?: {
       videoId?: string       // For video banners
+      imageUrl?: string      // For image banners (add this)
       category?: string      // For timeline banners
       startYear?: number     // For timeline banners
       endYear?: number       // For timeline banners
       background?: string    // For timeline banners
+      title?: string         // Optional title override
+      height?: string        // Optional height setting
+      compact?: boolean      // Optional compact mode
     }
   }

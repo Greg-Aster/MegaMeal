@@ -87,7 +87,7 @@ When you click "Save Changes" at the bottom of any tab, the following happens:
 
 1. Go to the "Profile" tab
 2. Click "Add Social Link"
-3. Select the platform (e.g., "Twitter")
+3. Select the platform (e.g., "Bluesky")
 4. The URL will be pre-filled with the platform's prefix
 5. Complete your username/handle
 6. Click "Add Link"

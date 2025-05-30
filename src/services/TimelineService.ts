@@ -11,14 +11,14 @@ import {
   groupEventsByEra,
   getTimelineStatistics,
   getEraConfigForYear
-} from './TimelineConfig';
+} from '../config/timelineconfig.ts';
 // Use 'import type' for types and interfaces
 import type { 
   TimelineEvent,
   EraConfig,
   EraConfigMap,
   TimelineViewConfig
-} from './TimelineConfig';
+} from '../config/timelineconfig.ts';
 
 // Modified getTimelineEvents function to include banner posts
 export async function getTimelineEvents(options: {

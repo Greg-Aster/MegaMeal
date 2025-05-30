@@ -1,0 +1,169 @@
+---
+// src/components/timeline/TimelineViewModes/TreeView.astro
+import type { TimelineEvent } from '../../../services/TimelineService.client';
+import { getEraDisplayName, getEraClasses } from '../../../services/TimelineService.client';
+
+export interface Props {
+  events?: TimelineEvent[];
+  background?: string;
+  selectedEventSlug?: string | null;
+}
+
+const {
+  events = [],
+  background = '/assets/banner/0001.png',
+  selectedEventSlug = null,
+} = Astro.props;
+
+const sortedEvents = [...events].sort((a, b) => a.year - b.year);
+const treeViewId = `tree-view-${Math.random().toString(36).substring(2,9)}`;
+---
+
+<div class="tree-view relative" id={treeViewId} data-ready="false">
+  <div class="absolute inset-0 -z-10 overflow-hidden">
+    <img src={background} alt="Timeline background" class="w-full h-full object-cover opacity-25" />
+    <div class="absolute inset-0 bg-gradient-to-r from-[oklch(0.35_0.05_var(--hue))] to-[oklch(0.25_0.05_var(--hue))] opacity-40 dark:opacity-30"></div>
+  </div>
+
+  <div class="relative z-10 overflow-y-auto scrollbar-timeline" style="max-height: calc(100vh - 160px);"> {/* Adjust max-height */}
+    <div class="px-4">
+      <div class="timeline-tree pl-8 relative">
+        {sortedEvents.length > 0 && (
+          <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-[var(--primary)] opacity-30 main-line"></div>
+        )}
+
+        {sortedEvents.map((event, i) => (
+          <button
+            class:list={[
+              "timeline-tree-node flex relative hover:bg-[var(--btn-card-bg-hover)] rounded-md p-2 mb-4 transition-colors text-left w-full",
+              selectedEventSlug === event.slug ? 'bg-[oklch(0.95_0.025_var(--hue))/50] dark:bg-[oklch(0.25_0.025_var(--hue))/50]' : ''
+            ]}
+            data-era={event.era}
+            data-slug={event.slug}
+            data-title={event.title}
+            style={`transition-delay: ${i * 50}ms;`}
+          >
+            <div class="absolute left-4 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <div class:list={[
+                "tree-node-circle rounded-full",
+                event.isKeyEvent ? 'w-5 h-5 bg-[var(--primary)]' : 'w-4 h-4 border-2 border-[var(--primary)] bg-[var(--card-bg)]'
+              ]}></div>
+            </div>
+            <div class="h-0.5 w-8 bg-[var(--primary)] opacity-30 absolute left-4 top-1/2 transform connector-line"></div>
+            <div class="pl-8 pt-2 pb-2 event-details-content">
+              <div class="flex items-center mb-1">
+                <span class="text-[var(--primary)] font-bold mr-2">{event.year}</span>
+                <span class={`text-xs py-0.5 px-2 rounded-full ${getEraClasses(event.era || 'unknown')}`} data-era={event.era}>
+                  {getEraDisplayName(event.era || 'unknown')}
+                </span>
+                {event.isKeyEvent && (
+                  <span class="ml-2 text-xs font-bold py-0.5 px-2 rounded-full bg-[var(--primary)] text-white">Key Event</span>
+                )}
+              </div>
+              <div class="event-title font-bold text-75 mb-1">{event.title}</div>
+              <div class="event-description text-50 text-sm">{event.description}</div>
+              {event.location && (
+                <div class="event-location text-xs mt-1 text-[var(--primary)]">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="inline-block h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                  {event.location}
+                </div>
+              )}
+            </div>
+          </button>
+        ))}
+
+        {sortedEvents.length === 0 && (
+          <div class="flex flex-col items-center justify-center py-10 text-center card-base p-8 mt-10">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <div class="text-75 font-bold mt-4">No timeline events found</div>
+            <div class="text-50 text-sm mt-2">
+              Add timelineYear to your posts to see them in this timeline
+            </div>
+          </div>
+        )}
+      </div>
+      <div class="h-40"></div> {/* Padding */}
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ treeViewId, initialSelectedSlug: selectedEventSlug }}>
+  const rootElement = document.getElementById(treeViewId);
+  let currentSelectedSlug = initialSelectedSlug;
+
+  if (rootElement) {
+    console.log("TreeView.astro script loaded for:", treeViewId);
+
+    // Animation on mount
+    setTimeout(() => {
+      rootElement.dataset.ready = "true";
+      // Adjust main line height after nodes are potentially ready and layout is stable
+      const mainLine = rootElement.querySelector('.main-line');
+      const treeContainer = rootElement.querySelector('.timeline-tree');
+      if (mainLine && treeContainer) {
+          // Calculate height based on last node's position.
+          // This is a bit simplified; robust calculation might need to check actual rendered bottom of last node.
+          const nodes = treeContainer.querySelectorAll('.timeline-tree-node');
+          if (nodes.length > 0) {
+              const lastNode = nodes[nodes.length - 1];
+              const lastNodeRect = lastNode.getBoundingClientRect();
+              const treeContainerRect = treeContainer.getBoundingClientRect();
+              // Approximate height needed for the line to reach the center of the last node.
+              // Add some padding or ensure it reaches slightly beyond.
+              const lineHeight = (lastNodeRect.top + lastNodeRect.height / 2) - treeContainerRect.top;
+              mainLine.style.height = `${lineHeight}px`;
+          } else {
+              mainLine.style.height = '0px'; // No nodes, no line
+          }
+      }
+    }, 100);
+
+    rootElement.addEventListener('click', (e) => {
+      const nodeButton = e.target.closest('.timeline-tree-node');
+      if (nodeButton) {
+        const slug = nodeButton.dataset.slug;
+        const title = nodeButton.dataset.title;
+
+        if (currentSelectedSlug && currentSelectedSlug === slug) {
+          console.log(`TreeView.astro: Navigating to /posts/${slug}/ (previously selected)`);
+          window.location.href = `/posts/${slug}/`;
+          return;
+        }
+        console.log(`TreeView.astro: Dispatching select event for slug: ${slug}, title: ${title}`);
+        const selectEvent = new CustomEvent('tree:select', { // Namespaced event
+          detail: { slug },
+          bubbles: true,
+          composed: true
+        });
+        rootElement.dispatchEvent(selectEvent);
+      }
+    });
+
+    rootElement.addEventListener('dblclick', (e) => {
+      const nodeButton = e.target.closest('.timeline-tree-node');
+      if (nodeButton) {
+        const slug = nodeButton.dataset.slug;
+        console.log(`TreeView.astro: Double-click navigation to /posts/${slug}/`);
+        window.location.href = `/posts/${slug}/`;
+      }
+    });
+    
+    // Simplified selected state update; see ListView.astro for comments on robustness.
+    // const observer = new MutationObserver(() => {
+    //     const newSelectedSlug = rootElement.dataset.selectedEventSlug;
+    //     if (newSelectedSlug !== currentSelectedSlug) {
+    //         currentSelectedSlug = newSelectedSlug;
+    //         rootElement.querySelectorAll('.timeline-tree-node').forEach(btn => {
+    //             btn.classList.toggle('bg-[oklch(0.95_0.025_var(--hue))/50]', btn.dataset.slug === currentSelectedSlug);
+    //             btn.classList.toggle('dark:bg-[oklch(0.25_0.025_var(--hue))/50]', btn.dataset.slug === currentSelectedSlug);
+    //         });
+    //     }
+    // });
+    // observer.observe(rootElement, { attributes: true, attributeFilter: ['data-selected-event-slug'] });
+  }
+</script>

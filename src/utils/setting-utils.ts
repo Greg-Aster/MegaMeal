@@ -2,9 +2,9 @@ import type { LIGHT_DARK_MODE } from '@/types/config'
 import {
   AUTO_MODE,
   DARK_MODE,
-  DEFAULT_THEME,
   LIGHT_MODE,
 } from '@constants/constants.ts'
+import { siteConfig } from '@/config/config.ts'
 
 export function getDefaultHue(): number {
   const fallback = '250'
@@ -50,5 +50,6 @@ export function setTheme(theme: LIGHT_DARK_MODE): void {
 }
 
 export function getStoredTheme(): LIGHT_DARK_MODE {
-  return (localStorage.getItem('theme') as LIGHT_DARK_MODE) || DEFAULT_THEME
+  const stored = localStorage.getItem('theme') as LIGHT_DARK_MODE
+  return stored || siteConfig.defaultTheme
 }

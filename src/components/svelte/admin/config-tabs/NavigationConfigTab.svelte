@@ -444,7 +444,7 @@
                 <select 
                   id="preset-select" 
                   bind:value={editingLink.presetIndex}
-                  class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition"
+                  class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100"
                 >
                   <option value={null} disabled>Select a preset...</option>
                   {#each Object.entries(linkPresets) as [index, preset]}
@@ -463,7 +463,7 @@
                     type="text" 
                     id="link-name" 
                     bind:value={editingLink.data.name}
-                    class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition" 
+                    class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100" 
                     placeholder="e.g. Projects"
                   />
                 </div>
@@ -476,7 +476,7 @@
                     type="text" 
                     id="link-url" 
                     bind:value={editingLink.data.url}
-                    class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm transition" 
+                    class="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-l text-sm text-neutral-900 dark:text-neutral-100" 
                     placeholder="e.g. /projects/ or https://example.com"
                   />
                 </div>

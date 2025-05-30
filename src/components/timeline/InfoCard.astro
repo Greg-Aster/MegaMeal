@@ -1,0 +1,233 @@
+---
+// src/components/timeline/InfoCard.astro
+import type { TimelineFact } from '../../config/timelineFacts'; // Adjust path if needed
+
+export interface Props {
+  cardId?: string; // Added prop, with a default value
+  initialFact?: TimelineFact;
+  initialIsVisible?: boolean;
+}
+
+const {
+  cardId = 'starmap-info-card', // Default as per instruction
+  initialFact = { headline: "Information", text: "Details will appear here.", type: 'fact' as const },
+  initialIsVisible = false, // Component starts hidden by default
+} = Astro.props;
+
+const wrapperBaseClasses = [
+  "info-card-wrapper", "card-base", "absolute",
+  "bottom-8 right-4 md:bottom-20 md:right-6", "p-3",
+  "backdrop-blur-sm", "shadow-lg", "rounded-[var(--radius-large,12px)]",
+  "w-full max-w-[280px] sm:w-11/12 sm:max-w-xs md:w-auto", "z-[100]",
+  // Transition classes are always present, opacity/transform controlled by script/initial state
+  "transition-opacity duration-300 ease-in-out",
+  "transition-transform duration-300 ease-in-out",
+];
+---
+
+<div
+  id={cardId}
+  class:list={[
+    ...wrapperBaseClasses,
+    initialFact.bgColorClass || "bg-[var(--card-bg)]",
+    initialFact.textColorClass || "text-[var(--text-color)]",
+    initialFact.fontFamilyClass || "font-sriracha",
+    // Initial visibility state:
+    initialIsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5",
+  ]}
+>
+  <button
+    class:list={[
+      "info-card-close-button",
+      "absolute top-1 right-1",
+      "opacity-60 hover:opacity-90",
+      "transition-opacity p-1",
+      // Button text color should also react if card's text color changes
+      // For now, it inherits or uses the initialFact's text color class if specific
+      initialFact.textColorClass || "text-[var(--text-color)]"
+    ]}
+    aria-label="Dismiss fact"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  </button>
+
+  <h3 class:list={[
+      "info-card-headline",
+      initialFact.headlineSizeClass || "text-sm sm:text-md",
+      "font-bold mb-1 pr-4",
+      initialFact.headlineColorClass || "text-[var(--primary)]"
+    ]}>
+    {initialFact.headline}
+  </h3>
+  <p class="info-card-text text-xs pr-4 mb-1 leading-snug">{initialFact.text}</p>
+
+  <div class="info-card-links-container">
+    {initialFact.ctaText && initialFact.link ? (
+      <a
+        href={`/posts/${initialFact.link}/`}
+        target="_blank" rel="noopener noreferrer"
+        class:list={[
+          "info-card-cta-link",
+          "mt-2 inline-block text-xs font-bold",
+          "py-1 px-3 rounded-md",
+          "hover:bg-opacity-80 transition-colors duration-200",
+          "text-center w-full",
+          initialFact.ctaButtonClass || "bg-[var(--primary)] text-white"
+        ]}
+      >
+        {initialFact.ctaText}
+      </a>
+    ) : initialFact.link ? (
+      <a
+        href={`/posts/${initialFact.link}/`}
+        class="info-card-learn-more-link text-xs text-[var(--primary)] hover:underline font-semibold mt-1 inline-block"
+        target="_blank" rel="noopener noreferrer"
+      >
+        Learn More &rarr;
+      </a>
+    ) : null}
+  </div>
+</div>
+
+<script define:vars={{ clientCardId: cardId, clientInitialFact: initialFact }}>
+  const cardElement = document.getElementById(clientCardId);
+
+  if (!cardElement) {
+    console.error(`InfoCard: Could not find element with ID ${clientCardId} during initial setup.`);
+    // Event listener for body will still be attached.
+  }
+
+  const headlineElement = cardElement?.querySelector('.info-card-headline');
+  const textElement = cardElement?.querySelector('.info-card-text');
+  const linksContainer = cardElement?.querySelector('.info-card-links-container');
+  const closeButton = cardElement?.querySelector('.info-card-close-button');
+  const closeButtonSvg = closeButton?.querySelector('svg');
+
+
+  // Store current classes based on initialFact to compare later
+  let currentBgColorClass = clientInitialFact.bgColorClass || "bg-[var(--card-bg)]";
+  let currentTextColorClass = clientInitialFact.textColorClass || "text-[var(--text-color)]";
+  let currentFontFamilyClass = clientInitialFact.fontFamilyClass || "font-sriracha";
+  let currentHeadlineColorClass = clientInitialFact.headlineColorClass || "text-[var(--primary)]";
+  let currentHeadlineSizeClass = clientInitialFact.headlineSizeClass || "text-sm sm:text-md";
+
+  function updateCardContent(fact) {
+    if (!cardElement || !headlineElement || !textElement || !linksContainer) {
+      console.error(`InfoCard (${clientCardId}): DOM elements not found for content update.`);
+      return;
+    }
+
+    headlineElement.textContent = fact.headline || '';
+    textElement.textContent = fact.text || '';
+
+    // Update card's background color class
+    const newBgColor = fact.bgColorClass || "bg-[var(--card-bg)]";
+    if (newBgColor !== currentBgColorClass) {
+      cardElement.classList.remove(currentBgColorClass);
+      cardElement.classList.add(newBgColor);
+      currentBgColorClass = newBgColor;
+    }
+
+    // Update card's text color class (and button if it inherits)
+    const newTextColor = fact.textColorClass || "text-[var(--text-color)]";
+    if (newTextColor !== currentTextColorClass) {
+      cardElement.classList.remove(currentTextColorClass);
+      cardElement.classList.add(newTextColor);
+      if (closeButton) { // Also update close button's text color class if it was using the old one
+          closeButton.classList.remove(currentTextColorClass);
+          closeButton.classList.add(newTextColor);
+      }
+      currentTextColorClass = newTextColor;
+    }
+    
+    // Update card's font family class
+    const newFontFamily = fact.fontFamilyClass || "font-sriracha";
+    if (newFontFamily !== currentFontFamilyClass) {
+      cardElement.classList.remove(currentFontFamilyClass);
+      cardElement.classList.add(newFontFamily);
+      currentFontFamilyClass = newFontFamily;
+    }
+
+    // Update headline's color class
+    const newHeadlineColor = fact.headlineColorClass || "text-[var(--primary)]";
+    if (newHeadlineColor !== currentHeadlineColorClass) {
+      headlineElement.classList.remove(currentHeadlineColorClass);
+      headlineElement.classList.add(newHeadlineColor);
+      currentHeadlineColorClass = newHeadlineColor;
+    }
+    
+    // Update headline's size class
+    const newHeadlineSize = fact.headlineSizeClass || "text-sm sm:text-md";
+    if (newHeadlineSize !== currentHeadlineSizeClass) {
+      currentHeadlineSizeClass.split(' ').forEach(cls => { if (cls) headlineElement.classList.remove(cls); });
+      newHeadlineSize.split(' ').forEach(cls => { if (cls) headlineElement.classList.add(cls); });
+      currentHeadlineSizeClass = newHeadlineSize;
+    }
+
+    // Update links
+    linksContainer.innerHTML = ''; // Clear old links
+    if (fact.ctaText && fact.link) {
+      const ctaLink = document.createElement('a');
+      ctaLink.href = `/posts/${fact.link}/`;
+      ctaLink.target = "_blank";
+      ctaLink.rel = "noopener noreferrer";
+      const ctaClasses = [
+        "info-card-cta-link", "mt-2", "inline-block", "text-xs", "font-bold",
+        "py-1", "px-3", "rounded-md", "hover:bg-opacity-80",
+        "transition-colors", "duration-200", "text-center", "w-full",
+        fact.ctaButtonClass || "bg-[var(--primary)] text-white"
+      ];
+      ctaLink.className = ctaClasses.join(" ");
+      ctaLink.textContent = fact.ctaText;
+      linksContainer.appendChild(ctaLink);
+    } else if (fact.link) {
+      const learnMoreLink = document.createElement('a');
+      learnMoreLink.href = `/posts/${fact.link}/`;
+      learnMoreLink.className = "info-card-learn-more-link text-xs text-[var(--primary)] hover:underline font-semibold mt-1 inline-block";
+      learnMoreLink.target = "_blank";
+      learnMoreLink.rel = "noopener noreferrer";
+      learnMoreLink.textContent = "Learn More →";
+      linksContainer.appendChild(learnMoreLink);
+    }
+  }
+
+  function showCard() {
+    if (!cardElement) return;
+    cardElement.style.opacity = '1';
+    cardElement.style.transform = 'translateY(0)';
+  }
+
+  function hideCard() {
+    if (!cardElement) return;
+    cardElement.style.opacity = '0';
+    cardElement.style.transform = 'translateY(5px)'; // Match initial hidden state offset
+  }
+
+  document.body.addEventListener('displayStarInfoCard', (event) => {
+    // Ensure cardElement is available, might not have been if ID was dynamic and script ran too early
+    // This is a fallback, ideally cardElement is found on initial load.
+    const currentCardElement = document.getElementById(clientCardId);
+    if (!currentCardElement) {
+        // console.warn(`InfoCard (${clientCardId}): Not found when 'displayStarInfoCard' event received.`);
+        return; // If card still not found, cannot proceed with this event.
+    }
+    
+    const detail = event.detail;
+    if (detail && detail.cardIdToTarget === clientCardId) {
+      updateCardContent(detail.fact);
+      showCard();
+    }
+  });
+
+  if (closeButton) {
+    closeButton.addEventListener('click', () => {
+      hideCard();
+    });
+  } else if (cardElement) {
+    // Log if cardElement exists but closeButton doesn't, for debugging.
+    console.warn(`InfoCard (${clientCardId}): Close button not found inside element.`);
+  }
+</script>

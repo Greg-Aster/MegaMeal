@@ -1,107 +1,46 @@
 ---
-title: "About DNDIY"
-description: "Learn more about our project and team."
+title: "About the Mega Meal Saga Universe"
+description: "Explore the Mega Meal Saga Universe: A sprawling world of dystopian fast-food, cosmic entities, and surreal narratives. Learn about its creation and lore."
 ---
 
-## **Gregory Aster**
----
+## Welcome to the Mega Meal Saga Universe
 
-- **Class:** Experimental Videographer & Cosmic Storyteller  
-- **Race:** Humanoid
+Step into the Mega Meal Saga, a sprawling, interconnected multiverse where dystopian fast-food empires, sentient mascots, and reality-bending cosmic entities collide. This universe is a tapestry woven from threads of cosmic horror, surrealism, and dark satire, inviting you to explore narratives that challenge perception and delve into the uncanny.
 
----
+### The Genesis of Mega Meal
 
-### **Core Stats**
+The Mega Meal Saga sprang from the imaginative depths of Gregory Aster, an experimental videographer and cosmic storyteller. Drawing from a background in mechanical engineering, Blender wizardry, and a fascination with the bizarre, Aster envisioned a world where the mundane (like processed food) becomes a harbinger of interdimensional terror and existential questions. The initial sparks for Mega Meal were ignited by a desire to blend genres—cyberpunk, westerns, and horror—into a unique, fragmented narrative experience.
 
-- **Creativity:** 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ (9/10)  
-  Greg’s boundless imagination fuels his dystopian worlds and bizarre narratives. Cosmic horror? Check. Surreal mascots? Double-check.  
+### Exploring the Lore
 
-- **Technical Expertise:** 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ (8/10)  
-  A master of mechanical engineering, Blender wizardry, and Python sorcery. His realm is where machine precision meets artistic chaos.
+The Mega Meal universe is rich with enigmatic elements and recurring themes:
 
-- **Problem Solving:** 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ (8/10)  
-  Years of engine repair and tech innovation forged an ability to troubleshoot anything—from leaky engines to interdimensional plot holes.
+*   **Key Concepts & Factions:**
+    *   **Sentient Mascots:** More than just brand ambassadors, these characters are often guardians of dark secrets or conduits for otherworldly forces.
+    *   **Mysterious Corporations:** Shadowy organizations that control the fast-food empires, often with sinister agendas that span across realities.
+    *   **Cosmic Entities:** Beings that exist beyond human comprehension, influencing events and timelines within the Mega Meal multiverse.
+*   **Notable Timelines & Narratives:**
+    *   **The Core Saga:** Chronicles a dystopian future where the truth behind the Mega Meal corporation and its products is a dangerous secret. Follow protagonists as they navigate this treacherous landscape.
+    *   **Interdimensional Crossovers:** Explore fragmented tales and alternate realities where characters and timelines intersect in unexpected and often unsettling ways.
+*   **Thematic Elements:**
+    *   **Consumerism & Control:** A critical look at mass production, corporate power, and their impact on society and individual will.
+    *   **Existential Dread & The Uncanny:** The universe often evokes a sense of unease, questioning the nature of reality, identity, and the forces that shape our existence.
+    *   **Nostalgia & The Surreal:** A blend of familiar tropes with bizarre, dreamlike imagery to create a unique aesthetic and emotional resonance.
 
-- **Endurance:** 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 (10/10)  
-  Endless hours of filmmaking, physical torture, and reading the Mahabharata have earned Greg indomitable physical and mental stamina. No project too long; no reality too warped.
+### The Creator: Gregory Aster
 
-- **Storytelling Aura:** 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ (9/10)  
-  Radiates mystique, melancholy, and intrigue. Conversations feel like lore drops in an open-world RPG.
+Gregory Aster is the primary architect of the Mega Meal Saga Universe. His diverse skills in filmmaking, AI animation, and narrative weaving allow him to bring these complex and often unsettling visions to life. His previous work, including the vintage series DNDIY (Do-Not-Do-It-Yourself), served as a proving ground for the experimental storytelling techniques now central to Mega Meal. Aster's approach is to craft episodic, fragmented tales, offering cryptic glimpses into a larger-than-life world.
 
----
+### The Future of Mega Meal
 
-### **Inventory**
+The Mega Meal Saga is an ever-evolving narrative space. Future objectives include:
 
-- **Legendary Blender of Creation:** Tool of ultimate animation and storytelling finesse. Capable of rendering surreal timelines with cinematic intensity.  
-- **Zeiss Flektogon** Vintage Prime lens 35mm f2.4 M42 mount with speedbooster - *Mint Condition*
-- **Lav Mic of Clarity:** Ensures crisp sound, even in the noisiest multiverse crossovers.  
-- **Zoom H4n Pro (Broken Relic):** The once-mighty artifact now awaiting resurrection.  
-- **Infinite Dip Sauce Vial:** A nod to Greg’s *Mega Meal* universe - possibly sentient, probably cursed.  
-- **Toolkit of Mechanical Mastery:** A collection of wrenches, diagnostic trouble guides, and metaphors from Greg’s 23-year tenure in the mechanical realm.
+*   **Expanding the Multiverse:** Introducing new timelines, characters, and cosmic insights.
+*   **More Content:** Providing regular updates, sneak peeks, and deeper dives into the lore.
+*   **Collaborative Ventures:** Seeking new creative minds to join in exploring and expanding the Mega Meal universe.
 
----
+### Join the Community / Contact
 
-### **Abilities & Skills**
+Are you looking to collaborate on storytelling ventures, discuss the lore, or simply explore the multiverse together?
 
-**Filmmaking Mastery:** Directs and produces surreal films that blur reality. From Cable TV to YouTube, his creations echo across different realities.  
-
-**Cosmic Horror Architect:** Builds worlds drenched in mystery, where processed food becomes the harbinger of interdimensional terror.  
-
-**AI Animation Sorcerer:** Channels AI-powered effects into projects, being the ultimate architect of his own desires without sacrificing creative freedom.  
-
-**Mechanical Insight:** Years of technical problem-solving provide Greg with unparalleled durability and adaptability.  
-
-**Narrative Weaving:** Writes episodic, fragmented tales like a pulp fiction bard—each story a cryptic glimpse into larger-than-life worlds.  
-
----
-
-### **Notable Quests**
-
-- **Mega Meal:** Chronicles a dystopian future where sentient fast-food mascots guard dark secrets. Will the protagonist, *(redacted)*, uncover the truth?  
-- **Untitled:** A Cosmic Horror  blend of timelines, sirens, and symbolic visuals exploring loss and destiny.  
-- **DNDIY:** Short for do-not-do-it-yourself, its the original vintage series Greg held the mantle for, and the proving ground of his skills today. 
-- **Merkin’s Alternate Universe:** Experimental website theme inspired by a cosmic entity - unlock dark realities with a mere mode switch.  
-- **Dystopian IRL Building of Things:** The ongoing battle against decay and existential dread.
-
----
-
-### **Faction Relationships**
-
-**The Film Enthusiasts’ Guild:** Revered. Greg’s blend of cyberpunk, westerns, and horror attracts fans seeking storytelling beyond the stars.  
-
-**The Order of the Open Signal:** Respected. His work resonates with those yearning for bygone eras and alternate realities.  
-
-**ComfyUI Developers:** Allies. Greg’s experiments with stabilization and AI animation contribute to the ever-evolving tech.
-
----
-
-### **Traits & Quirks**
-
-- **Melancholy Visionary:** Finds beauty in the dark and eerie, creating narratives that evoke profound nostalgia.  
-- **Builder of Lore:** Lives in a multiverse of interconnected timelines, cosmic gods, and cursed hamburgers.  
-- **Persistent Idealist:** Believes in lifting others - especially those navigating difficult circumstances - with empathy and creativity.  
-
----
-
-### **Personal Life**  
-**Marital Bond:** Partnered to April Aster, a guiding force and shinning light in a dark void. Their relationship is the anchor in Greg’s multiversal explorations.  
-
-**Hobbies:** Reading folk tales and mythology, building furniture, Running through dimensions (or real-life), beating machines, petting cats, and contemplating trucking as a side quest.  
-
----
-
-### **Future Objectives**  
-
-- **Post more:** Provide sneak peeks, musings, and cosmic insights.  
-- **Collaborative Ventures:** Always seeking new adventurers to join the storytelling party.  
-- **Expand the Multiverse:** From dark-themed universes to surreal narrative spaces, the journey continues.  
-
----
-
-### **Join My Party**
-
-Looking to collaborate on storytelling ventures or explore the multiverse together?
-
-Contact below.
-
----
+Please reach out via the contact details provided on this site. We'd love to hear from you!
