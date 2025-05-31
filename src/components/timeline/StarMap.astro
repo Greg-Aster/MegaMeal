@@ -1,0 +1,557 @@
+---
+// src/components/timeline/StarMap.astro
+// Main Astro component for the starmap with TypeScript integration
+
+import type { StarEvent } from '../../types/starmap';
+
+export interface Props {
+  events: StarEvent[];
+  containerId: string;
+  isMobile?: boolean;
+  skyboxImageUrl?: string;
+  autoInitialize?: boolean;
+  className?: string;
+}
+
+const { 
+  events, 
+  containerId, 
+  isMobile = false, 
+  skyboxImageUrl = "/assets/hdri/sky_wip2.webp",
+  autoInitialize = true,
+  className = ""
+} = Astro.props;
+
+// Validate required props
+if (!containerId) {
+  throw new Error('StarMap component requires a containerId prop');
+}
+
+if (!events || !Array.isArray(events)) {
+  throw new Error('StarMap component requires an events array prop');
+}
+
+// Generate unique IDs for this instance
+const floatingCardId = `floating-card-${containerId}`;
+const loadingMessageId = `loading-message-${containerId}`;
+---
+
+<div 
+  id={containerId} 
+  class={`starmap-container relative w-full h-full overflow-hidden ${className}`}
+  data-events={JSON.stringify(events)}
+  data-is-mobile={isMobile}
+  data-skybox-url={skyboxImageUrl}
+  data-auto-initialize={autoInitialize}
+  data-floating-card-id={floatingCardId}
+>
+  <!-- Loading Message -->
+  <div 
+    id={loadingMessageId}
+    class="starmap-loading-message absolute inset-0 flex items-center justify-center z-40 bg-gradient-to-b from-slate-900/90 to-slate-800/90 backdrop-blur-sm"
+  >
+    <div class="text-center text-white">
+      <div class="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+      <h3 class="text-lg font-semibold mb-2">Loading Starmap</h3>
+      <p class="text-sm text-slate-300">Initializing celestial navigation...</p>
+    </div>
+  </div>
+
+  <!-- Mobile Controls (conditionally rendered) -->
+  {isMobile && (
+    <div class="starmap-mobile-controls absolute top-4 right-4 z-30 flex flex-col gap-2">
+      <div class="bg-black/20 backdrop-blur-sm rounded-lg p-2 flex flex-col gap-2">
+        <!-- Movement Controls -->
+        <div class="grid grid-cols-3 gap-1">
+          <div></div>
+          <button 
+            data-action="moveUp" 
+            class="starmap-control-btn bg-white/10 hover:bg-white/20 text-white p-2 rounded text-sm"
+            aria-label="Move up"
+          >
+            ↑
+          </button>
+          <div></div>
+          
+          <button 
+            data-action="moveLeft" 
+            class="starmap-control-btn bg-white/10 hover:bg-white/20 text-white p-2 rounded text-sm"
+            aria-label="Move left"
+          >
+            ←
+          </button>
+          <button 
+            data-action="centerView" 
+            class="starmap-control-btn bg-white/10 hover:bg-white/20 text-white p-2 rounded text-xs"
+            aria-label="Center view"
+          >
+            ⌂
+          </button>
+          <button 
+            data-action="moveRight" 
+            class="starmap-control-btn bg-white/10 hover:bg-white/20 text-white p-2 rounded text-sm"
+            aria-label="Move right"
+          >
+            →
+          </button>
+          
+          <div></div>
+          <button 
+            data-action="moveDown" 
+            class="starmap-control-btn bg-white/10 hover:bg-white/20 text-white p-2 rounded text-sm"
+            aria-label="Move down"
+          >
+            ↓
+          </button>
+          <div></div>
+        </div>
+        
+        <!-- Zoom Controls -->
+        <div class="flex gap-1">
+          <button 
+            data-action="zoomIn" 
+            class="starmap-control-btn bg-white/10 hover:bg-white/20 text-white p-2 rounded text-sm flex-1"
+            aria-label="Zoom in"
+          >
+            +
+          </button>
+          <button 
+            data-action="zoomOut" 
+            class="starmap-control-btn bg-white/10 hover:bg-white/20 text-white p-2 rounded text-sm flex-1"
+            aria-label="Zoom out"
+          >
+            −
+          </button>
+        </div>
+        
+        <!-- Feature Controls -->
+        <div class="flex gap-1">
+          <button 
+            data-action="toggleAutoRotate" 
+            class="starmap-control-btn bg-white/10 hover:bg-white/20 text-white p-2 rounded text-xs flex-1"
+            aria-label="Toggle auto-rotate"
+          >
+            🔄
+          </button>
+          <button 
+            data-action="resetView" 
+            class="starmap-control-btn bg-white/10 hover:bg-white/20 text-white p-2 rounded text-xs flex-1"
+            aria-label="Reset view"
+          >
+            ⟲
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+</div>
+
+<!-- Floating Card (positioned outside container for proper z-index) -->
+<div 
+  id={floatingCardId} 
+  class="starmap-floating-card absolute z-50 opacity-0 pointer-events-none transition-all duration-200 ease-out"
+  style="transform: translateZ(0);" 
+>
+  <!-- Card content will be dynamically inserted here -->
+</div>
+
+<script>
+  // Import TypeScript modules
+  import { StarMapCore } from './starmap/StarMapCore';
+  import { StarManager } from './starmap/StarManager';
+  import { InteractionHandler } from './starmap/InteractionHandler';
+  import { MobileStarmapInterface } from './starmap/MobileStarmapInterface';
+  import type { StarEvent } from '../../types/starmap';
+
+  // Global initialization function
+  async function initializeStarmap() {
+    console.log('[StarMap] Starting initialization...');
+    
+    const containers = document.querySelectorAll('.starmap-container[data-auto-initialize="true"]');
+    
+    for (const containerElement of containers) {
+      const container = containerElement as HTMLElement;
+      const containerId = container.id;
+      
+      try {
+        // Extract configuration from data attributes
+        const eventsData = container.getAttribute('data-events');
+        const isMobile = container.getAttribute('data-is-mobile') === 'true';
+        const skyboxUrl = container.getAttribute('data-skybox-url') || '/assets/hdri/sky_wip2.webp';
+        const floatingCardId = container.getAttribute('data-floating-card-id');
+        
+        if (!eventsData) {
+          console.warn(`[StarMap] No events data found for container: ${containerId}`);
+          continue;
+        }
+        
+        const events: StarEvent[] = JSON.parse(eventsData);
+        console.log(`[StarMap DEBUG] Initializing ${containerId} with ${events.length} events (mobile: ${isMobile}). Events data:`, events);
+        
+        // Show loading state
+        const loadingElement = container.querySelector('.starmap-loading-message') as HTMLElement;
+        if (loadingElement) {
+          loadingElement.style.display = 'flex';
+        }
+        
+        // Initialize core systems
+        const core = new StarMapCore(containerId, { 
+          isMobile, 
+          skyboxImageUrl: skyboxUrl 
+        });
+        
+        console.log(`[StarMap DEBUG] About to call core.init() for ${containerId}`);
+        await core.init();
+        console.log(`[StarMap DEBUG] core.init() completed for ${containerId}`);
+        
+        // Initialize star management
+        const starManager = new StarManager(core, { useEraColors: true });
+        console.log(`[StarMap DEBUG] StarManager instantiated for ${containerId}`);
+        
+        // Initialize interaction handling
+        const interactionHandler = new InteractionHandler(
+          core, 
+          starManager, 
+          { 
+            isMobile, 
+            floatingCardId: floatingCardId || undefined 
+          }
+        );
+        
+        // Create stars and constellations
+        console.log(`[StarMap DEBUG] About to call starManager.createOrUpdateStars() for ${containerId}`);
+        starManager.createOrUpdateStars(events);
+        console.log(`[StarMap DEBUG] starManager.createOrUpdateStars() completed for ${containerId}`);
+        
+        // Setup mobile interface if needed
+        let mobileInterface: MobileStarmapInterface | null = null;
+        if (isMobile) {
+          mobileInterface = new MobileStarmapInterface(containerId);
+          setupMobileControls(containerId, mobileInterface);
+          console.log(`[StarMap] Mobile interface configured for ${containerId}`);
+        }
+        
+        // Expose API to global scope
+        (window as any)[`starmap_${containerId}`] = {
+          // Core API
+          isInitialized: () => core.isInitialized,
+          resetView: () => core.resetView(),
+          panUp: (amount: number) => core.panUp(amount),
+          panDown: (amount: number) => core.panDown(amount),
+          panLeft: (amount: number) => core.panLeft(amount),
+          panRight: (amount: number) => core.panRight(amount),
+          zoomIn: (amount: number) => core.zoomIn(amount),
+          zoomOut: (amount: number) => core.zoomOut(amount),
+          toggleAutoRotate: () => core.toggleAutoRotate(),
+          centerView: () => core.centerView(),
+          
+          // Star Management API
+          updateEvents: (newEvents: StarEvent[]) => starManager.updateEvents(newEvents),
+          getConstellationInfo: () => starManager.getConstellationInfo(),
+          
+          // Interaction API
+          getCurrentSelection: () => interactionHandler.getCurrentSelection(),
+          clearSelection: () => interactionHandler.clearSelection(),
+          
+          // Mobile API (if available)
+          ...(mobileInterface ? {
+            isMobile: () => true,
+            isMobilePortrait: () => window.innerHeight > window.innerWidth,
+            getInfo: () => mobileInterface!.getInfo(),
+            executeSequence: (commands: any[]) => mobileInterface!.executeSequence(commands),
+            quickTour: () => mobileInterface!.quickTour(),
+            focusMode: () => mobileInterface!.focusMode(),
+            overviewMode: () => mobileInterface!.overviewMode()
+          } : {}),
+          
+          // Internal references (for debugging)
+          _core: core,
+          _starManager: starManager,
+          _interactionHandler: interactionHandler,
+          _mobileInterface: mobileInterface
+        };
+        
+        // Hide loading state
+        if (loadingElement) {
+          loadingElement.style.display = 'none';
+        }
+        
+        console.log(`[StarMap] ✅ Successfully initialized ${containerId}`);
+        
+        // Emit ready event
+        container.dispatchEvent(new CustomEvent('starmap:ready', {
+          detail: { containerId, events: events.length, isMobile },
+          bubbles: true
+        }));
+        
+      } catch (error) {
+        console.error(`[StarMap DEBUG] ❌ Detailed Initialization failed for ${containerId}:`, error);
+        if (error instanceof Error) {
+          console.error(`[StarMap DEBUG] Error name: ${error.name}`);
+          console.error(`[StarMap DEBUG] Error message: ${error.message}`);
+          console.error(`[StarMap DEBUG] Error stack: ${error.stack}`);
+        }
+        
+        // Show error state
+        const loadingElement = container.querySelector('.starmap-loading-message') as HTMLElement;
+        if (loadingElement) {
+          loadingElement.innerHTML = `
+            <div class="text-center text-red-400">
+              <div class="text-4xl mb-4">⚠️</div>
+              <h3 class="text-lg font-semibold mb-2">Starmap Error</h3>
+              <p class="text-sm">Failed to initialize celestial view</p>
+              <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm">
+                Retry
+              </button>
+            </div>
+          `;
+        }
+        
+        // Emit error event
+        container.dispatchEvent(new CustomEvent('starmap:error', {
+          detail: { containerId, error: error.message },
+          bubbles: true
+        }));
+      }
+    }
+  }
+
+  // Setup mobile control event handlers
+  function setupMobileControls(containerId: string, mobileInterface: MobileStarmapInterface) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const controlButtons = container.querySelectorAll('.starmap-control-btn[data-action]');
+    
+    controlButtons.forEach(button => {
+      const action = button.getAttribute('data-action');
+      if (!action) return;
+      
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Add visual feedback
+        button.classList.add('bg-white/30');
+        setTimeout(() => button.classList.remove('bg-white/30'), 150);
+        
+        // Execute command
+        switch (action) {
+          case 'moveUp':
+            mobileInterface.moveUp();
+            break;
+          case 'moveDown':
+            mobileInterface.moveDown();
+            break;
+          case 'moveLeft':
+            mobileInterface.moveLeft();
+            break;
+          case 'moveRight':
+            mobileInterface.moveRight();
+            break;
+          case 'zoomIn':
+            mobileInterface.zoomIn();
+            break;
+          case 'zoomOut':
+            mobileInterface.zoomOut();
+            break;
+          case 'toggleAutoRotate':
+            mobileInterface.toggleAutoRotate();
+            break;
+          case 'resetView':
+            mobileInterface.resetView();
+            break;
+          case 'centerView':
+            mobileInterface.centerView();
+            break;
+          default:
+            console.warn(`[StarMap] Unknown mobile action: ${action}`);
+        }
+      });
+    });
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeStarmap);
+  } else {
+    initializeStarmap();
+  }
+
+  // Handle page transitions (Astro specific)
+  document.addEventListener('astro:page-load', initializeStarmap);
+  
+  // Cleanup on page unload
+  document.addEventListener('astro:before-preparation', () => {
+    // Cleanup all starmap instances
+    Object.keys(window).forEach(key => {
+      if (key.startsWith('starmap_')) {
+        const api = (window as any)[key];
+        if (api && api._core && api._core.dispose) {
+          api._core.dispose();
+        }
+        if (api && api._starManager && api._starManager.dispose) {
+          api._starManager.dispose();
+        }
+        if (api && api._interactionHandler && api._interactionHandler.dispose) {
+          api._interactionHandler.dispose();
+        }
+        delete (window as any)[key];
+      }
+    });
+  });
+</script>
+
+<style>
+  .starmap-container {
+    min-height: 400px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .starmap-loading-message {
+    border-radius: inherit;
+  }
+
+  .starmap-floating-card {
+    max-width: 250px;
+    z-index: 9999;
+  }
+
+  /* Timeline Card Styles */
+  .timeline-card {
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    background: rgba(15, 23, 42, 0.85);
+    color: white;
+  }
+
+  .timeline-card .card-title {
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  .timeline-card .card-description {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .timeline-link {
+    transition: all 0.2s ease;
+  }
+
+  .timeline-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  }
+
+  /* Card Pointer Styles */
+  .card-pointer {
+    width: 0;
+    height: 0;
+  }
+
+  .timeline-card-top .card-pointer {
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid rgba(15, 23, 42, 0.85);
+  }
+
+  .timeline-card-bottom .card-pointer {
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid rgba(15, 23, 42, 0.85);
+  }
+
+  .timeline-card-left .card-pointer {
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-left: 8px solid rgba(15, 23, 42, 0.85);
+  }
+
+  .timeline-card-right .card-pointer {
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-right: 8px solid rgba(15, 23, 42, 0.85);
+  }
+
+  /* Mobile Controls */
+  .starmap-mobile-controls {
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  .starmap-control-btn {
+    transition: all 0.15s ease;
+    font-family: ui-monospace, monospace;
+    font-weight: bold;
+    min-width: 36px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .starmap-control-btn:active {
+    transform: scale(0.95);
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .starmap-container {
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+    }
+    
+    .starmap-mobile-controls {
+      top: 8px;
+      right: 8px;
+    }
+    
+    .starmap-control-btn {
+      min-width: 32px;
+      min-height: 32px;
+      font-size: 14px;
+    }
+  }
+
+  /* Animation Classes */
+  @keyframes starmap-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .starmap-container {
+    animation: starmap-fade-in 0.5s ease-out;
+  }
+
+  /* Accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    .starmap-container,
+    .timeline-link,
+    .starmap-control-btn {
+      animation: none;
+      transition: none;
+    }
+  }
+</style>
