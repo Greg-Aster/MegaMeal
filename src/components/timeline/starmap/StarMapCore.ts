@@ -1,28 +1,31 @@
 // src/components/timeline/starmap/StarMapCore.ts
 // Core Three.js scene management and rendering
 
+import type * as THREE from 'three';
 import type { 
   StarMapCoreOptions, 
-  StarmapCustomEvent 
+  StarmapCustomEvent, 
+  OrbitControlsType,
+  THREE_Extended 
 } from '../../../types/starmap';
 
 export class StarMapCore {
   public readonly containerId: string;
   public readonly options: Required<StarMapCoreOptions>;
   
-  // Core Three.js objects (using any since we access via window.THREE)
-  public THREE: any | null = null;
-  public OrbitControls: any | null = null;
-  public scene: any | null = null;
-  public camera: any | null = null;
-  public renderer: any | null = null;
-  public controls: any | null = null;
-  public raycaster: any | null = null;
-  public mouse: any | null = null;
+  // Core Three.js objects
+  public THREE: typeof THREE | null = null;
+  public OrbitControls: (new (camera: THREE.Camera, domElement: HTMLElement) => OrbitControlsType) | null = null;
+  public scene: THREE.Scene | null = null;
+  public camera: THREE.PerspectiveCamera | null = null;
+  public renderer: THREE.WebGLRenderer | null = null;
+  public controls: OrbitControlsType | null = null;
+  public raycaster: THREE.Raycaster | null = null;
+  public mouse: THREE.Vector2 | null = null;
   
   // Groups
-  public starsGroup: any | null = null;
-  public gridGroup: any | null = null;
+  public starsGroup: THREE.Group | null = null;
+  public gridGroup: THREE.Group | null = null;
   
   // State
   private initialized = false;
@@ -86,11 +89,12 @@ export class StarMapCore {
     }
 
     // Load OrbitControls
-    if (!this.THREE.OrbitControls) {
+    const extendedTHREE = this.THREE as THREE_Extended;
+    if (!extendedTHREE.OrbitControls) {
       await this.loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js');
-      this.OrbitControls = this.THREE.OrbitControls;
+      this.OrbitControls = extendedTHREE.OrbitControls;
     } else {
-      this.OrbitControls = this.THREE.OrbitControls;
+      this.OrbitControls = extendedTHREE.OrbitControls;
     }
 
     if (!this.OrbitControls) {
@@ -215,7 +219,7 @@ export class StarMapCore {
     // Meridian lines
     for (let i = 0; i < 12; i++) {
       const phi = (i / 12) * Math.PI * 2;
-      const points: any[] = [];
+      const points: THREE.Vector3[] = [];
       for (let j = 0; j <= 50; j++) {
         points.push(new this.THREE.Vector3().setFromSphericalCoords(
           gridRadius, 
@@ -235,7 +239,7 @@ export class StarMapCore {
       
       if (polarAngleRad < 0.01 || polarAngleRad > Math.PI - 0.01) continue;
       
-      const points: any[] = [];
+      const points: THREE.Vector3[] = [];
       for (let j = 0; j <= 60; j++) {
         points.push(new this.THREE.Vector3().setFromSphericalCoords(
           gridRadius, 
