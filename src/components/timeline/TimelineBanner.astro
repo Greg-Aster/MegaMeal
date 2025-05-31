@@ -269,6 +269,8 @@ const viewModes = [
 }}>
   // Timeline Banner Controller Script - RESTORED VERSION
 
+  const LAST_VIEW_MODE_KEY = 'timelineBannerLastViewMode';
+
   // --- Global Variables & DOM Elements ---
   const views = {
     timeline: document.getElementById(timelineViewId),
@@ -307,6 +309,7 @@ const viewModes = [
 
   function setActiveView(mode) {
     currentViewMode = mode;
+    localStorage.setItem(LAST_VIEW_MODE_KEY, mode); // Save the new mode
 
     Object.keys(views).forEach(viewKey => {
       if (views[viewKey]) {
@@ -428,7 +431,14 @@ const viewModes = [
 
   // --- Event Listeners & Initialization ---
   function initialize() {
-    // Set initial view
+    // Try to load the last view mode from localStorage
+    const savedViewMode = localStorage.getItem(LAST_VIEW_MODE_KEY);
+    const validViewModes = ["timeline", "starmap", "list", "tree", "map"]; // Ensure these match your viewModes array
+    if (savedViewMode && validViewModes.includes(savedViewMode)) {
+      currentViewMode = savedViewMode; // Override with saved mode
+    }
+    
+    // Set initial view (this will now use the potentially updated currentViewMode)
     setActiveView(currentViewMode);
 
     // Era selector
