@@ -13,7 +13,7 @@ const {
   id = "starmap-view",
   events,
   useEraColors = false,
-  skyboxImageUrl = "/assets/hdri/sky_wip.webp",
+  skyboxImageUrl = "/assets/hdri/sky_wip2.webp",
 } = Astro.props;
 
 const mapId = `${id}-three-container`;
@@ -1199,9 +1199,10 @@ const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera
       mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(starsGroup.children); // Original intersection logic
+      const starSpriteArray = Array.from(starSprites.values());
+      const intersects = raycaster.intersectObjects(starSpriteArray); // Target only star sprites
 
-      if (intersects.length > 0 && intersects[0].object.userData.uniqueId) { // Ensure it's a star
+      if (intersects.length > 0 && intersects[0].object.userData.uniqueId) { // Check should still be valid
         handleStarClick(intersects[0].object);
       } else {
         // Clicked empty space - deselect current star if one is selected
@@ -1234,7 +1235,8 @@ const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera
         mouse.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
         
         raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(starsGroup.children);
+        const starSpriteArray = Array.from(starSprites.values());
+        const intersects = raycaster.intersectObjects(starSpriteArray); // Target only star sprites
         
         if (intersects.length > 0 && intersects[0].object.userData && intersects[0].object.userData.uniqueId) {
             // A star was tapped
