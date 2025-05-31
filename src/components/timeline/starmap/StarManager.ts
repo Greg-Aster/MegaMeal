@@ -1,6 +1,7 @@
 // src/components/timeline/starmap/StarManager.ts
 // Handles star creation, animation, and constellation management
 
+import type * as THREE from 'three';
 import type { 
   StarEvent, 
   StarUserData, 
@@ -26,8 +27,8 @@ export class StarManager {
   private readonly constellationBuilder: ConstellationBuilder;
   
   // Star management
-  private readonly starSprites = new Map<string, any>(); // THREE.Sprite
-  private readonly orbitalRings = new Map<string, any[]>(); // THREE.Sprite[]
+  private readonly starSprites = new Map<string, THREE.Sprite>();
+  private readonly orbitalRings = new Map<string, THREE.Sprite[]>();
   private currentEvents: StarEvent[] = [];
   
   // Animation
@@ -270,7 +271,7 @@ export class StarManager {
   }
 
   // === ORBITAL RINGS ===
-  private createOrbitalRingsForStar(starSprite: any, eventData: StarUserData): any[] {
+  private createOrbitalRingsForStar(starSprite: THREE.Sprite, eventData: StarUserData): THREE.Sprite[] {
     if (!this.core.THREE) return [];
 
     const rings: THREE.Sprite[] = [];
@@ -354,7 +355,7 @@ export class StarManager {
     return rings;
   }
 
-  public updateOrbitalRingsForStar(starSprite: any, eventData: StarUserData): void {
+  public updateOrbitalRingsForStar(starSprite: THREE.Sprite, eventData: StarUserData): void {
     if (!this.core.THREE || !this.core.starsGroup) return;
 
     let existingRings = this.orbitalRings.get(eventData.uniqueId) || [];
@@ -499,7 +500,7 @@ export class StarManager {
   }
 
   // === INTERACTION METHODS ===
-  public handleStarClick(intersectedSprite: any): void {
+  public handleStarClick(intersectedSprite: THREE.Sprite): void {
     const eventData = intersectedSprite.userData as StarUserData;
     const clickedSpriteId = eventData.uniqueId;
 
@@ -544,7 +545,7 @@ export class StarManager {
     }
   }
 
-  public handleStarHover(intersectedSprite: any, isHovering: boolean): void {
+  public handleStarHover(intersectedSprite: THREE.Sprite, isHovering: boolean): void {
     if (intersectedSprite && intersectedSprite.userData) {
       const userData = intersectedSprite.userData as StarUserData;
       userData.isHovered = isHovering;
@@ -563,11 +564,11 @@ export class StarManager {
     this.orbitalRings.clear();
   }
 
-  public getStarByUniqueId(uniqueId: string): any | undefined {
+  public getStarByUniqueId(uniqueId: string): THREE.Sprite | undefined {
     return this.starSprites.get(uniqueId);
   }
 
-  public getAllStars(): any[] {
+  public getAllStars(): THREE.Sprite[] {
     return Array.from(this.starSprites.values());
   }
 

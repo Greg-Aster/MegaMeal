@@ -186,7 +186,7 @@ const loadingMessageId = `loading-message-${containerId}`;
         }
         
         const events: StarEvent[] = JSON.parse(eventsData);
-        console.log(`[StarMap DEBUG] Initializing ${containerId} with ${events.length} events (mobile: ${isMobile}). Events data:`, events);
+        console.log(`[StarMap] Initializing ${containerId} with ${events.length} events (mobile: ${isMobile})`);
         
         // Show loading state
         const loadingElement = container.querySelector('.starmap-loading-message') as HTMLElement;
@@ -200,13 +200,11 @@ const loadingMessageId = `loading-message-${containerId}`;
           skyboxImageUrl: skyboxUrl 
         });
         
-        console.log(`[StarMap DEBUG] About to call core.init() for ${containerId}`);
         await core.init();
-        console.log(`[StarMap DEBUG] core.init() completed for ${containerId}`);
+        console.log(`[StarMap] Core initialized for ${containerId}`);
         
         // Initialize star management
         const starManager = new StarManager(core, { useEraColors: true });
-        console.log(`[StarMap DEBUG] StarManager instantiated for ${containerId}`);
         
         // Initialize interaction handling
         const interactionHandler = new InteractionHandler(
@@ -219,9 +217,8 @@ const loadingMessageId = `loading-message-${containerId}`;
         );
         
         // Create stars and constellations
-        console.log(`[StarMap DEBUG] About to call starManager.createOrUpdateStars() for ${containerId}`);
         starManager.createOrUpdateStars(events);
-        console.log(`[StarMap DEBUG] starManager.createOrUpdateStars() completed for ${containerId}`);
+        console.log(`[StarMap] Stars created for ${containerId}`);
         
         // Setup mobile interface if needed
         let mobileInterface: MobileStarmapInterface | null = null;
@@ -285,12 +282,7 @@ const loadingMessageId = `loading-message-${containerId}`;
         }));
         
       } catch (error) {
-        console.error(`[StarMap DEBUG] ❌ Detailed Initialization failed for ${containerId}:`, error);
-        if (error instanceof Error) {
-          console.error(`[StarMap DEBUG] Error name: ${error.name}`);
-          console.error(`[StarMap DEBUG] Error message: ${error.message}`);
-          console.error(`[StarMap DEBUG] Error stack: ${error.stack}`);
-        }
+        console.error(`[StarMap] ❌ Initialization failed for ${containerId}:`, error);
         
         // Show error state
         const loadingElement = container.querySelector('.starmap-loading-message') as HTMLElement;

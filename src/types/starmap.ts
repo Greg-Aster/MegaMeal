@@ -2,7 +2,7 @@
 // 🌟 MAIN TYPE DEFINITIONS FILE 🌟
 // Comprehensive type definitions for the starmap system
 
-// Note: THREE.js types are available globally when @types/three is installed
+import type * as THREE from 'three';
 
 // === CORE INTERFACES ===
 export interface StarEvent {
@@ -214,10 +214,10 @@ export interface OrbitalRingDefinition {
 export interface StarmapCustomEvent extends CustomEvent {
   detail: {
     eventData?: StarEvent;
-    sprite?: any; // THREE.Sprite
-    camera?: any; // THREE.Camera
-    scene?: any; // THREE.Scene
-    renderer?: any; // THREE.WebGLRenderer
+    sprite?: THREE.Sprite;
+    camera?: THREE.Camera;
+    scene?: THREE.Scene;
+    renderer?: THREE.WebGLRenderer;
     timestamp?: number;
     [key: string]: any;
   };
