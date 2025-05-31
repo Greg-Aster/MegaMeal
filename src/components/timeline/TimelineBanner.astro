@@ -1,6 +1,6 @@
 ---
 // src/components/timeline/TimelineBanner.astro
-// RESTORED CONTROLLER COMPONENT - All features working
+// ENHANCED WITH MOBILE STARMAP CONTROLS
 
 import TimelineView from './TimelineViewModes/TimelineView.astro';
 import StarMapView from './TimelineViewModes/StarMapView.astro';
@@ -224,8 +224,10 @@ const viewModes = [
       </div>
     </div>
 
-    <!-- Bottom Controls (for timeline zoom) -->
+    <!-- Bottom Controls (Timeline Zoom + Mobile Starmap) -->
     <div id="timelineBottomControls" class="timeline-custom-controls absolute bottom-0 left-0 right-0 flex items-center justify-between p-2 z-[999]" style="background-color: rgba(0,0,0,0.4); backdrop-filter: blur(4px); color: white; height: 44px; overflow: hidden;">
+      
+      <!-- Timeline Zoom Controls -->
       <div class="timeline-zoom-controls flex items-center space-x-2" style="display: none;">
         <button class="zoom-out p-1 hover:bg-gray-700 rounded" title="Zoom Out">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -242,6 +244,77 @@ const viewModes = [
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
           </svg>
         </button>
+      </div>
+
+      <!-- Mobile Starmap Controls -->
+      <div class="starmap-mobile-controls flex items-center justify-center space-x-1 w-full" style="display: none;">
+        
+        <!-- Movement Controls -->
+        <div class="flex flex-col items-center space-y-1">
+          <button class="starmap-move-up p-1 bg-gray-700/80 hover:bg-gray-600 rounded" title="Look Up">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+            </svg>
+          </button>
+          
+          <div class="flex items-center space-x-1">
+            <button class="starmap-move-left p-1 bg-gray-700/80 hover:bg-gray-600 rounded" title="Rotate Left">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </button>
+            
+            <button class="starmap-center p-1 bg-gray-700/80 hover:bg-sky-600 rounded" title="Center View">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </button>
+            
+            <button class="starmap-move-right p-1 bg-gray-700/80 hover:bg-gray-600 rounded" title="Rotate Right">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </div>
+          
+          <button class="starmap-move-down p-1 bg-gray-700/80 hover:bg-gray-600 rounded" title="Look Down">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Zoom and Feature Controls -->
+        <div class="flex items-center space-x-2 ml-4">
+          <button class="starmap-zoom-in p-1 bg-gray-700/80 hover:bg-gray-600 rounded" title="Zoom In (FOV)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="M21 21l-4.35-4.35M11 8v6M8 11h6"></path>
+            </svg>
+          </button>
+          
+          <button class="starmap-zoom-out p-1 bg-gray-700/80 hover:bg-gray-600 rounded" title="Zoom Out (FOV)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="M21 21l-4.35-4.35M8 11h6"></path>
+            </svg>
+          </button>
+
+          <button class="starmap-auto-rotate p-1 bg-gray-700/80 hover:bg-sky-600 rounded" title="Toggle Auto-Rotate">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+          </button>
+
+          <button class="starmap-reset p-1 bg-gray-700/80 hover:bg-orange-600 rounded" title="Reset Starmap View">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5v6"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 5v6"></path>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -267,9 +340,13 @@ const viewModes = [
   timelineContainerId: `${id}-timeline-container`,
   starmapContainerId: `${id}-starmap-three-container`,
 }}>
-  // Timeline Banner Controller Script - RESTORED VERSION
+  // Timeline Banner Controller Script - ENHANCED WITH MOBILE STARMAP CONTROLS
 
   const LAST_VIEW_MODE_KEY = 'timelineBannerLastViewMode';
+
+  // --- Mobile Detection ---
+  const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const isMobilePortrait = () => isMobileDevice && window.matchMedia("(orientation: portrait)").matches;
 
   // --- Global Variables & DOM Elements ---
   const views = {
@@ -283,6 +360,7 @@ const viewModes = [
   const eraSelectElement = document.getElementById(controllerId + '-era-select');
   const viewSwitcherButtons = document.querySelectorAll(`#timelineTopControls .view-switcher-button`);
   const zoomControls = document.querySelector('.timeline-zoom-controls');
+  const starmapMobileControls = document.querySelector('.starmap-mobile-controls');
 
   let currentViewMode = initialViewMode;
   let currentEvents = JSON.parse(events);
@@ -293,6 +371,102 @@ const viewModes = [
   let showInfoCard = false;
   let infoCardTimerId = null;
   let infoCardsDismissedForSession = false;
+
+  // --- Starmap API Interface ---
+  const StarmapAPI = {
+    getStarmap: () => {
+      return window[`starmap_${starmapContainerId}`];
+    },
+    
+    isReady: () => {
+      const starmap = StarmapAPI.getStarmap();
+      return starmap && starmap.isInitialized && starmap.isInitialized();
+    },
+
+    // Movement controls
+    moveUp: () => {
+      const starmap = StarmapAPI.getStarmap();
+      if (starmap?.controls) {
+        starmap.controls.object.rotation.x += 0.1;
+        starmap.controls.update();
+      }
+    },
+
+    moveDown: () => {
+      const starmap = StarmapAPI.getStarmap();
+      if (starmap?.controls) {
+        starmap.controls.object.rotation.x -= 0.1;
+        starmap.controls.update();
+      }
+    },
+
+    moveLeft: () => {
+      const starmap = StarmapAPI.getStarmap();
+      if (starmap?.controls) {
+        starmap.controls.object.rotation.y += 0.1;
+        starmap.controls.update();
+      }
+    },
+
+    moveRight: () => {
+      const starmap = StarmapAPI.getStarmap();
+      if (starmap?.controls) {
+        starmap.controls.object.rotation.y -= 0.1;
+        starmap.controls.update();
+      }
+    },
+
+    zoomIn: () => {
+      const starmap = StarmapAPI.getStarmap();
+      if (starmap?.camera) {
+        starmap.camera.fov = Math.max(15, starmap.camera.fov - 3);
+        starmap.camera.updateProjectionMatrix();
+      }
+    },
+
+    zoomOut: () => {
+      const starmap = StarmapAPI.getStarmap();
+      if (starmap?.camera) {
+        starmap.camera.fov = Math.min(75, starmap.camera.fov + 3);
+        starmap.camera.updateProjectionMatrix();
+      }
+    },
+
+    toggleAutoRotate: () => {
+      const starmap = StarmapAPI.getStarmap();
+      if (starmap?.controls) {
+        starmap.controls.autoRotate = !starmap.controls.autoRotate;
+        
+        // Update button appearance
+        const autoRotateBtn = document.querySelector('.starmap-auto-rotate');
+        if (autoRotateBtn) {
+          if (starmap.controls.autoRotate) {
+            autoRotateBtn.classList.add('bg-sky-600');
+            autoRotateBtn.classList.remove('bg-gray-700/80');
+          } else {
+            autoRotateBtn.classList.remove('bg-sky-600');
+            autoRotateBtn.classList.add('bg-gray-700/80');
+          }
+        }
+      }
+    },
+
+    resetView: () => {
+      const starmap = StarmapAPI.getStarmap();
+      if (starmap?.resetView) {
+        starmap.resetView();
+      }
+    },
+
+    centerView: () => {
+      const starmap = StarmapAPI.getStarmap();
+      if (starmap?.controls) {
+        starmap.controls.target.set(0, 0, 0);
+        starmap.controls.object.position.set(0, -150, 120);
+        starmap.controls.update();
+      }
+    }
+  };
 
   // --- View Management ---
   function updateViewSwitcherButtonStates(activeMode) {
@@ -309,7 +483,7 @@ const viewModes = [
 
   function setActiveView(mode) {
     currentViewMode = mode;
-    localStorage.setItem(LAST_VIEW_MODE_KEY, mode); // Save the new mode
+    localStorage.setItem(LAST_VIEW_MODE_KEY, mode);
 
     Object.keys(views).forEach(viewKey => {
       if (views[viewKey]) {
@@ -319,8 +493,14 @@ const viewModes = [
 
     updateViewSwitcherButtonStates(mode);
 
+    // Show/hide controls based on view mode and device
     if (zoomControls) {
       zoomControls.style.display = mode === 'timeline' ? 'flex' : 'none';
+    }
+
+    if (starmapMobileControls) {
+      const showMobileControls = mode === 'starmap' && isMobileDevice;
+      starmapMobileControls.style.display = showMobileControls ? 'flex' : 'none';
     }
 
     // Handle view-specific initialization
@@ -336,11 +516,12 @@ const viewModes = [
     }
 
     if (mode === 'starmap') {
-      const starmap = window[`starmap_${starmapContainerId}`];
-      if (!starmap || !starmap.isInitialized()) {
-        // Starmap will auto-initialize when visible
-        console.log('Starmap view activated, waiting for initialization...');
-      }
+      // Wait a moment for the view to be visible, then check starmap
+      setTimeout(() => {
+        if (!StarmapAPI.isReady()) {
+          console.log('Starmap view activated, waiting for initialization...');
+        }
+      }, 100);
     }
   }
 
@@ -381,13 +562,54 @@ const viewModes = [
 
     // Update starmap view
     if (currentViewMode === 'starmap') {
-      const starmap = window[`starmap_${starmapContainerId}`];
+      const starmap = StarmapAPI.getStarmap();
       if (starmap && starmap.isInitialized()) {
         starmap.updateEvents(currentEvents);
       }
     }
 
     // TODO: Update other views (list, tree, map) when they support dynamic updates
+  }
+
+  // --- Mobile Starmap Control Handlers ---
+  function setupStarmapMobileControls() {
+    if (!isMobileDevice) return;
+
+    // Movement controls
+    document.querySelector('.starmap-move-up')?.addEventListener('click', StarmapAPI.moveUp);
+    document.querySelector('.starmap-move-down')?.addEventListener('click', StarmapAPI.moveDown);
+    document.querySelector('.starmap-move-left')?.addEventListener('click', StarmapAPI.moveLeft);
+    document.querySelector('.starmap-move-right')?.addEventListener('click', StarmapAPI.moveRight);
+    document.querySelector('.starmap-center')?.addEventListener('click', StarmapAPI.centerView);
+
+    // Zoom controls
+    document.querySelector('.starmap-zoom-in')?.addEventListener('click', StarmapAPI.zoomIn);
+    document.querySelector('.starmap-zoom-out')?.addEventListener('click', StarmapAPI.zoomOut);
+
+    // Feature controls
+    document.querySelector('.starmap-auto-rotate')?.addEventListener('click', StarmapAPI.toggleAutoRotate);
+    document.querySelector('.starmap-reset')?.addEventListener('click', StarmapAPI.resetView);
+
+    // Add visual feedback for button presses
+    const starmapButtons = document.querySelectorAll('.starmap-mobile-controls button');
+    starmapButtons.forEach(button => {
+      button.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        button.classList.add('bg-sky-600');
+      });
+      
+      button.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        setTimeout(() => {
+          if (!button.classList.contains('starmap-auto-rotate') || !StarmapAPI.getStarmap()?.controls?.autoRotate) {
+            button.classList.remove('bg-sky-600');
+            if (!button.classList.contains('starmap-center')) {
+              button.classList.add('bg-gray-700/80');
+            }
+          }
+        }, 150);
+      });
+    });
   }
 
   // --- InfoCard (Facts) Management ---
@@ -397,7 +619,6 @@ const viewModes = [
     const displayFact = () => {
       const currentFact = megaMealFactsData[Math.floor(Math.random() * megaMealFactsData.length)];
       
-      // Prepare fact with custom styling for dark theme
       const factWithStyling = {
         ...currentFact,
         bgColorClass: 'bg-slate-800/90',
@@ -406,7 +627,6 @@ const viewModes = [
         ctaButtonClass: 'bg-sky-600 hover:bg-sky-500 text-white'
       };
 
-      // Dispatch event to update InfoCard
       document.body.dispatchEvent(new CustomEvent('displayStarInfoCard', {
         detail: {
           fact: factWithStyling,
@@ -433,12 +653,12 @@ const viewModes = [
   function initialize() {
     // Try to load the last view mode from localStorage
     const savedViewMode = localStorage.getItem(LAST_VIEW_MODE_KEY);
-    const validViewModes = ["timeline", "starmap", "list", "tree", "map"]; // Ensure these match your viewModes array
+    const validViewModes = ["timeline", "starmap", "list", "tree", "map"];
     if (savedViewMode && validViewModes.includes(savedViewMode)) {
-      currentViewMode = savedViewMode; // Override with saved mode
+      currentViewMode = savedViewMode;
     }
     
-    // Set initial view (this will now use the potentially updated currentViewMode)
+    // Set initial view
     setActiveView(currentViewMode);
 
     // Era selector
@@ -461,7 +681,7 @@ const viewModes = [
       });
     });
 
-    // Zoom controls
+    // Timeline zoom controls
     const zoomInBtn = document.querySelector(`#${wrapperId} .zoom-in`);
     const zoomOutBtn = document.querySelector(`#${wrapperId} .zoom-out`);
     const resetViewBtn = document.querySelector(`#${wrapperId} .reset-view`);
@@ -485,6 +705,9 @@ const viewModes = [
       });
     }
 
+    // Setup mobile starmap controls
+    setupStarmapMobileControls();
+
     // InfoCard close button
     const infoCardElement = document.getElementById(factsInfoCardId);
     if (infoCardElement) {
@@ -499,6 +722,10 @@ const viewModes = [
       setTimeout(showNextFactOrAd, 5000 + Math.random() * 2000);
       infoCardTimerId = setInterval(showNextFactOrAd, 15000 + Math.random() * 5000);
     }
+
+    // Log mobile detection for debugging
+    console.log('[TimelineBanner] Mobile device detected:', isMobileDevice);
+    console.log('[TimelineBanner] Mobile portrait:', isMobilePortrait());
   }
 
   // Initialize when DOM is ready
@@ -507,6 +734,14 @@ const viewModes = [
   } else {
     initialize();
   }
+
+  // Expose API for debugging
+  window.timelineBannerAPI = {
+    currentViewMode: () => currentViewMode,
+    StarmapAPI,
+    isMobileDevice,
+    isMobilePortrait
+  };
 </script>
 
 <style is:global>
@@ -526,5 +761,24 @@ const viewModes = [
   
   .view-switcher-button.bg-sky-600 {
     background-color: rgb(2 132 199) !important;
+  }
+
+  /* Mobile Starmap Controls Styles */
+  .starmap-mobile-controls button {
+    min-width: 32px;
+    min-height: 32px;
+    transition: all 0.2s ease;
+  }
+
+  .starmap-mobile-controls button:active {
+    transform: scale(0.95);
+  }
+
+  /* Enhanced mobile touch targets */
+  @media (max-width: 768px) {
+    .starmap-mobile-controls button {
+      min-width: 36px;
+      min-height: 36px;
+    }
   }
 </style>
