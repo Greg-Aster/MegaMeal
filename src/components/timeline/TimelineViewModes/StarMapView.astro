@@ -44,6 +44,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
   skyboxImageUrl,
   useEraColors,
 }}>
+const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   // Star appearance helpers - from StarNode.astro
   const eraColorMap = {
     'ancient-epoch': '#3b82f6',
@@ -717,7 +718,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
       eventsByEra[era].push(event);
     });
 
-    console.log('Starmap: Events grouped by era:', Object.keys(eventsByEra).map(era => `${era}: ${eventsByEra[era].length}`).join(', '));
+    // console.log('Starmap: Events grouped by era:', Object.keys(eventsByEra).map(era => `${era}: ${eventsByEra[era].length}`).join(', ')); // Original log, re-enabled if needed, or remove if final
 
     // Create constellations for each era
     Object.entries(eventsByEra).forEach(([era, eraEvents]) => {
@@ -787,7 +788,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
           };
           
           starsGroup.add(sprite);
-          starSprites.set(event.slug, sprite);
+          starSprites.set(sprite.userData.uniqueId, sprite); // Key by uniqueStarId
           
           // Create orbital rings for this star
           const rings = createOrbitalRingsForStar(sprite, sprite.userData);
@@ -821,7 +822,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
         ancient_wisdom: [[0,1], [0,2], [1,5], [2,5], [0,3], [0,4]], // Star formation
         rising_dawn: [[0,1], [1,2], [1,3], [1,4], [2,5], [2,6]], // Rising pattern
         crown: [[0,1], [0,2], [1,3], [2,4], [3,7], [4,7], [5,6]], // Crown shape
-        crossed_swords: [[0,4], [1,4], [2,4], [3,4], [4,5], [4,6]], // Cross pattern
+        crossed_swords: [[0,1], [2,3]], // Simpler X pattern for 4 stars
         supernova: [[0,1], [0,2], [0,3], [0,4], [0,5], [0,6], [0,7], [0,8]], // Radial
         ascension: [[0,1], [0,2], [1,3], [2,4], [3,5], [4,6], [7,1], [7,2]], // Ascending
         omega: [[0,1], [2,3], [4,5], [0,6], [1,6], [2,4], [3,5]], // Omega shape
@@ -833,8 +834,15 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
       
       connections.forEach(([startIdx, endIdx]) => {
         if (startIdx < eraEvents.length && endIdx < eraEvents.length) {
-          const startSprite = starSprites.get(eraEvents[startIdx].slug);
-          const endSprite = starSprites.get(eraEvents[endIdx].slug);
+          const startEventData = eraEvents[startIdx];
+          const endEventData = eraEvents[endIdx];
+          
+          // Construct unique IDs to fetch sprites
+          const startUniqueId = `${startEventData.slug}-${startEventData.year}-${startIdx}`;
+          const endUniqueId = `${endEventData.slug}-${endEventData.year}-${endIdx}`;
+          
+          const startSprite = starSprites.get(startUniqueId);
+          const endSprite = starSprites.get(endUniqueId);
           
           if (startSprite && endSprite) {
             linePositions.push(startSprite.position.clone());
@@ -1078,7 +1086,7 @@ const starmapEventsJson = JSON.stringify(events.map(e => ({
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, Math.max(1, height));
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     container.appendChild(renderer.domElement);
 
     // Setup raycaster for star interaction

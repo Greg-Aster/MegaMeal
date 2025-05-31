@@ -266,7 +266,7 @@ const fadeOverlayId = `${id}-fade-overlay`;
 
       const eventElements = this.container.querySelectorAll('.timeline-event');
       eventElements.forEach(el => {
-        const verticalOffsetMatch = el.style.transform.match(/translateY\(([^p]+)px\)/);
+        const verticalOffsetMatch = el.style.transform.match(/translate\(\s*[^,]+\s*,\s*(-?\d*\.?\d+)px\)/);
         const verticalOffset = verticalOffsetMatch ? parseFloat(verticalOffsetMatch[1]) : 0;
         el.style.transform = `translate(0, ${verticalOffset}px) scale(${1/this.scale})`;
         const cardWrapper = el.querySelector('.card-wrapper');
