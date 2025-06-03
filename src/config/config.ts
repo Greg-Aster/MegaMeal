@@ -39,30 +39,11 @@ export const navBarConfig: NavBarConfig = {
   links: [
     0,
     {
-      name: "Temporal Archive",
-      url: "/archive/",
+      name: "Gastronomy",
+      url: "#",
       dropdown: [
-        {
-          name: "Complete Timeline",
-          url: "/posts/timeline/"
-        },
-        {
-          name: "Corporate Empire",
-          url: "/posts/timeline/corporate-empire/"
-        },
-        {
-          name: "The Perfect Mary",
-          url: "/posts/timeline/miranda-bloody-mary/"
-        },
-        {
-          name: "Snuggloid Emergence",
-          url: "/posts/timeline/spork-uprising/"
-        },
-        {
-          name: "Culinary Cosmos",
-          url: "/posts/timeline/boudin-noir-restaurant-review/",
-          external: false
-        }
+        { name: "Cookbook", url: "/cookbook/" },
+        { name: "Resturant Reviews", url: "/reviews/" }
       ]
     },
     3,
@@ -92,7 +73,6 @@ export const profileConfig: ProfileConfig = {
       url: "https://bsky.app/profile/megameal"
     }
   ],
-  avatarFilename: "ComfyUI_0003.png"
 }
 
 export const licenseConfig: LicenseConfig = {

@@ -1,66 +1,33 @@
-<!--
-=====================================================================
-MAIN GRID LAYOUT COMPONENT (MainGridLayout.astro)
-=====================================================================
-
-PURPOSE:
-This is the primary layout component that handles all banner types and 
-organizes the main content structure for the website. It provides a 
-unified interface for displaying different types of banners and content.
-
-BANNER TYPES SUPPORTED:
-- Standard: Animated cycling through multiple images (default)
-- Video: YouTube video embeds in banners
-- Image: Static single images with optional links
-- Timeline: Interactive timeline displays
-- Assistant: AI assistant (Bleepy) interactive banners
-- None: No banner (minimal spacing)
-
-MAIN FEATURES:
-- Responsive banner system with mobile/desktop sizing
-- Parallax background effects (optional)
-- Automatic banner type detection from post frontmatter
-- Unified content grid layout with sidebar and main content
-- Table of Contents (TOC) positioning
-- Back-to-top functionality
-- Bleepy mascot integration
-
-PROPS INTERFACE:
-- title: Page title
-- banner: Banner image URL (fallback)
-- description: Page description
-- headings: Array of headings for TOC generation
-- post: Post data object (contains banner configuration)
-- bannerLink: Optional link for banner clicks
-- isPostPage: Boolean flag for post-specific behavior
-- pageMascotContext: Context data for Bleepy mascot
-
-CONFIGURATION:
-ALL banner behavior is controlled through banner.config.ts
-That file is the single source of truth for banner configuration.
-Modify banner.config.ts to change banner types, animation speed, sizing, etc.
-
-MAINTENANCE NOTES:
-- All banner logic is centralized in banner.config.ts
-- Debug logging is available in browser console for banner animation
-- Performance optimizations include animation pausing when tab is hidden
-- CSS variables are used for responsive design and easy theming
-
-DEPENDENCIES:
-- banner.config.ts: Single source of truth for all banner configuration
-- Timeline components: For timeline banner functionality  
-- Bleepy components: For assistant banner functionality
-- Various utility components (Navbar, Footer, TOC, etc.)
-
-DEBUGGING:
-Check browser console for banner animation debug messages:
-- "Banner animation: Found X banner images"
-- "Banner animation: Started with Xms interval"
-Use window.bannerAnimation.start/stop/next() for manual control
-=====================================================================
--->
-
 ---
+// =====================================================================
+// REVIEWS LAYOUT COMPONENT (ReviewsLayout.astro)
+// =====================================================================
+//
+// PURPOSE:
+// This layout component is designed for review sections of the website.
+// It provides a structure with a navigation bar, a main content area,
+// a specialized ReviewsSideBar, and a footer. It is inspired by
+// MainGridLayout.astro but tailored for review content.
+//
+// MAIN FEATURES:
+// - Responsive layout structure
+// - Integration of Navbar and Footer
+// - Specialized ReviewsSideBar for review-related navigation/widgets
+// - Main content slot for individual review pages
+// - Utilizes the site's banner system (configurable via banner.config.ts)
+//
+// PROPS INTERFACE (similar to MainGridLayout):
+// - title: Page title (defaults to "Reviews Page")
+// - banner: Banner image URL (fallback)
+// - description: Page description (defaults to "Product and service reviews.")
+// - headings: Array of headings for TOC generation
+// - post: Post data object (for banner configuration)
+// - bannerLink: Optional link for banner clicks
+// - isPostPage: Boolean flag for post-specific behavior
+// - pageMascotContext: Context data for Bleepy mascot
+//
+// =====================================================================
+
 // =====================================================================
 // COMPONENT IMPORTS
 // =====================================================================
@@ -68,7 +35,7 @@ Use window.bannerAnimation.start/stop/next() for manual control
 import Footer from '@components/Footer.astro'
 import Navbar from '@components/Navbar.astro'
 import BackToTop from '@components/control/BackToTop.astro'
-import SideBar from '@components/widget/SideBar.astro'
+import ReviewsSideBar from '@components/widget/ReviewsSideBar.astro' // MODIFIED: ReviewsSideBar import
 import Layout from './Layout.astro'
 import { Icon } from 'astro-icon/components'
 import { siteConfig } from '../config/config'
@@ -93,8 +60,7 @@ import {
   getBannerLink,
   hasAnyBannerLinks,
   getLinkPreviewData,
-  getIconSVG,
-  getPageSpecificOverlap // Import getPageSpecificOverlap
+  getIconSVG
 } from '../config/banner.config';
 
 // =====================================================================
@@ -118,48 +84,33 @@ interface Props {
 // PROPS DESTRUCTURING AND SETUP
 // =====================================================================
 
-const { 
-  title, 
+const {
+  title = "Reviews Page", // MODIFIED: Default title
   banner = siteConfig.banner.src, // Use site default if no banner provided
-  description, 
-  lang, 
-  setOGTypeArticle, 
-  headings = [], 
+  description = "Product and service reviews.", // MODIFIED: Default description
+  lang,
+  setOGTypeArticle,
+  headings = [],
   post,
   bannerLink = '',
   isPostPage = false
 } = Astro.props
 
 // Debug logging for development
-console.log('MAIN_GRID_LAYOUT - isPostPage prop received:', Astro.props.isPostPage);
-console.log('MAIN_GRID_LAYOUT - pageMascotContext prop received:', Astro.props.pageMascotContext);
+console.log('REVIEWS_LAYOUT - isPostPage prop received:', Astro.props.isPostPage);
+console.log('REVIEWS_LAYOUT - pageMascotContext prop received:', Astro.props.pageMascotContext);
 
 // =====================================================================
 // BANNER CONFIGURATION PROCESSING - SINGLE SOURCE OF TRUTH
 // =====================================================================
 // ALL banner logic is now handled by banner.config.ts functions
 
-// Determine current page type for page-specific overlaps
-let currentPageType = 'default'; // Fallback
-const currentPath = Astro.url.pathname;
-
-if (currentPath === '/' || currentPath === '/home/') {
-  currentPageType = 'home';
-} else if (currentPath.startsWith('/posts/') || currentPath.startsWith('/blog/')) {
-  currentPageType = 'post';
-} else if (currentPath.startsWith('/archive/') || currentPath.startsWith('/categories/') || currentPath.startsWith('/tags/')) {
-  currentPageType = 'archive';
-} else if (currentPath.startsWith('/about/')) {
-  currentPageType = 'about';
-}
-// Add other page type checks as needed, e.g., for 'cookbook', 'reviews' if they have specific overlaps
-
-// Get complete banner configuration from banner.config.ts, now passing pageType
-const bannerConfiguration = determineBannerConfiguration(post, currentPageType, bannerLink);
+// Get complete banner configuration from banner.config.ts
+const bannerConfiguration = determineBannerConfiguration(post, bannerLink);
 
 // Destructure the configuration for easy access
 const {
-  postData,
+  postData, // Used by banner system, not directly by sidebar here
   bannerType,
   bannerDataSources,
   layout,
@@ -184,8 +135,7 @@ const {
   navbarSpacing,
   bannerHeight: BANNER_HEIGHT,
   bannerOverlap: BANNER_OVERLAP,
-  mainContentOffset,
-  dynamicOverlap // Destructure the new dynamicOverlap
+  mainContentOffset
 } = layout;
 
 // =====================================================================
@@ -207,39 +157,36 @@ if (post && post.data) {
 }
 ---
 
-<Layout 
-  title={title} 
-  banner={banner} 
-  description={description} 
-  lang={lang} 
+<Layout
+  title={title}
+  banner={banner}
+  description={description}
+  lang={lang}
   setOGTypeArticle={setOGTypeArticle}
-  post={post} 
+  post={post}
 >
 
   <!-- =============================================================== -->
   <!-- PARALLAX BACKGROUND SECTION                                   -->
   <!-- =============================================================== -->
-  <!-- Optional parallax scrolling background (controlled by site config) -->
-  {siteConfig.banner.enable && bannerConfig.parallax.enabled && 
+  {siteConfig.banner.enable && bannerConfig.parallax.enabled &&
     <div id="parallax-banner" class="fixed top-0 left-0 w-full h-screen z-[-1] overflow-hidden">
-      <ImageWrapper 
-        id="parallax-image" 
-        alt="Site background image" 
+      <ImageWrapper
+        id="parallax-image"
+        alt="Site background image"
         class="parallax-bg object-cover w-full h-[120vh]"
-        src={siteConfig.banner.src} 
+        src={siteConfig.banner.src}
         position={siteConfig.banner.position || 'center'}
       />
-      {/* Optional image credit display */}
-      {siteConfig.banner.credit?.enable && 
+      {siteConfig.banner.credit?.enable &&
         <div class="absolute bottom-4 right-4 text-white/50 text-xs bg-black/30 px-2 py-1 rounded">
-          {siteConfig.banner.credit.text && 
+          {siteConfig.banner.credit.text &&
             <a href={siteConfig.banner.credit.url || '#'} class="hover:text-white/80 transition">
               {siteConfig.banner.credit.text}
             </a>
           }
         </div>
       }
-      <!-- Optional overlay for better text readability -->
       <div class="absolute inset-0 bg-gradient-to-b from-black/20 to-black/50 pointer-events-none"></div>
     </div>
   }
@@ -247,7 +194,6 @@ if (post && post.data) {
   <!-- =============================================================== -->
   <!-- NAVIGATION BAR SECTION                                        -->
   <!-- =============================================================== -->
-  <!-- Fixed navigation bar that stays at the top -->
   <slot slot="head" name="head"></slot>
   <div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:px-4 mx-auto">
     <div id="navbar-wrapper" class="pointer-events-auto sticky top-0 transition-all">
@@ -258,9 +204,7 @@ if (post && post.data) {
 <!-- =============================================================== -->
 <!-- UNIFIED BANNER CONTAINER                                       -->
 <!-- =============================================================== -->
-<!-- This container handles ALL banner types in one unified system  -->
-<!-- Banner type is determined by banner.config.ts                  -->
-<div id="banner-container" 
+<div id="banner-container"
   class={`z-10 w-full relative transition-all duration-500
     ${hasTimelineBanner ? 'has-timeline-banner' : ''}
     ${hasVideoBanner ? 'has-video-banner' : ''}
@@ -274,7 +218,6 @@ if (post && post.data) {
   <!-- ============================================================= -->
   <!-- VIDEO BANNER CONTENT                                         -->
   <!-- ============================================================= -->
-  <!-- Displays YouTube video embeds when video banner type is used -->
   {hasVideoBanner && (
     <div class="video-banner-content max-w-screen-2xl mx-auto px-4">
       <div class="relative w-full pb-[56.25%] bg-black overflow-hidden shadow-lg rounded-lg">
@@ -293,7 +236,6 @@ if (post && post.data) {
   <!-- ============================================================= -->
   <!-- ASSISTANT BANNER CONTENT (BLEEPY)                            -->
   <!-- ============================================================= -->
-  <!-- Displays the AI assistant (Bleepy) when assistant banner type is used -->
   {hasAssistantBanner && (
     <div class="assistant-banner-content max-w-screen-2xl mx-auto px-0 py-0" style="height: 70vh;">
       <BleepyBanner backgroundImageUrl={bannerDataSources.assistantBannerData?.imageUrl} />
@@ -303,7 +245,6 @@ if (post && post.data) {
   <!-- ============================================================= -->
   <!-- TIMELINE BANNER CONTENT                                      -->
   <!-- ============================================================= -->
-  <!-- Displays interactive timeline when timeline banner type is used -->
   {hasTimelineBanner && (
     <div class="timeline-banner-content max-w-screen-2xl mx-auto px-0 py-0">
       <div class="timeline-banner-container">
@@ -326,16 +267,13 @@ if (post && post.data) {
   <!-- ============================================================= -->
   <!-- IMAGE BANNER CONTENT                                         -->
   <!-- ============================================================= -->
-  <!-- Displays static images when image banner type is used        -->
-  <!-- Supports optional click-through links                        -->
   {hasImageBanner && (
     <div class="image-banner-content max-w-screen-2xl mx-auto px-0">
       <div class="relative w-full overflow-hidden shadow-lg rounded-lg">
-        {/* Conditional link wrapper - only if finalBannerLink exists */}
         {finalBannerLink ? (
-          <a 
-            href={finalBannerLink} 
-            aria-label="Banner Link" 
+          <a
+            href={finalBannerLink}
+            aria-label="Banner Link"
             class="group block relative"
           >
             <div class="absolute transition pointer-events-none group-hover:bg-black/30 group-active:bg-black/50 w-full h-full z-50 flex items-center justify-center">
@@ -345,14 +283,14 @@ if (post && post.data) {
               ></Icon>
             </div>
             <img
-              src={hasPostBanner && post?.data?.bannerType === "image" ? (post.data.bannerData?.imageUrl || post.data.image) : (bannerDataSources.imageBannerData?.imageUrl || siteConfig.banner.src)}
+              src={hasPostBanner && post?.data?.bannerType === "image" ? (post.data.bannerData?.imageUrl || post.data.image) : ((bannerDataSources.imageBannerData as any)?.imageUrl || siteConfig.banner.src)}
               alt={hasPostBanner ? (post.data.title || "Post banner image") : (title || "Banner image")}
               class="w-full object-cover"
             />
           </a>
         ) : (
           <img
-            src={hasPostBanner && post?.data?.bannerType === "image" ? (post.data.bannerData?.imageUrl || post.data.image) : (bannerDataSources.imageBannerData?.imageUrl || siteConfig.banner.src)}
+            src={hasPostBanner && post?.data?.bannerType === "image" ? (post.data.bannerData?.imageUrl || post.data.image) : ((bannerDataSources.imageBannerData as any)?.imageUrl || siteConfig.banner.src)}
             alt={hasPostBanner ? (post.data.title || "Post banner image") : (title || "Banner image")}
             class="w-full object-cover"
           />
@@ -364,18 +302,16 @@ if (post && post.data) {
 <!-- ============================================================= -->
   <!-- STANDARD ANIMATED BANNER - ENHANCED UX WITH VIDEO SUPPORT    -->
   <!-- ============================================================= -->
-  <!-- All configuration and link preview data from banner.config.ts -->
   {hasStandardBanner && (
     <div id="standard-banner-container" class="animated-banner-content max-w-screen-2xl mx-auto h-full relative" style={`height: ${BANNER_HEIGHT};`}>
-      {/* Cycle through all banner items (videos and images) from banner.config.ts */}
       {bannerConfig.standardBannerConfig.bannerList.length > 0 ? bannerConfig.standardBannerConfig.bannerList.map((item, index) => {
         const bannerLink = getBannerLink(index);
         const isClickable = bannerLink !== null;
         const isVideoItem = bannerConfig.standardBannerConfig.isVideoBannerItem(item);
         const isImageItem = bannerConfig.standardBannerConfig.isImageBannerItem(item);
-        
+
         return (
-          <div 
+          <div
             class="banner-slide absolute inset-0 w-full h-full transition-opacity"
             style={`
               transition-duration: ${bannerConfig.standardBannerConfig.animation.transitionDuration}ms;
@@ -384,26 +320,20 @@ if (post && post.data) {
             data-banner-index={index}
           >
             {isClickable ? (
-              <a 
-                href={bannerLink} 
+              <a
+                href={bannerLink}
                 class="banner-link block w-full h-full relative group"
                 aria-label={`Banner Link ${index + 1}`}
               >
-                {/* BASIC hover overlay - enhanced overlays added by JavaScript */}
                 <div class="absolute inset-0 w-full h-full transition-all duration-300 opacity-0 group-hover:opacity-30 bg-black pointer-events-none z-10"></div>
-                
-                {/* BASIC click icon - enhanced preview added by JavaScript */}
                 <div class="absolute inset-0 w-full h-full flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 z-20 pointer-events-none">
                   <Icon
                     name="fa6-solid:arrow-up-right-from-square"
                     class="text-white text-4xl drop-shadow-lg"
                   />
                 </div>
-                
-                {/* Render video or image content */}
                 {isVideoItem ? (
                   <>
-                    {/* Video element */}
                     <video
                       src={item.src}
                       autoplay={bannerConfig.standardBannerConfig.video.autoplay}
@@ -414,11 +344,10 @@ if (post && post.data) {
                       preload={item.preload || bannerConfig.standardBannerConfig.video.preload}
                       class={`banner-video w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition} transition-transform duration-300 group-hover:scale-105`}
                       style={`border-radius: ${bannerConfig.visual.borderRadius};`}
-                      onError="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                      onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
                     >
                       Your browser does not support the video tag.
                     </video>
-                    {/* Fallback image (hidden by default) */}
                     <Image
                       src={item.fallbackImage}
                       alt={item.alt}
@@ -442,11 +371,9 @@ if (post && post.data) {
                 ) : null}
               </a>
             ) : (
-              /* Non-clickable banner items */
               <>
                 {isVideoItem ? (
                   <>
-                    {/* Video element */}
                     <video
                       src={item.src}
                       autoplay={bannerConfig.standardBannerConfig.video.autoplay}
@@ -457,11 +384,10 @@ if (post && post.data) {
                       preload={item.preload || bannerConfig.standardBannerConfig.video.preload}
                       class={`banner-video w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition}`}
                       style={`border-radius: ${bannerConfig.visual.borderRadius};`}
-                      onError="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                      onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
                     >
                       Your browser does not support the video tag.
                     </video>
-                    {/* Fallback image (hidden by default) */}
                     <Image
                       src={item.fallbackImage}
                       alt={item.alt}
@@ -488,11 +414,9 @@ if (post && post.data) {
           </div>
         );
       }) : (
-        <!-- Fallback display when no banner items are available -->
         <div class="w-full h-full rounded-lg" style={`background: ${getFallbackBannerCSS()};`}></div>
       )}
-      
-      <!-- Optional gradient overlay for better text readability -->
+
       {bannerConfig.visual.applyGradientOverlay && (
         <div class="absolute inset-0 w-full h-full pointer-events-none" style={`background: ${bannerConfig.visual.gradientOverlay}; border-radius: ${bannerConfig.visual.borderRadius};`}></div>
       )}
@@ -504,47 +428,36 @@ if (post && post.data) {
 <!-- =============================================================== -->
 <!-- MAIN CONTENT WRAPPER                                           -->
 <!-- =============================================================== -->
-<!-- Contains the main grid layout with sidebar and content area    -->
-<!-- Main content offset is controlled by banner.config.ts          -->
-<div class={`w-full z-30 pointer-events-none relative`}>
-  <div class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto" style={`top: ${mainPanelTop}; position: relative;`}>
+<div class={`w-full z-30 pointer-events-none relative`}
+  style={`margin-top: ${mainContentOffset};`}>
+  <div class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto">
     <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-[17.5rem_auto] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
-       mx-auto gap-4 px-0 md:px-4" style={`margin-top: ${mainContentOffset};`}>
-       
+       mx-auto gap-4 px-0 md:px-4">
+
       <!-- ========================================================= -->
-      <!-- SIDEBAR SECTION                                          -->
+      <!-- SIDEBAR SECTION (ReviewsSideBar)                         -->
       <!-- ========================================================= -->
-      <!-- Contains author info, navigation, and other sidebar content -->
-      <SideBar 
-        class="mb-4 row-start-2 row-end-3 col-span-2 lg:row-start-1 lg:row-end-2 lg:col-span-1 lg:max-w-[17.5rem] onload-animation" 
-        headings={headings}
-        postSlug={postData?.slug || ''}
-        customAvatar={postData?.customAvatar || ''}
-        customName={postData?.customName || ''}
-        customBio={postData?.customBio || ''}
-      ></SideBar>
-      
+      <ReviewsSideBar
+        class="mb-4 row-start-2 row-end-3 col-span-2 lg:row-start-1 lg:row-end-2 lg:col-span-1 lg:max-w-[17.5rem] onload-animation"
+      ></ReviewsSideBar>
+
       <!-- ========================================================= -->
       <!-- MAIN CONTENT SECTION                                     -->
       <!-- ========================================================= -->
-      <!-- The primary content area where page/post content is displayed -->
       <main id="main" class="transition-swup-fade col-span-2 lg:col-span-1 overflow-hidden">
         <div id="main-content-wrapper" class="onload-animation">
           <slot></slot>
-          <!-- Footer for large screens (hidden on mobile) -->
           <div class="footer col-span-2 onload-animation hidden lg:block">
             <Footer></Footer>
           </div>
         </div>
       </main>
-      
-      <!-- Footer for mobile screens (hidden on large screens) -->
+
       <div class="footer col-span-2 onload-animation block lg:hidden">
         <Footer></Footer>
       </div>
     </div>
 
-    <!-- Back to top button (floating action button) -->
     <BackToTop></BackToTop>
   </div>
 </div>
@@ -552,7 +465,6 @@ if (post && post.data) {
 <!-- =============================================================== -->
 <!-- TABLE OF CONTENTS (TOC) SECTION                                -->
 <!-- =============================================================== -->
-<!-- Fixed position TOC that appears on large screens only          -->
 <div class="absolute w-full z-0 hidden 2xl:block">
   <div class="relative max-w-[var(--page-width)] mx-auto">
     {siteConfig.toc.enable && <div id="toc-wrapper" class="hidden lg:block transition absolute top-0 -right-[var(--toc-width)] w-[var(--toc-width)] flex items-center toc-animated">
@@ -565,7 +477,6 @@ if (post && post.data) {
       </div>
     </div>}
 
-    {/* TOC div must exist for Swup navigation to work properly */}
     {!siteConfig.toc.enable && <div id="toc"></div>}
   </div>
 </div>
@@ -573,20 +484,18 @@ if (post && post.data) {
 <!-- =============================================================== -->
 <!-- BLEEPY (AI ASSISTANT) INTEGRATION                              -->
 <!-- =============================================================== -->
-<!-- Global Bleepy mascot and context data for AI interactions     -->
 {contextForBleepy && (
   <div id="bleepy-page-context" style="display: none;" data-context={JSON.stringify(contextForBleepy)}></div>
 )}
-<Bleepy mascotContext={Astro.props.pageMascotContext} instanceIdentifier="LAYOUT_BLEEPY" />
+<Bleepy mascotContext={Astro.props.pageMascotContext} instanceIdentifier="LAYOUT_BLEEPY_REVIEWS" />
 
 </Layout>
 
 <style define:vars={{
   'banner-height': bannerConfig.layout.height.desktop,
   'banner-height-mobile': bannerConfig.layout.height.mobile,
-  'banner-overlap': BANNER_OVERLAP, // Use the destructured BANNER_OVERLAP which comes from getResponsiveBannerDimensions
-  'banner-overlap-mobile': bannerConfig.layout.overlap.mobile, // Assuming mobile still uses general overlap or needs its own dynamic calculation
-  'dynamic-overlap': dynamicOverlap, // Add the dynamic overlap CSS variable
+  'banner-overlap': bannerConfig.layout.overlap.desktop,
+  'banner-overlap-mobile': bannerConfig.layout.overlap.mobile,
   'navbar-height': bannerConfig.navbar.height.desktop,
   'navbar-height-mobile': bannerConfig.navbar.height.mobile,
   'main-content-offset': bannerConfig.layout.mainContentOffset.desktop,
@@ -601,33 +510,24 @@ if (post && post.data) {
   .has-standard-banner {
     margin-top: var(--standard-navbar-spacing) !important;
   }
-  
+
   .has-timeline-banner {
     margin-top: var(--timeline-navbar-spacing) !important;
   }
-  
+
   .has-video-banner {
     margin-top: var(--video-navbar-spacing) !important;
   }
-  
+
   .has-image-banner {
     margin-top: var(--image-navbar-spacing) !important;
   }
-  
+
   .has-assistant-banner {
     margin-top: var(--assistant-navbar-spacing) !important;
   }
 
-  /* ============================================================= */
-  /* MAIN CONTENT POSITIONING                                      */
-  /* ============================================================= */
-  /* Main content offset is controlled by banner.config.ts        */
-  /* Modify bannerConfig.layout.mainContentOffset to adjust       */
-  
-  /* Desktop main content offset is applied inline via CSS variable */
-  /* Mobile override below uses CSS variable from config */
-
-  /* Banner animation optimizations - consistent structure */
+  /* Main content positioning */
   .banner-slide {
     will-change: opacity;
     backface-visibility: hidden;
@@ -640,7 +540,6 @@ if (post && post.data) {
     transform: translateZ(0);
   }
 
-  /* Standard banner specific styles */
   #standard-banner-container {
     position: relative;
     overflow: hidden;
@@ -650,41 +549,37 @@ if (post && post.data) {
     transition-property: opacity;
     transition-timing-function: ease-in-out;
   }
-  
-  /* Mobile responsiveness */
+
   @media (max-width: 768px) {
     #banner-container.absolute, #animated-banner {
       height: var(--banner-height-mobile);
     }
-    
+
     .video-banner-content, .image-banner-content {
       padding: 0 0.5rem;
     }
   }
 
-  /* Animation styles */
   .onload-animation {
     opacity: 0;
     transform: translateY(10px);
     transition: opacity 0.5s ease, transform 0.5s ease;
   }
-  
+
   .onload-animation.loaded {
     opacity: 1;
     transform: translateY(0);
   }
-  
-  /* TOC styles */
+
   .toc-animated {
     transition: opacity 0.3s ease;
   }
-  
+
   .toc-hide {
     opacity: 0;
     pointer-events: none;
   }
 
-  /* Large screen handling */
   @media (min-width: 1921px) {
     .animated-banner-content:after {
       content: '';
@@ -702,7 +597,7 @@ if (post && post.data) {
 <script>
   // Import banner animation utility and configuration
   import { createBannerAnimation } from '@/utils/bannerAnimation';
-  import { 
+  import {
     getBannerAnimationSettings,
     getBannerLink,
     getLinkPreviewData,
@@ -710,7 +605,6 @@ if (post && post.data) {
     bannerConfig
   } from '../config/banner.config';
 
-  // Initialize everything when DOM is ready
   document.addEventListener('DOMContentLoaded', () => {
     initializePageAnimations();
     initializeBannerAnimation();
@@ -718,20 +612,16 @@ if (post && post.data) {
     initializeEventListeners();
   });
 
-  /**
-   * Initialize page load animations
-   */
   function initializePageAnimations() {
     updateNavbarHeight();
-    
+
     const elements = document.querySelectorAll('.onload-animation');
     elements.forEach((element, index) => {
       setTimeout(() => {
         element.classList.add('loaded');
       }, 100 + (index * 50));
     });
-    
-    // Show post image if present
+
     const postImage = document.getElementById('post-image');
     if (postImage) {
       setTimeout(() => {
@@ -740,12 +630,7 @@ if (post && post.data) {
     }
   }
 
-  /**
-   * Initialize banner animation using the centralized utility
-   * Much cleaner - all logic is now in the banner system!
-   */
   function initializeBannerAnimation() {
-    // Create banner animation with configuration
     const bannerController = createBannerAnimation({
       containerId: 'standard-banner-container',
       animationConfig: getBannerAnimationSettings(),
@@ -756,35 +641,32 @@ if (post && post.data) {
       isImageBannerItem: bannerConfig.standardBannerConfig.isImageBannerItem
     });
 
-    // Initialize the animation system
     const initialized = bannerController.initialize();
-    
+
     if (initialized) {
-      console.log('Banner animation system initialized successfully');
+      console.log('Banner animation system initialized successfully for ReviewsLayout');
     } else {
-      console.log('Banner animation system initialization skipped (not applicable)');
+      console.log('Banner animation system initialization skipped for ReviewsLayout (not applicable)');
     }
   }
 
-  /**
-   * Efficient parallax effect
-   * Configuration from banner.config.ts
-   */
   function initializeParallaxEffect() {
     const parallaxBanner = document.getElementById('parallax-banner');
     if (!parallaxBanner) return;
-    
+
     const parallaxImage = document.getElementById('parallax-image');
     if (!parallaxImage) return;
-    
+
     const scrollFactor = bannerConfig.parallax.scrollFactor;
     let ticking = false;
 
     function updateParallax() {
       const scrollY = window.scrollY;
       const offset = scrollY * scrollFactor;
-      
-      parallaxImage.style.transform = `translate3d(0, ${offset}px, 0)`;
+
+      if (parallaxImage) {
+        parallaxImage.style.transform = `translate3d(0, ${offset}px, 0)`;
+      }
       ticking = false;
     }
 
@@ -795,7 +677,6 @@ if (post && post.data) {
       }
     });
 
-    // Fade in parallax banner after initial setup
     window.addEventListener('load', () => {
       setTimeout(() => {
         parallaxBanner.classList.add('loaded');
@@ -803,9 +684,6 @@ if (post && post.data) {
     });
   }
 
-  /**
-   * Update navbar height CSS variable
-   */
   function updateNavbarHeight() {
     const navbar = document.getElementById('navbar-wrapper');
     if (navbar) {
@@ -814,11 +692,7 @@ if (post && post.data) {
     }
   }
 
-  /**
-   * Initialize event listeners
-   */
   function initializeEventListeners() {
-    // TOC visibility on scroll
     window.addEventListener('scroll', () => {
       const scrollY = window.scrollY;
       const tocWrapper = document.querySelector('#toc-wrapper');
@@ -830,19 +704,16 @@ if (post && post.data) {
         }
       }
     });
-    
-    // Handle resize events
+
     window.addEventListener('resize', () => {
       updateNavbarHeight();
     });
 
-    // Apply background opacity from config if available
-    if (window.siteConfig && window.siteConfig.transparency) {
-      document.documentElement.style.setProperty('--bg-opacity', window.siteConfig.transparency);
+    if ((window as any).siteConfig && (window as any).siteConfig.transparency) {
+      document.documentElement.style.setProperty('--bg-opacity', (window as any).siteConfig.transparency);
     }
   }
 
-  // Preserve global banner animation interface for TypeScript
   declare global {
     interface Window {
       bannerAnimation?: {

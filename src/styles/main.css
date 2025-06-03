@@ -143,6 +143,287 @@
         hover:decoration-[var(--link-hover)] active:decoration-[var(--link-active)] underline-offset-[0.25rem]
     }
 
+/* ===================================================================
+     * CORRECTED BANNER SYSTEM - Fixes Invisible Images Issue
+     * ===================================================================
+     * CRITICAL FIXES: Proper sizing, z-index management, and positioning
+     * All slides remain visible and properly sized
+     * ===================================================================
+     */
+
+    /* FIXED: Banner slide wrapper with proper sizing and positioning */
+    .banner-slide {
+        will-change: opacity;
+        backface-visibility: hidden;
+        transition-property: opacity;
+        transition-timing-function: ease-in-out;
+        /* CRITICAL FIXES */
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 2; /* Default z-index above background content */
+    }
+
+    /* FIXED: Interactive slide gets higher z-index */
+    .banner-slide.banner-interactive {
+        pointer-events: auto;
+        z-index: 10 !important; /* Ensure interactive slide is on top */
+    }
+
+    /* FIXED: Non-interactive slides still visible but not clickable */
+    .banner-slide.banner-non-interactive {
+        pointer-events: none;
+        z-index: 1; /* Lower but still visible */
+    }
+
+    /* Banner interaction states */
+    .banner-slide.banner-paused {
+        transform: scale(1.002);
+        z-index: 15 !important;
+    }
+
+    .banner-slide.banner-selected {
+        transform: scale(1.01);
+        z-index: 20 !important;
+        pointer-events: auto !important;
+    }
+
+    /* FIXED: Banner image with proper sizing */
+    .banner-image {
+        will-change: opacity, transform;
+        backface-visibility: hidden;
+        transition: transform 0.3s ease;
+        /* CRITICAL FIXES */
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover; /* Ensure images fill container */
+    }
+
+    /* FIXED: Standard banner container with guaranteed height */
+    #standard-banner-container {
+        position: relative;
+        overflow: hidden;
+        /* CRITICAL: Ensure container has height */
+        min-height: 200px; /* Fallback height */
+    }
+
+    /* Banner clickable link - enhanced with preview states */
+    .banner-link {
+        @apply transition relative;
+        cursor: pointer;
+        z-index: 20;
+        display: block;
+        width: 100%;
+        height: 100%;
+        position: relative;
+    }
+
+    /* PostCard-Style Banner Preview Overlay */
+    .banner-postcard-preview {
+        @apply absolute inset-0 w-full h-full;
+        backdrop-filter: blur(8px);
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+        z-index: 30;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    /* Banner preview card using existing card-base styling */
+    .banner-preview-card {
+        max-width: 80%;
+        min-width: 300px;
+        transform: scale(0.95);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Show preview only on interactive slides */
+    .banner-slide.banner-interactive .banner-link:hover .banner-postcard-preview,
+    .banner-slide.banner-selected .banner-postcard-preview {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .banner-slide.banner-interactive .banner-link:hover .banner-preview-card,
+    .banner-slide.banner-selected .banner-preview-card {
+        transform: scale(1);
+    }
+
+    /* Banner hover overlay (background dimming) */
+    .banner-hover-overlay {
+        @apply absolute inset-0 w-full h-full;
+        background: linear-gradient(
+            135deg, 
+            color-mix(in srgb, black 30%, transparent),
+            color-mix(in srgb, black 50%, transparent)
+        );
+        backdrop-filter: blur(2px);
+        opacity: 0;
+        transition: all 0.3s ease;
+        pointer-events: none;
+        z-index: 25;
+    }
+
+    /* Show overlay only on interactive slides */
+    .banner-slide.banner-interactive .banner-link:hover .banner-hover-overlay,
+    .banner-slide.banner-selected .banner-hover-overlay {
+        opacity: 1;
+    }
+
+    /* Pause Indicator using existing button styling */
+    .banner-pause-indicator {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transform: scale(0.8);
+        transition: all 0.3s ease;
+        z-index: 35;
+        backdrop-filter: blur(4px);
+    }
+
+    /* Show pause indicator when animation is paused */
+    .banner-slide.banner-paused .banner-pause-indicator,
+    .banner-slide.banner-selected .banner-pause-indicator {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    /* Banner link focus states */
+    .banner-link:focus,
+    .banner-link:focus-visible {
+        outline: 4px solid var(--primary);
+        outline-offset: 4px;
+        border-radius: inherit;
+    }
+
+    /* DEBUGGING: Uncomment these to see banner boundaries */
+    /*
+    .banner-slide {
+        border: 3px solid red !important;
+    }
+    .banner-slide.banner-interactive {
+        border-color: green !important;
+    }
+    .banner-image {
+        border: 2px solid blue !important;
+    }
+    #standard-banner-container {
+        border: 5px solid purple !important;
+        background: rgba(255, 255, 0, 0.1) !important;
+    }
+    */
+
+    /* MOBILE: Touch-specific optimizations */
+    @media (max-width: 768px) {
+        .banner-postcard-preview {
+            padding: 1.5rem;
+        }
+
+        .banner-preview-card {
+            min-width: 90%;
+            max-width: 95%;
+        }
+
+        /* Mobile selection hint using existing button styling */
+        .banner-mobile-hint {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.7;
+            animation: mobileHint 3s infinite;
+            pointer-events: none;
+            z-index: 40;
+        }
+
+        /* Hide mobile hint when banner is selected */
+        .banner-slide.banner-selected .banner-mobile-hint {
+            opacity: 0;
+            transform: scale(0);
+        }
+    }
+
+    /* Mobile hint animation */
+    @keyframes mobileHint {
+        0%, 85%, 100% {
+            opacity: 0.7;
+            transform: scale(1);
+        }
+        42% {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+    }
+
+    /* Desktop-only hover enhancements */
+    @media (min-width: 769px) {
+        .banner-slide.banner-interactive .banner-link:hover .banner-image {
+            transform: scale(1.02);
+        }
+
+        /* Subtle border pulse on hover - only for interactive slides */
+        .banner-slide.banner-interactive .banner-link:hover {
+            box-shadow: 
+                0 0 0 3px color-mix(in srgb, var(--primary) 30%, transparent),
+                0 0 20px color-mix(in srgb, var(--primary) 20%, transparent);
+            border-radius: inherit;
+        }
+    }
+
+    /* Accessibility improvements */
+    @media (prefers-reduced-motion: reduce) {
+        .banner-slide,
+        .banner-image,
+        .banner-postcard-preview,
+        .banner-hover-overlay,
+        .banner-pause-indicator {
+            transition: none !important;
+            animation: none !important;
+        }
+    }
+
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+        .banner-postcard-preview {
+            backdrop-filter: none;
+        }
+        
+        .banner-preview-card {
+            border: 2px solid white !important;
+        }
+        
+        .banner-pause-indicator {
+            border: 2px solid white !important;
+        }
+    }
+
+    /* Dark mode optimizations */
+    @media (prefers-color-scheme: dark) {
+        .banner-postcard-preview {
+            /* PostCard styling automatically handles dark mode */
+        }
+    }
+    
     .toc-hide,
     .toc-not-ready {
         @apply opacity-0 pointer-events-none
