@@ -1195,9 +1195,14 @@
     
     /* Apply mobile grid layout - ONLY on larger screens */
     @media (min-width: 1024px) {
+        body.force-mobile-view #main-panel-wrapper { /* Target the panel that gets the dynamic 'top' style */
+            top: 0 !important; /* Neutralize server-rendered 'top' offset in fullscreen */
+        }
+
         body.force-mobile-view #main-grid {
             grid-template-columns: 1fr !important;
             grid-template-rows: auto 1fr auto !important;
+            margin-top: 5.5rem !important; /* Consistent 4.5rem gap from the now top:0 panel wrapper */
         }
         
         /* Hide sidebar in fullscreen mode - ONLY on larger screens */
@@ -1224,14 +1229,15 @@
         
         /* Hide TOC in fullscreen mode - ONLY on larger screens */
         body.force-mobile-view #toc-wrapper,
-        body.force-mobile-view .2xl\\:block {
+        body.force-mobile-view .2xl\:block {
             display: none !important;
         }
     }
     
     /* Force mobile banner height on all screen sizes */
     body.force-mobile-view #banner-container {
-        height: var(--banner-height-mobile) !important;
+        /* display: none !important; /* Hide banner completely - This will be handled by the more specific rule below */
+        /* height: var(--banner-height-mobile) !important; /* No longer needed if display: none */
     }
     
     /* Adjust navbar for mobile view */
@@ -1281,11 +1287,14 @@
 
     /* Fullscreen mode specific adjustments */
     body.force-mobile-view #banner-container {
-      margin-top: 0 !important;
-      min-height: 0 !important;
+      display: none !important; /* Hide banner completely */
+      margin-top: 0 !important; /* Retained for consistency, though display:none makes it less relevant */
+      min-height: 0 !important; /* Retained for consistency, though display:none makes it less relevant */
     }
     
-} /* End of @layer components */
+} 
+
+/* End of @layer components */
 
 /* ===================================================================
  * GLOBAL STYLES OUTSIDE @layer (from original main.css)
