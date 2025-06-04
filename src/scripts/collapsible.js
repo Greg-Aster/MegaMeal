@@ -1,8 +1,10 @@
-// Modified version with scroll-to-top
+// Modified version with improved scroll behavior
 function handleCollapsibleClick(event) {
+  // Prevent default button behavior that might cause scrolling
+  event.preventDefault();
+  
   const header = event.currentTarget;
   const content = header.nextElementSibling;
-  const parentCard = header.closest('.card-base'); // Add this line
   
   if (content.hasAttribute('data-animating')) return;
 
@@ -16,16 +18,16 @@ function handleCollapsibleClick(event) {
     }
   });
 
-  // Toggle current with parentCard reference
+  // Toggle current - keep user at button position
   if (!isCurrentlyExpanded) {
-    expandSection(content, header, parentCard); // Pass parentCard
+    expandSection(content, header);
   } else {
     collapseSection(content, header);
   }
 }
 
-// Modified expandSection to accept parentCard
-function expandSection(content, header, parentCard) {
+// Modified expandSection - removed parentCard parameter and scroll behavior
+function expandSection(content, header) {
   const arrow = header.querySelector('.indicator-arrow');
   
   content.setAttribute('data-animating', 'true');
@@ -43,13 +45,8 @@ function expandSection(content, header, parentCard) {
     
     setTimeout(() => {
       content.removeAttribute('data-animating');
-      // Add scroll logic here
-      if (parentCard) {
-        parentCard.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }
+      // Removed scroll logic to prevent unwanted scrolling
+      // The user stays at their current position
     }, 300); // Match animation duration
   });
 }

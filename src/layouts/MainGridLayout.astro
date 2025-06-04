@@ -79,6 +79,7 @@ import { Image } from 'astro:assets';
 import TimelineController from '../components/timeline/TimelineBanner.astro';
 import '../styles/timeline-styles.css';
 
+
 // Bleepy (AI Assistant) related imports
 import Bleepy from '@components/bleepy/Bleepy.astro';
 import BleepyBanner from '@components/bleepy/BleepyBanner.astro';
@@ -254,6 +255,22 @@ if (post && post.data) {
       <Navbar></Navbar>
     </div>
   </div>
+
+<!-- =============================================================== -->
+<!-- FULLSCREEN MODE TOGGLE                                        -->
+<!-- =============================================================== -->
+<!-- Simple toggle to force mobile view on desktop                 -->
+<div id="fullscreen-toggle" class="fixed bottom-4 right-4 z-50">
+  <button 
+    id="fullscreen-btn"
+    class="btn-card rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-300"
+    aria-label="Toggle Fullscreen Mode"
+    title="Toggle Fullscreen Mode"
+  >
+    <Icon name="fa6-solid:expand" class="fullscreen-icon w-5 h-5" />
+    <Icon name="fa6-solid:compress" class="fullscreen-exit-icon w-5 h-5 hidden" />
+  </button>
+</div>
 
 <!-- =============================================================== -->
 <!-- UNIFIED BANNER CONTAINER                                       -->
@@ -628,23 +645,8 @@ if (post && post.data) {
   /* Mobile override below uses CSS variable from config */
 
   /* Banner animation optimizations - consistent structure */
-  .banner-slide {
-    will-change: opacity;
-    backface-visibility: hidden;
-    transform: translateZ(0);
-  }
-
-  .banner-image {
-    will-change: opacity, transform;
-    backface-visibility: hidden;
-    transform: translateZ(0);
-  }
 
   /* Standard banner specific styles */
-  #standard-banner-container {
-    position: relative;
-    overflow: hidden;
-  }
 
   #standard-banner-container .banner-slide {
     transition-property: opacity;
@@ -656,34 +658,8 @@ if (post && post.data) {
     #banner-container.absolute, #animated-banner {
       height: var(--banner-height-mobile);
     }
-    
-    .video-banner-content, .image-banner-content {
-      padding: 0 0.5rem;
-    }
-  }
-
-  /* Animation styles */
-  .onload-animation {
-    opacity: 0;
-    transform: translateY(10px);
-    transition: opacity 0.5s ease, transform 0.5s ease;
   }
   
-  .onload-animation.loaded {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  
-  /* TOC styles */
-  .toc-animated {
-    transition: opacity 0.3s ease;
-  }
-  
-  .toc-hide {
-    opacity: 0;
-    pointer-events: none;
-  }
-
   /* Large screen handling */
   @media (min-width: 1921px) {
     .animated-banner-content:after {
@@ -859,4 +835,107 @@ if (post && post.data) {
       };
     }
   }
+
+  /**
+ * Initialize fullscreen mode toggle
+ */
+function initializeFullscreenMode() {
+  const toggleBtn = document.getElementById('fullscreen-btn');
+  const expandIcon = toggleBtn?.querySelector('.fullscreen-icon');
+  const compressIcon = toggleBtn?.querySelector('.fullscreen-exit-icon');
+  
+  // Check saved state and apply it WITHOUT triggering reload
+  const isFullscreen = localStorage.getItem('fullscreenMode') === 'true';
+  
+  // Apply initial state (without reload - just visual state)
+  if (isFullscreen) {
+    applyFullscreenState();
+  } else {
+    applyNormalState();
+  }
+  
+  // Toggle handler
+  toggleBtn?.addEventListener('click', () => {
+    const currentState = document.body.classList.contains('force-mobile-view');
+    
+    if (currentState) {
+      disableFullscreenMode();
+    } else {
+      enableFullscreenMode();
+    }
+  });
+  
+  /**
+   * Apply fullscreen visual state without reload
+   */
+  function applyFullscreenState() {
+    // Add class to force mobile view
+    document.body.classList.add('force-mobile-view');
+    
+    // Update button icons
+    expandIcon?.classList.add('hidden');
+    compressIcon?.classList.remove('hidden');
+  }
+  
+  /**
+   * Apply normal visual state without reload
+   */
+  function applyNormalState() {
+    // Remove class
+    document.body.classList.remove('force-mobile-view');
+    
+    // Update button icons
+    expandIcon?.classList.remove('hidden');
+    compressIcon?.classList.add('hidden');
+  }
+  
+  /**
+   * Enable fullscreen mode and reload to apply banner changes
+   */
+  function enableFullscreenMode() {
+    // Save state first
+    localStorage.setItem('fullscreenMode', 'true');
+    localStorage.setItem('fullscreenBannerOverride', 'true');
+    
+    // Apply visual state immediately
+    applyFullscreenState();
+    
+    // Reload to apply banner changes
+    if (!document.body.classList.contains('fullscreen-transitioning')) {
+      document.body.classList.add('fullscreen-transitioning');
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
+    }
+  }
+  
+  /**
+   * Disable fullscreen mode and reload to restore banner
+   */
+  function disableFullscreenMode() {
+    // Save state first
+    localStorage.setItem('fullscreenMode', 'false');
+    localStorage.removeItem('fullscreenBannerOverride');
+    
+    // Apply visual state immediately
+    applyNormalState();
+    
+    // Reload to restore banner
+    if (!document.body.classList.contains('fullscreen-transitioning')) {
+      document.body.classList.add('fullscreen-transitioning');
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
+    }
+  }
+}
+
+  // Add to DOMContentLoaded
+  document.addEventListener('DOMContentLoaded', () => {
+    initializePageAnimations();
+    initializeBannerAnimation();
+    initializeParallaxEffect();
+    initializeEventListeners();
+    initializeFullscreenMode(); // Add this line
+  });
 </script>

@@ -2,6 +2,10 @@
 
 @layer components {
 
+    /* ===================================================================
+     * GLOBAL CSS CUSTOM PROPERTIES (from original main.css)
+     * ===================================================================
+     */
     :root {
     /* Global transparency controls */
         --bg-opacity: 0.85; /* Default transparency value */
@@ -29,289 +33,738 @@
         --text-color-muted: oklch(0.5 0.01 var(--hue));
     }
     
-@media (prefers-color-scheme: dark) {
-    :root {
-        --card-bg: oklch(0.15 0.01 var(--hue));
-        --text-color: oklch(0.9 0.01 var(--hue));
-        --border-color: oklch(0.3 0.01 var(--hue));
-        --surface-1: oklch(0.2 0.01 var(--hue));
-        --surface-2: oklch(0.25 0.02 var(--hue));
-        --input-bg: oklch(0.18 0.01 var(--hue));
-        --input-border-color: oklch(0.4 0.01 var(--hue));
-        --text-on-primary: oklch(0.98 0.01 var(--hue));
-        --text-color-muted: oklch(0.6 0.01 var(--hue));
-    }
-}
-    /* Keep existing card-base but add opacity and backdrop blur */
-    .card-base {
-        @apply rounded-[var(--radius-large)] overflow-hidden transition;
-        background-color: color-mix(in srgb, var(--card-bg), transparent calc((1 - var(--bg-opacity)) * 100%));
-        backdrop-filter: blur(3px);
-        box-sizing: border-box;
-        /* padding: 2px; */ /* Padding removed, space created by transparent shadow layer */
-        border: none;
-        box-shadow:
-          /* Transparent 2px inset to create space for the glow */
-          inset 0 0 0 2px transparent,
-          /* Bright center line, inset by 2px (to sit inside transparent layer), 1px thick */
-          inset 0 0 0 2px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 100%), transparent),
-          /* Inner glow / falloff, starting from the 3px inset */
-          inset 0 0 5px 3px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 70%), transparent),
-          /* Softer, wider inner glow */
-          inset 0 0 7px 3px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 40%), transparent);
-    }
-
-    .card-base2 {
-        @apply rounded-[var(--radius-large)] overflow-hidden transition;
-        background-color: color-mix(in srgb, var(--card-bg), transparent calc((1 - var(--bg-opacity)) * 100%));
-        backdrop-filter: blur(3px);
-        box-sizing: border-box;
-        border: 1px solid color-mix(in srgb, var(--primary) calc(var(--card-border-subtle-opacity) * 100%), transparent);
-        /* No complex box-shadow for glow, just a subtle border */
-    }
-    .card-base3 {
-        @apply rounded-[var(--radius-large)] overflow-hidden transition;
-        background-color: color-mix(in srgb, var(--card-bg), transparent calc((1 - var(--bg-opacity)) * 100%));
-        backdrop-filter: blur(3px);
-        box-sizing: border-box;
-        /* padding: 2px; */ /* Padding removed, space created by transparent shadow layer */
-        border: none;
-        box-shadow:
-          /* Transparent 2px inset to create space for the glow */
-          inset 0 0 0 2px transparent,
-          /* Bright center line, inset by 2px (to sit inside transparent layer), 1px thick */
-          inset 0 0 0 2px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 100%), transparent),
-          /* Inner glow / falloff, starting from the 3px inset */
-          inset 0 0 5px 3px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 70%), transparent),
-          /* Softer, wider inner glow */
-          inset 0 0 7px 3px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 40%), transparent);
-    }
-
-    h1, h2, h3, h4, h5, h6, p, a, span, li, ul, ol, blockquote, code, pre, table, th, td, strong {
-        @apply transition;
-    }
-    .card-shadow {
-        @apply drop-shadow-[0_2px_4px_rgba(0,0,0,0.005)]
-    }
-    .expand-animation {
-        @apply relative before:ease-out before:transition active:bg-none hover:before:bg-[var(--btn-plain-bg-hover)] active:before:bg-[var(--btn-plain-bg-active)] z-0
-        before:absolute before:rounded-[inherit] before:inset-0 before:scale-[0.85] hover:before:scale-100 before:-z-10
-    }
-    .link {
-        @apply transition rounded-md p-1 -m-1 expand-animation;
-    }
-    .link-lg {
-        @apply transition rounded-md p-1.5 -m-1.5 expand-animation;
-    }
-    .float-panel {
-        @apply top-[5.25rem] rounded-[var(--radius-large)] overflow-hidden bg-[var(--float-panel-bg)] transition shadow-xl dark:shadow-none
-    }
-    .float-panel-closed {
-        @apply -translate-y-1 opacity-0 pointer-events-none
-    }
-    .search-panel mark {
-        @apply bg-transparent text-[var(--primary)]
-    }
-
-    .btn-card {
-        @apply transition flex items-center justify-center bg-[var(--card-bg)] hover:bg-[var(--btn-card-bg-hover)]
-        active:bg-[var(--btn-card-bg-active)]
-    }
-    .btn-card.disabled {
-        @apply pointer-events-none text-black/10 dark:text-white/10
-    }
-    .btn-plain {
-        @apply transition relative flex items-center justify-center bg-none
-        text-black/75 hover:text-[var(--primary)] dark:text-white/75 dark:hover:text-[var(--primary)];
-        &:not(.scale-animation) {
-            @apply hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)]
-        }
-        &.scale-animation {
-            @apply expand-animation;
-            &.current-theme-btn {
-                @apply before:scale-100 before:opacity-100 before:bg-[var(--btn-plain-bg-hover)] text-[var(--primary)]
-            }
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --card-bg: oklch(0.15 0.01 var(--hue));
+            --text-color: oklch(0.9 0.01 var(--hue));
+            --border-color: oklch(0.3 0.01 var(--hue));
+            --surface-1: oklch(0.2 0.01 var(--hue));
+            --surface-2: oklch(0.25 0.02 var(--hue));
+            --input-bg: oklch(0.18 0.01 var(--hue));
+            --input-border-color: oklch(0.4 0.01 var(--hue));
+            --text-on-primary: oklch(0.98 0.01 var(--hue));
+            --text-color-muted: oklch(0.6 0.01 var(--hue));
         }
     }
-    .btn-regular {
-        @apply transition flex items-center justify-center bg-[var(--btn-regular-bg)] hover:bg-[var(--btn-regular-bg-hover)] active:bg-[var(--btn-regular-bg-active)]
-        text-[var(--btn-content)] dark:text-white/75
-    }
 
-    .link-underline {
-        @apply transition underline decoration-2 decoration-dashed decoration-[var(--link-underline)]
-        hover:decoration-[var(--link-hover)] active:decoration-[var(--link-active)] underline-offset-[0.25rem]
-    }
-
-/* ===================================================================
-     * CORRECTED BANNER SYSTEM - Fixes Invisible Images Issue
+    /* ===================================================================
+     * BANNER SYSTEM - COMPLETE STYLING SOLUTION WITH VIDEO LAZY LOADING
      * ===================================================================
-     * CRITICAL FIXES: Proper sizing, z-index management, and positioning
-     * All slides remain visible and properly sized
-     * ===================================================================
+     * (Content from original banner.css)
      */
 
-    /* FIXED: Banner slide wrapper with proper sizing and positioning */
-    .banner-slide {
-        will-change: opacity;
-        backface-visibility: hidden;
-        transition-property: opacity;
-        transition-timing-function: ease-in-out;
-        /* CRITICAL FIXES */
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        z-index: 2; /* Default z-index above background content */
+    /* =================================================================
+     * BANNER CSS CUSTOM PROPERTIES
+     * =================================================================
+     * Banner-specific CSS variables for easy customization
+     */
+     :root {
+        /* Banner timing and animation properties */
+        --banner-transition-duration: 0.4s;
+        --banner-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
+        --banner-hover-scale: 1.02;
+        --banner-selected-scale: 1.01;
+        --banner-paused-scale: 1.002;
+        
+        /* Banner spacing and sizing */
+        --banner-preview-padding-desktop: 4rem 3rem 3rem;
+        --banner-preview-padding-mobile: 3rem 1.5rem 2rem;
+        --banner-nav-btn-size-desktop: 3rem;
+        --banner-nav-btn-size-mobile: 2.5rem;
+        --banner-indicator-size-desktop: 0.5rem;
+        --banner-indicator-size-mobile: 0.375rem;
+        
+        /* Banner loading indicator properties */
+        --banner-loading-bg: color-mix(in srgb, black 85%, transparent);
+        --banner-loading-border-radius: 0.75rem;
+        --banner-loading-padding: 1rem 1.5rem;
+        --banner-loading-gap: 0.75rem;
+        --banner-spinner-size: 1.25rem;
+        --banner-spinner-border-width: 2px;
+        
+        /* Banner z-index layers */
+        --banner-z-base: 1;
+        --banner-z-default: 2;
+        --banner-z-interactive: 10;
+        --banner-z-paused: 15;
+        --banner-z-selected: 20;
+        --banner-z-link: 20;
+        --banner-z-overlay: 25;
+        --banner-z-preview: 30;
+        --banner-z-pause-indicator: 35;
+        --banner-z-navigation: 40;
+        --banner-z-loading: 50;
+        --banner-z-title: 45;
     }
 
-    /* FIXED: Interactive slide gets higher z-index */
-    .banner-slide.banner-interactive {
-        pointer-events: auto;
-        z-index: 10 !important; /* Ensure interactive slide is on top */
-    }
+    /* =================================================================
+     * BASE BANNER CONTAINER AND SLIDE STRUCTURE
+     * =================================================================
+     * Core banner layout and positioning system
+     */
 
-    /* FIXED: Non-interactive slides still visible but not clickable */
-    .banner-slide.banner-non-interactive {
-        pointer-events: none;
-        z-index: 1; /* Lower but still visible */
-    }
-
-    /* Banner interaction states */
-    .banner-slide.banner-paused {
-        transform: scale(1.002);
-        z-index: 15 !important;
-    }
-
-    .banner-slide.banner-selected {
-        transform: scale(1.01);
-        z-index: 20 !important;
-        pointer-events: auto !important;
-    }
-
-    /* FIXED: Banner image with proper sizing */
-    .banner-image {
-        will-change: opacity, transform;
-        backface-visibility: hidden;
-        transition: transform 0.3s ease;
-        /* CRITICAL FIXES */
-        display: block !important;
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: cover; /* Ensure images fill container */
-    }
-
-    /* FIXED: Standard banner container with guaranteed height */
+    /* Banner container - ensures proper sizing and overflow handling */
     #standard-banner-container {
-        position: relative;
-        overflow: hidden;
-        /* CRITICAL: Ensure container has height */
-        min-height: 200px; /* Fallback height */
+        position: relative; /* */
+        overflow: hidden; /* */
+        min-height: 200px; /* Fallback height for loading states */ /* */
     }
 
-    /* Banner clickable link - enhanced with preview states */
+    /* Base banner slide - shared properties for all slide types */
+    .banner-slide {
+        /* Performance optimizations */
+        will-change: opacity; /* */
+        backface-visibility: hidden; /* */
+        transform: translateZ(0); /* ADDED for layer promotion (from MainGridLayout.astro) */
+        
+        /* Transition properties */
+        transition-property: opacity, transform; /* */
+        transition-duration: var(--banner-transition-duration); /* */
+        transition-timing-function: var(--banner-transition-easing); /* */
+        
+        /* Critical positioning */
+        position: absolute !important; /* */
+        top: 0 !important; /* */
+        left: 0 !important; /* */
+        width: 100% !important; /* */
+        height: 100% !important; /* */
+        z-index: var(--banner-z-default); /* */
+    }
+
+    /* Banner content (images and videos) - shared styling */
+    .banner-image,
+    .banner-video {
+        /* Performance optimizations */
+        will-change: opacity, transform; /* */
+        backface-visibility: hidden; /* */
+        transform: translateZ(0); /* ADDED for layer promotion (from MainGridLayout.astro) */
+        
+        /* Sizing and display */
+        display: block !important; /* */
+        width: 100% !important; /* */
+        height: 100% !important; /* */
+        object-fit: cover; /* */
+        
+        /* Smooth transitions */
+        transition: transform 0.3s ease; /* */
+    }
+
+    /* Banner clickable link wrapper */
     .banner-link {
-        @apply transition relative;
-        cursor: pointer;
-        z-index: 20;
-        display: block;
-        width: 100%;
-        height: 100%;
-        position: relative;
+        @apply transition relative; /* */
+        cursor: pointer; /* */
+        z-index: var(--banner-z-link); /* */
+        display: block; /* */
+        width: 100%; /* */
+        height: 100%; /* */
+        /* position: relative; /* This was duplicated in original banner.css, @apply relative handles it */
     }
 
-    /* PostCard-Style Banner Preview Overlay */
+    /* =================================================================
+     * BANNER INTERACTION STATES
+     * =================================================================
+     * Different interaction modes and their visual feedback
+     */
+
+    /* Interactive slide (current/active slide) */
+    .banner-slide.banner-interactive {
+        pointer-events: auto; /* */
+        z-index: var(--banner-z-interactive) !important; /* */
+    }
+
+    /* Non-interactive slide (background slides) */
+    .banner-slide.banner-non-interactive {
+        pointer-events: none; /* */
+        z-index: var(--banner-z-base); /* */
+    }
+
+    /* Paused state (when animation is paused) */
+    .banner-slide.banner-paused {
+        transform: scale(var(--banner-paused-scale)); /* */
+        z-index: var(--banner-z-paused) !important; /* */
+    }
+
+    /* Selected state (mobile touch selection) */
+    .banner-slide.banner-selected {
+        transform: scale(var(--banner-selected-scale)); /* */
+        z-index: var(--banner-z-selected) !important; /* */
+        pointer-events: auto !important; /* */
+    }
+
+    /* =================================================================
+     * BANNER PREVIEW OVERLAY SYSTEM
+     * =================================================================
+     * PostCard-style preview with enhanced interaction
+     */
+
+    /* Main preview overlay - blurred background */
     .banner-postcard-preview {
-        @apply absolute inset-0 w-full h-full;
-        backdrop-filter: blur(8px);
-        opacity: 0;
-        transform: translateY(10px);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        pointer-events: none;
-        z-index: 30;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem;
+        @apply absolute inset-0 w-full h-full; /* */
+        
+        /* Visual effects */
+        backdrop-filter: blur(8px); /* */
+        
+        /* Initial state (hidden) */
+        opacity: 0; /* */
+        transform: translateY(10px); /* */
+        
+        /* Transition */
+        transition: all var(--banner-transition-duration) var(--banner-transition-easing); /* */
+        
+        /* Interaction */
+        pointer-events: none; /* */
+        z-index: var(--banner-z-preview); /* */
+        
+        /* Layout */
+        display: flex; /* */
+        flex-direction: column; /* */
+        align-items: center; /* */
+        justify-content: center; /* */
+        padding: var(--banner-preview-padding-desktop); /* */
     }
 
-    /* Banner preview card using existing card-base styling */
+    /* Preview card using existing design system */
     .banner-preview-card {
-        max-width: 80%;
-        min-width: 300px;
-        transform: scale(0.95);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        max-width: 80%; /* */
+        min-width: 300px; /* */
+        transform: scale(0.95); /* */
+        transition: all var(--banner-transition-duration) var(--banner-transition-easing); /* */
     }
 
-    /* Show preview only on interactive slides */
-    .banner-slide.banner-interactive .banner-link:hover .banner-postcard-preview,
-    .banner-slide.banner-selected .banner-postcard-preview {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    .banner-slide.banner-interactive .banner-link:hover .banner-preview-card,
-    .banner-slide.banner-selected .banner-preview-card {
-        transform: scale(1);
-    }
-
-    /* Banner hover overlay (background dimming) */
+    /* Enhanced hover overlay (background dimming) */
     .banner-hover-overlay {
-        @apply absolute inset-0 w-full h-full;
+        @apply absolute inset-0 w-full h-full; /* */
+        
+        /* Visual effects */
         background: linear-gradient(
             135deg, 
             color-mix(in srgb, black 30%, transparent),
             color-mix(in srgb, black 50%, transparent)
-        );
-        backdrop-filter: blur(2px);
-        opacity: 0;
-        transition: all 0.3s ease;
-        pointer-events: none;
-        z-index: 25;
+        ); /* */
+        backdrop-filter: blur(2px); /* */
+        
+        /* Initial state */
+        opacity: 0; /* */
+        transition: all 0.3s ease; /* */
+        pointer-events: none; /* */
+        z-index: var(--banner-z-overlay); /* */
     }
 
-    /* Show overlay only on interactive slides */
-    .banner-slide.banner-interactive .banner-link:hover .banner-hover-overlay,
+    /* =================================================================
+     * BANNER PREVIEW ACTIVATION STATES
+     * =================================================================
+     * Show/hide logic for different interaction modes
+     */
+
+    /* Desktop hover activation */
+    .banner-slide.banner-interactive .banner-link:hover .banner-postcard-preview,
+    .banner-slide.banner-interactive .banner-link:hover .banner-hover-overlay {
+        opacity: 1; /* */
+    }
+
+    .banner-slide.banner-interactive .banner-link:hover .banner-postcard-preview {
+        transform: translateY(0); /* */
+    }
+
+    .banner-slide.banner-interactive .banner-link:hover .banner-preview-card {
+        transform: scale(1); /* */
+    }
+
+    /* Mobile/touch selection activation */
+    .banner-slide.banner-selected .banner-postcard-preview,
     .banner-slide.banner-selected .banner-hover-overlay {
-        opacity: 1;
+        opacity: 1; /* */
     }
 
-    /* Pause Indicator using existing button styling */
+    .banner-slide.banner-selected .banner-postcard-preview {
+        transform: translateY(0); /* */
+    }
+
+    .banner-slide.banner-selected .banner-preview-card {
+        transform: scale(1); /* */
+    }
+
+    /* =================================================================
+     * BANNER LOADING INDICATOR SYSTEM
+     * =================================================================
+     * Video loading states and loading spinner feedback
+     */
+
+    /* Loading indicator container */
+    .banner-loading-indicator {
+        position: absolute; /* */
+        top: 50%; /* */
+        left: 50%; /* */
+        transform: translate(-50%, -50%); /* */
+        
+        /* Visual styling using design system */
+        background: var(--banner-loading-bg); /* */
+        backdrop-filter: blur(8px); /* */
+        border: 1px solid color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 100%), transparent); /* */
+        border-radius: var(--banner-loading-border-radius); /* */
+        color: var(--text-color); /* */
+        
+        /* Layout */
+        display: flex; /* */
+        align-items: center; /* */
+        gap: var(--banner-loading-gap); /* */
+        padding: var(--banner-loading-padding); /* */
+        
+        /* Interaction and layering */
+        pointer-events: none; /* */
+        z-index: var(--banner-z-loading); /* */
+        
+        /* Initial state */
+        opacity: 0; /* */
+        transform: translate(-50%, -50%) scale(0.9); /* */
+        transition: all 0.3s ease; /* */
+    }
+
+    /* Show loading indicator when visible */
+    .banner-loading-indicator[style*="flex"] {
+        opacity: 1; /* */
+        transform: translate(-50%, -50%) scale(1); /* */
+    }
+
+    /* Loading spinner */
+    .loading-spinner {
+        width: var(--banner-spinner-size); /* */
+        height: var(--banner-spinner-size); /* */
+        border: var(--banner-spinner-border-width) solid color-mix(in srgb, var(--text-color) 30%, transparent); /* */
+        border-top: var(--banner-spinner-border-width) solid var(--primary); /* */
+        border-radius: 50%; /* */
+        animation: bannerSpinnerRotate 1s linear infinite; /* */
+        flex-shrink: 0; /* */
+    }
+
+    /* Loading text */
+    .loading-text {
+        font-size: 0.875rem; /* */
+        font-weight: 500; /* */
+        white-space: nowrap; /* */
+        opacity: 0.9; /* */
+    }
+
+    /* Spinner animation */
+    @keyframes bannerSpinnerRotate {
+        0% { 
+            transform: rotate(0deg); /* */
+        }
+        100% { 
+            transform: rotate(360deg); /* */
+        }
+    }
+
+    /* =================================================================
+     * NAVIGATION CONTROLS SYSTEM
+     * =================================================================
+     * Previous/Next buttons and position indicators
+     */
+
+    /* Navigation controls container */
+    .banner-navigation-controls {
+        position: absolute; /* */
+        top: 50%; /* */
+        left: 0; /* */
+        right: 0; /* */
+        transform: translateY(-50%); /* */
+        
+        /* Layout */
+        display: flex; /* */
+        justify-content: space-between; /* */
+        align-items: center; /* */
+        padding: 0 1rem; /* */
+        
+        /* Initial state */
+        pointer-events: none; /* */
+        z-index: var(--banner-z-navigation); /* */
+        opacity: 0; /* */
+        transition: all 0.3s ease; /* */
+    }
+
+    /* Navigation buttons - inherits from design system */
+    .banner-nav-btn {
+        @apply btn-card; /* */
+        
+        /* Sizing */
+        width: var(--banner-nav-btn-size-desktop); /* */
+        height: var(--banner-nav-btn-size-desktop); /* */
+        border-radius: 50%; /* */
+        
+        /* Visual effects */
+        backdrop-filter: blur(8px); /* */
+        border: 1px solid color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 100%), transparent); /* */
+        box-shadow: 
+            0 4px 12px color-mix(in srgb, black 20%, transparent),
+            inset 0 0 0 1px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 50%), transparent); /* */
+        
+        /* Interaction */
+        transition: all 0.2s ease; /* */
+        cursor: pointer; /* */
+        
+        /* Layout */
+        display: flex; /* */
+        align-items: center; /* */
+        justify-content: center; /* */
+        
+        /* Styling */
+        color: var(--text-color); /* */
+        opacity: 0.9; /* */
+    }
+
+    /* Navigation button hover states */
+    .banner-nav-btn:hover {
+        opacity: 1; /* */
+        transform: scale(1.1); /* */
+        border-color: color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 150%), transparent); /* */
+        box-shadow: 
+            0 6px 16px color-mix(in srgb, black 30%, transparent),
+            0 0 20px color-mix(in srgb, var(--primary) 30%, transparent),
+            inset 0 0 0 1px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 80%), transparent); /* */
+    }
+
+    /* Navigation button interaction states */
+    .banner-nav-btn:active {
+        transform: scale(0.95); /* */
+    }
+
+    .banner-nav-btn:focus,
+    .banner-nav-btn:focus-visible {
+        outline: 2px solid var(--primary); /* */
+        outline-offset: 2px; /* */
+    }
+
+    /* Navigation icons */
+    .banner-nav-icon {
+        width: 1.2rem; /* */
+        height: 1.2rem; /* */
+        fill: currentColor; /* */
+        transition: transform 0.2s ease; /* */
+    }
+
+    .banner-nav-btn:hover .banner-nav-icon {
+        transform: scale(1.1); /* */
+    }
+
+    /* =================================================================
+     * POSITION INDICATOR SYSTEM
+     * =================================================================
+     * Dots showing current position and direct navigation
+     */
+
+    /* Position indicator container */
+    .banner-position-indicator {
+        position: absolute; /* */
+        bottom: 1rem; /* */
+        left: 50%; /* */
+        transform: translateX(-50%); /* */
+        
+        /* Layout */
+        display: flex; /* */
+        gap: 0.5rem; /* */
+        
+        /* Initial state */
+        pointer-events: none; /* */
+        z-index: var(--banner-z-navigation); /* */
+        opacity: 0; /* */
+        transition: all 0.3s ease; /* */
+    }
+
+    /* Individual position dots */
+    .banner-position-dot {
+        width: var(--banner-indicator-size-desktop); /* */
+        height: var(--banner-indicator-size-desktop); /* */
+        border-radius: 50%; /* */
+        background-color: color-mix(in srgb, var(--text-color) 40%, transparent); /* */
+        transition: all 0.2s ease; /* */
+        cursor: pointer; /* */
+    }
+
+    /* Active position dot */
+    .banner-position-dot.active {
+        background-color: var(--primary); /* */
+        transform: scale(1.2); /* */
+        box-shadow: 0 0 8px color-mix(in srgb, var(--primary) 60%, transparent); /* */
+    }
+
+
+    /* =================================================================
+     * NAVIGATION ACTIVATION STATES
+     * =================================================================
+     * Show navigation controls during preview activation
+     */
+
+    /* Show navigation controls when preview is active */
+    .banner-slide.banner-interactive .banner-link:hover .banner-navigation-controls,
+    .banner-slide.banner-interactive .banner-link:hover .banner-position-indicator,
+    .banner-slide.banner-interactive .banner-link:hover .banner-title-display,
+    .banner-slide.banner-selected .banner-navigation-controls,
+    .banner-slide.banner-selected .banner-position-indicator,
+    .banner-slide.banner-selected .banner-title-display {
+        opacity: 1; /* */
+        pointer-events: auto; /* */
+    }
+
+    /* =================================================================
+     * PAUSE INDICATOR SYSTEM
+     * =================================================================
+     * Visual feedback when animation is paused
+     */
+
+    /* Pause indicator using existing button styling */
     .banner-pause-indicator {
-        position: absolute;
-        top: 1rem;
-        left: 1rem;
-        width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transform: scale(0.8);
-        transition: all 0.3s ease;
-        z-index: 35;
-        backdrop-filter: blur(4px);
+        position: absolute; /* */
+        top: 1rem; /* */
+        left: 1rem; /* */
+        width: 2.5rem; /* */
+        height: 2.5rem; /* */
+        border-radius: 50%; /* */
+        
+        /* Layout */
+        display: flex; /* */
+        align-items: center; /* */
+        justify-content: center; /* */
+        
+        /* Initial state */
+        opacity: 0; /* */
+        transform: scale(0.8); /* */
+        transition: all 0.3s ease; /* */
+        z-index: var(--banner-z-pause-indicator); /* */
+        backdrop-filter: blur(4px); /* */
     }
 
     /* Show pause indicator when animation is paused */
     .banner-slide.banner-paused .banner-pause-indicator,
     .banner-slide.banner-selected .banner-pause-indicator {
-        opacity: 1;
-        transform: scale(1);
+        opacity: 1; /* */
+        transform: scale(1); /* */
     }
 
-    /* Banner link focus states */
+    /* =================================================================
+     * MOBILE HINT SYSTEM
+     * =================================================================
+     * Helps mobile users understand interaction model
+     */
+
+    .banner-mobile-hint {
+        position: absolute; /* */
+        bottom: 1rem; /* */
+        right: 1rem; /* */
+        width: 3rem; /* */
+        height: 3rem; /* */
+        border-radius: 50%; /* */
+        
+        /* Layout */
+        display: flex; /* */
+        align-items: center; /* */
+        justify-content: center; /* */
+        
+        /* Animation */
+        opacity: 0.7; /* */
+        animation: bannerMobileHint 3s infinite; /* */
+        pointer-events: none; /* */
+        z-index: var(--banner-z-navigation); /* */
+    }
+
+    /* Hide mobile hint when banner is selected */
+    .banner-slide.banner-selected .banner-mobile-hint {
+        opacity: 0; /* */
+        transform: scale(0); /* */
+    }
+
+    /* Mobile hint animation */
+    @keyframes bannerMobileHint {
+        0%, 85%, 100% {
+            opacity: 0.7; /* */
+            transform: scale(1); /* */
+        }
+        42% {
+            opacity: 1; /* */
+            transform: scale(1.1); /* */
+        }
+    }
+
+    /* =================================================================
+     * DESKTOP HOVER ENHANCEMENTS
+     * =================================================================
+     * Advanced hover effects for desktop users
+     */
+
+    @media (min-width: 769px) {
+        /* Image scaling on hover */
+        .banner-slide.banner-interactive .banner-link:hover .banner-image,
+        .banner-slide.banner-interactive .banner-link:hover .banner-video {
+            transform: scale(var(--banner-hover-scale)); /* */
+        }
+
+        /* Banner link hover effects */
+        .banner-slide.banner-interactive .banner-link:hover {
+            box-shadow: 
+                0 0 0 3px color-mix(in srgb, var(--primary) 30%, transparent),
+                0 0 20px color-mix(in srgb, var(--primary) 20%, transparent); /* */
+            border-radius: inherit; /* */
+        }
+    }
+
+    /* =================================================================
+     * MOBILE OPTIMIZATIONS (Banner System Specific)
+     * =================================================================
+     * Touch-friendly controls and responsive sizing
+     */
+
+    @media (max-width: 768px) {
+        /* Adjust CSS custom properties for mobile */
+        :root { /* This :root is for banner specific vars, defined within this @media query */
+            --banner-nav-btn-size-desktop: var(--banner-nav-btn-size-mobile); /* */
+            --banner-indicator-size-desktop: var(--banner-indicator-size-mobile); /* */
+            --banner-loading-padding: 0.75rem 1rem; /* */
+            --banner-loading-gap: 0.5rem; /* */
+            --banner-spinner-size: 1rem; /* */
+        }
+
+        /* Navigation controls spacing */
+        .banner-navigation-controls {
+            padding: 0 0.5rem; /* */
+        }
+
+        /* Mobile navigation buttons */
+        .banner-nav-btn {
+            width: var(--banner-nav-btn-size-mobile); /* */
+            height: var(--banner-nav-btn-size-mobile); /* */
+            opacity: 1; /* Always visible on mobile for better touch interaction */ /* */
+        }
+
+        /* Mobile navigation icons */
+        .banner-nav-icon {
+            width: 1rem; /* */
+            height: 1rem; /* */
+        }
+
+        /* Mobile preview padding */
+        .banner-postcard-preview {
+            padding: var(--banner-preview-padding-mobile); /* */
+        }
+
+        /* Mobile preview card sizing */
+        .banner-preview-card {
+            min-width: 90%; /* */
+            max-width: 95%; /* */
+        }
+
+        /* Mobile position indicators */
+        .banner-position-indicator {
+            bottom: 0.5rem; /* */
+            gap: 0.375rem; /* */
+        }
+
+        .banner-position-dot {
+            width: var(--banner-indicator-size-mobile); /* */
+            height: var(--banner-indicator-size-mobile); /* */
+        }
+
+        /* Mobile banner title */
+        .banner-title {
+            font-size: 0.75rem; /* */
+            max-width: 250px; /* */
+            padding: 0.375rem 0.75rem; /* */
+        }
+
+        /* Mobile loading indicator text (specific to banner loading) */
+        .loading-text { /* This .loading-text is specific to banner loading */
+            font-size: 0.75rem; /* */
+        }
+        
+        /* Padding for specific banner content types on mobile (from MainGridLayout.astro) */
+        .video-banner-content, .image-banner-content {
+            padding: 0 0.5rem;
+        }
+    }
+
+    /* =================================================================
+     * ACCESSIBILITY SUPPORT (Banner System Specific)
+     * =================================================================
+     * High contrast mode and reduced motion support
+     */
+
+    /* Banner link focus states for keyboard navigation */
     .banner-link:focus,
     .banner-link:focus-visible {
-        outline: 4px solid var(--primary);
-        outline-offset: 4px;
-        border-radius: inherit;
+        outline: 4px solid var(--primary); /* */
+        outline-offset: 4px; /* */
+        border-radius: inherit; /* */
     }
 
-    /* DEBUGGING: Uncomment these to see banner boundaries */
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+        .banner-nav-btn {
+            border: 2px solid white !important; /* */
+            background-color: black !important; /* */
+            color: white !important; /* */
+        }
+        
+        .banner-position-dot {
+            border: 1px solid white !important; /* */
+        }
+        
+        .banner-position-dot.active {
+            background-color: white !important; /* */
+        }
+        
+        .banner-postcard-preview {
+            backdrop-filter: none; /* */
+        }
+        
+        .banner-preview-card {
+            border: 2px solid white !important; /* */
+        }
+        
+        .banner-pause-indicator {
+            border: 2px solid white !important; /* */
+        }
+        
+        .banner-loading-indicator {
+            border: 2px solid white !important; /* */
+            background-color: black !important; /* */
+            color: white !important; /* */
+            backdrop-filter: none; /* */
+        }
+        
+        .loading-spinner { /* This .loading-spinner is specific to banner loading */
+            border-color: white !important; /* */
+            border-top-color: white !important; /* */
+        }
+    }
+
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+        .banner-slide,
+        .banner-image,
+        .banner-video,
+        .banner-postcard-preview,
+        .banner-hover-overlay,
+        .banner-pause-indicator,
+        .banner-navigation-controls,
+        .banner-nav-btn,
+        .banner-position-indicator,
+        .banner-position-dot,
+        .banner-title-display,
+        .banner-loading-indicator,
+        .loading-spinner { /* This .loading-spinner is specific to banner loading */
+            transition: none !important; /* */
+            animation: none !important; /* */
+        }
+        
+        .banner-nav-btn:hover .banner-nav-icon {
+            transform: none !important; /* */
+        }
+    }
+
+    /* =================================================================
+     * DEBUGGING UTILITIES (Banner System Specific)
+     * =================================================================
+     * Uncomment these to visualize banner boundaries during development
+     */
+
     /*
     .banner-slide {
         border: 3px solid red !important;
@@ -319,7 +772,8 @@
     .banner-slide.banner-interactive {
         border-color: green !important;
     }
-    .banner-image {
+    .banner-image,
+    .banner-video {
         border: 2px solid blue !important;
     }
     #standard-banner-container {
@@ -328,318 +782,520 @@
     }
     */
 
-    /* MOBILE: Touch-specific optimizations */
-    @media (max-width: 768px) {
-        .banner-postcard-preview {
-            padding: 1.5rem;
-        }
-
-        .banner-preview-card {
-            min-width: 90%;
-            max-width: 95%;
-        }
-
-        /* Mobile selection hint using existing button styling */
-        .banner-mobile-hint {
-            position: absolute;
-            bottom: 1rem;
-            right: 1rem;
-            width: 3rem;
-            height: 3rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.7;
-            animation: mobileHint 3s infinite;
-            pointer-events: none;
-            z-index: 40;
-        }
-
-        /* Hide mobile hint when banner is selected */
-        .banner-slide.banner-selected .banner-mobile-hint {
-            opacity: 0;
-            transform: scale(0);
-        }
+    /* ===================================================================
+     * CARD SYSTEM - BASE DESIGN COMPONENTS (from original main.css)
+     * ===================================================================
+     */
+    .card-base {
+        @apply rounded-[var(--radius-large)] overflow-hidden transition; /* */
+        background-color: color-mix(in srgb, var(--card-bg), transparent calc((1 - var(--bg-opacity)) * 100%)); /* */
+        backdrop-filter: blur(3px); /* */
+        box-sizing: border-box; /* */
+        border: none; /* */
+        box-shadow:
+          inset 0 0 0 2px transparent,
+          inset 0 0 0 2px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 100%), transparent),
+          inset 0 0 5px 3px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 70%), transparent),
+          inset 0 0 7px 3px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 40%), transparent); /* */
     }
 
-    /* Mobile hint animation */
-    @keyframes mobileHint {
-        0%, 85%, 100% {
-            opacity: 0.7;
-            transform: scale(1);
-        }
-        42% {
-            opacity: 1;
-            transform: scale(1.1);
-        }
+    .card-base2 {
+        @apply rounded-[var(--radius-large)] overflow-hidden transition; /* */
+        background-color: color-mix(in srgb, var(--card-bg), transparent calc((1 - var(--bg-opacity)) * 100%)); /* */
+        backdrop-filter: blur(3px); /* */
+        box-sizing: border-box; /* */
+        border: 1px solid color-mix(in srgb, var(--primary) calc(var(--card-border-subtle-opacity) * 100%), transparent); /* */
     }
 
-    /* Desktop-only hover enhancements */
-    @media (min-width: 769px) {
-        .banner-slide.banner-interactive .banner-link:hover .banner-image {
-            transform: scale(1.02);
-        }
-
-        /* Subtle border pulse on hover - only for interactive slides */
-        .banner-slide.banner-interactive .banner-link:hover {
-            box-shadow: 
-                0 0 0 3px color-mix(in srgb, var(--primary) 30%, transparent),
-                0 0 20px color-mix(in srgb, var(--primary) 20%, transparent);
-            border-radius: inherit;
-        }
+    .card-base3 {
+        @apply rounded-[var(--radius-large)] overflow-hidden transition; /* */
+        background-color: color-mix(in srgb, var(--card-bg), transparent calc((1 - var(--bg-opacity)) * 100%)); /* */
+        backdrop-filter: blur(3px); /* */
+        box-sizing: border-box; /* */
+        border: none; /* */
+        box-shadow:
+          inset 0 0 0 2px transparent,
+          inset 0 0 0 2px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 100%), transparent),
+          inset 0 0 5px 3px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 70%), transparent),
+          inset 0 0 7px 3px color-mix(in srgb, var(--primary) calc(var(--card-border-opacity) * 40%), transparent); /* */
     }
 
-    /* Accessibility improvements */
-    @media (prefers-reduced-motion: reduce) {
-        .banner-slide,
-        .banner-image,
-        .banner-postcard-preview,
-        .banner-hover-overlay,
-        .banner-pause-indicator {
-            transition: none !important;
-            animation: none !important;
-        }
+    .card-shadow {
+        @apply drop-shadow-[0_2px_4px_rgba(0,0,0,0.005)]; /* */
     }
 
-    /* High contrast mode support */
-    @media (prefers-contrast: high) {
-        .banner-postcard-preview {
-            backdrop-filter: none;
-        }
-        
-        .banner-preview-card {
-            border: 2px solid white !important;
-        }
-        
-        .banner-pause-indicator {
-            border: 2px solid white !important;
-        }
-    }
-
-    /* Dark mode optimizations */
-    @media (prefers-color-scheme: dark) {
-        .banner-postcard-preview {
-            /* PostCard styling automatically handles dark mode */
-        }
-    }
-    
-    .toc-hide,
-    .toc-not-ready {
-        @apply opacity-0 pointer-events-none
-    }
-
-    #toc-inner-wrapper {
-        mask-image: linear-gradient(to bottom, transparent 0%, black 2rem, black calc(100% - 2rem), transparent 100%);
-    }
-
-    .hide-scrollbar {
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-    }
-    .hide-scrollbar::-webkit-scrollbar {
-        display: none;
+    /* ===================================================================
+     * TYPOGRAPHY SYSTEM (from original main.css)
+     * ===================================================================
+     */
+    h1, h2, h3, h4, h5, h6, p, a, span, li, ul, ol, blockquote, code, pre, table, th, td, strong {
+        @apply transition; /* */
     }
 
     .text-90 {
-        @apply text-black/90 dark:text-white/90
+        @apply text-black/90 dark:text-white/90; /* */
     }
     .text-75 {
-        @apply text-black/75 dark:text-white/75
+        @apply text-black/75 dark:text-white/75; /* */
     }
     .text-50 {
-        @apply text-black/50 dark:text-white/50
+        @apply text-black/50 dark:text-white/50; /* */
     }
     .text-30 {
-        @apply text-black/30 dark:text-white/30
+        @apply text-black/30 dark:text-white/30; /* */
     }
     .text-25 {
-        @apply text-black/25 dark:text-white/25
+        @apply text-black/25 dark:text-white/25; /* */
     }
 
-    .meta-icon {
-        @apply w-8 h-8 transition rounded-md flex items-center justify-center bg-[var(--btn-regular-bg)]
-        text-[var(--btn-content)] mr-2
+    /* ===================================================================
+     * ANIMATION SYSTEM (from original main.css & MainGridLayout.astro)
+     * ===================================================================
+     */
+    .expand-animation {
+        @apply relative before:ease-out before:transition active:bg-none hover:before:bg-[var(--btn-plain-bg-hover)] active:before:bg-[var(--btn-plain-bg-active)] z-0
+        before:absolute before:rounded-[inherit] before:inset-0 before:scale-[0.85] hover:before:scale-100 before:-z-10; /* */
     }
-    .with-divider {
-        @apply before:content-['/'] before:ml-1.5 before:mr-1.5 before:text-[var(--meta-divider)] before:text-sm
-        before:font-medium before:first-of-type:hidden before:transition
+
+    /* Trickle effect animation */
+    @keyframes trickle {
+        0% {
+          transform: translateY(-100%); /* */
+          opacity: 0; /* */
+        }
+        100% {
+          transform: translateY(0); /* */
+          opacity: 1; /* */
+        }
+    }
+      
+    .trickle-text {
+        animation: trickle 2s ease-out forwards; /* */
+    }
+
+    /* Onload animation utility (from MainGridLayout.astro) */
+    .onload-animation {
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .onload-animation.loaded {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+
+    /* ===================================================================
+     * LINK SYSTEM (from original main.css)
+     * ===================================================================
+     */
+    .link {
+        @apply transition rounded-md p-1 -m-1 expand-animation; /* */
+    }
+    .link-lg {
+        @apply transition rounded-md p-1.5 -m-1.5 expand-animation; /* */
+    }
+
+    .link-underline {
+        @apply transition underline decoration-2 decoration-dashed decoration-[var(--link-underline)]
+        hover:decoration-[var(--link-hover)] active:decoration-[var(--link-active)] underline-offset-[0.25rem]; /* */
+    }
+
+    /* ===================================================================
+     * BUTTON SYSTEM (from original main.css)
+     * ===================================================================
+     */
+    .btn-card {
+        @apply transition flex items-center justify-center bg-[var(--card-bg)] hover:bg-[var(--btn-card-bg-hover)]
+        active:bg-[var(--btn-card-bg-active)]; /* */
+    }
+    .btn-card.disabled {
+        @apply pointer-events-none text-black/10 dark:text-white/10; /* */
+    }
+
+    .btn-plain {
+        @apply transition relative flex items-center justify-center bg-none
+        text-black/75 hover:text-[var(--primary)] dark:text-white/75 dark:hover:text-[var(--primary)]; /* */
+        &:not(.scale-animation) {
+            @apply hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)]; /* */
+        }
+        &.scale-animation {
+            @apply expand-animation; /* */
+            &.current-theme-btn {
+                @apply before:scale-100 before:opacity-100 before:before:bg-[var(--btn-plain-bg-hover)] text-[var(--primary)]; /* */
+            }
+        }
+    }
+
+    .btn-regular {
+        @apply transition flex items-center justify-center bg-[var(--btn-regular-bg)] hover:bg-[var(--btn-regular-bg-hover)] active:bg-[var(--btn-regular-bg-active)]
+        text-[var(--btn-content)] dark:text-white/75; /* */
     }
 
     .btn-regular-dark {
         @apply flex items-center justify-center
         bg-[oklch(0.45_0.01_var(--hue))] hover:bg-[oklch(0.50_0.01_var(--hue))] active:bg-[oklch(0.55_0.01_var(--hue))]
-        dark:bg-[oklch(0.30_0.02_var(--hue))] dark:hover:bg-[oklch(0.35_0.03_var(--hue))] dark:active:bg-[oklch(0.40_0.03_var(--hue))]
+        dark:bg-[oklch(0.30_0.02_var(--hue))] dark:hover:bg-[oklch(0.35_0.03_var(--hue))] dark:active:bg-[oklch(0.40_0.03_var(--hue))]; /* */
     }
     .btn-regular-dark.success {
-        @apply bg-[oklch(0.75_0.14_var(--hue))] dark:bg-[oklch(0.75_0.14_var(--hue))]
+        @apply bg-[oklch(0.75_0.14_var(--hue))] dark:bg-[oklch(0.75_0.14_var(--hue))]; /* */
     }
 
+    /* ===================================================================
+     * PANEL SYSTEM (from original main.css)
+     * ===================================================================
+     */
+    .float-panel {
+        @apply top-[5.25rem] rounded-[var(--radius-large)] overflow-hidden bg-[var(--float-panel-bg)] transition shadow-xl dark:shadow-none; /* */
+    }
+    .float-panel-closed {
+        @apply -translate-y-1 opacity-0 pointer-events-none; /* */
+    }
+
+    /* ===================================================================
+     * SEARCH SYSTEM (from original main.css)
+     * ===================================================================
+     */
+    .search-panel mark {
+        @apply bg-transparent text-[var(--primary)]; /* */
+    }
+
+    /* ===================================================================
+     * TABLE OF CONTENTS SYSTEM (from original main.css & MainGridLayout.astro)
+     * ===================================================================
+     */
+    .toc-hide,
+    .toc-not-ready {
+        @apply opacity-0 pointer-events-none; /* .toc-hide from MainGridLayout.astro is covered here */ /* */
+    }
+    #toc-wrapper { /* Added from MainGridLayout.astro's .toc-animated style */
+        transition: opacity 0.3s ease;
+    }
+    #toc-inner-wrapper {
+        mask-image: linear-gradient(to bottom, transparent 0%, black 2rem, black calc(100% - 2rem), transparent 100%); /* */
+    }
+
+    /* ===================================================================
+     * UTILITY CLASSES (from original main.css)
+     * ===================================================================
+     */
+    .hide-scrollbar {
+        scrollbar-width: none; /* */
+        -ms-overflow-style: none; /* */
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none; /* */
+    }
+
+    .collapsed {
+        height: var(--collapsedHeight); /* */
+    }
+
+    /* ===================================================================
+     * ICON SYSTEM (from original main.css)
+     * ===================================================================
+     */
+    .meta-icon {
+        @apply w-8 h-8 transition rounded-md flex items-center justify-center bg-[var(--btn-regular-bg)]
+        text-[var(--btn-content)] mr-2; /* */
+    }
+
+    .with-divider {
+        @apply before:content-['/'] before:ml-1.5 before:mr-1.5 before:text-[var(--meta-divider)] before:text-sm
+        before:font-medium before:first-of-type:hidden before:transition; /* */
+    }
+
+    /* ===================================================================
+     * COPY BUTTON SYSTEM (from original main.css)
+     * ===================================================================
+     */
     .copy-btn-icon {
-        @apply absolute top-1/2 left-1/2 transition -translate-x-1/2 -translate-y-1/2
+        @apply absolute top-1/2 left-1/2 transition -translate-x-1/2 -translate-y-1/2; /* */
     }
     .copy-btn .copy-icon {
-        @apply opacity-100 fill-white dark:fill-white/75
+        @apply opacity-100 fill-white dark:fill-white/75; /* */
     }
     .copy-btn.success .copy-icon {
-        @apply opacity-0 fill-[var(--deep-text)]
+        @apply opacity-0 fill-[var(--deep-text)]; /* */
     }
     .copy-btn .success-icon {
-        @apply opacity-0
+        @apply opacity-0; /* */
     }
     .copy-btn.success .success-icon {
-        @apply opacity-100
+        @apply opacity-100; /* */
     }
-    /*   Neon text */
+
+    /* ===================================================================
+     * VISUAL EFFECTS SYSTEM (from original main.css & MainGridLayout.astro)
+     * ===================================================================
+     */
+
+    /* Neon text effect */
     .neon-text {
         text-shadow: 
           0 0 5px #fff, 
           0 0 10px #fff, 
           0 0 20px oklch(0.65 0.5 var(--hue)), 
-          0 0 40px oklch(0.65 0.5 var(--hue));
-        animation: glow 1.5s infinite alternate;
-      }
+          0 0 40px oklch(0.65 0.5 var(--hue)); /* */
+        animation: glow 1.5s infinite alternate; /* */
+    }
     
-      @keyframes glow {
+    @keyframes glow {
         from {
           text-shadow: 
             0 0 5px #fff, 
             0 0 10px #fff, 
             0 0 20px oklch(0.65 0.5 var(--hue)), 
-            0 0 40px oklch(0.65 0.5 var(--hue));
+            0 0 40px oklch(0.65 0.5 var(--hue)); /* */
         }
         to {
           text-shadow: 
             0 0 10px #fff, 
             0 0 20px #fff, 
             0 0 40px oklch(0.65 0.5 var(--hue)), 
-            0 0 80px oklch(0.65 0.5 var(--hue));
+            0 0 80px oklch(0.65 0.5 var(--hue)); /* */
         }
-      }
-      /*   Gradient background */
-      .gradient-bg {
-        background: linear-gradient(to right, oklch(0.35 0.2 var(--hue)), oklch(0.45 0.3 var(--hue)));
-      }
-      /*trickle effect*/
-      @keyframes trickle {
-        0% {
-          transform: translateY(-100%);
-          opacity: 0;
-        }
-        100% {
-          transform: translateY(0);
-          opacity: 1;
-        }
-      }
-      
-      .trickle-text {
-        animation: trickle 2s ease-out forwards;
-      }
-
-    /* Keep default browser autofill in light mode, fix dark mode only */
-        input:-webkit-autofill {
-            transition: color 9999s ease-out, background-color 9999s ease-out;
-        }
-        
-        .dark input:-webkit-autofill {
-            -webkit-text-fill-color: oklch(0.85 0.01 var(--hue)) !important;
-            /* Apply a semi-transparent version of your dark card background */
-            box-shadow: 0 0 0px 1000px oklch(0.25 0.01 var(--hue), 0.7) inset !important;
-        }
-        
-        @-moz-document url-prefix() {
-            .dark input:-moz-autofill {
-                color: oklch(0.85 0.01 var(--hue)) !important;
-                background-color: oklch(0.25 0.01 var(--hue), 0.7) !important;
-            }
-        }
-        
-    /* Parallax background styles */
-        .parallax-bg {
-            transform: translateZ(0);
-            position: absolute;
-            top: 0vh;
-            left: 0;
-            width: 100%;
-            height: 130vh;
-            will-change: transform;
-            /* Remove the initial transform that's causing the jump */
-            /* transform: translate3d(0, var(--parallax-offset, 0), 0); */
-            /* Modify the transition to only affect opacity */
-            transition: opacity 0.3s ease-out;
-            /* Start at full opacity but invisible due to parent container */
-            opacity: 1;
-        }
-        
-        /* Add this new class for the container */
-        #parallax-banner {
-            opacity: 0;
-            transition: opacity 0.5s ease-out;
-        }
-        
-        #parallax-banner.loaded {
-            opacity: 1;
-        }
-    
-    @keyframes fadeInParallax {
-        from { opacity: 0; }
-        to { opacity: 1; }
     }
-}
+
+    /* Gradient background */
+    .gradient-bg {
+        background: linear-gradient(to right, oklch(0.35 0.2 var(--hue)), oklch(0.45 0.3 var(--hue))); /* */
+    }
+
+    /* Large screen vignette for animated banner content (from MainGridLayout.astro) */
+    @media (min-width: 1921px) {
+      .animated-banner-content:after { 
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to right, rgba(0,0,0,0.15), transparent 10%, transparent 90%, rgba(0,0,0,0.15));
+        z-index: 1; /* Note: Review z-index in context of other banner elements */
+      }
+    }
+
+
+    /* ===================================================================
+     * DASH LINE DECORATIVE ELEMENT (from original main.css)
+     * ===================================================================
+     */
+    .dash-line {
+        position: relative; /* */
+    }
+
+    .dash-line::before {
+        content: ""; /* */
+        position: absolute; /* */
+        width: 10%; /* */
+        height: 100%; /* */
+        left: calc(50% - 1px); /* */
+        border-left: 2px dashed var(--line-color); /* */
+        pointer-events: none; /* */
+        transition: all 0.3s; /* */
+        transform: translateY(-50%); /* */
+    }
+
+    /* ===================================================================
+     * FORM INPUT SYSTEM (from original main.css)
+     * ===================================================================
+     */
+
+    /* Browser autofill styling */
+    input:-webkit-autofill {
+        transition: color 9999s ease-out, background-color 9999s ease-out; /* */
+    }
+    
+    .dark input:-webkit-autofill {
+        -webkit-text-fill-color: oklch(0.85 0.01 var(--hue)) !important; /* */
+        box-shadow: 0 0 0px 1000px oklch(0.25 0.01 var(--hue), 0.7) inset !important; /* */
+    }
+    
+    @-moz-document url-prefix() {
+        .dark input:-moz-autofill {
+            color: oklch(0.85 0.01 var(--hue)) !important; /* */
+            background-color: oklch(0.25 0.01 var(--hue), 0.7) !important; /* */
+        }
+    }
+
+    /* ===================================================================
+     * PARALLAX BACKGROUND SYSTEM (from original main.css)
+     * ===================================================================
+     */
+    .parallax-bg {
+        transform: translateZ(0); /* */
+        position: absolute; /* */
+        top: 0vh; /* */
+        left: 0; /* */
+        width: 100%; /* */
+        height: 130vh; /* */
+        will-change: transform; /* */
+        transition: opacity 0.3s ease-out; /* */
+        opacity: 1; /* */
+    }
+    
+    #parallax-banner {
+        opacity: 0; /* */
+        transition: opacity 0.5s ease-out; /* */
+    }
+    
+    #parallax-banner.loaded {
+        opacity: 1; /* */
+    }
+
+    @keyframes fadeInParallax {
+        from { opacity: 0; } /* */
+        to { opacity: 1; } /* */
+    }
+
+    /* ===================================================================
+     * PRODUCT CARD SYSTEM (from original main.css)
+     * ===================================================================
+     */
+    .product-card.selected {
+      box-shadow: 0 0 20px 7px var(--primary), 0 0 10px 3px var(--primary-hover); /* */
+      transform: scale(1.03); /* */
+      z-index: 10; /* */
+    }
+
+    .product-card.expanded .product-description-short {
+      display: none; /* */
+    }
+
+    .product-card.expanded .product-description-full,
+    .product-card.expanded .product-additional-details {
+      display: block; /* */
+      max-height: 1000px; /* */
+      opacity: 1; /* */
+      overflow: visible; /* */
+    }
+
+    .product-description-full,
+    .product-additional-details {
+      max-height: 0; /* */
+      overflow: hidden; /* */
+      transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out; /* */
+      opacity: 0; /* */
+      display: none; /* */
+    }
+    
+    /* ===================================================================
+     * FULLSCREEN MODE SYSTEM - UPDATED
+     * ===================================================================
+     * Forces mobile responsive view on desktop screens when activated
+     * Updated to work better with banner positioning system
+     */
+    
+    /* Force mobile view when class is present */
+    body.force-mobile-view {
+        /* Override viewport-based media queries */
+        --force-mobile: 1;
+    }
+    
+    /* Apply mobile grid layout - ONLY on larger screens */
+    @media (min-width: 1024px) {
+        body.force-mobile-view #main-grid {
+            grid-template-columns: 1fr !important;
+            grid-template-rows: auto 1fr auto !important;
+        }
+        
+        /* Hide sidebar in fullscreen mode - ONLY on larger screens */
+        body.force-mobile-view .sidebar,
+        body.force-mobile-view [class*="lg:col-span-1"]:first-child {
+            display: none !important;
+        }
+        
+        /* Force main content to full width - ONLY on larger screens */
+        body.force-mobile-view main#main {
+            grid-column: span 2 !important;
+            max-width: 100% !important;
+        }
+        
+        /* Hide desktop-only elements - ONLY on larger screens */
+        body.force-mobile-view .hidden.lg\\:block {
+            display: none !important;
+        }
+        
+        /* Show mobile-only elements - ONLY on larger screens */
+        body.force-mobile-view .block.lg\\:hidden {
+            display: block !important;
+        }
+        
+        /* Hide TOC in fullscreen mode - ONLY on larger screens */
+        body.force-mobile-view #toc-wrapper,
+        body.force-mobile-view .2xl\\:block {
+            display: none !important;
+        }
+    }
+    
+    /* Force mobile banner height on all screen sizes */
+    body.force-mobile-view #banner-container {
+        height: var(--banner-height-mobile) !important;
+    }
+    
+    /* Adjust navbar for mobile view */
+    body.force-mobile-view #navbar-wrapper {
+        padding: 0 1rem !important;
+    }
+    
+    /* Hide fullscreen toggle on actual mobile devices */
+    @media (max-width: 768px) {
+        #fullscreen-toggle {
+            display: none !important;
+        }
+    }
+    
+    /* Smooth transition effect */
+    body.fullscreen-transitioning {
+        opacity: 0.7;
+        transition: opacity 0.3s ease;
+    }
+
+    /* Banner type-specific spacing - for none banner type */
+    .has-standard-banner {
+      margin-top: var(--standard-navbar-spacing) !important;
+    }
+    
+    .has-timeline-banner {
+      margin-top: var(--timeline-navbar-spacing) !important;
+    }
+    
+    .has-video-banner {
+      margin-top: var(--video-navbar-spacing) !important;
+    }
+    
+    .has-image-banner {
+      margin-top: var(--image-navbar-spacing) !important;
+    }
+    
+    .has-assistant-banner {
+      margin-top: var(--assistant-navbar-spacing) !important;
+    }
+
+    /* None banner specific styles */
+    .has-none-banner {
+      margin-top: 0 !important;
+      min-height: 0 !important;
+    }
+
+    /* Fullscreen mode specific adjustments */
+    body.force-mobile-view #banner-container {
+      margin-top: 0 !important;
+      min-height: 0 !important;
+    }
+    
+} /* End of @layer components */
+
+/* ===================================================================
+ * GLOBAL STYLES OUTSIDE @layer (from original main.css)
+ * ===================================================================
+ */
 
 .custom-md img, #post-cover img {
-    @apply cursor-zoom-in
+    @apply cursor-zoom-in; /* */
 }
 
 ::selection {
-    background-color: var(--selection-bg)
-}
-
-.dash-line {
-    position: relative;
-}
-
-.dash-line::before {
-    content: "";
-    position: absolute;
-    width: 10%;
-    height: 100%;
-    left: calc(50% - 1px);
-    border-left: 2px dashed var(--line-color);
-    pointer-events: none;
-    transition: all 0.3s;
-    transform: translateY(-50%);
-}
-
-.collapsed {
-    height: var(--collapsedHeight);
-}
-
-/* Styles for selected and expanded product cards */
-.product-card.selected {
-  box-shadow: 0 0 20px 7px var(--primary), 0 0 10px 3px var(--primary-hover); /* Glowing effect */
-  transform: scale(1.03); /* Slight expansion */
-  z-index: 10; /* Ensure it's above other cards */
-}
-
-.product-card.expanded .product-description-short {
-  display: none;
-}
-
-.product-card.expanded .product-description-full,
-.product-card.expanded .product-additional-details {
-  display: block;
-  max-height: 1000px; /* Large enough to accommodate content */
-  opacity: 1;
-  overflow: visible;
-}
-
-/* Initial state for full description and additional details (hidden) */
-.product-description-full,
-.product-additional-details {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
-  opacity: 0;
-  display: none; /* Start as display: none and switch to block when expanded */
+    background-color: var(--selection-bg); /* */
 }
