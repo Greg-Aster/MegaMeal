@@ -524,7 +524,7 @@ if (post && post.data) {
 <!-- Contains the main grid layout with sidebar and content area    -->
 <!-- Main content offset is controlled by banner.config.ts          -->
 <div class={`w-full z-30 pointer-events-none relative`}>
-  <div class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto" style={`top: ${mainPanelTop}; position: relative;`}>
+  <div id="main-panel-wrapper" class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto" style={`top: ${mainPanelTop}; position: relative;`}>
     <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-[17.5rem_auto] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
        mx-auto gap-4 px-0 md:px-4" style={`margin-top: ${mainContentOffset};`}>
        

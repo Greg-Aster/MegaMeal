@@ -121,6 +121,21 @@ export interface BannerConfig {
 
   // Parallax effect settings
   parallax: BannerParallaxConfig;
+
+  // Navigation settings
+  navigation?: { // Make optional if not all configs will have it immediately
+    enabled: boolean;
+    showPositionIndicator: boolean;
+    showBannerTitles: boolean;
+    autoResumeDelay: number;
+    keyboardNavigation: boolean;
+    enabledForTypes: BannerType[];
+    styling?: {
+      buttonSize?: { desktop: string; mobile: string };
+      indicatorSize?: { desktop: string; mobile: string };
+      animationDuration?: string;
+    };
+  };
 }
 
 /**
@@ -537,12 +552,12 @@ export function determineBannerConfiguration(post: any, pageType: string, defaul
         assistantBannerData: null
       },
       layout: {
-        mainPanelTop: bannerConfig.panel.top.none,
-        navbarSpacing: bannerConfig.navbar.spacing.none,
-        bannerHeight: '0',
-        bannerOverlap: '0',
-        dynamicOverlap: '0',
-        mainContentOffset: '0'
+        mainPanelTop: bannerConfig.panel.top.none, // Stays "0rem" as per 'none' banner config
+        navbarSpacing: "0rem", // Banner container will be display:none, so its margin is irrelevant
+        bannerHeight: '0', // Ensures banner takes no height if not display:none
+        bannerOverlap: '0', // No overlap if no banner
+        dynamicOverlap: '0', // No dynamic overlap if no banner
+        mainContentOffset: "1.5rem" // Positions main grid (5.5rem current + 3rem additional) below navbar
       },
       finalBannerLink: '',
       currentBannerType: 'none' as BannerType
