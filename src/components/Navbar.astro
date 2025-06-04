@@ -95,6 +95,12 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
             <button aria-label="Bring back mascot" title="Bring back mascot" id="navbar-bring-back-mascot-button" class="btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90" style="display: none;">
                 🥄
             </button>
+
+            <!-- Fullscreen Mode Toggle -->
+            <button aria-label="Toggle Fullscreen Mode" title="Toggle Fullscreen Mode" class="btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90" id="fullscreen-btn">
+                <Icon name="fa6-solid:expand" class="fullscreen-icon text-[1.25rem]"></Icon>
+                <Icon name="fa6-solid:compress" class="fullscreen-exit-icon text-[1.25rem] hidden"></Icon>
+            </button>
         </div>
         
         <NavMenuPanel links={links} isAuthenticated={isAuthenticated}></NavMenuPanel>
@@ -180,6 +186,103 @@ function loadButtonScript() {
             bringBackMascotBtn.style.display = 'none';
         }
     }
+
+    // Fullscreen Mode Toggle Functionality
+    initializeFullscreenMode();
+}
+
+/**
+ * Initialize fullscreen mode toggle
+ */
+function initializeFullscreenMode() {
+  const toggleBtn = document.getElementById('fullscreen-btn');
+  const expandIcon = toggleBtn?.querySelector('.fullscreen-icon');
+  const compressIcon = toggleBtn?.querySelector('.fullscreen-exit-icon');
+  
+  // Check saved state and apply it WITHOUT triggering reload
+  const isFullscreen = localStorage.getItem('fullscreenMode') === 'true';
+  
+  // Apply initial state (without reload - just visual state)
+  if (isFullscreen) {
+    applyFullscreenState();
+  } else {
+    applyNormalState();
+  }
+  
+  // Toggle handler
+  toggleBtn?.addEventListener('click', () => {
+    const currentState = document.body.classList.contains('force-mobile-view');
+    
+    if (currentState) {
+      disableFullscreenMode();
+    } else {
+      enableFullscreenMode();
+    }
+  });
+  
+  /**
+   * Apply fullscreen visual state without reload
+   */
+  function applyFullscreenState() {
+    // Add class to force mobile view
+    document.body.classList.add('force-mobile-view');
+    
+    // Update button icons
+    expandIcon?.classList.add('hidden');
+    compressIcon?.classList.remove('hidden');
+  }
+  
+  /**
+   * Apply normal visual state without reload
+   */
+  function applyNormalState() {
+    // Remove class
+    document.body.classList.remove('force-mobile-view');
+    
+    // Update button icons
+    expandIcon?.classList.remove('hidden');
+    compressIcon?.classList.add('hidden');
+  }
+  
+  /**
+   * Enable fullscreen mode and reload to apply banner changes
+   */
+  function enableFullscreenMode() {
+    // Save state first
+    localStorage.setItem('fullscreenMode', 'true');
+    localStorage.setItem('fullscreenBannerOverride', 'true');
+    
+    // Apply visual state immediately
+    applyFullscreenState();
+    
+    // Reload to apply banner changes
+    if (!document.body.classList.contains('fullscreen-transitioning')) {
+      document.body.classList.add('fullscreen-transitioning');
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
+    }
+  }
+  
+  /**
+   * Disable fullscreen mode and reload to restore banner
+   */
+  function disableFullscreenMode() {
+    // Save state first
+    localStorage.setItem('fullscreenMode', 'false');
+    localStorage.removeItem('fullscreenBannerOverride');
+    
+    // Apply visual state immediately
+    applyNormalState();
+    
+    // Reload to restore banner
+    if (!document.body.classList.contains('fullscreen-transitioning')) {
+      document.body.classList.add('fullscreen-transitioning');
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
+    }
+  }
 }
 
 document.addEventListener('bleepy:visibilityChanged', (event: Event) => {
