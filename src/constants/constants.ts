@@ -21,4 +21,4 @@ export const MAIN_PANEL_OVERLAPS_BANNER_HEIGHT = 4.5
 export const MAIN_PANEL_OVERLAPS_BANNER_HEIGHT_MOBILE = 2 // Smaller height for mobile
 
 // Page width: rem
-export const PAGE_WIDTH = 75
+export const PAGE_WIDTH = 85
