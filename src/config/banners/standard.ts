@@ -56,7 +56,7 @@ import { isVideoBannerItem, isImageBannerItem } from './types'
 
 import banner1Fallback from '@/assets/banner/3dtimeline.webp'  // Fallback for your video
 import banner2Fallback from '@/assets/banner/cookbook.png'
-import banner3 from '@/assets/banner/0003.png'
+import banner3Fallback from '@/assets/banner/reviews.png'
 import banner4 from '@/assets/banner/0004.png'
 import banner5 from '@/assets/banner/0005.png'
 import banner6 from '@/assets/banner/0006.png'
@@ -112,26 +112,29 @@ export const bannerList: BannerItem[] = [
   // Video item - uses your ComfyUI video
   {
     type: 'video',
-    src: '/videos/ComfyUI_00015_.webm',  // Place this file in /public/videos/
+    src: '/videos/starmap.webm',  // Place this file in /public/videos/
     fallbackImage: banner1Fallback,      // Fallback image for unsupported browsers
     alt: 'Animated banner',
     preload: 'none'  // Don't preload video until needed
   },
   {
     type: 'video',
-    src: '/videos/cookbook.webm',  // Place this file in /public/videos/
+    src: '/videos/cookbook2.webm',  // Place this file in /public/videos/
     fallbackImage: banner2Fallback,      // Fallback image for unsupported browsers
-    alt: 'Animated banner',
+    alt: 'MegaMeal Cookbook',
+    preload: 'none',  // Don't preload video until needed
+  },
+  {
+    type: 'video',
+    src: '/videos/reviews.webm',  // Place this file in /public/videos/
+    fallbackImage: banner3Fallback,      // Fallback image for unsupported browsers
+    alt: 'Reviews and testimonials',
     preload: 'none'  // Don't preload video until needed
   },
 
   // Image items - existing images
+  
 /*   {
-    type: 'image',
-    src: banner3,
-    alt: 'Banner image 3'
-  },
-  {
     type: 'image',
     src: banner4,
     alt: 'Banner image 4'
@@ -155,7 +158,7 @@ export const bannerList: BannerItem[] = [
     type: 'image',
     src: banner8,
     alt: 'Banner image 8' 
-  }*/
+  } */
 
   // Example of adding more videos:
   // {
@@ -176,7 +179,7 @@ export const bannerList: BannerItem[] = [
 export const bannerLinks: (string | null)[] = [
   '/posts/explainer/',         // Link for video banner (ComfyUI_00010_.webm)
   '/cookbook/',                // Link for video banner2 (coockbook.webm)  
-  '/projects',                 // Link for banner3 (0003.png)
+  '/reviews/',                 // Link for banner3 (0003.png)
   null,                        // No link for banner4 (0004.png)
   '/contact',                  // Link for banner5 (0005.png)
   '/blog',                     // Link for banner6 (0006.png)
@@ -213,15 +216,16 @@ export const linkPreviewData: Record<string, LinkPreviewInfo> = {
     icon: 'book-open'
   },
   '/cookbook/': {
-    title: 'The Cookbook Project',
+    title: 'The Cookbook Project - Under Construction',
     description: 'Discover our comprehensive cookbook featuring recipes, cooking techniques, and culinary tips inspired by the MEGAMEAL universe. Perfect for aspiring chefs and food enthusiasts.',
     icon: 'user-group'
   },
-/*   '/projects': {
-    title: 'Our Projects',
-    description: 'Explore our latest work, open-source contributions, and featured projects.',
-    icon: 'rocket'
+   '/reviews/': {
+    title: 'Recipies, Reviews. and Testimonials - Under Construction',
+    description: 'Read reviews, testimonials, and user experiences with MEGAMEAL products and recipes. Join our community of food lovers and share your culinary journey.',
+    icon: 'newspaper'
   },
+  /*
   '/contact': {
     title: 'Get In Touch',
     description: 'Have questions or want to collaborate? We\'d love to hear from you.',
@@ -249,9 +253,16 @@ export const linkPreviewData: Record<string, LinkPreviewInfo> = {
  */
 export const animationConfig: BannerAnimationConfig = {
   enabled: true,                 // Set to false to disable banner cycling
-  interval: 5000,                // 5 seconds between transitions (shorter for videos)
+  interval: 4000,                // 5 seconds between transitions (shorter for videos)
   transitionDuration: 1000,      // 1 second fade transition
-  direction: 'forward'           // 'forward', 'reverse', or 'alternate'
+  direction: 'forward',           // 'forward', 'reverse', or 'alternate'
+
+      // NEW: Navigation-specific animation settings
+      pauseOnHover: true,       // Pause on desktop hover
+      pauseOnMobileTouch: true, // Pause on mobile touch
+      resumeAfterNavigation: true, // Auto-resume after manual navigation
+      smoothTransitions: true   // Use smooth crossfade transitions
+  
 };
 
 // =====================================================================

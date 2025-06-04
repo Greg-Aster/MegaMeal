@@ -293,7 +293,46 @@ export const bannerConfig: BannerConfig = {
     enabled: true,                // Enable/disable parallax effect
     scrollFactor: -0.02,          // How much background moves (-0.02 = 2% opposite of scroll)
     easingFactor: 0.1             // Smooth motion factor (0.1 = 10% of gap each frame)
-  }
+  },
+  
+  // =================================================================
+  // OPTIONAL: NAVIGATION CONFIGURATION
+  // =================================================================
+  // Add these optional settings to control navigation behavior
+  // The system works great with defaults, but you can customize:
+  
+  navigation: {
+    /** Enable/disable manual navigation controls */
+    enabled: true,
+    
+    /** Show position indicator dots */
+    showPositionIndicator: true,
+    
+    /** Show banner titles in preview overlay */
+    showBannerTitles: true,
+    
+    /** Auto-resume delay after manual navigation (milliseconds) */
+    autoResumeDelay: 5000, // 5 seconds
+    
+    /** Enable keyboard navigation (arrow keys, Home, End) */
+    keyboardNavigation: true,
+    
+    /** Enable navigation for specific banner types */
+    enabledForTypes: ['standard', 'image', 'video'] as BannerType[],
+    
+    /** Custom navigation button styling (optional) */
+    styling: {
+      buttonSize: {
+        desktop: '3rem',
+        mobile: '2.5rem'
+      },
+      indicatorSize: {
+        desktop: '0.5rem', 
+        mobile: '0.375rem'
+      },
+      animationDuration: '0.3s'
+    }
+  },
 }
 
 // =================================================================
@@ -331,15 +370,39 @@ switch (bannerConfig.defaultBannerType) {
 // These functions provide safe access to banner configuration values
 // and help with responsive design and type safety
 
-/**
- * Extract banner-related data from post object
- * Centralizes post data extraction to avoid repetition
- * 
- * @param post - The post object from Astro
- * @returns Extracted banner data or null if no post
- */
-export function getBannerDataFromPost(post: any): PostBannerData | null {
-  if (!post?.data) return null;
+  /**
+   * Extract banner-related data from post object
+   * Centralizes post data extraction to avoid repetition
+   * 
+   * @param post - The post object from Astro
+   * @returns Extracted banner data or null if no post
+   */
+  /**
+   * Check if fullscreen mode is currently active
+   * This function checks localStorage for the fullscreen banner override setting
+   * 
+   * @returns True if fullscreen mode is active (banner should be hidden)
+   */
+  export function isFullscreenModeActive(): boolean {
+    // Check if we're in a browser environment (not during SSR)
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      return false;
+    }
+    
+    // Check if fullscreen banner override is active
+    const fullscreenOverride = localStorage.getItem('fullscreenBannerOverride');
+    return fullscreenOverride === 'true';
+  }
+
+  /**
+   * Extract banner-related data from post object
+   * Centralizes post data extraction to avoid repetition
+   * 
+   * @param post - The post object from Astro
+   * @returns Extracted banner data or null if no post
+   */
+  export function getBannerDataFromPost(post: any): PostBannerData | null {
+    if (!post?.data) return null;
   
   return {
     bannerLink: post.data.bannerLink || '',
@@ -447,7 +510,45 @@ export function getBannerDataSources(bannerType: BannerDeterminationResult, post
  * @param defaultBannerLink - Default banner link if not in post
  * @returns Complete banner configuration including type, data, and layout
  */
+/**
+ * Modified determineBannerConfiguration function
+ * Add this check at the beginning of the existing function
+ */
 export function determineBannerConfiguration(post: any, pageType: string, defaultBannerLink: string = '') {
+  // Check for fullscreen mode override
+  if (isFullscreenModeActive()) {
+    // Return configuration for "none" banner type
+    return {
+      postData: getBannerDataFromPost(post),
+      bannerType: {
+        hasTimelineBanner: false,
+        hasVideoBanner: false,
+        hasImageBanner: false,
+        hasAssistantBanner: false,
+        hasStandardBanner: false,
+        hasPostBanner: false,
+        isStandardPage: false,
+        currentBannerType: 'none' as BannerType
+      },
+      bannerDataSources: {
+        videoBannerData: null,
+        imageBannerData: null,
+        timelineBannerData: null,
+        assistantBannerData: null
+      },
+      layout: {
+        mainPanelTop: bannerConfig.panel.top.none,
+        navbarSpacing: bannerConfig.navbar.spacing.none,
+        bannerHeight: '0',
+        bannerOverlap: '0',
+        dynamicOverlap: '0',
+        mainContentOffset: '0'
+      },
+      finalBannerLink: '',
+      currentBannerType: 'none' as BannerType
+    };
+  }
+
   // Extract post data
   const postData = getBannerDataFromPost(post);
   
