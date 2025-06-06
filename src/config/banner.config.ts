@@ -294,10 +294,10 @@ export const bannerConfig: BannerConfig = {
     top: {
       video: "-0.5rem",
       image: "-0.5rem",
-      timeline: "-0.5rem", // Simplified - no dynamic variable
+      timeline: "7rem", // Simplified - no dynamic variable
       assistant: "-0.5rem",
       standard: "-6.5rem",
-      none: "-0rem" // No banner = no extra spacing,
+      none: "-40rem" // No banner = no extra spacing,
     }
   },
 

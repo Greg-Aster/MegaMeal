@@ -1,8 +1,8 @@
 ---
 // src/components/timeline/TimelineViewModes/MapView.astro
+// Complete overhaul - Interactive Universe Map with proper selection and navigation
 import type { TimelineEvent } from '../../../services/TimelineService.client';
 import { getEraDisplayName, getEraClasses } from '../../../services/TimelineService.client';
-import TimelineCard from '../TimelineCard.astro';
 
 export interface Props {
   events?: TimelineEvent[];
@@ -12,281 +12,552 @@ export interface Props {
 
 const {
   events = [],
-  background = '/assets/banner/0001.png', // Consider a night sky image here
+  background = '/assets/banner/0001.png',
   selectedEventSlug = null,
 } = Astro.props;
 
 const eventsWithLocations = events.filter(event => event.location);
 
-function getLocationCoordinates(location: string | undefined) {
-  if (!location) return { x: 50, y: 50 }; // Default if no location
-  const hash = [...location].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 0);
-  const x = 50 + (hash % 300); // Spread across 0-350 range for x
-  const y = 50 + ((hash * 17) % 200); // Spread across 0-250 range for y. Ensures "above horizon" if y=0 is top.
-  return { x, y };
+// Enhanced coordinate generation for better cosmic distribution
+function getUniverseCoordinates(location: string | undefined, year: number) {
+  if (!location) return { x: 50, y: 50, sector: 'unknown' };
+  
+  // Create hash from location for consistent positioning
+  const locationHash = [...location].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 1000, 0);
+  const yearFactor = year % 100; // Use year for additional positioning variation
+  
+  // Create sectors based on era/time periods
+  const sector = year < 2050 ? 'inner-core' : 
+                year < 2100 ? 'mid-rim' : 
+                year < 2200 ? 'outer-rim' : 'frontier';
+  
+  // Distribute coordinates in cosmic spiral pattern
+  const angle = (locationHash + yearFactor) * 0.1;
+  const radius = 20 + (locationHash % 60); // 20-80% from center
+  
+  const x = 50 + (Math.cos(angle) * radius * 0.8);
+  const y = 50 + (Math.sin(angle) * radius * 0.6);
+  
+  return { 
+    x: Math.max(5, Math.min(95, x)), 
+    y: Math.max(5, Math.min(95, y)), 
+    sector 
+  };
 }
 
-const mapViewId = `map-view-${Math.random().toString(36).substring(2,9)}`;
+// Group events by era for constellation connections
+const eraGroups = eventsWithLocations.reduce((acc, event) => {
+  const era = event.era || 'unknown';
+  if (!acc[era]) acc[era] = [];
+  acc[era].push(event);
+  return acc;
+}, {} as Record<string, TimelineEvent[]>);
+
+const mapViewId = `universe-map-${Math.random().toString(36).substring(2,9)}`;
 ---
 
-<style>
-  .pin-circle {
-    transition: all 700ms ease-in-out; /* Slower, smoother transition */
-  }
-  .sky-transform-wrapper {
-    transition: transform 300ms ease-out; /* Smooth zoom transition */
-    width: 100%;
-    height: 100%;
-    transform-origin: center center; /* Default origin, will be updated by JS */
-    position: relative; /* To contain absolutely positioned children properly */
-  }
-  .sky-viewport { /* The main container for the sky view, handles overflow */
-    /* Ensure this container captures wheel events if children have pointer-events-none */
-  }
-</style>
+<div class="universe-map relative" id={mapViewId} data-ready="false">
+  <!-- Instructions Panel -->
+  <div class="absolute top-4 right-4 z-30 bg-black/90 text-white text-xs rounded-lg p-3 backdrop-blur-sm border border-cyan-500/30">
+    <div class="font-bold mb-1 text-cyan-400">Universe Map Controls:</div>
+    <div>• Click once to select a location</div>
+    <div>• Click again to navigate to event</div>
+    <div>• Hover for quick preview</div>
+    <div>• Use mouse wheel to zoom</div>
+  </div>
 
-<div class="map-view relative" id={mapViewId}>
-  <div class="relative z-10 overflow-y-auto scrollbar-timeline" style="max-height: calc(100vh - 160px);">
-    <div class="px-4">
-      {/* Renamed map-container to sky-viewport for conceptual clarity */}
-      <div
-        class="sky-viewport relative card-base bg-[oklch(0.1_0.01_var(--hue))/80] dark:bg-[oklch(0.05_0.01_var(--hue))/80] backdrop-blur-sm rounded-md overflow-hidden"
-        style="height: calc(70vh - 140px); min-height: 300px;"
-      >
-        <div class="sky-transform-wrapper"> {/* This div will be scaled for zoom */}
-          <div class="absolute inset-0 -z-10"> {/* Kept -z-10, ensure it's behind SVG + Pins */}
-            <img src={background} alt="Sky background" class="w-full h-full object-cover opacity-30 dark:opacity-20" /> {/* Adjusted opacity */}
-            <div class="absolute inset-0 bg-gradient-to-b from-transparent to-[oklch(0.05_0.01_var(--hue))] opacity-70"></div> {/* Example: Horizon gradient */}
+  <!-- Sector Legend -->
+  <div class="absolute top-4 left-4 z-30 bg-black/90 text-white text-xs rounded-lg p-3 backdrop-blur-sm border border-purple-500/30">
+    <div class="font-bold mb-2 text-purple-400">Cosmic Sectors:</div>
+    <div class="space-y-1">
+      <div class="flex items-center">
+        <div class="w-3 h-3 rounded-full bg-yellow-400 mr-2"></div>
+        <span>Inner Core</span>
+      </div>
+      <div class="flex items-center">
+        <div class="w-3 h-3 rounded-full bg-orange-400 mr-2"></div>
+        <span>Mid Rim</span>
+      </div>
+      <div class="flex items-center">
+        <div class="w-3 h-3 rounded-full bg-red-400 mr-2"></div>
+        <span>Outer Rim</span>
+      </div>
+      <div class="flex items-center">
+        <div class="w-3 h-3 rounded-full bg-purple-400 mr-2"></div>
+        <span>Frontier</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="relative z-10 overflow-hidden" style="height: calc(100vh - 160px);">
+    <!-- Universe Map Container -->
+    <div class="universe-viewport relative w-full h-full overflow-hidden cursor-grab" data-viewport>
+      <!-- Zoomable Content Wrapper -->
+      <div class="universe-content w-full h-full relative" data-content style="transform: scale(1) translate(0px, 0px);">
+        
+        <!-- Deep Space Background -->
+        <div class="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-950 to-black">
+          <!-- Animated Stars Background -->
+          <div class="stars-layer-1 absolute inset-0 opacity-60"></div>
+          <div class="stars-layer-2 absolute inset-0 opacity-40"></div>
+          <div class="stars-layer-3 absolute inset-0 opacity-20"></div>
+          
+          <!-- Nebula Effects -->
+          <div class="absolute inset-0 opacity-30">
+            <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-radial from-purple-600/20 via-blue-600/10 to-transparent rounded-full blur-3xl animate-pulse"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-radial from-cyan-600/20 via-teal-600/10 to-transparent rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+            <div class="absolute top-1/2 left-1/2 w-64 h-64 bg-gradient-radial from-pink-600/15 via-purple-600/8 to-transparent rounded-full blur-3xl animate-pulse" style="animation-delay: 4s;"></div>
           </div>
+        </div>
 
-          <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" class="w-full h-full absolute inset-0 pointer-events-none z-0"> {/* z-0, between bg and pins */}
-            <defs>
-              <pattern id="map-grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="0.5" class="text-[var(--primary)]" opacity="0.1" /> {/* Subtler grid */}
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#map-grid-pattern)" class="text-[var(--primary)]" />
-            {/* Original decorative paths - these will scale with the zoom */}
-            <path d="M 80,50 C 100,40 150,30 200,50 C 250,70 280,90 300,70 C 320,50 350,60 350,80 C 350,100 320,120 300,150 C 280,180 250,190 200,180 C 150,170 120,190 100,170 C 80,150 60,130 80,100 C 100,70 80,50 80,50 Z"
-                  fill="oklch(0.3 0.05 var(--hue))" fill-opacity="0.3" stroke="oklch(0.4 0.1 var(--hue))" stroke-width="1" />
-            <path d="M 30,200 C 40,180 70,170 100,190 C 130,210 160,200 170,220 C 180,240 150,260 120,250 C 90,240 60,250 50,230 C 40,210 30,200 30,200 Z"
-                  fill="oklch(0.25 0.08 var(--hue))" fill-opacity="0.3" stroke="oklch(0.4 0.1 var(--hue))" stroke-width="1" />
-          </svg>
-
-          <div class="absolute inset-0 z-10"> {/* z-10, above SVG grid */}
-            {eventsWithLocations.map(event => {
-              const coords = getLocationCoordinates(event.location);
-              const posXPercent = (coords.x / 400) * 100;
-              const posYPercent = (coords.y / 300) * 100;
+        <!-- Constellation Connections -->
+        <svg class="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="constellation-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:cyan;stop-opacity:0.6"/>
+              <stop offset="50%" style="stop-color:purple;stop-opacity:0.4"/>
+              <stop offset="100%" style="stop-color:cyan;stop-opacity:0.6"/>
+            </linearGradient>
+          </defs>
+          
+          {Object.entries(eraGroups).map(([era, eraEvents]) => {
+            if (eraEvents.length < 2) return null;
+            const coords = eraEvents.map(event => getUniverseCoordinates(event.location, event.year));
+            return coords.slice(0, -1).map((coord, i) => {
+              const nextCoord = coords[i + 1];
               return (
-                <div
-                  class="map-pin absolute cursor-pointer pointer-events-auto"
-                  style={`left: ${posXPercent}%; top: ${posYPercent}%; transform: translate(-50%, -50%);`}
-                  data-slug={event.slug}
-                  data-title={event.title}
-                >
-                  <div
-                    class:list={[
-                      "pin-circle w-6 h-6 rounded-full flex items-center justify-center", // Removed transition from here, added via <style>
-                      (selectedEventSlug === event.slug) ? 'scale-150 shadow-glow' : ''
-                    ]}
-                    style={`background-color: ${event.isKeyEvent ? 'oklch(0.8 0.2 var(--hue))' : 'oklch(0.7 0.1 var(--hue))'}`}
-                  >
-                    {/* Simpler star look: a glowing dot or a smaller inner dot */}
-                    <div class="w-2 h-2 rounded-full bg-white/90 shadow-sm"></div>
-                  </div>
-                  <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs font-bold text-white/80 bg-[oklch(0.1_0.02_var(--hue))/60] px-1 py-0.5 rounded backdrop-blur-sm">
-                    {event.year}
-                  </div>
-                  {(selectedEventSlug === event.slug) && (
-                    <div class="absolute z-20 timeline-card-container" style={`top: ${coords.y < 150 ? '120%' : '-220%'}; left: -50%; width: 200px;`}>
-                        <TimelineCard
-                          event={event}
-                          isSelected={selectedEventSlug === event.slug}
-                          compact={false}
-                          position={coords.y < 150 ? 'bottom' : 'top'}
-                          isVisible={true}
-                        />
+                <line
+                  x1={coord.x}
+                  y1={coord.y}
+                  x2={nextCoord.x}
+                  y2={nextCoord.y}
+                  stroke="url(#constellation-gradient)"
+                  stroke-width="0.1"
+                  opacity="0.5"
+                  class="constellation-line"
+                />
+              );
+            });
+          })}
+        </svg>
+
+        <!-- Cosmic Grid -->
+        <svg class="absolute inset-0 w-full h-full pointer-events-none z-5" viewBox="0 0 100 100">
+          <defs>
+            <pattern id="cosmic-grid" width="10" height="10" patternUnits="userSpaceOnUse">
+              <path d="M 10 0 L 0 0 0 10" fill="none" stroke="cyan" stroke-width="0.05" opacity="0.1"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#cosmic-grid)"/>
+        </svg>
+
+        <!-- Universe Locations -->
+        <div class="absolute inset-0 z-20">
+          {eventsWithLocations.map((event) => {
+            const coords = getUniverseCoordinates(event.location, event.year);
+            const sectorColors = {
+              'inner-core': 'from-yellow-400 to-orange-500',
+              'mid-rim': 'from-orange-400 to-red-500', 
+              'outer-rim': 'from-red-400 to-purple-500',
+              'frontier': 'from-purple-400 to-pink-500',
+              'unknown': 'from-gray-400 to-gray-600'
+            };
+            
+            return (
+              <div
+                class="cosmic-location absolute cursor-pointer group"
+                style={`left: ${coords.x}%; top: ${coords.y}%; transform: translate(-50%, -50%);`}
+                data-slug={event.slug}
+                data-title={event.title}
+                data-year={event.year}
+                data-location={event.location}
+                data-era={event.era}
+                data-sector={coords.sector}
+              >
+                <!-- Location Pulse Effect -->
+                <div class="absolute inset-0 rounded-full animate-ping opacity-20 bg-gradient-to-r" classList:list={[sectorColors[coords.sector]]}></div>
+                
+                <!-- Main Location Marker -->
+                <div class:list={[
+                  "location-marker relative w-4 h-4 rounded-full transition-all duration-300 group-hover:scale-125",
+                  "bg-gradient-to-r shadow-lg border-2 border-white/30",
+                  sectorColors[coords.sector],
+                  selectedEventSlug === event.slug ? 'scale-150 ring-4 ring-cyan-400/50 ring-offset-2 ring-offset-transparent' : '',
+                  event.isKeyEvent ? 'w-6 h-6 shadow-xl shadow-white/50' : ''
+                ]}>
+                  <!-- Inner Core -->
+                  <div class="absolute inset-1 rounded-full bg-white/90 animate-pulse"></div>
+                  
+                  <!-- Key Event Crown -->
+                  {event.isKeyEvent && (
+                    <div class="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                      <svg class="w-3 h-3 text-yellow-300" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
                     </div>
                   )}
                 </div>
-              );
-            })}
-          </div>
-        </div> {/* End of sky-transform-wrapper */}
 
-        {/* UI Elements that should NOT zoom/pan - Placed outside the transform wrapper */}
-        <div class="absolute top-4 right-4 bg-[oklch(0.9_0.03_var(--hue))/90] dark:bg-[oklch(0.2_0.05_var(--hue))/90] p-3 rounded-md text-sm text-75 backdrop-blur-sm shadow-md z-30">
-          <div class="font-bold mb-2">Sky Legend</div> {/* Renamed */}
-          <div class="flex items-center mb-2">
-            <div class="w-4 h-4 rounded-full bg-[oklch(0.7_0.1_var(--hue))] mr-2"></div> {/* Adjusted color */}
-            <span>Event</span>
-          </div>
-          <div class="flex items-center">
-            <div class="w-5 h-5 rounded-full bg-[oklch(0.8_0.2_var(--hue))] mr-1"></div>
-            <span>Key Event</span>
-          </div>
-        </div>
+                <!-- Year Label -->
+                <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs font-bold text-cyan-300 bg-black/70 px-2 py-1 rounded backdrop-blur-sm border border-cyan-500/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {event.year}
+                </div>
 
-        {eventsWithLocations.length === 0 && (
-          <div class="absolute inset-0 flex items-center justify-center z-30">
-            <div class="text-center p-8 bg-[oklch(0.95_0.03_var(--hue))/80] dark:bg-[oklch(0.2_0.03_var(--hue))/80] backdrop-blur-sm rounded-xl shadow-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-[var(--primary)] mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                 {/* Placeholder for a more thematic icon, e.g., telescope, stars */}
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c-1.933 0-3.5 1.567-3.5 3.5S10.067 10 12 10s3.5-1.567 3.5-3.5S13.933 3 12 3zm0 14c-1.933 0-3.5 1.567-3.5 3.5S10.067 24 12 24s3.5-1.567 3.5-3.5S13.933 17 12 17zm7-7c-1.933 0-3.5 1.567-3.5 3.5S17.067 17 19 17s3.5-1.567 3.5-3.5S20.933 10 19 10zm-14 0c-1.933 0-3.5 1.567-3.5 3.5S3.067 17 5 17s3.5-1.567 3.5-3.5S6.933 10 5 10z" />
-              </svg>
-              <p class="text-75 font-bold text-lg">No Celestial Events Found</p>
-              <p class="text-50 mt-2">Add timelineLocation to your posts to place events in the sky.</p>
-            </div>
-          </div>
-        )}
-      </div> {/* End of sky-viewport */}
-
-      {/* List of locations - kept outside the main sky view for now */}
-      <div class="timeline-map-events mt-4">
-        <h3 class="font-bold text-75 mb-2">Timeline Locations</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-          {eventsWithLocations.map(event => (
-            <button
-              class:list={[
-                "location-card flex items-center p-2 hover:bg-[var(--btn-card-bg-hover)] rounded-md transition-colors text-left",
-                selectedEventSlug === event.slug ? 'bg-[oklch(0.95_0.025_var(--hue))/50] dark:bg-[oklch(0.25_0.025_var(--hue))/50]' : ''
-              ]}
-              data-slug={event.slug}
-              data-era={event.era}
-              data-title={event.title}
-            >
-              <div class="location-icon mr-2 text-[var(--primary)]">
-                {/* Icon can be changed to something more celestial/star-like */}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2L9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5z" />
-                </svg>
+                <!-- Location Name -->
+                <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 text-xs font-medium text-white bg-black/80 px-2 py-1 rounded backdrop-blur-sm border border-purple-500/30 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  {event.location}
+                </div>
               </div>
-              <div class="location-info">
-                <div class="font-bold text-75 text-sm">{event.title} ({event.year})</div>
-                <div class="text-50 text-xs">{event.location}</div>
-              </div>
-            </button>
-          ))}
+            );
+          })}
         </div>
       </div>
-      <div class="h-40"></div> {/* Padding */}
     </div>
+
+    <!-- Information Panel -->
+    <div class="absolute bottom-4 left-4 right-4 z-30 transition-all duration-300" id="info-panel" style="transform: translateY(100%); opacity: 0;">
+      <div class="bg-black/95 text-white rounded-lg p-4 backdrop-blur-sm border border-cyan-500/30 max-w-2xl mx-auto">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex-1">
+            <h3 class="font-bold text-cyan-400 text-lg" id="info-title"></h3>
+            <div class="flex items-center gap-3 mt-1">
+              <span class="text-purple-300 font-medium" id="info-year"></span>
+              <span class="text-orange-300 text-sm" id="info-location"></span>
+              <span class="text-xs px-2 py-1 rounded-full bg-gradient-to-r from-purple-600 to-pink-600" id="info-era"></span>
+            </div>
+          </div>
+          <button class="close-info-panel text-gray-400 hover:text-white transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        
+        <p class="text-gray-300 mb-4 leading-relaxed" id="info-description"></p>
+        
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div class="flex items-center text-sm text-cyan-300" id="info-sector">
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              <span id="sector-name"></span>
+            </div>
+            <div class="key-event-indicator hidden items-center text-sm text-yellow-300" id="key-event-indicator">
+              <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              Key Event
+            </div>
+          </div>
+          
+          <div class="action-hint text-sm text-gray-400" id="action-hint">
+            Click again to navigate to this event
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Locations Message -->
+    {eventsWithLocations.length === 0 && (
+      <div class="absolute inset-0 flex items-center justify-center z-30">
+        <div class="text-center p-8 bg-black/90 backdrop-blur-sm rounded-xl border border-purple-500/30 max-w-md">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-purple-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+          </svg>
+          <p class="text-purple-400 font-bold text-lg mb-2">No Cosmic Locations Found</p>
+          <p class="text-gray-400">Add location data to your timeline events to see them mapped in the universe.</p>
+        </div>
+      </div>
+    )}
   </div>
 </div>
 
 <script define:vars={{ mapViewId, initialSelectedSlug: selectedEventSlug }}>
   const rootElement = document.getElementById(mapViewId);
   let currentSelectedSlug = initialSelectedSlug;
-  let hoveredPinSlug = null;
-
-  // if (rootElement) { // Correctly commented out
-  //  console.log("MapView.astro (Night Sky enhanced) script loaded for:", mapViewId);
-
-  //   const skyViewport = rootElement.querySelector('.sky-viewport');
-  //  const skyTransformWrapper = rootElement.querySelector('.sky-transform-wrapper');
-
-  //  let currentScale = 1;
-  //  const minScale = 1; // Min zoom out
-  //  const maxScale = 1; // Max zoom in
-  //  const zoomStep = 0.1; // How much to zoom per wheel event
-
-  //  function updatePinAndCardStates() {
-  //      const pins = rootElement.querySelectorAll('.map-pin');
-  //      pins.forEach(pin => {
-  //          const slug = pin.dataset.slug;
-  //          const pinCircle = pin.querySelector('.pin-circle');
-  //          const cardContainer = pin.querySelector('.timeline-card-container');
-
-  //          const isSelected = slug === currentSelectedSlug;
-  //          const isHovered = slug === hoveredPinSlug;
-
-  //          if (pinCircle) {
-  //              pinCircle.classList.toggle('scale-150', isSelected || isHovered);
-  //              pinCircle.classList.toggle('shadow-glow', isSelected || isHovered);
-  //          }
-  //          if (cardContainer) {
-  //              cardContainer.style.display = (isSelected || isHovered) ? 'block' : 'none';
-  //          }
-  //      });
-
-  //      const locationCards = rootElement.querySelectorAll('.location-card');
-  //      locationCards.forEach(card => {
-  //          card.classList.toggle('bg-[oklch(0.95_0.025_var(--hue))/50]', card.dataset.slug === currentSelectedSlug);
-  //          card.classList.toggle('dark:bg-[oklch(0.25_0.025_var(--hue))/50]', card.dataset.slug === currentSelectedSlug);
-  //      });
-  //  }
   
-
-  //  function handlePinOrCardInteraction(slug, isDblClick = false) {
-  //      if (isDblClick || (currentSelectedSlug && currentSelectedSlug === slug)) {
-  //          console.log(`MapView.astro: Navigating to /posts/${slug}/`);
-  //          window.location.href = `/posts/${slug}/`;
-  //          return;
-  //      }
-  //      currentSelectedSlug = slug;
-  //      hoveredPinSlug = null;
-  //      updatePinAndCardStates();
-
-  //      const selectEvent = new CustomEvent('map:select', {
-  //          detail: { slug },
-  //          bubbles: true,
-  //          composed: true
-  //      });
-  //      rootElement.dispatchEvent(selectEvent);
-  //  }
-
-  //  rootElement.addEventListener('click', (e) => {
-  //    const interactiveElement = e.target.closest('.map-pin, .location-card');
-  //    if (interactiveElement && interactiveElement.dataset.slug) {
-  //      handlePinOrCardInteraction(interactiveElement.dataset.slug);
-  //    }
-  //  });
-
-  //  rootElement.addEventListener('dblclick', (e) => {
-  //    const interactiveElement = e.target.closest('.map-pin, .location-card');
-  //    if (interactiveElement && interactiveElement.dataset.slug) {
-  //      handlePinOrCardInteraction(interactiveElement.dataset.slug, true);
-  //    }
-  //  });
-
-  //  rootElement.addEventListener('mouseover', (e) => {
-  //      const pinElement = e.target.closest('.map-pin');
-  //      if (pinElement && pinElement.dataset.slug) {
-  //          hoveredPinSlug = pinElement.dataset.slug;
-  //          updatePinAndCardStates();
-  //      }
-  //  });
-
-  //  rootElement.addEventListener('mouseout', (e) => {
-  //      const pinElement = e.target.closest('.map-pin');
-  //      if (pinElement && hoveredPinSlug === pinElement.dataset.slug) {
-  //          hoveredPinSlug = null;
-  //          updatePinAndCardStates();
-  //      }
-  //  });
-
+  if (rootElement) {
+    console.log("Universe Map script loaded for:", mapViewId);
+    
+    const viewport = rootElement.querySelector('[data-viewport]');
+    const content = rootElement.querySelector('[data-content]');
+    const infoPanel = rootElement.querySelector('#info-panel');
+    
+    let isDragging = false;
+    let currentScale = 1;
+    let currentX = 0;
+    let currentY = 0;
+    let startX = 0;
+    let startY = 0;
+    
+    const minScale = 0.5;
+    const maxScale = 3;
+    
+    // Create animated stars
+    function createStars() {
+      const layers = ['.stars-layer-1', '.stars-layer-2', '.stars-layer-3'];
+      const densities = [100, 50, 25];
+      
+      layers.forEach((layer, index) => {
+        const starLayer = rootElement.querySelector(layer);
+        if (starLayer) {
+          for (let i = 0; i < densities[index]; i++) {
+            const star = document.createElement('div');
+            star.className = 'absolute rounded-full bg-white';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.width = (Math.random() * 2 + 1) + 'px';
+            star.style.height = star.style.width;
+            star.style.opacity = Math.random() * 0.8 + 0.2;
+            star.style.animationDelay = Math.random() * 3 + 's';
+            starLayer.appendChild(star);
+          }
+        }
+      });
+    }
+    
+    // Update info panel
+    function updateInfoPanel(event, isVisible = true) {
+      if (!infoPanel) return;
+      
+      if (!isVisible) {
+        infoPanel.style.transform = 'translateY(100%)';
+        infoPanel.style.opacity = '0';
+        return;
+      }
+      
+      const coords = getUniverseCoordinates(event.location, event.year);
+      const sectorNames = {
+        'inner-core': 'Inner Core Sector',
+        'mid-rim': 'Mid Rim Territory', 
+        'outer-rim': 'Outer Rim Frontier',
+        'frontier': 'Frontier Space',
+        'unknown': 'Unknown Sector'
+      };
+      
+      rootElement.querySelector('#info-title').textContent = event.title;
+      rootElement.querySelector('#info-year').textContent = event.year;
+      rootElement.querySelector('#info-location').textContent = event.location;
+      rootElement.querySelector('#info-era').textContent = event.era || 'Unknown Era';
+      rootElement.querySelector('#info-description').textContent = event.description;
+      rootElement.querySelector('#sector-name').textContent = sectorNames[coords.sector];
+      
+      const keyEventIndicator = rootElement.querySelector('#key-event-indicator');
+      if (event.isKeyEvent) {
+        keyEventIndicator.classList.remove('hidden');
+        keyEventIndicator.classList.add('flex');
+      } else {
+        keyEventIndicator.classList.add('hidden');
+        keyEventIndicator.classList.remove('flex');
+      }
+      
+      infoPanel.style.transform = 'translateY(0)';
+      infoPanel.style.opacity = '1';
+    }
+    
+    // Helper function to get coordinates (matches Astro component)
+    function getUniverseCoordinates(location, year) {
+      if (!location) return { x: 50, y: 50, sector: 'unknown' };
+      
+      const locationHash = [...location].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 1000, 0);
+      const yearFactor = year % 100;
+      
+      const sector = year < 2050 ? 'inner-core' : 
+                    year < 2100 ? 'mid-rim' : 
+                    year < 2200 ? 'outer-rim' : 'frontier';
+      
+      const angle = (locationHash + yearFactor) * 0.1;
+      const radius = 20 + (locationHash % 60);
+      
+      const x = 50 + (Math.cos(angle) * radius * 0.8);
+      const y = 50 + (Math.sin(angle) * radius * 0.6);
+      
+      return { 
+        x: Math.max(5, Math.min(95, x)), 
+        y: Math.max(5, Math.min(95, y)), 
+        sector 
+      };
+    }
+    
+    // Update visual states
+    function updateLocationStates() {
+      const locations = rootElement.querySelectorAll('.cosmic-location');
+      locations.forEach(location => {
+        const marker = location.querySelector('.location-marker');
+        const isSelected = location.dataset.slug === currentSelectedSlug;
+        
+        if (isSelected) {
+          marker.classList.add('scale-150', 'ring-4', 'ring-cyan-400/50', 'ring-offset-2', 'ring-offset-transparent');
+        } else {
+          marker.classList.remove('scale-150', 'ring-4', 'ring-cyan-400/50', 'ring-offset-2', 'ring-offset-transparent');
+        }
+      });
+    }
+    
+    // Handle location clicks
+    rootElement.addEventListener('click', (e) => {
+      const location = e.target.closest('.cosmic-location');
+      
+      // Close info panel if clicking outside
+      if (e.target.closest('.close-info-panel')) {
+        updateInfoPanel(null, false);
+        return;
+      }
+      
+      if (location) {
+        const slug = location.dataset.slug;
+        const eventData = {
+          title: location.dataset.title,
+          year: parseInt(location.dataset.year),
+          location: location.dataset.location,
+          era: location.dataset.era,
+          description: 'Loading event details...', // You might want to pass full event data
+          isKeyEvent: location.querySelector('.location-marker').classList.contains('w-6')
+        };
+        
+        if (currentSelectedSlug === slug) {
+          // Second click - navigate
+          console.log(`Universe Map: Navigating to /posts/${slug}/`);
+          window.location.href = `/posts/${slug}/`;
+          return;
+        }
+        
+        // First click - select
+        currentSelectedSlug = slug;
+        updateLocationStates();
+        updateInfoPanel(eventData, true);
+        
+        // Dispatch selection event
+        const selectEvent = new CustomEvent('universe-map:select', {
+          detail: { slug, title: eventData.title },
+          bubbles: true,
+          composed: true
+        });
+        rootElement.dispatchEvent(selectEvent);
+      } else if (!e.target.closest('#info-panel')) {
+        // Clicked on empty space - deselect
+        currentSelectedSlug = null;
+        updateLocationStates();
+        updateInfoPanel(null, false);
+      }
+    });
+    
     // Zoom functionality
-  //  if (skyViewport && skyTransformWrapper) { // skyViewport is not defined if the block is commented
-  //      skyViewport.addEventListener('wheel', (event) => {
-  //          event.preventDefault();
-
-  //          const delta = event.deltaY > 0 ? -zoomStep : zoomStep;
-  //          const oldScale = currentScale;
-            
-  //          currentScale = Math.max(minScale, Math.min(maxScale, currentScale + delta));
-
-  //          if (currentScale !== oldScale) {
-  //              const rect = skyViewport.getBoundingClientRect();
-                
-  //              const mouseX = event.clientX - rect.left;
-  //              const mouseY = event.clientY - rect.top;
-
-  //              skyTransformWrapper.style.transformOrigin = `${(mouseX / rect.width) * 100}% ${(mouseY / rect.height) * 100}%`;
-  //              skyTransformWrapper.style.transform = `scale(${currentScale})`;
-  //          }
-  //      }, { passive: false });
-  //  }
-  //  updatePinAndCardStates(); // Initial state
-  // } // Correctly commented out
+    if (viewport && content) {
+      viewport.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        const newScale = Math.max(minScale, Math.min(maxScale, currentScale + delta));
+        
+        if (newScale !== currentScale) {
+          currentScale = newScale;
+          content.style.transform = `scale(${currentScale}) translate(${currentX}px, ${currentY}px)`;
+        }
+      }, { passive: false });
+      
+      // Pan functionality
+      viewport.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.cosmic-location, #info-panel')) return;
+        
+        isDragging = true;
+        startX = e.clientX - currentX;
+        startY = e.clientY - currentY;
+        viewport.style.cursor = 'grabbing';
+      });
+      
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        currentX = e.clientX - startX;
+        currentY = e.clientY - startY;
+        content.style.transform = `scale(${currentScale}) translate(${currentX}px, ${currentY}px)`;
+      });
+      
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+        viewport.style.cursor = 'grab';
+      });
+    }
+    
+    // Initialize
+    setTimeout(() => {
+      createStars();
+      updateLocationStates();
+      rootElement.dataset.ready = "true";
+      
+      // Show initial selection if provided
+      if (currentSelectedSlug) {
+        const selectedLocation = rootElement.querySelector(`[data-slug="${currentSelectedSlug}"]`);
+        if (selectedLocation) {
+          const eventData = {
+            title: selectedLocation.dataset.title,
+            year: parseInt(selectedLocation.dataset.year),
+            location: selectedLocation.dataset.location,
+            era: selectedLocation.dataset.era,
+            description: 'Event details...',
+            isKeyEvent: selectedLocation.querySelector('.location-marker').classList.contains('w-6')
+          };
+          updateInfoPanel(eventData, true);
+        }
+      }
+    }, 100);
+  }
 </script>
+
+<style>
+  .universe-map {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  .universe-viewport {
+    background: radial-gradient(ellipse at center, #1a1a2e 0%, #16213e 40%, #0f0f23 100%);
+  }
+  
+  .location-marker {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .cosmic-location:hover .location-marker {
+    transform: scale(1.25);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+  }
+  
+  .constellation-line {
+    stroke-dasharray: 2, 2;
+    animation: constellation-flow 4s linear infinite;
+  }
+  
+  @keyframes constellation-flow {
+    0% { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: 4; }
+  }
+  
+  .bg-gradient-radial {
+    background: radial-gradient(circle, var(--tw-gradient-stops));
+  }
+  
+  /* Custom scrollbar */
+  .universe-viewport::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .universe-viewport {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  /* Stars animation */
+  .stars-layer-1 div,
+  .stars-layer-2 div,
+  .stars-layer-3 div {
+    animation: twinkle 3s infinite;
+  }
+  
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 1; }
+  }
+</style>

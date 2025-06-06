@@ -42,8 +42,7 @@ export const navBarConfig: NavBarConfig = {
       name: "Gastronomy",
       url: "#",
       dropdown: [
-        { name: "Cookbook", url: "/cookbook/" },
-        { name: "Resturant Reviews", url: "/reviews/" }
+        { name:  "Map ", url: "/posts/explainer/" },
       ]
     },
     3,
