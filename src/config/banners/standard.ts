@@ -37,14 +37,15 @@
 
 // Import type for Astro image metadata
 import type { ImageMetadata } from 'astro'
-import type { 
-  StandardBannerData, 
-  BannerAnimationConfig, 
+import type {
+  StandardBannerData,
+  BannerAnimationConfig,
   LinkPreviewInfo,
   BannerItem,
   VideoBannerItem,
   ImageBannerItem,
-  VideoBannerConfig
+  VideoBannerConfig,
+  BannerItemPreviewDetails // Added import
 } from './types'
 
 // Import type guards
@@ -54,10 +55,11 @@ import { isVideoBannerItem, isImageBannerItem } from './types'
 // BANNER IMAGE IMPORTS (for images and video fallbacks)
 // =====================================================================
 
-import banner1Fallback from '@/assets/banner/3dtimeline.webp'  // Fallback for your video
-import banner2Fallback from '@/assets/banner/cookbook.png'
-import banner3Fallback from '@/assets/banner/reviews.png'
-import banner4 from '@/assets/banner/0004.png'
+//import banner1 from '@/assets/banner/main-title.png'
+import banner1Fallback from '@/assets/banner/main-title.png'  // Fallback for your video
+import banner2Fallback from '@/assets/banner/3dtimeline.webp'
+import banner3Fallback from '@/assets/banner/cookbook.png'
+import banner4Fallback from '@/assets/banner/reviews.png'
 import banner5 from '@/assets/banner/0005.png'
 import banner6 from '@/assets/banner/0006.png'
 import banner7 from '@/assets/banner/0007.png'
@@ -110,24 +112,36 @@ export const videoConfig: VideoBannerConfig = {
  */
 export const bannerList: BannerItem[] = [
   // Video item - uses your ComfyUI video
+/*   {
+    type: 'image',
+    src: banner1,
+    alt: 'Banner image 4'
+  }, */
+   {
+    type: 'video',
+    src: '/videos/titleb.webm',  // Place this file in /public/videos/
+    fallbackImage: banner1Fallback,      // Fallback image for unsupported browsers
+    alt: 'Animated title',
+    preload: 'none'  // Don't preload video until needed
+  }, 
   {
     type: 'video',
     src: '/videos/starmap.webm',  // Place this file in /public/videos/
-    fallbackImage: banner1Fallback,      // Fallback image for unsupported browsers
+    fallbackImage: banner2Fallback,      // Fallback image for unsupported browsers
     alt: 'Animated banner',
     preload: 'none'  // Don't preload video until needed
   },
   {
     type: 'video',
     src: '/videos/cookbook2.webm',  // Place this file in /public/videos/
-    fallbackImage: banner2Fallback,      // Fallback image for unsupported browsers
+    fallbackImage: banner3Fallback,      // Fallback image for unsupported browsers
     alt: 'MegaMeal Cookbook',
     preload: 'none',  // Don't preload video until needed
   },
   {
     type: 'video',
     src: '/videos/reviews.webm',  // Place this file in /public/videos/
-    fallbackImage: banner3Fallback,      // Fallback image for unsupported browsers
+    fallbackImage: banner4Fallback,      // Fallback image for unsupported browsers
     alt: 'Reviews and testimonials',
     preload: 'none'  // Don't preload video until needed
   },
@@ -170,21 +184,17 @@ export const bannerList: BannerItem[] = [
   // }
 ];
 
-/**
- * Banner item links - corresponds to bannerList array above
- * Set to null or empty string for non-clickable items
- * 
- * IMPORTANT: This array should have the same length as bannerList
+ /* IMPORTANT: This array should have the same length as bannerList
  */
 export const bannerLinks: (string | null)[] = [
+  '',         // no for video banner (ComfyUI_00010_.webm)
   '/posts/explainer/',         // Link for video banner (ComfyUI_00010_.webm)
-  '/cookbook/',                // Link for video banner2 (coockbook.webm)  
-  '/reviews/',                 // Link for banner3 (0003.png)
+  '',                // Link for video banner3 (cookbook.webm)  
+  '',                 // Link for banner4 (0003.png)
   null,                        // No link for banner4 (0004.png)
   '/contact',                  // Link for banner5 (0005.png)
   '/blog',                     // Link for banner6 (0006.png)
   '',                          // No link for banner7 (0007.png)
-  '/portfolio'                 // Link for banner8 (0008.png)
 ];
 
 /**
@@ -210,6 +220,11 @@ export const defaultBanner: BannerItem = bannerList[0];
  * - icon: Font Awesome icon name for consistent iconography
  */
 export const linkPreviewData: Record<string, LinkPreviewInfo> = {
+  '': {
+    title: 'Thank you for your interest in MEGAMEAL',
+    description: 'We appreciate your support and interest in the MEGAMEAL universe.',
+    icon: 'book-open'
+  },
   '/posts/explainer/': {
     title: 'Introduction to MEGAMEAL Saga',
     description: 'Explore the hyper-capitalist dystopian future of MEGAMEAL, a science fiction food parody series where cosmic horror and culinary culture collide across multiple media formats and timelines.',
@@ -291,7 +306,12 @@ export function getBannerAnimationSettings(): BannerAnimationConfig {
     enabled: animationConfig.enabled,
     interval: animationConfig.interval,
     transitionDuration: animationConfig.transitionDuration,
-    direction: animationConfig.direction
+    direction: animationConfig.direction,
+    // Include all properties from the local animationConfig
+    pauseOnHover: animationConfig.pauseOnHover,
+    pauseOnMobileTouch: animationConfig.pauseOnMobileTouch,
+    resumeAfterNavigation: animationConfig.resumeAfterNavigation,
+    smoothTransitions: animationConfig.smoothTransitions
   };
 }
 
@@ -407,6 +427,80 @@ export function validateStandardBannerConfig(): {
   };
 }
 
+/**
+ * Gathers all necessary details for rendering a banner item's preview card.
+ * This function is intended to be the single source of truth for preview data.
+ */
+export function getBannerItemPreviewDetails(index: number): BannerItemPreviewDetails | null {
+  if (index < 0 || index >= bannerList.length) {
+    console.warn(`getBannerItemPreviewDetails: Index ${index} out of bounds.`);
+    return null;
+  }
+
+  const item = bannerList[index];
+  const linkUrl = bannerLinks[index]; // Raw link string or null
+
+  let originalHref = '';
+  let urlForDisplay = '';
+  let hasValidLink = false;
+  let actualPreviewData: LinkPreviewInfo;
+
+  const defaultItemTitle = item.alt || `Banner Item ${index + 1}`;
+  const defaultItemDescription = isVideoBannerItem(item)
+    ? 'This video banner showcases dynamic content.'
+    : 'This image banner provides visual context.';
+  const defaultItemIcon = isVideoBannerItem(item) ? 'film' : 'image';
+
+  if (linkUrl && linkUrl.trim() !== '' && linkUrl !== '#') {
+    try {
+      // Attempt to parse the URL. For server-side or context-agnostic use, provide a base.
+      // In a browser context, window.location.origin would be ideal if available.
+      // For now, using a placeholder base, assuming relative paths are common.
+      const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+      const testUrl = new URL(linkUrl, base);
+      
+      originalHref = linkUrl; // Use the raw link for the href attribute
+      urlForDisplay = testUrl.pathname; // Use pathname for display
+      hasValidLink = true;
+      // Fetch specific preview data if available, otherwise use a generic one for valid links
+      actualPreviewData = linkPreviewData[originalHref] || {
+        title: defaultItemTitle, // Fallback to item alt text or generic title
+        description: `Follow this link to learn more.`,
+        icon: 'arrow-up-right-from-square'
+      };
+    } catch (error) {
+      console.warn(`Invalid URL in standard.ts for banner item ${index}: "${linkUrl}". Error: ${error}`);
+      // Link is invalid, treat as if no link
+      hasValidLink = false;
+      actualPreviewData = {
+        title: defaultItemTitle,
+        description: defaultItemDescription,
+        icon: defaultItemIcon
+      };
+    }
+  } else {
+    // No link or a placeholder link like '#'
+    hasValidLink = false;
+    actualPreviewData = {
+      title: defaultItemTitle,
+      description: defaultItemDescription,
+      icon: defaultItemIcon
+    };
+  }
+
+  const previewIconSVG = iconSVGs[actualPreviewData.icon] || iconSVGs['arrow-up-right-from-square']; // Default icon SVG
+
+  return {
+    hasValidLink,
+    originalHref, // This will be empty if no valid link
+    urlForDisplay,  // This will be empty if no valid link
+    previewTitle: actualPreviewData.title,
+    previewDescription: actualPreviewData.description,
+    previewIconSVG,
+    isVideoButton: isVideoBannerItem(item), // Renamed from isVideo for clarity in BannerItemPreviewDetails
+  };
+}
+
 // =====================================================================
 // EXPORT CONFIGURATION OBJECT
 // =====================================================================
@@ -424,10 +518,11 @@ export const standardBannerConfig = {
   // Helper functions
   getBannerAnimationSettings,
   getVideoConfig,
-  getBannerLink,
-  hasAnyBannerLinks,
-  getLinkPreviewData,
-  getIconSVG,
+  getBannerLink, // Retain for now if used elsewhere, but preview details should come from the new function
+  hasAnyBannerLinks, // Retain for now
+  getLinkPreviewData, // Retain for now
+  getIconSVG, // Retain for now
+  getBannerItemPreviewDetails, // Export the new function
   getBannerItem,
   getBannerCount,
   validateStandardBannerConfig,
