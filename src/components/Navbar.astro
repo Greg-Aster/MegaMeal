@@ -109,208 +109,224 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
 </div>
 
 <script>
-let dismissMascotBtn: HTMLElement | null = null;
-let bringBackMascotBtn: HTMLElement | null = null;
-function switchTheme() {
-    if (localStorage.theme === 'dark') {
-        document.documentElement.classList.remove('dark');
-        localStorage.theme = 'light';
-    } else {
-        document.documentElement.classList.add('dark');
-        localStorage.theme = 'dark';
+    let dismissMascotBtn: HTMLElement | null = null;
+    let bringBackMascotBtn: HTMLElement | null = null;
+    
+    function switchTheme() {
+        if (localStorage.theme === 'dark') {
+            document.documentElement.classList.remove('dark');
+            localStorage.theme = 'light';
+        } else {
+            document.documentElement.classList.add('dark');
+            localStorage.theme = 'dark';
+        }
     }
-}
-
-function loadButtonScript() {
-    // Theme switch
-    let switchBtn = document.getElementById("scheme-switch");
-    if (switchBtn) {
-        switchBtn.addEventListener("click", function () {
-            switchTheme();
+    
+    function loadButtonScript() {
+        // Theme switch
+        let switchBtn = document.getElementById("scheme-switch");
+        if (switchBtn) {
+            switchBtn.addEventListener("click", function () {
+                switchTheme();
+            });
+        }
+    
+        // Display settings button
+        let settingBtn = document.getElementById("display-settings-switch");
+        if (settingBtn) {
+            settingBtn.addEventListener("click", function () {
+                let settingPanel = document.getElementById("display-setting");
+                if (settingPanel) {
+                    settingPanel.classList.toggle("float-panel-closed");
+                }
+            });
+        }
+    
+        // Nav menu button
+        let menuBtn = document.getElementById("nav-menu-switch");
+        if (menuBtn) {
+            menuBtn.addEventListener("click", function () {
+                let menuPanel = document.getElementById("nav-menu-panel");
+                if (menuPanel) {
+                    menuPanel.classList.toggle("float-panel-closed");
+                }
+            });
+        }
+    
+        // Mascot Controls (Bleepy) - PRESERVED EXACTLY AS-IS
+        dismissMascotBtn = document.getElementById("navbar-dismiss-mascot-button");
+        bringBackMascotBtn = document.getElementById("navbar-bring-back-mascot-button");
+    
+        if (dismissMascotBtn) {
+            dismissMascotBtn.addEventListener("click", function () {
+                document.dispatchEvent(new CustomEvent('bleepy:hide'));
+            });
+        }
+    
+        if (bringBackMascotBtn) {
+            bringBackMascotBtn.addEventListener("click", function () {
+                document.dispatchEvent(new CustomEvent('bleepy:show'));
+            });
+        }
+    
+        // Initial Button State for Mascot Controls
+        if (dismissMascotBtn && bringBackMascotBtn) {
+            const mascotDismissed = sessionStorage.getItem('cuppyDismissed') === 'true';
+            if (mascotDismissed) {
+                dismissMascotBtn.style.display = 'none';
+                bringBackMascotBtn.style.display = 'flex';
+            } else {
+                dismissMascotBtn.style.display = 'flex';
+                bringBackMascotBtn.style.display = 'none';
+            }
+        }
+    
+        // UPDATED: Fullscreen Mode Toggle Functionality
+        initializeFullscreenMode();
+    }
+    
+    /**
+     * IMPROVED: Initialize fullscreen mode toggle with smart mobile behavior
+     */
+    function initializeFullscreenMode() {
+        const toggleBtn = document.getElementById('fullscreen-btn');
+        if (!toggleBtn) return; // Exit if button doesn't exist
+        
+        const expandIcon = toggleBtn?.querySelector('.fullscreen-icon');
+        const compressIcon = toggleBtn?.querySelector('.fullscreen-exit-icon');
+        
+        // Check if we're on a desktop device (1024px or larger)
+        const isDesktop = () => window.innerWidth >= 1024;
+        
+        // Hide button on mobile/tablet devices
+        if (!isDesktop()) {
+            toggleBtn.style.display = 'none';
+            return; // Exit early for mobile devices
+        }
+        
+        // Check saved state and apply it WITHOUT triggering reload
+        const isFullscreen = localStorage.getItem('fullscreenMode') === 'true';
+        
+        // Apply initial state
+        if (isFullscreen) {
+            applyFullscreenState();
+        } else {
+            applyNormalState();
+        }
+        
+        // Toggle handler - smart behavior based on screen size
+        toggleBtn?.addEventListener('click', () => {
+            const currentState = localStorage.getItem('fullscreenMode') === 'true';
+            
+            if (currentState) {
+                disableFullscreenMode();
+            } else {
+                enableFullscreenMode();
+            }
         });
-    }
-
-    // Display settings button
-    let settingBtn = document.getElementById("display-settings-switch");
-    if (settingBtn) {
-        settingBtn.addEventListener("click", function () {
-            let settingPanel = document.getElementById("display-setting");
-            if (settingPanel) {
-                settingPanel.classList.toggle("float-panel-closed");
+        
+        /**
+         * Apply fullscreen visual state (desktop layout changes)
+         */
+        function applyFullscreenState() {
+            // Add class to force mobile view (only affects desktop due to CSS media query)
+            document.body.classList.add('force-mobile-view');
+            
+            // Update button icons
+            expandIcon?.classList.add('hidden');
+            compressIcon?.classList.remove('hidden');
+        }
+        
+        /**
+         * Apply normal state
+         */
+        function applyNormalState() {
+            // Remove class
+            document.body.classList.remove('force-mobile-view');
+            
+            // Update button icons
+            expandIcon?.classList.remove('hidden');
+            compressIcon?.classList.add('hidden');
+        }
+        
+        /**
+         * Enable fullscreen mode - desktop gets layout changes and reload
+         */
+        function enableFullscreenMode() {
+            // Save state first
+            localStorage.setItem('fullscreenMode', 'true');
+            localStorage.setItem('fullscreenBannerOverride', 'true');
+            
+            // Apply layout changes
+            applyFullscreenState();
+            
+            // Reload to apply banner changes
+            if (!document.body.classList.contains('fullscreen-transitioning')) {
+                document.body.classList.add('fullscreen-transitioning');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 300);
+            }
+        }
+        
+        /**
+         * Disable fullscreen mode - restore normal layout and reload
+         */
+        function disableFullscreenMode() {
+            // Save state first
+            localStorage.setItem('fullscreenMode', 'false');
+            localStorage.removeItem('fullscreenBannerOverride');
+            
+            // Restore normal layout
+            applyNormalState();
+            
+            // Reload to restore banner
+            if (!document.body.classList.contains('fullscreen-transitioning')) {
+                document.body.classList.add('fullscreen-transitioning');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 300);
+            }
+        }
+        
+        // Handle window resize - hide button if resizing to mobile
+        window.addEventListener('resize', () => {
+            if (!isDesktop()) {
+                toggleBtn.style.display = 'none';
+            } else {
+                toggleBtn.style.display = '';
             }
         });
     }
-
-    // Nav menu button
-    let menuBtn = document.getElementById("nav-menu-switch");
-    if (menuBtn) {
-        menuBtn.addEventListener("click", function () {
-            let menuPanel = document.getElementById("nav-menu-panel");
-            if (menuPanel) {
-                menuPanel.classList.toggle("float-panel-closed");
+    
+    // Bleepy mascot visibility event listener - PRESERVED EXACTLY AS-IS
+    document.addEventListener('bleepy:visibilityChanged', (event: Event) => {
+        const customEvent = event as CustomEvent;
+        const { visible } = customEvent.detail;
+        if (dismissMascotBtn && bringBackMascotBtn) {
+            if (visible) {
+                dismissMascotBtn.style.display = 'flex';
+                bringBackMascotBtn.style.display = 'none';
+            } else {
+                dismissMascotBtn.style.display = 'none';
+                bringBackMascotBtn.style.display = 'flex';
             }
-        });
-    }
-    // Mascot Controls
-    dismissMascotBtn = document.getElementById("navbar-dismiss-mascot-button");
-    bringBackMascotBtn = document.getElementById("navbar-bring-back-mascot-button");
-
-    if (dismissMascotBtn) {
-        dismissMascotBtn.addEventListener("click", function () {
-            document.dispatchEvent(new CustomEvent('bleepy:hide'));
-            // Optionally, directly update button visibility here for immediate feedback,
-            // though the 'bleepy:visibilityChanged' listener will also handle this.
-            // dismissMascotBtn.style.display = 'none';
-            // if (bringBackMascotBtn) bringBackMascotBtn.style.display = 'flex'; // Or 'inline-flex' or 'block' depending on styling
-        });
-    }
-
-    if (bringBackMascotBtn) {
-        bringBackMascotBtn.addEventListener("click", function () {
-            document.dispatchEvent(new CustomEvent('bleepy:show'));
-            // Optionally, directly update button visibility here
-            // bringBackMascotBtn.style.display = 'none';
-            // if (dismissMascotBtn) dismissMascotBtn.style.display = 'flex';
-        });
-    }
-
-    // Initial Button State for Mascot Controls
-    // Inside loadButtonScript() or a similar init function
-    if (dismissMascotBtn && bringBackMascotBtn) {
-        const mascotDismissed = sessionStorage.getItem('cuppyDismissed') === 'true';
-        if (mascotDismissed) {
-            dismissMascotBtn.style.display = 'none';
-            bringBackMascotBtn.style.display = 'flex'; // Or appropriate display value
-        } else {
-            dismissMascotBtn.style.display = 'flex'; // Or appropriate display value
-            bringBackMascotBtn.style.display = 'none';
         }
+    });
+    
+    // Initialize everything
+    loadButtonScript();
+    </script>
+    
+    {import.meta.env.PROD && <script is:inline define:vars={{scriptUrl: url('/pagefind/pagefind.js')}}>
+    async function loadPagefind() {
+        const pagefind = await import(scriptUrl)
+        await pagefind.options({
+            'excerptLength': 20
+        })
+        pagefind.init()
+        window.pagefind = pagefind
+        pagefind.search('')     // speed up the first search
     }
-
-    // Fullscreen Mode Toggle Functionality
-    initializeFullscreenMode();
-}
-
-/**
- * Initialize fullscreen mode toggle
- */
-function initializeFullscreenMode() {
-  const toggleBtn = document.getElementById('fullscreen-btn');
-  const expandIcon = toggleBtn?.querySelector('.fullscreen-icon');
-  const compressIcon = toggleBtn?.querySelector('.fullscreen-exit-icon');
-  
-  // Check saved state and apply it WITHOUT triggering reload
-  const isFullscreen = localStorage.getItem('fullscreenMode') === 'true';
-  
-  // Apply initial state (without reload - just visual state)
-  if (isFullscreen) {
-    applyFullscreenState();
-  } else {
-    applyNormalState();
-  }
-  
-  // Toggle handler
-  toggleBtn?.addEventListener('click', () => {
-    const currentState = document.body.classList.contains('force-mobile-view');
-    
-    if (currentState) {
-      disableFullscreenMode();
-    } else {
-      enableFullscreenMode();
-    }
-  });
-  
-  /**
-   * Apply fullscreen visual state without reload
-   */
-  function applyFullscreenState() {
-    // Add class to force mobile view
-    document.body.classList.add('force-mobile-view');
-    
-    // Update button icons
-    expandIcon?.classList.add('hidden');
-    compressIcon?.classList.remove('hidden');
-  }
-  
-  /**
-   * Apply normal visual state without reload
-   */
-  function applyNormalState() {
-    // Remove class
-    document.body.classList.remove('force-mobile-view');
-    
-    // Update button icons
-    expandIcon?.classList.remove('hidden');
-    compressIcon?.classList.add('hidden');
-  }
-  
-  /**
-   * Enable fullscreen mode and reload to apply banner changes
-   */
-  function enableFullscreenMode() {
-    // Save state first
-    localStorage.setItem('fullscreenMode', 'true');
-    localStorage.setItem('fullscreenBannerOverride', 'true');
-    
-    // Apply visual state immediately
-    applyFullscreenState();
-    
-    // Reload to apply banner changes
-    if (!document.body.classList.contains('fullscreen-transitioning')) {
-      document.body.classList.add('fullscreen-transitioning');
-      setTimeout(() => {
-        window.location.reload();
-      }, 300);
-    }
-  }
-  
-  /**
-   * Disable fullscreen mode and reload to restore banner
-   */
-  function disableFullscreenMode() {
-    // Save state first
-    localStorage.setItem('fullscreenMode', 'false');
-    localStorage.removeItem('fullscreenBannerOverride');
-    
-    // Apply visual state immediately
-    applyNormalState();
-    
-    // Reload to restore banner
-    if (!document.body.classList.contains('fullscreen-transitioning')) {
-      document.body.classList.add('fullscreen-transitioning');
-      setTimeout(() => {
-        window.location.reload();
-      }, 300);
-    }
-  }
-}
-
-document.addEventListener('bleepy:visibilityChanged', (event: Event) => {
-    const customEvent = event as CustomEvent;
-    const { visible } = customEvent.detail;
-    if (dismissMascotBtn && bringBackMascotBtn) {
-        if (visible) {
-            dismissMascotBtn.style.display = 'flex'; // Or appropriate display value
-            bringBackMascotBtn.style.display = 'none';
-        } else {
-            dismissMascotBtn.style.display = 'none';
-            bringBackMascotBtn.style.display = 'flex'; // Or appropriate display value
-        }
-    }
-});
-
-loadButtonScript();
-</script>
-
-{import.meta.env.PROD && <script is:inline define:vars={{scriptUrl: url('/pagefind/pagefind.js')}}>
-async function loadPagefind() {
-    const pagefind = await import(scriptUrl)
-    await pagefind.options({
-        'excerptLength': 20
-    })
-    pagefind.init()
-    window.pagefind = pagefind
-    pagefind.search('')     // speed up the first search
-}
-loadPagefind()
-</script>}
+    loadPagefind()
+    </script>}

@@ -304,119 +304,151 @@ if (post && post.data) {
   <!-- ============================================================= -->
   {hasStandardBanner && (
     <div id="standard-banner-container" class="animated-banner-content max-w-screen-2xl mx-auto h-full relative" style={`height: ${BANNER_HEIGHT};`}>
+      
+      <!-- Hide Banner Button -->
+      <button 
+        id="hide-banner-btn" 
+        class="absolute top-4 right-4 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all duration-200 backdrop-blur-sm"
+        title="Hide Banner"
+        aria-label="Hide Banner"
+      >
+        <Icon name="fa6-solid:eye-slash" class="text-sm" />
+      </button>
+      
+      {/* Cycle through all banner items (videos and images) from banner.config.ts */}
       {bannerConfig.standardBannerConfig.bannerList.length > 0 ? bannerConfig.standardBannerConfig.bannerList.map((item, index) => {
         const bannerLink = getBannerLink(index);
         const isClickable = bannerLink !== null;
         const isVideoItem = bannerConfig.standardBannerConfig.isVideoBannerItem(item);
         const isImageItem = bannerConfig.standardBannerConfig.isImageBannerItem(item);
-
+        const linkPreview = isClickable ? getLinkPreviewData(bannerLink) : null;
+        
         return (
-          <div
-            class="banner-slide absolute inset-0 w-full h-full transition-opacity"
+          <div 
+            class="banner-slide banner-non-interactive absolute inset-0 w-full h-full transition-opacity"
             style={`
               transition-duration: ${bannerConfig.standardBannerConfig.animation.transitionDuration}ms;
               opacity: ${index === 0 ? '1' : '0'};
             `}
             data-banner-index={index}
+            data-banner-link={bannerLink || ''}
           >
-            {isClickable ? (
-              <a
-                href={bannerLink}
-                class="banner-link block w-full h-full relative group"
-                aria-label={`Banner Link ${index + 1}`}
-              >
-                <div class="absolute inset-0 w-full h-full transition-all duration-300 opacity-0 group-hover:opacity-30 bg-black pointer-events-none z-10"></div>
-                <div class="absolute inset-0 w-full h-full flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 z-20 pointer-events-none">
-                  <Icon
-                    name="fa6-solid:arrow-up-right-from-square"
-                    class="text-white text-4xl drop-shadow-lg"
+            {/* STEP 1: Clickable banner area - shows preview instead of direct navigation */}
+            <div 
+              class="banner-click-area block w-full h-full relative cursor-pointer"
+              data-action="show-preview"
+            >
+              {/* Render video or image content */}
+              {isVideoItem ? (
+                <>
+                  {/* Video element */}
+                  <video
+                    src={item.src}
+                    autoplay={bannerConfig.standardBannerConfig.video.autoplay}
+                    muted={bannerConfig.standardBannerConfig.video.muted}
+                    loop={bannerConfig.standardBannerConfig.video.loop}
+                    playsinline={bannerConfig.standardBannerConfig.video.playsInline}
+                    controls={bannerConfig.standardBannerConfig.video.controls}
+                    preload={item.preload || bannerConfig.standardBannerConfig.video.preload}
+                    class={`banner-video w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition}`}
+                    style={`border-radius: ${bannerConfig.visual.borderRadius};`}
+                    onError="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                  {/* Fallback image (hidden by default) */}
+                  <Image
+                    src={item.fallbackImage}
+                    alt={item.alt}
+                    width={bannerConfig.layout.maxWidth}
+                    height={Math.round(bannerConfig.layout.maxWidth * 0.5625)}
+                    class={`banner-image-fallback w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition}`}
+                    style={`border-radius: ${bannerConfig.visual.borderRadius}; display: none;`}
+                    loading="lazy"
                   />
+                </>
+              ) : isImageItem ? (
+                <Image
+                  src={item.src}
+                  alt={item.alt}
+                  width={bannerConfig.layout.maxWidth}
+                  height={Math.round(bannerConfig.layout.maxWidth * 0.5625)}
+                  class={`banner-image w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition}`}
+                  style={`border-radius: ${bannerConfig.visual.borderRadius};`}
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                />
+              ) : null}
+            </div>
+  
+            {/* Enhanced hover/preview overlay */}
+            <div class="banner-hover-overlay absolute inset-0 w-full h-full opacity-0 transition-all duration-300 pointer-events-none z-20" style="background: linear-gradient(135deg, rgba(0,0,0,0.4), rgba(0,0,0,0.6)); backdrop-filter: blur(2px);"></div>
+  
+            {/* STEP 2: PostCard-style preview overlay - click to navigate */}
+            {isClickable && linkPreview && (
+              <div class="banner-postcard-preview absolute inset-0 w-full h-full opacity-0 transform translate-y-4 transition-all duration-300 pointer-events-none z-30 flex flex-col items-center justify-center p-6">
+                
+                {/* Close preview button */}
+                <button 
+                  class="close-preview-btn absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white rounded-full w-8 h-8 flex items-center justify-center transition-all duration-200 backdrop-blur-sm"
+                  data-action="close-preview"
+                  title="Close Preview"
+                  aria-label="Close Preview"
+                >
+                  <Icon name="fa6-solid:arrow-up-right-from-square" class="text-sm" />
+                </button>
+                
+                {/* Clickable preview card - STEP 2 navigation */}
+                <a 
+                  href={bannerLink}
+                  class="banner-preview-card card-base max-w-md w-full transform scale-95 transition-all duration-300 hover:scale-100 cursor-pointer group"
+                  data-action="navigate"
+                >
+                  <div class="p-6">
+                    <div class="flex items-start gap-4">
+                      {/* Icon */}
+                      <div class="flex-shrink-0 w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
+                        <Fragment set:html={getIconSVG(linkPreview.icon)} />
+                      </div>
+                      
+                      {/* Content */}
+                      <div class="flex-1 min-w-0">
+                        <h3 class="font-bold text-lg mb-2 text-[var(--text-color)] group-hover:text-[var(--primary)] transition-colors">
+                          {linkPreview.title}
+                        </h3>
+                        <p class="text-sm text-[var(--text-color-muted)] mb-3 line-clamp-2">
+                          {linkPreview.description}
+                        </p>
+                        <div class="flex items-center gap-2 text-xs text-[var(--primary)]">
+                          <span>Visit Page</span>
+                          <Icon name="fa6-solid:arrow-right" class="text-xs transition-transform group-hover:translate-x-1" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+                
+                {/* Navigation hint */}
+                <div class="mt-4 text-center">
+                  <p class="text-white/70 text-sm backdrop-blur-sm bg-black/20 px-3 py-1 rounded-full">
+                    Tap card to visit page
+                  </p>
                 </div>
-                {isVideoItem ? (
-                  <>
-                    <video
-                      src={item.src}
-                      autoplay={bannerConfig.standardBannerConfig.video.autoplay}
-                      muted={bannerConfig.standardBannerConfig.video.muted}
-                      loop={bannerConfig.standardBannerConfig.video.loop}
-                      playsinline={bannerConfig.standardBannerConfig.video.playsInline}
-                      controls={bannerConfig.standardBannerConfig.video.controls}
-                      preload={item.preload || bannerConfig.standardBannerConfig.video.preload}
-                      class={`banner-video w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition} transition-transform duration-300 group-hover:scale-105`}
-                      style={`border-radius: ${bannerConfig.visual.borderRadius};`}
-                      onError="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                    >
-                      Your browser does not support the video tag.
-                    </video>
-                    <Image
-                      src={item.fallbackImage}
-                      alt={item.alt}
-                      width={bannerConfig.layout.maxWidth}
-                      height={Math.round(bannerConfig.layout.maxWidth * 0.5625)}
-                      class={`banner-image-fallback w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition} transition-transform duration-300 group-hover:scale-105`}
-                      style={`border-radius: ${bannerConfig.visual.borderRadius}; display: none;`}
-                      loading="lazy"
-                    />
-                  </>
-                ) : isImageItem ? (
-                  <Image
-                    src={item.src}
-                    alt={item.alt}
-                    width={bannerConfig.layout.maxWidth}
-                    height={Math.round(bannerConfig.layout.maxWidth * 0.5625)}
-                    class={`banner-image w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition} transition-transform duration-300 group-hover:scale-105`}
-                    style={`border-radius: ${bannerConfig.visual.borderRadius};`}
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                  />
-                ) : null}
-              </a>
-            ) : (
-              <>
-                {isVideoItem ? (
-                  <>
-                    <video
-                      src={item.src}
-                      autoplay={bannerConfig.standardBannerConfig.video.autoplay}
-                      muted={bannerConfig.standardBannerConfig.video.muted}
-                      loop={bannerConfig.standardBannerConfig.video.loop}
-                      playsinline={bannerConfig.standardBannerConfig.video.playsInline}
-                      controls={bannerConfig.standardBannerConfig.video.controls}
-                      preload={item.preload || bannerConfig.standardBannerConfig.video.preload}
-                      class={`banner-video w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition}`}
-                      style={`border-radius: ${bannerConfig.visual.borderRadius};`}
-                      onError="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                    >
-                      Your browser does not support the video tag.
-                    </video>
-                    <Image
-                      src={item.fallbackImage}
-                      alt={item.alt}
-                      width={bannerConfig.layout.maxWidth}
-                      height={Math.round(bannerConfig.layout.maxWidth * 0.5625)}
-                      class={`banner-image-fallback w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition}`}
-                      style={`border-radius: ${bannerConfig.visual.borderRadius}; display: none;`}
-                      loading="lazy"
-                    />
-                  </>
-                ) : isImageItem ? (
-                  <Image
-                    src={item.src}
-                    alt={item.alt}
-                    width={bannerConfig.layout.maxWidth}
-                    height={Math.round(bannerConfig.layout.maxWidth * 0.5625)}
-                    class={`banner-image w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition}`}
-                    style={`border-radius: ${bannerConfig.visual.borderRadius};`}
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                  />
-                ) : null}
-              </>
+              </div>
             )}
+  
+            {/* Mobile interaction hint (shows briefly on page load) */}
+            <div class="banner-mobile-hint absolute bottom-4 left-4 bg-black/50 text-white px-3 py-2 rounded-lg text-sm backdrop-blur-sm opacity-70 transition-opacity duration-300 md:hidden">
+              <Icon name="fa6-solid:hand-pointer" class="inline mr-2 text-xs" />
+              Tap to preview
+            </div>
           </div>
         );
       }) : (
+        <!-- Fallback display when no banner items are available -->
         <div class="w-full h-full rounded-lg" style={`background: ${getFallbackBannerCSS()};`}></div>
       )}
-
+      
+      <!-- Optional gradient overlay for better text readability -->
       {bannerConfig.visual.applyGradientOverlay && (
         <div class="absolute inset-0 w-full h-full pointer-events-none" style={`background: ${bannerConfig.visual.gradientOverlay}; border-radius: ${bannerConfig.visual.borderRadius};`}></div>
       )}

@@ -78,6 +78,7 @@ import ImageWrapper from "../components/misc/ImageWrapper.astro";
 import { Image } from 'astro:assets';
 import TimelineController from '../components/timeline/TimelineBanner.astro';
 import '../styles/timeline-styles.css';
+import '../styles/banner-styles.css';
 
 
 // Bleepy (AI Assistant) related imports
@@ -363,143 +364,101 @@ if (post && post.data) {
   )}
 
 <!-- ============================================================= -->
-  <!-- STANDARD ANIMATED BANNER - ENHANCED UX WITH VIDEO SUPPORT    -->
-  <!-- ============================================================= -->
-  <!-- All configuration and link preview data from banner.config.ts -->
-  {hasStandardBanner && (
-    <div id="standard-banner-container" class="animated-banner-content max-w-screen-2xl mx-auto h-full relative" style={`height: ${BANNER_HEIGHT};`}>
-      {/* Cycle through all banner items (videos and images) from banner.config.ts */}
-      {bannerConfig.standardBannerConfig.bannerList.length > 0 ? bannerConfig.standardBannerConfig.bannerList.map((item, index) => {
-        const bannerLink = getBannerLink(index);
-        const isClickable = bannerLink !== null;
-        const isVideoItem = bannerConfig.standardBannerConfig.isVideoBannerItem(item);
-        const isImageItem = bannerConfig.standardBannerConfig.isImageBannerItem(item);
-        
-        return (
-          <div 
-            class="banner-slide absolute inset-0 w-full h-full transition-opacity"
-            style={`
-              transition-duration: ${bannerConfig.standardBannerConfig.animation.transitionDuration}ms;
-              opacity: ${index === 0 ? '1' : '0'};
-            `}
-            data-banner-index={index}
-          >
-            {isClickable ? (
-              <a 
-                href={bannerLink} 
-                class="banner-link block w-full h-full relative group"
-                aria-label={`Banner Link ${index + 1}`}
-              >
-                {/* BASIC hover overlay - enhanced overlays added by JavaScript */}
-                <div class="absolute inset-0 w-full h-full transition-all duration-300 opacity-0 group-hover:opacity-30 bg-black pointer-events-none z-10"></div>
-                
-                {/* BASIC click icon - enhanced preview added by JavaScript */}
-                <div class="absolute inset-0 w-full h-full flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 z-20 pointer-events-none">
-                  <Icon
-                    name="fa6-solid:arrow-up-right-from-square"
-                    class="text-white text-4xl drop-shadow-lg"
-                  />
-                </div>
-                
-                {/* Render video or image content */}
-                {isVideoItem ? (
-                  <>
-                    {/* Video element */}
-                    <video
-                      src={item.src}
-                      autoplay={bannerConfig.standardBannerConfig.video.autoplay}
-                      muted={bannerConfig.standardBannerConfig.video.muted}
-                      loop={bannerConfig.standardBannerConfig.video.loop}
-                      playsinline={bannerConfig.standardBannerConfig.video.playsInline}
-                      controls={bannerConfig.standardBannerConfig.video.controls}
-                      preload={item.preload || bannerConfig.standardBannerConfig.video.preload}
-                      class={`banner-video w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition} transition-transform duration-300 group-hover:scale-105`}
-                      style={`border-radius: ${bannerConfig.visual.borderRadius};`}
-                      onError="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                    >
-                      Your browser does not support the video tag.
-                    </video>
-                    {/* Fallback image (hidden by default) */}
-                    <Image
-                      src={item.fallbackImage}
-                      alt={item.alt}
-                      width={bannerConfig.layout.maxWidth}
-                      height={Math.round(bannerConfig.layout.maxWidth * 0.5625)}
-                      class={`banner-image-fallback w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition} transition-transform duration-300 group-hover:scale-105`}
-                      style={`border-radius: ${bannerConfig.visual.borderRadius}; display: none;`}
-                      loading="lazy"
-                    />
-                  </>
-                ) : isImageItem ? (
-                  <Image
-                    src={item.src}
-                    alt={item.alt}
-                    width={bannerConfig.layout.maxWidth}
-                    height={Math.round(bannerConfig.layout.maxWidth * 0.5625)}
-                    class={`banner-image w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition} transition-transform duration-300 group-hover:scale-105`}
-                    style={`border-radius: ${bannerConfig.visual.borderRadius};`}
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                  />
-                ) : null}
-              </a>
-            ) : (
-              /* Non-clickable banner items */
-              <>
-                {isVideoItem ? (
-                  <>
-                    {/* Video element */}
-                    <video
-                      src={item.src}
-                      autoplay={bannerConfig.standardBannerConfig.video.autoplay}
-                      muted={bannerConfig.standardBannerConfig.video.muted}
-                      loop={bannerConfig.standardBannerConfig.video.loop}
-                      playsinline={bannerConfig.standardBannerConfig.video.playsInline}
-                      controls={bannerConfig.standardBannerConfig.video.controls}
-                      preload={item.preload || bannerConfig.standardBannerConfig.video.preload}
-                      class={`banner-video w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition}`}
-                      style={`border-radius: ${bannerConfig.visual.borderRadius};`}
-                      onError="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                    >
-                      Your browser does not support the video tag.
-                    </video>
-                    {/* Fallback image (hidden by default) */}
-                    <Image
-                      src={item.fallbackImage}
-                      alt={item.alt}
-                      width={bannerConfig.layout.maxWidth}
-                      height={Math.round(bannerConfig.layout.maxWidth * 0.5625)}
-                      class={`banner-image-fallback w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition}`}
-                      style={`border-radius: ${bannerConfig.visual.borderRadius}; display: none;`}
-                      loading="lazy"
-                    />
-                  </>
-                ) : isImageItem ? (
-                  <Image
-                    src={item.src}
-                    alt={item.alt}
-                    width={bannerConfig.layout.maxWidth}
-                    height={Math.round(bannerConfig.layout.maxWidth * 0.5625)}
-                    class={`banner-image w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition}`}
-                    style={`border-radius: ${bannerConfig.visual.borderRadius};`}
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                  />
-                ) : null}
-              </>
-            )}
-          </div>
-        );
-      }) : (
-        <!-- Fallback display when no banner items are available -->
-        <div class="w-full h-full rounded-lg" style={`background: ${getFallbackBannerCSS()};`}></div>
-      )}
+<!-- STANDARD ANIMATED BANNER - ENHANCED UX WITH VIDEO SUPPORT    -->
+<!-- ============================================================= -->
+<!-- All configuration and link preview data from banner.config.ts -->
+{hasStandardBanner && (
+  <div id="standard-banner-container" class="animated-banner-content max-w-screen-2xl mx-auto h-full relative" style={`height: ${BANNER_HEIGHT};`}>
+    {/* Cycle through all banner items (videos and images) from banner.config.ts */}
+    {bannerConfig.standardBannerConfig.bannerList.length > 0 ? bannerConfig.standardBannerConfig.bannerList.map((item, index) => {
+      const bannerLink = getBannerLink(index);
+      const isClickable = bannerLink !== null;
+      const isVideoItem = bannerConfig.standardBannerConfig.isVideoBannerItem(item);
+      const isImageItem = bannerConfig.standardBannerConfig.isImageBannerItem(item);
       
-      <!-- Optional gradient overlay for better text readability -->
-      {bannerConfig.visual.applyGradientOverlay && (
-        <div class="absolute inset-0 w-full h-full pointer-events-none" style={`background: ${bannerConfig.visual.gradientOverlay}; border-radius: ${bannerConfig.visual.borderRadius};`}></div>
-      )}
-    </div>
-  )}
-
+      return (
+        <div 
+          class="banner-slide absolute inset-0 w-full h-full transition-opacity"
+          style={`
+            transition-duration: ${bannerConfig.standardBannerConfig.animation.transitionDuration}ms;
+            opacity: ${index === 0 ? '1' : '0'};
+          `}
+          data-banner-index={index}
+        >
+          {/* ALL banner items get a banner-link wrapper - with or without actual links */}
+          <div
+            class="banner-link w-full h-full relative cursor-pointer group"
+            data-has-link={isClickable}
+            data-href={bannerLink}
+            aria-label={`Banner ${index + 1}${isClickable ? ' - Click to visit link' : ' - Click for information'}`}
+            role="button"
+            tabindex="0"
+          >
+            {/* BASIC hover overlay - enhanced overlays added by JavaScript */}
+            <div class="absolute inset-0 w-full h-full transition-all duration-300 opacity-0 group-hover:opacity-30 bg-black pointer-events-none z-10"></div>
+            
+            {/* BASIC click icon - enhanced preview added by JavaScript */}
+            <div class="absolute inset-0 w-full h-full flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 z-20 pointer-events-none">
+              <Icon
+                name="fa6-solid:circle-info"
+                class="text-white text-4xl drop-shadow-lg"
+              />
+            </div>
+            
+            {/* Render video or image content */}
+            {isVideoItem ? (
+              <>
+                {/* Video element */}
+                <video
+                  src={item.src}
+                  autoplay={bannerConfig.standardBannerConfig.video.autoplay}
+                  muted={bannerConfig.standardBannerConfig.video.muted}
+                  loop={bannerConfig.standardBannerConfig.video.loop}
+                  playsinline={bannerConfig.standardBannerConfig.video.playsInline}
+                  controls={bannerConfig.standardBannerConfig.video.controls}
+                  preload={item.preload || bannerConfig.standardBannerConfig.video.preload}
+                  class={`banner-video w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition} transition-transform duration-300 group-hover:scale-105`}
+                  style={`border-radius: ${bannerConfig.visual.borderRadius};`}
+                  onerror="this.style.display='none'; var ne = this.nextElementSibling; if (ne) ne.style.display='block';"
+                >
+                  Your browser does not support the video tag.
+                </video>
+                {/* Fallback image (hidden by default) */}
+                <Image
+                  src={item.fallbackImage}
+                  alt={item.alt}
+                  width={bannerConfig.layout.maxWidth}
+                  height={Math.round(bannerConfig.layout.maxWidth * 0.5625)}
+                  class={`banner-image-fallback w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition} transition-transform duration-300 group-hover:scale-105`}
+                  style={`border-radius: ${bannerConfig.visual.borderRadius}; display: none;`}
+                  loading="lazy"
+                />
+              </>
+            ) : isImageItem ? (
+              <Image
+                src={item.src}
+                alt={item.alt}
+                width={bannerConfig.layout.maxWidth}
+                height={Math.round(bannerConfig.layout.maxWidth * 0.5625)}
+                class={`banner-image w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition} transition-transform duration-300 group-hover:scale-105`}
+                style={`border-radius: ${bannerConfig.visual.borderRadius};`}
+                loading={index === 0 ? 'eager' : 'lazy'}
+              />
+            ) : null}
+          </div>
+        </div>
+      );
+    }) : (
+      <!-- Fallback display when no banner items are available -->
+      <div class="w-full h-full rounded-lg" style={`background: ${getFallbackBannerCSS()};`}></div>
+    )}
+    
+    <!-- Optional gradient overlay for better text readability -->
+    {bannerConfig.visual.applyGradientOverlay && (
+      <div class="absolute inset-0 w-full h-full pointer-events-none" style={`background: ${bannerConfig.visual.gradientOverlay}; border-radius: ${bannerConfig.visual.borderRadius};`}></div>
+    )}
+  </div>
+)}
 </div>
 
 <!-- =============================================================== -->
@@ -585,9 +544,9 @@ if (post && post.data) {
 <style define:vars={{
   'banner-height': bannerConfig.layout.height.desktop,
   'banner-height-mobile': bannerConfig.layout.height.mobile,
-  'banner-overlap': BANNER_OVERLAP, // Use the destructured BANNER_OVERLAP which comes from getResponsiveBannerDimensions
-  'banner-overlap-mobile': bannerConfig.layout.overlap.mobile, // Assuming mobile still uses general overlap or needs its own dynamic calculation
-  'dynamic-overlap': dynamicOverlap, // Add the dynamic overlap CSS variable
+  'banner-overlap': BANNER_OVERLAP,
+  'banner-overlap-mobile': bannerConfig.layout.overlap.mobile,
+  'dynamic-overlap': dynamicOverlap,
   'navbar-height': bannerConfig.navbar.height.desktop,
   'navbar-height-mobile': bannerConfig.navbar.height.mobile,
   'main-content-offset': bannerConfig.layout.mainContentOffset.desktop,
@@ -598,7 +557,12 @@ if (post && post.data) {
   'image-navbar-spacing': bannerConfig.navbar.spacing.image,
   'assistant-navbar-spacing': bannerConfig.navbar.spacing.assistant,
 }}>
-  /* Banner type-specific spacing */
+  /* ============================================================= */
+  /* DYNAMIC BANNER TYPE-SPECIFIC SPACING                         */
+  /* ============================================================= */
+  /* These values come from banner.config.ts and need to be here  */
+  /* because they use dynamic Astro variables                     */
+  
   .has-standard-banner {
     margin-top: var(--standard-navbar-spacing) !important;
   }
@@ -620,31 +584,29 @@ if (post && post.data) {
   }
 
   /* ============================================================= */
-  /* MAIN CONTENT POSITIONING                                      */
+  /* COMPONENT-SPECIFIC RESPONSIVE OVERRIDES                      */
   /* ============================================================= */
-  /* Main content offset is controlled by banner.config.ts        */
-  /* Modify bannerConfig.layout.mainContentOffset to adjust       */
+  /* These override main.css with dynamic values from config      */
   
-  /* Desktop main content offset is applied inline via CSS variable */
-  /* Mobile override below uses CSS variable from config */
-
-  /* Banner animation optimizations - consistent structure */
-
-  /* Standard banner specific styles */
-
-  #standard-banner-container .banner-slide {
-    transition-property: opacity;
-    transition-timing-function: ease-in-out;
+  /* Banner container responsive heights using dynamic variables */
+  #banner-container {
+    height: var(--banner-height);
   }
   
-  /* Mobile responsiveness */
   @media (max-width: 768px) {
-    #banner-container.absolute, #animated-banner {
+    #banner-container {
       height: var(--banner-height-mobile);
     }
   }
+
+  /* Standard banner transition optimization */
+  #standard-banner-container .banner-slide {
+    transition-property: opacity;
+    transition-timing-function: ease-in-out;
+    transition-duration: var(--banner-transition-duration, 0.4s);
+  }
   
-  /* Large screen handling */
+  /* Large screen vignette effect - uses CSS variables for consistency */
   @media (min-width: 1921px) {
     .animated-banner-content:after {
       content: '';
@@ -655,19 +617,43 @@ if (post && post.data) {
       bottom: 0;
       background: linear-gradient(to right, rgba(0,0,0,0.15), transparent 10%, transparent 90%, rgba(0,0,0,0.15));
       z-index: 1;
+      pointer-events: none;
     }
+  }
+
+  /* ============================================================= */
+  /* MAIN CONTENT POSITIONING WITH DYNAMIC VALUES                 */
+  /* ============================================================= */
+  /* Main content offset controlled by banner.config.ts values    */
+  
+  #main-grid {
+    /* Use the dynamic offset values from config */
+    margin-top: var(--main-content-offset);
+  }
+  
+  @media (max-width: 768px) {
+    #main-grid {
+      margin-top: var(--main-content-offset-mobile);
+    }
+  }
+
+  /* Dynamic overlap positioning for different page types */
+  #main-panel-wrapper {
+    /* Dynamic overlap is calculated in banner.config.ts based on page type */
+    --computed-overlap: var(--dynamic-overlap);
   }
 </style>
 
 <script>
   // Import banner animation utility and configuration
-  import { createBannerAnimation } from '@/utils/bannerAnimation';
-  import { 
+  import { createBannerAnimation, VideoLoadingState } from '@/utils/bannerAnimation'; // Added VideoLoadingState
+  import {
     getBannerAnimationSettings,
-    getBannerLink,
-    getLinkPreviewData,
-    getIconSVG,
-    bannerConfig
+    // getBannerLink, // No longer passed directly
+    // getLinkPreviewData, // No longer passed directly
+    // getIconSVG, // No longer passed directly
+    bannerConfig, // Still needed for isVideoBannerItem, isImageBannerItem
+    standardBannerConfig // Import standardBannerConfig to access getBannerItemPreviewDetails
   } from '../config/banner.config';
 
   // Initialize everything when DOM is ready
@@ -709,11 +695,9 @@ if (post && post.data) {
     const bannerController = createBannerAnimation({
       containerId: 'standard-banner-container',
       animationConfig: getBannerAnimationSettings(),
-      getBannerLink: getBannerLink,
-      getLinkPreviewData: getLinkPreviewData,
-      getIconSVG: getIconSVG,
-      isVideoBannerItem: bannerConfig.standardBannerConfig.isVideoBannerItem,
-      isImageBannerItem: bannerConfig.standardBannerConfig.isImageBannerItem
+      getBannerItemPreviewDetails: standardBannerConfig.getBannerItemPreviewDetails, // Pass the new function
+      isVideoBannerItem: bannerConfig.standardBannerConfig.isVideoBannerItem, // Keep for now
+      isImageBannerItem: bannerConfig.standardBannerConfig.isImageBannerItem  // Keep for now
     });
 
     // Initialize the animation system
@@ -744,7 +728,9 @@ if (post && post.data) {
       const scrollY = window.scrollY;
       const offset = scrollY * scrollFactor;
       
-      parallaxImage.style.transform = `translate3d(0, ${offset}px, 0)`;
+      if (parallaxImage) {
+        parallaxImage.style.transform = `translate3d(0, ${offset}px, 0)`;
+      }
       ticking = false;
     }
 
@@ -797,34 +783,58 @@ if (post && post.data) {
     });
 
     // Apply background opacity from config if available
-    if (window.siteConfig && window.siteConfig.transparency) {
-      document.documentElement.style.setProperty('--bg-opacity', window.siteConfig.transparency);
+    // Assuming siteConfig is globally available or attached to window elsewhere.
+    // For type safety, we should declare it if it's expected on window.
+    if ((window as any).siteConfig && (window as any).siteConfig.transparency) {
+      document.documentElement.style.setProperty('--bg-opacity', (window as any).siteConfig.transparency);
     }
   }
 
   // Preserve global banner animation interface for TypeScript
-  declare global {
-    interface Window {
-      bannerAnimation?: {
-        start: () => void;
-        stop: () => void;
-        next: () => void;
-        pause: (reason?: string) => void;
-        resume: (reason?: string) => void;
-        isPaused: () => boolean;
-        getCurrentIndex: () => number;
-        getCurrentLink: () => string | null;
-        selectBanner: (index: number) => void;
-        deselectBanner: () => void;
-      };
-    }
+  // This should match the more complete definition in bannerAnimation.ts
+  // Unified Global API type declaration (from bannerAnimation.ts)
+  interface BannerAnimationAPI {
+    start: () => void;
+    stop: () => void;
+    next: () => void;
+    pause: (reason?: string) => void;
+    resume: (reason?: string) => void;
+    navigateToIndex: (index: number) => void;
+    navigateToPrevious: () => void;
+    navigateToNext: () => void;
+    getCurrentIndex: () => number;
+    isPaused: () => boolean;
+    getTotalSlides: () => number;
+    isManuallyNavigating: () => boolean;
+    isVideoSlide: (index: number) => boolean;
+    getVideoLoadingState: (index: number) => VideoLoadingState; // Make sure VideoLoadingState is imported or defined
+    getVideoStats: () => {
+      totalVideos: number;
+      loadedCount: number;
+      loadingCount: number;
+      errorCount: number;
+      unloadedCount: number;
+    };
+    showPreview: (index: number) => void;
+    hidePreview: (index: number) => void;
+    hideAllPreviews: () => void;
+    getStatus: () => {
+      isPaused: boolean;
+      pauseReason: string;
+      currentIndex: number;
+      isAnimating: boolean;
+      hasTimeout: boolean;
+    };
   }
 
-  // Add to DOMContentLoaded
-  document.addEventListener('DOMContentLoaded', () => {
-    initializePageAnimations();
-    initializeBannerAnimation();
-    initializeParallaxEffect();
-    initializeEventListeners();
-  });
+  declare global {
+    interface Window {
+      siteConfig?: {
+        transparency?: string | number;
+      };
+      bannerAnimation?: BannerAnimationAPI;
+    }
+  }
+  
+  // Removed duplicate DOMContentLoaded listener
 </script>

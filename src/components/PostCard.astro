@@ -60,8 +60,8 @@ const timestamp = published.getTime();
 const dateStr = published.toISOString().split('T')[0];
 ---
 
-<div 
-  class:list={["card-base flex flex-row w-full overflow-hidden relative local-post mb-6 md:mb-0", config.layout.cardBorderRadius, className]}
+<div
+  class:list={["card-base flex flex-row w-full overflow-hidden relative local-post mb-6 md:mb-0 md:h-[14rem]", config.layout.cardBorderRadius, className]}
   style={style}
   data-post-type="local"
   data-post-id={entry.id}
@@ -73,9 +73,9 @@ const dateStr = published.toISOString().split('T')[0];
   data-post-description={description}>
   
   <div class:list={[
-        "relative pt-4 pb-4 px-4 md:px-0", // Adjusted padding for mobile
+        "relative pt-4 pb-4 px-4 md:px-0 flex flex-col h-full", // Added flex flex-col h-full
         hasCover
-          ? "w-2/3 md:w-[calc(100%_-_var(--coverWidth)_-_12px)] md:pl-9 md:pr-2" // w-2/3 for mobile
+          ? "w-2/3 md:w-[calc(100%_-_18rem_-_12px)] md:pl-9 md:pr-2" // w-2/3 for mobile, text uses fixed 18rem for image
           : "w-full md:w-[calc(100%_-_52px_-_12px)] md:pl-9 md:pr-2", // if no cover, text takes full width
       ]}>
     <a href={url}
@@ -98,13 +98,13 @@ const dateStr = published.toISOString().split('T')[0];
     </PostMetadata>
 
     <!-- description -->
-    <div class:list={["transition text-75 mb-3.5 pr-4", {[`line-clamp-${config.styling.descriptionLines}`]: true}]}>
+    <div class:list={["mt-auto transition text-75 pr-4 pb-4", {[`line-clamp-${config.styling.descriptionLines}`]: true}]}>
       { description || remarkPluginFrontmatter.excerpt }
     </div>
 
     <!-- word count and read time  -->
     {(config.content.showWordCount || config.content.showReadTime) && (
-      <div class="text-sm text-black/30 dark:text-white/30 flex gap-4 transition">
+      <div class="text-sm text-black/30 dark:text-white/30 flex gap-4 transition mb-2">
         {config.content.showWordCount && <div>{remarkPluginFrontmatter.words} {" " + i18n(I18nKey.wordsCount)}</div>}
         {config.content.showWordCount && config.content.showReadTime && <div>|</div>}
         {config.content.showReadTime && <div>{remarkPluginFrontmatter.minutes} {" " + i18n(I18nKey.minutesCount)}</div>}
@@ -115,21 +115,34 @@ const dateStr = published.toISOString().split('T')[0];
   {hasCover && <a href={url} aria-label={title}
                   class:list={[
                       "group",
-                      "w-1/3 md:w-[var(--coverWidth)] self-center", // w-1/3 for mobile
+                      // "postcard-image-container", // Class removed, width is now fixed with Tailwind
+                      "w-1/3 md:w-[16rem] md:h-[12.5rem] self-center", // Corrected height for md+
                       "p-3 md:p-0", // Adjusted padding for mobile
-                      "relative md:absolute md:top-3 md:bottom-3 md:right-3 md:aspect-[4/3]", // Aspect ratio for desktop
-                      "rounded-xl overflow-hidden active:scale-95",
-                      "md:bg-transparent" // Ensures transparency on medium screens and up; mobile inherits/defaults
+                      "relative md:absolute md:top-3 md:bottom-3 md:right-3",
+                      "rounded-xl overflow-hidden active:scale-5",
+                      "bg-black" // Fallback background color
                   ]} >
+      
+      {/* Blurred background - positioned absolutely behind */}
+      <div class="absolute inset-0 blur-background">
+        <ImageWrapper src={image} basePath={path.join("content/posts/", getDir(entry.id))} alt=""
+                  class="w-full h-full object-cover blur-md scale-110 opacity-60">
+        </ImageWrapper>
+      </div>
+      
       <div class="absolute pointer-events-none z-10 w-full h-full group-hover:bg-black/30 group-active:bg-black/50 transition"></div>
       <div class="absolute pointer-events-none z-20 w-full h-full flex items-center justify-center ">
           <Icon name="material-symbols:chevron-right-rounded"
                 class="transition opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-100 text-white text-5xl">
           </Icon>
       </div>
-      <ImageWrapper src={image} basePath={path.join("content/posts/", getDir(entry.id))} alt="Cover Image of the Post"
-                class="w-full h-auto md:w-full md:h-full md:object-cover">
-      </ImageWrapper>
+      
+      {/* Main crisp image on top */}
+      <div class="absolute inset-0 main-image">
+        <ImageWrapper src={image} basePath={path.join("content/posts/", getDir(entry.id))} alt="Cover Image of the Post"
+                  class="postcard-image postcard-image-fix w-full h-full object-cover">
+        </ImageWrapper>
+      </div>
   </a>}
 
   {!hasCover && config.layout.showEnterButton &&
@@ -146,4 +159,14 @@ const dateStr = published.toISOString().split('T')[0];
 <div class="transition border-t-[1px] border-dashed mx-6 border-black/10 dark:border-white/[0.15] last:border-t-0 md:hidden"></div>
 
 <style define:vars={{coverWidth}}>
+  /* .postcard-image-container rule removed as width is now fixed via Tailwind */
+  
+  /* Ensure proper layering */
+  .blur-background {
+    z-index: 1;
+  }
+  
+  .main-image {
+    z-index: 5;
+  }
 </style>

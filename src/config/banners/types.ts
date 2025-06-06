@@ -222,6 +222,11 @@ export interface BannerAnimationConfig {
   interval: number;            // Milliseconds between transitions
   transitionDuration: number;  // Milliseconds for fade transition
   direction: 'forward' | 'reverse' | 'alternate';
+  // Added from standard.ts animationConfig
+  pauseOnHover?: boolean;
+  pauseOnMobileTouch?: boolean;
+  resumeAfterNavigation?: boolean;
+  smoothTransitions?: boolean;
 }
 
 /**
@@ -328,4 +333,19 @@ export interface BannerParallaxConfig {
   enabled: boolean;
   scrollFactor: number;     // How much the parallax moves (e.g., -0.05)
   easingFactor: number;     // Smooth motion factor (e.g., 0.1)
+}
+
+/**
+ * Comprehensive details for rendering a banner item's preview card.
+ * This structure is intended to be populated by the config files
+ * and consumed by bannerAnimation.ts for rendering.
+ */
+export interface BannerItemPreviewDetails {
+  hasValidLink: boolean;
+  originalHref: string;       // The actual URL for navigation if a link is valid
+  urlForDisplay: string;      // Formatted URL or pathname for display in the card
+  previewTitle: string;
+  previewDescription: string;
+  previewIconSVG: string;     // The actual SVG string for the icon
+  isVideoButton: boolean;     // True if the banner item is a video
 }

@@ -48,11 +48,12 @@
 // =====================================================================
 
 // Import shared types
-import type { 
-  BannerType, 
-  BannerData, 
-  BannerDeterminationResult, 
-  PostBannerData, 
+import type {
+  BannerType,
+  BannerData,
+  ImageBannerData, // Added ImageBannerData
+  BannerDeterminationResult,
+  PostBannerData,
   LinkPreviewInfo,
   BannerAnimationConfig,
   BannerLayoutConfig,
@@ -497,15 +498,39 @@ export function determineBannerType(post: any, postData: PostBannerData | null):
  */
 export function getBannerDataSources(bannerType: BannerDeterminationResult, post: any) {
   const { hasTimelineBanner, hasVideoBanner, hasImageBanner, hasAssistantBanner } = bannerType;
+
+  let resolvedImageBannerData: ImageBannerData | null = null;
+  if (hasImageBanner) {
+    if (post?.data?.bannerType === "image") {
+      // Ensure imageUrl is a string, provide a fallback if necessary, or handle potential undefined
+      const imageUrl = post.data.bannerData?.imageUrl || post.data.image;
+      if (typeof imageUrl === 'string') {
+        resolvedImageBannerData = { imageUrl: imageUrl };
+      } else {
+        // Fallback if no valid image URL is found for a post-specific image banner
+        console.warn("Banner config: Post-specific image banner lacks a valid imageUrl. Falling back to default image banner data.");
+        resolvedImageBannerData = bannerConfig.imageBannerConfig.data; // Assumes imageBannerConfig.data is valid ImageBannerData
+      }
+    } else {
+      // This means it's a default image banner.
+      // determineBannerType ensures that if hasImageBanner is true due to default,
+      // then bannerConfig.defaultBannerType === 'image' and isImageBannerData(bannerConfig.defaultBannerData) is true.
+      if (isImageBannerData(bannerConfig.defaultBannerData)) {
+        resolvedImageBannerData = bannerConfig.defaultBannerData;
+      } else {
+        // This case should ideally not be reached if determineBannerType is correct.
+        console.warn("Banner config: Mismatch in default image banner data type. Expected ImageBannerData, got something else. Falling back to imageBannerConfig.data.");
+        resolvedImageBannerData = bannerConfig.imageBannerConfig.data; // Fallback to the explicit image banner config data
+      }
+    }
+  }
   
   return {
-    videoBannerData: hasVideoBanner && post?.data?.bannerType === "video" 
+    videoBannerData: hasVideoBanner && post?.data?.bannerType === "video"
       ? post.data.bannerData
       : hasVideoBanner ? bannerConfig.defaultBannerData : null,
     
-    imageBannerData: hasImageBanner && post?.data?.bannerType === "image"
-      ? { imageUrl: post.data.bannerData?.imageUrl || post.data.image }
-      : hasImageBanner ? bannerConfig.defaultBannerData : null,
+    imageBannerData: resolvedImageBannerData,
     
     timelineBannerData: hasTimelineBanner && post?.data?.bannerType === "timeline"
       ? post.data.bannerData
