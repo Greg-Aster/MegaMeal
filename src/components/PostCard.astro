@@ -1,6 +1,6 @@
 ---
 // src/components/PostCard.astro
-// This updated PostCard component adds data attributes to support client-side filtering
+// Updated PostCard component with mobile-friendly layout fixes
 
 import path from 'path';
 import PostMetadata from './PostMeta.astro';
@@ -60,8 +60,18 @@ const timestamp = published.getTime();
 const dateStr = published.toISOString().split('T')[0];
 ---
 
+<!-- UPDATED: Horizontal layout on all screen sizes -->
 <div
-  class:list={["card-base flex flex-row w-full overflow-hidden relative local-post mb-6 md:mb-0 md:h-[14rem]", config.layout.cardBorderRadius, className]}
+  class:list={[
+    "card-base w-full overflow-hidden relative local-post mb-6 md:mb-0",
+    // All mobile sizes: horizontal layout with appropriate heights
+    "flex flex-row",
+    "h-[10rem] xs:h-[11rem] sm:h-[12rem]",
+    // Desktop: horizontal layout with fixed height
+    "md:h-[14rem]",
+    config.layout.cardBorderRadius, 
+    className
+  ]}
   style={style}
   data-post-type="local"
   data-post-id={entry.id}
@@ -72,21 +82,86 @@ const dateStr = published.toISOString().split('T')[0];
   data-post-image={image}
   data-post-description={description}>
   
+  <!-- IMAGE SECTION: Horizontal layout on all screen sizes -->
+  {hasCover && (
+    <a href={url} 
+       aria-label={title}
+       class:list={[
+         "group relative rounded-xl overflow-hidden bg-black shrink-0",
+         // Small mobile: reasonable width for horizontal layout
+         "w-32 h-auto",
+         // Larger mobile: slightly bigger
+         "xs:w-36 sm:w-40",
+         // Desktop: fixed dimensions, absolute positioning
+         "md:w-[16rem] md:h-[12.5rem] md:absolute md:top-3 md:bottom-3 md:right-3",
+         // Margins
+         "m-3 md:m-0"
+       ]}>
+      
+      <!-- Blurred background for aesthetic appeal -->
+      <div class="absolute inset-0 blur-background">
+        <ImageWrapper 
+          src={image} 
+          basePath={path.join("content/posts/", getDir(entry.id))} 
+          alt=""
+          class="w-full h-full object-cover blur-md scale-110 opacity-60" />
+      </div>
+      
+      <!-- Hover overlay -->
+      <div class="absolute pointer-events-none z-10 w-full h-full group-hover:bg-black/30 group-active:bg-black/50 transition"></div>
+      
+      <!-- Hover icon -->
+      <div class="absolute pointer-events-none z-20 w-full h-full flex items-center justify-center">
+        <Icon 
+          name="material-symbols:chevron-right-rounded"
+          class="transition opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-100 text-white text-5xl" />
+      </div>
+      
+      <!-- Main crisp image -->
+      <div class="absolute inset-0 main-image z-5">
+        <ImageWrapper 
+          src={image} 
+          basePath={path.join("content/posts/", getDir(entry.id))} 
+          alt="Cover Image of the Post"
+          class="postcard-image postcard-image-fix w-full h-full object-cover" />
+      </div>
+    </a>
+  )}
+
+  <!-- CONTENT SECTION: Responsive spacing and layout -->
   <div class:list={[
-        "relative pt-4 pb-4 px-4 md:px-0 flex flex-col h-full", // Added flex flex-col h-full
-        hasCover
-          ? "w-2/3 md:w-[calc(100%_-_18rem_-_12px)] md:pl-9 md:pr-2" // w-2/3 for mobile, text uses fixed 18rem for image
-          : "w-full md:w-[calc(100%_-_52px_-_12px)] md:pl-9 md:pr-2", // if no cover, text takes full width
-      ]}>
+    "relative flex flex-col h-full transition-all",
+    // Mobile portrait: full width with padding
+    "w-full p-4 pb-6",
+    // Mobile landscape: adjust for image width
+    hasCover 
+      ? "sm:w-3/5 sm:pl-4 sm:pr-6 sm:py-4" 
+      : "sm:w-full sm:px-6 sm:py-4",
+    // Desktop: adjust for absolute positioned image
+    hasCover
+      ? "md:w-[calc(100%_-_18rem_-_12px)] md:pl-9 md:pr-2 md:py-4"
+      : "md:w-[calc(100%_-_52px_-_12px)] md:pl-9 md:pr-2 md:py-4"
+  ]}>
+    
+    <!-- TITLE -->
     <a href={url}
-       class:list={["transition group w-full block font-bold mb-3 text-90 hover:text-[var(--primary)] dark:hover:text-[var(--primary)] active:text-[var(--title-active)] dark:active:text-[var(--title-active)] md:before:w-1 md:before:h-5 md:before:rounded-md md:before:bg-[var(--primary)] md:before:absolute md:before:top-[35px] md:before:left-[18px] md:before:block", config.styling.titleSize]}>
+       class:list={[
+         "transition group w-full block font-bold mb-3 text-90",
+         "hover:text-[var(--primary)] dark:hover:text-[var(--primary)]", 
+         "active:text-[var(--title-active)] dark:active:text-[var(--title-active)]",
+         // Desktop-only: side indicator
+         "md:before:w-1 md:before:h-5 md:before:rounded-md md:before:bg-[var(--primary)]",
+         "md:before:absolute md:before:top-[35px] md:before:left-[18px] md:before:block",
+         config.styling.titleSize
+       ]}>
       {title}
-      {/* Mobile icon removed as title takes full width now, less need for side icon */}
-      {/* <Icon class="inline text-[2rem] text-[var(--primary)] md:hidden translate-y-0.5 absolute" name="material-symbols:chevron-right-rounded" /> */}
-      <Icon class="text-[var(--primary)] text-[2rem] transition hidden md:inline absolute translate-y-0.5 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0" name="material-symbols:chevron-right-rounded" />
+      <!-- Desktop hover arrow -->
+      <Icon 
+        class="text-[var(--primary)] text-[2rem] transition hidden md:inline absolute translate-y-0.5 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0" 
+        name="material-symbols:chevron-right-rounded" />
     </a>
 
-    <!-- metadata -->
+    <!-- METADATA - Hidden on ALL mobile devices, visible on desktop only -->
     <PostMetadata 
       published={published} 
       updated={updated} 
@@ -94,79 +169,61 @@ const dateStr = published.toISOString().split('T')[0];
       category={category} 
       hideTagsForMobile={config.content.hideTagsOnMobile} 
       hideUpdateDate={!config.content.showUpdateDate} 
-      class="mb-4">
-    </PostMetadata>
+      class="mb-4 hidden md:block" />
 
-    <!-- description -->
-    <div class:list={["mt-auto transition text-75 pr-4 pb-4", {[`line-clamp-${config.styling.descriptionLines}`]: true}]}>
-      { description || remarkPluginFrontmatter.excerpt }
+    <!-- DESCRIPTION - grows to fill available space -->
+    <div class:list={[
+      "flex-grow transition text-75 mb-4",
+      // Responsive line clamping
+      "line-clamp-3 sm:line-clamp-2 md:line-clamp-3",
+      `md:line-clamp-${config.styling.descriptionLines}`
+    ]}>
+      {description || remarkPluginFrontmatter.excerpt}
     </div>
 
-    <!-- word count and read time  -->
+    <!-- WORD COUNT AND READ TIME -->
     {(config.content.showWordCount || config.content.showReadTime) && (
-      <div class="text-sm text-black/30 dark:text-white/30 flex gap-4 transition mb-2">
-        {config.content.showWordCount && <div>{remarkPluginFrontmatter.words} {" " + i18n(I18nKey.wordsCount)}</div>}
+      <div class="text-sm text-black/30 dark:text-white/30 flex gap-4 transition mt-auto">
+        {config.content.showWordCount && (
+          <div>{remarkPluginFrontmatter.words} {" " + i18n(I18nKey.wordsCount)}</div>
+        )}
         {config.content.showWordCount && config.content.showReadTime && <div>|</div>}
-        {config.content.showReadTime && <div>{remarkPluginFrontmatter.minutes} {" " + i18n(I18nKey.minutesCount)}</div>}
+        {config.content.showReadTime && (
+          <div>{remarkPluginFrontmatter.minutes} {" " + i18n(I18nKey.minutesCount)}</div>
+        )}
       </div>
     )}
   </div>
 
-  {hasCover && <a href={url} aria-label={title}
-                  class:list={[
-                      "group",
-                      // "postcard-image-container", // Class removed, width is now fixed with Tailwind
-                      "w-1/3 md:w-[16rem] md:h-[12.5rem] self-center", // Corrected height for md+
-                      "p-3 md:p-0", // Adjusted padding for mobile
-                      "relative md:absolute md:top-3 md:bottom-3 md:right-3",
-                      "rounded-xl overflow-hidden active:scale-5",
-                      "bg-black" // Fallback background color
-                  ]} >
-      
-      {/* Blurred background - positioned absolutely behind */}
-      <div class="absolute inset-0 blur-background">
-        <ImageWrapper src={image} basePath={path.join("content/posts/", getDir(entry.id))} alt=""
-                  class="w-full h-full object-cover blur-md scale-110 opacity-60">
-        </ImageWrapper>
-      </div>
-      
-      <div class="absolute pointer-events-none z-10 w-full h-full group-hover:bg-black/30 group-active:bg-black/50 transition"></div>
-      <div class="absolute pointer-events-none z-20 w-full h-full flex items-center justify-center ">
-          <Icon name="material-symbols:chevron-right-rounded"
-                class="transition opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-100 text-white text-5xl">
-          </Icon>
-      </div>
-      
-      {/* Main crisp image on top */}
-      <div class="absolute inset-0 main-image">
-        <ImageWrapper src={image} basePath={path.join("content/posts/", getDir(entry.id))} alt="Cover Image of the Post"
-                  class="postcard-image postcard-image-fix w-full h-full object-cover">
-        </ImageWrapper>
-      </div>
-  </a>}
-
-  {!hasCover && config.layout.showEnterButton &&
-      <a href={url} aria-label={title} class="!hidden md:!flex btn-regular w-[3.25rem]
-       absolute right-3 top-3 bottom-3 rounded-xl bg-[var(--enter-btn-bg)]
-       hover:bg-[var(--enter-btn-bg-hover)] active:bg-[var(--enter-btn-bg-active)] active:scale-95
-      ">
-          <Icon name="material-symbols:chevron-right-rounded"
-                class="transition text-[var(--primary)] text-4xl mx-auto">
-          </Icon>
-      </a>
-  }
+  <!-- ENTER BUTTON for cards without cover on desktop -->
+  {!hasCover && config.layout.showEnterButton && (
+    <a href={url} 
+       aria-label={title} 
+       class="!hidden md:!flex btn-regular w-[3.25rem] absolute right-3 top-3 bottom-3 rounded-xl bg-[var(--enter-btn-bg)] hover:bg-[var(--enter-btn-bg-hover)] active:bg-[var(--enter-btn-bg-active)] active:scale-95">
+      <Icon 
+        name="material-symbols:chevron-right-rounded"
+        class="transition text-[var(--primary)] text-4xl mx-auto" />
+    </a>
+  )}
 </div>
+
+<!-- MOBILE SEPARATOR (only visible on mobile) -->
 <div class="transition border-t-[1px] border-dashed mx-6 border-black/10 dark:border-white/[0.15] last:border-t-0 md:hidden"></div>
 
 <style define:vars={{coverWidth}}>
-  /* .postcard-image-container rule removed as width is now fixed via Tailwind */
-  
-  /* Ensure proper layering */
+  /* Ensure proper layering for image overlays */
   .blur-background {
     z-index: 1;
   }
   
   .main-image {
     z-index: 5;
+  }
+
+  /* Ensure images always use proper object-fit */
+  .postcard-image {
+    object-fit: cover !important;
+    width: 100% !important;
+    height: 100% !important;
   }
 </style>
