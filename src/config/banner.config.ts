@@ -17,7 +17,7 @@
  * 
  * MAIN FUNCTIONS:
  * - Defines banner animation settings (timing, transitions, direction)
- * - Manages layout dimensions for different screen sizes
+ * - Manages layout dimensions for all screen sizes (UNIFIED MOBILE/DESKTOP)
  * - Provides helper functions for type checking and positioning
  * - Centralizes visual styling options (overlays, borders, etc.)
  * - Handles banner type determination logic
@@ -83,8 +83,41 @@ import { isNoneBannerData } from './banners/none'
 import type { ImageMetadata } from 'astro'
 
 // =====================================================================
-// MAIN BANNER CONFIGURATION INTERFACE
+// UNIFIED LAYOUT CONFIGURATION TYPES
 // =====================================================================
+
+/**
+ * Unified layout configuration interface (no mobile/desktop split)
+ * This simplifies configuration by using the same values for all screen sizes
+ */
+export interface UnifiedBannerLayoutConfig {
+  height: string;                    // Single height value for all devices
+  overlap: string;                   // Single overlap value for all devices
+  maxWidth: number;                  // Maximum banner width in pixels
+  noneBannerPlaceholderHeight: string; // Height when no banner is used
+  mainContentOffset: string;         // Single offset value for all devices
+  pageOverlaps: {                    // Single overlap values per page type
+    home: string;
+    post: string;
+    archive: string;
+    about: string;
+  };
+}
+
+/**
+ * Unified navbar configuration interface (no mobile/desktop split)
+ */
+export interface UnifiedBannerNavbarConfig {
+  height: string;                    // Single navbar height for all devices
+  spacing: {                         // Spacing after navbar for different banner types
+    standard: string;
+    timeline: string;
+    video: string;
+    image: string;
+    assistant: string;
+    none: string;                    // Single value instead of desktop/mobile object
+  };
+}
 
 /**
  * Main banner configuration interface
@@ -105,8 +138,8 @@ export interface BannerConfig {
   assistantBannerConfig: typeof assistantBannerConfig;
   noneBannerConfig: typeof noneBannerConfig;
   
-  // Layout settings
-  layout: BannerLayoutConfig;
+  // Layout settings (UNIFIED - no mobile/desktop split)
+  layout: UnifiedBannerLayoutConfig;
   
   // Visual settings
   visual: BannerVisualConfig;
@@ -114,8 +147,8 @@ export interface BannerConfig {
   // Fallback settings (used if images fail to load)
   fallback: BannerFallbackConfig;
   
-  // Navbar configuration
-  navbar: BannerNavbarConfig;
+  // Navbar configuration (UNIFIED - no mobile/desktop split)
+  navbar: UnifiedBannerNavbarConfig;
 
   // Panel positioning (previously calculated in MainGridLayout.astro)
   panel: BannerPanelConfig;
@@ -132,8 +165,8 @@ export interface BannerConfig {
     keyboardNavigation: boolean;
     enabledForTypes: BannerType[];
     styling?: {
-      buttonSize?: { desktop: string; mobile: string };
-      indicatorSize?: { desktop: string; mobile: string };
+      buttonSize?: string;            // Single size for all devices
+      indicatorSize?: string;         // Single size for all devices
       animationDuration?: string;
     };
   };
@@ -141,16 +174,20 @@ export interface BannerConfig {
 
 /**
  * ===================================================================
- * MAIN BANNER CONFIGURATION OBJECT
+ * MAIN BANNER CONFIGURATION OBJECT - UNIFIED LAYOUT
  * ===================================================================
  * 
  * This object controls ALL banner behavior for the site by combining
  * configurations from modular banner type files.
  * 
+ * ⭐ SIMPLIFIED LAYOUT: All mobile/desktop splits have been removed
+ * ⭐ EASIER MANAGEMENT: Single values work for all screen sizes
+ * ⭐ CONSISTENT EXPERIENCE: Same layout behavior across all devices
+ * 
  * KEY SETTINGS TO MODIFY:
  * - defaultBannerType: Change this to set what banner type appears on main pages
  * - Individual banner configurations: Modify files in /config/banners/
- * - Layout settings: Adjust banner dimensions and positioning
+ * - Layout settings: Adjust banner dimensions and positioning (now unified!)
  * - Visual settings: Control banner appearance and effects
  * 
  * BANNER TYPE CONFIGURATIONS:
@@ -188,61 +225,40 @@ export const bannerConfig: BannerConfig = {
   noneBannerConfig,        // From /config/banners/none.ts
   
   // =================================================================
-  // LAYOUT AND SIZING CONFIGURATION - ALL BANNER DIMENSIONS
+  // UNIFIED LAYOUT AND SIZING CONFIGURATION - ONE SIZE FITS ALL
   // =================================================================
   /*
-  For a standard banner on desktop with these settings:
-  1. Banner height: 60vh
-  2. Panel top position: 60vh - 8rem = (60vh - 8rem)
-  3. Main content offset: +1.5rem additional spacing
+  ⭐ UNIFIED LAYOUT APPROACH:
+  All devices now use the same layout values for consistency and easier management.
+  
+  For a standard banner with these settings:
+  1. Banner height: 60vh (same on all devices)
+  2. Panel top position: 60vh - 6.5rem (same calculation)
+  3. Main content offset: +1.5rem additional spacing (same spacing)
 
-  Result: Main panel starts at (60vh - 8rem), then content has 1.5rem gap
+  Result: Consistent layout behavior across all screen sizes!
 
-  For other pages (video, image, etc):
-  - They use fixed overlap values (2-3rem) for better readability
-  - Not affected by the overlap setting in layout
-
-  To adjust:
-  - For DEFAULT page overlap: Change layout.overlap values
-  - For OTHER pages overlap: Change the calculations in panel.top
-  - For additional spacing: Change mainContentOffset (keep positive!)
+  To adjust the entire site layout:
+  - Change height to adjust banner size globally
+  - Change overlap to adjust default content positioning
+  - Change mainContentOffset for space between banner and content
+  - Change pageOverlaps for specific page types
   */
   layout: {
-    height: {
-      desktop: '60vh',             // Banner height on desktop - ADJUST to change banner size
-      mobile: '40vh'               // Banner height on mobile - ADJUST for mobile experience
-    },
-    overlap: {
-      desktop: '2rem',             // How much content overlaps banner on desktop - ADJUST FOR MAIN CONTENT POSITIONING
-      mobile: '1rem'               // How much content overlaps banner on mobile - ADJUST FOR MAIN CONTENT POSITIONING
-    },
-    maxWidth: 3840,                // Maximum banner width in pixels
-    noneBannerPlaceholderHeight: '3.5rem', // Height when no banner is used
+    height: '60vh',                  // ⭐ UNIFIED: Same banner height for all devices
+    overlap: '2rem',               // ⭐ UNIFIED: Same content overlap for all devices
+    maxWidth: 3840,                  // Maximum banner width in pixels
+    noneBannerPlaceholderHeight: '1.5rem', // Height when no banner is used
     
-    // MAIN CONTENT POSITIONING - Controls where your main content appears relative to banners
-    mainContentOffset: {
-      desktop: '2rem',           // Space between banner and main content on desktop
-      mobile: ' 1rem'               // Space between banner and main content on mobile
-    },
+    // ⭐ UNIFIED MAIN CONTENT POSITIONING - Same spacing on all devices
+    mainContentOffset: '1.5rem',     // ⭐ UNIFIED: Space between banner and main content
 
-    // PAGE-SPECIFIC OVERLAPS - Controls overlap for different page types
+    // ⭐ UNIFIED PAGE-SPECIFIC OVERLAPS - Same overlap for all devices per page type
     pageOverlaps: {
-      home: {
-        desktop: '10rem',            // Large overlap for visual impact on home
-        mobile: '5rem'
-      },
-      post: {
-        desktop: '3rem',             // Minimal overlap for readability
-        mobile: '2rem'
-      },
-      archive: {
-        desktop: '5rem',             // Medium overlap for archive pages
-        mobile: '3rem'
-      },
-      about: {
-        desktop: '4rem',             // Subtle overlap for about page
-        mobile: '2.5rem'
-      }
+      home: '10rem',                  // ⭐ UNIFIED: Large overlap for visual impact on home
+      post: '2.5rem',                // ⭐ UNIFIED: Minimal overlap for readability
+      archive: '4rem',               // ⭐ UNIFIED: Medium overlap for archive pages
+      about: '3rem'                  // ⭐ UNIFIED: Subtle overlap for about page
     }
   },
   
@@ -267,21 +283,17 @@ export const bannerConfig: BannerConfig = {
   },
 
   // =================================================================
-  // NAVBAR CONFIGURATION
+  // UNIFIED NAVBAR CONFIGURATION - Same height for all devices
   // =================================================================
-  // this navbar heigh cascades down to the panel positioning
   navbar: {
-    height: {
-      desktop: '4.5rem',          // 72px at 16px base font size
-      mobile: '3.5rem'            // 56px at 16px base font size
-    },
+    height: '5rem',                 // ⭐ UNIFIED: Same navbar height for all devices (compromise between 4.5rem and 3.5rem)
     spacing: {
-      standard: "0",                 // Standard banners flow naturally from navbar
+      standard: "0",                // Standard banners flow naturally from navbar
       timeline: "5.5rem",           // Timeline banners need extra space
       video: "5.5rem",              // Video banners need extra space  
       image: "0",                   // Image banners flow naturally
       assistant: "5.5rem",          // Assistant banners need extra space
-      none: "3.5rem",                  // No banner = no extra spacing
+      none: "-8rem"                 // ⭐ UNIFIED: Compromise between -13.5rem and 2.5rem
     }
   },
 
@@ -289,15 +301,14 @@ export const bannerConfig: BannerConfig = {
   // PANEL POSITIONING CONFIGURATION  
   // =================================================================
   // Controls where the main content panel appears relative to different banner types
-  // there was an dynamic option here that has been removed as it was not funcional - "calc(var(--banner-height) - var(--dynamic-overlap, 3rem))",
   panel: {
     top: {
       video: "-0.5rem",
       image: "-0.5rem",
-      timeline: "7rem", // Simplified - no dynamic variable
+      timeline: "-0.5rem",
       assistant: "-0.5rem",
-      standard: "-6.5rem",
-      none: "-40rem" // No banner = no extra spacing,
+      standard: "-5.5rem",
+      none: "12rem"                // ⭐ UNIFIED: Compromise between -32rem and other positioning
     }
   },
 
@@ -312,11 +323,8 @@ export const bannerConfig: BannerConfig = {
   },
   
   // =================================================================
-  // OPTIONAL: NAVIGATION CONFIGURATION
+  // UNIFIED NAVIGATION CONFIGURATION - Same settings for all devices
   // =================================================================
-  // Add these optional settings to control navigation behavior
-  // The system works great with defaults, but you can customize:
-  
   navigation: {
     /** Enable/disable manual navigation controls */
     enabled: true,
@@ -336,16 +344,10 @@ export const bannerConfig: BannerConfig = {
     /** Enable navigation for specific banner types */
     enabledForTypes: ['standard', 'image', 'video'] as BannerType[],
     
-    /** Custom navigation button styling (optional) */
+    /** ⭐ UNIFIED: Same styling for all devices */
     styling: {
-      buttonSize: {
-        desktop: '3rem',
-        mobile: '2.5rem'
-      },
-      indicatorSize: {
-        desktop: '0.5rem', 
-        mobile: '0.375rem'
-      },
+      buttonSize: '2.75rem',        // ⭐ UNIFIED: Compromise between 3rem and 2.5rem
+      indicatorSize: '0.4375rem',   // ⭐ UNIFIED: Compromise between 0.5rem and 0.375rem  
       animationDuration: '0.3s'
     }
   },
@@ -381,10 +383,10 @@ switch (bannerConfig.defaultBannerType) {
 }
 
 // =====================================================================
-// HELPER FUNCTIONS FOR BANNER CONFIGURATION
+// HELPER FUNCTIONS FOR BANNER CONFIGURATION - UPDATED FOR UNIFIED LAYOUT
 // =====================================================================
 // These functions provide safe access to banner configuration values
-// and help with responsive design and type safety
+// ⭐ SIMPLIFIED: No more mobile/desktop parameter handling needed!
 
   /**
    * Extract banner-related data from post object
@@ -545,14 +547,12 @@ export function getBannerDataSources(bannerType: BannerDeterminationResult, post
 /**
  * Get complete banner configuration for a page
  * This is the main function to use in MainGridLayout.astro
+ * ⭐ SIMPLIFIED: No more mobile/desktop handling needed!
  * 
  * @param post - The post object from Astro
+ * @param pageType - Type of page for specific overlap handling
  * @param defaultBannerLink - Default banner link if not in post
  * @returns Complete banner configuration including type, data, and layout
- */
-/**
- * Modified determineBannerConfiguration function
- * Add this check at the beginning of the existing function
  */
 export function determineBannerConfiguration(post: any, pageType: string, defaultBannerLink: string = '') {
   // Check for fullscreen mode override
@@ -577,12 +577,12 @@ export function determineBannerConfiguration(post: any, pageType: string, defaul
         assistantBannerData: null
       },
       layout: {
-        mainPanelTop: bannerConfig.panel.top.none, // Stays "0rem" as per 'none' banner config
-        navbarSpacing: "0rem", // Banner container will be display:none, so its margin is irrelevant
-        bannerHeight: '0', // Ensures banner takes no height if not display:none
-        bannerOverlap: '0', // No overlap if no banner
-        dynamicOverlap: '0', // No dynamic overlap if no banner
-        mainContentOffset: "1.5rem" // Positions main grid (5.5rem current + 3rem additional) below navbar
+        mainPanelTop: bannerConfig.panel.top.none,
+        navbarSpacing: "0rem",
+        bannerHeight: '0',
+        bannerOverlap: '0',
+        dynamicOverlap: '0',
+        mainContentOffset: "1.5rem"
       },
       finalBannerLink: '',
       currentBannerType: 'none' as BannerType
@@ -598,12 +598,13 @@ export function determineBannerConfiguration(post: any, pageType: string, defaul
   // Get banner data sources
   const bannerDataSources = getBannerDataSources(bannerType, post);
   
-  // Get layout configuration
+  // ⭐ SIMPLIFIED: Get layout configuration (no mobile/desktop params needed)
   const mainPanelTop = getPanelTopPosition(bannerType.currentBannerType);
   const navbarSpacing = bannerConfig.navbar.spacing[bannerType.currentBannerType];
-  const { height: bannerHeight, overlap: bannerOverlap } = getResponsiveBannerDimensions(false);
-  const mainContentOffset = getMainContentOffset(false);
-  const dynamicOverlap = getPageSpecificOverlap(pageType, false); // Get desktop-specific overlap
+  const bannerHeight = bannerConfig.layout.height;           // ⭐ UNIFIED: Single value
+  const bannerOverlap = bannerConfig.layout.overlap;         // ⭐ UNIFIED: Single value
+  const mainContentOffset = bannerConfig.layout.mainContentOffset; // ⭐ UNIFIED: Single value
+  const dynamicOverlap = getPageSpecificOverlap(pageType);   // ⭐ UNIFIED: Single value
   
   // Finalize banner link
   const finalBannerLink = postData?.bannerLink || defaultBannerLink;
@@ -617,7 +618,7 @@ export function determineBannerConfiguration(post: any, pageType: string, defaul
       navbarSpacing,
       bannerHeight,
       bannerOverlap,
-      dynamicOverlap, // Add page-specific overlap
+      dynamicOverlap,
       mainContentOffset
     },
     finalBannerLink,
@@ -626,19 +627,18 @@ export function determineBannerConfiguration(post: any, pageType: string, defaul
 }
 
 /**
- * Get appropriate banner dimensions based on screen size
- * Used by MainGridLayout.astro to set responsive banner heights
+ * ⭐ SIMPLIFIED: Get banner dimensions (no longer needs mobile/desktop params)
+ * Used by MainGridLayout.astro to set banner heights
  * 
- * @param isMobile - Whether to get mobile dimensions (default: false)
  * @returns Object with height and overlap CSS values
  */
-export function getResponsiveBannerDimensions(isMobile: boolean = false): {
+export function getResponsiveBannerDimensions(): {
   height: string;
   overlap: string;
 } {
   return {
-    height: isMobile ? bannerConfig.layout.height.mobile : bannerConfig.layout.height.desktop,
-    overlap: isMobile ? bannerConfig.layout.overlap.mobile : bannerConfig.layout.overlap.desktop
+    height: bannerConfig.layout.height,      // ⭐ UNIFIED: Single value
+    overlap: bannerConfig.layout.overlap     // ⭐ UNIFIED: Single value
   };
 }
 
@@ -685,57 +685,53 @@ export function getPanelTopPosition(bannerType: BannerType): string {
 }
 
 /**
- * Get page-specific overlap based on page type
+ * ⭐ SIMPLIFIED: Get page-specific overlap (no mobile/desktop params needed)
  * Returns appropriate overlap value for different page contexts
  * 
  * @param pageType - Type of page (home, post, archive, about)
- * @param isMobile - Whether to get mobile overlap (default: false)
  * @returns CSS overlap value
  */
-export function getPageSpecificOverlap(pageType: string, isMobile: boolean = false): string {
+export function getPageSpecificOverlap(pageType: string): string {
   const overlaps = bannerConfig.layout.pageOverlaps;
-  const device = isMobile ? 'mobile' : 'desktop';
   
   // Return specific overlap or fall back to default
   switch(pageType) {
     case 'home':
-      return overlaps.home[device];
+      return overlaps.home;
     case 'post':
     case 'posts':
     case 'blog':
-      return overlaps.post[device];
+      return overlaps.post;
     case 'archive':
     case 'categories':
     case 'tags':
-      return overlaps.archive[device];
+      return overlaps.archive;
     case 'about':
-      return overlaps.about[device];
+      return overlaps.about;
     default:
       // Fall back to default overlap
-      return isMobile ? bannerConfig.layout.overlap.mobile : bannerConfig.layout.overlap.desktop;
+      return bannerConfig.layout.overlap;
   }
 }
 
 /**
- * Get navbar height based on screen size
- * Provides responsive navbar height for layout calculations
+ * ⭐ SIMPLIFIED: Get navbar height (no mobile/desktop params needed)
+ * Provides navbar height for layout calculations
  * 
- * @param isMobile - Whether to get mobile height (default: false)
  * @returns CSS value for navbar height
  */
-export function getNavbarHeight(isMobile: boolean = false): string {
-  return isMobile ? bannerConfig.navbar.height.mobile : bannerConfig.navbar.height.desktop;
+export function getNavbarHeight(): string {
+  return bannerConfig.navbar.height;         // ⭐ UNIFIED: Single value
 }
 
 /**
- * Get main content offset based on screen size
+ * ⭐ SIMPLIFIED: Get main content offset (no mobile/desktop params needed)
  * Controls spacing between banner and main content
  * 
- * @param isMobile - Whether to get mobile offset (default: false)
  * @returns CSS value for main content offset
  */
-export function getMainContentOffset(isMobile: boolean = false): string {
-  return isMobile ? bannerConfig.layout.mainContentOffset.mobile : bannerConfig.layout.mainContentOffset.desktop;
+export function getMainContentOffset(): string {
+  return bannerConfig.layout.mainContentOffset; // ⭐ UNIFIED: Single value
 }
 
 /**
