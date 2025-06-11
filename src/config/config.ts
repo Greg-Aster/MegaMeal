@@ -43,6 +43,7 @@ export const navBarConfig: NavBarConfig = {
       url: "#",
       dropdown: [
         { name:  "Map ", url: "/posts/explainer/" },
+        { name:  "Cookbook ", url: "/posts/cookbook/cookbook-index/" },
       ]
     },
     3,

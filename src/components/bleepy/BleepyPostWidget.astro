@@ -7,18 +7,18 @@ interface Props {
 const { mascotContext } = Astro.props;
 ---
 
-<div id="bleepy-post-widget" class="widget-container rounded-lg p-4 flex flex-row gap-4" data-page-context={mascotContext || ''}>
+<div id="bleepy-post-widget" class="widget-container rounded-lg p-4 flex flex-row gap-4 border border-black/10 dark:border-white/20 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm" data-page-context={mascotContext || ''}>
   <div id="widget-mascot-visual-area" class="w-1/3 flex items-center justify-start">
     <img id="widget-mascot-image-display" alt="Cuppy" class="max-w-full max-h-full object-contain" style="display: none;" />
     <!-- SVG mascot content will be injected here by JavaScript -->
   </div>
   <div class="flex flex-col flex-grow gap-2">
-    <div id="widget-chat-history" class="h-64 overflow-y-auto flex-grow">
+    <div id="widget-chat-history" class="h-64 overflow-y-auto flex-grow scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300 dark:scrollbar-track-gray-800 dark:scrollbar-thumb-gray-600">
       <!-- Chat messages will be appended here -->
     </div>
     <div id="widget-chat-ui" class="flex gap-2 p-2">
-      <input type="text" id="widget-chat-input" class="widget-chat-input flex-grow p-2 rounded-lg" placeholder="Type your message..." />
-      <button id="widget-chat-send" class="widget-chat-send p-2 rounded-lg">Send</button>
+      <input type="text" id="widget-chat-input" class="widget-chat-input flex-grow p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-colors" placeholder="Type your message..." />
+      <button id="widget-chat-send" class="widget-chat-send p-2 rounded-lg bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white transition-colors">Send</button>
     </div>
   </div>
 </div>
@@ -133,9 +133,9 @@ const { mascotContext } = Astro.props;
     messageElement.classList.add('p-2', 'rounded-lg', 'mb-2', 'max-w-[80%]');
 
     if (sender === 'user') {
-      messageElement.classList.add('widget-user-message', 'ml-auto', 'text-right');
+      messageElement.classList.add('ml-auto', 'text-right', 'bg-blue-600', 'dark:bg-blue-500', 'text-white');
     } else {
-      messageElement.classList.add('widget-cuppy-message', 'mr-auto', 'text-left');
+      messageElement.classList.add('mr-auto', 'text-left', 'bg-gray-100', 'dark:bg-gray-700', 'text-gray-900', 'dark:text-gray-100');
     }
     chatHistoryElement.appendChild(messageElement);
     chatHistoryElement.scrollTop = chatHistoryElement.scrollHeight; // Scroll to bottom
@@ -349,72 +349,21 @@ const { mascotContext } = Astro.props;
 
 <style is:global>
   @import './mascotAnimations.css';
-
-  /* Widget container */
-  #bleepy-post-widget.widget-container {
-    border: 1px solid var(--border-color);
-    /* background-image, background-size, etc. are set by JS, keep them */
-  }
-
-  /* Chat input */
-  #bleepy-post-widget .widget-chat-input {
-    border: 1px solid var(--input-border-color);
-    background-color: var(--input-bg);
-    color: var(--text-color);
-    /* p-2, rounded-lg are from existing Tailwind classes in the HTML */
-  }
-  #bleepy-post-widget .widget-chat-input::placeholder {
-    color: var(--text-color-muted);
-  }
-  #bleepy-post-widget .widget-chat-input:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 30%, transparent);
-    outline: none;
-  }
-
-  /* Chat send button */
-  #bleepy-post-widget .widget-chat-send {
-    background-color: var(--primary);
-    color: var(--text-on-primary);
-    /* p-2, rounded-lg are from existing Tailwind classes in the HTML */
-  }
-  #bleepy-post-widget .widget-chat-send:hover {
-    background-color: var(--primary-hover); /* Assuming --primary-hover is defined in main.css */
-  }
-
-  /* Chat messages */
-  #bleepy-post-widget .widget-user-message {
-    background-color: var(--primary);
-    color: var(--text-on-primary);
-    /* Base layout styles (p-2, rounded-lg, mb-2, max-w-[80%], ml-auto, text-right)
-       are still applied by Tailwind classes added in JavaScript */
-  }
-
-  #bleepy-post-widget .widget-cuppy-message {
-    background-color: var(--surface-2);
-    color: var(--text-color);
-    /* Base layout styles (p-2, rounded-lg, mb-2, max-w-[80%], mr-auto, text-left)
-       are still applied by Tailwind classes added in JavaScript */
-  }
-
-  /* Ensure chat history is scrollable - Updated scrollbar variables */
-  #widget-chat-history {
-    scrollbar-width: thin; /* For Firefox */
-    scrollbar-color: var(--surface-2) var(--surface-1); /* Changed --surface-3 to --surface-2 */
-  }
-
+  
+  /* Custom scrollbar support for browsers that don't support Tailwind scrollbar utilities */
   #widget-chat-history::-webkit-scrollbar {
     width: 8px;
   }
 
   #widget-chat-history::-webkit-scrollbar-track {
-    background: var(--surface-1);
-    border-radius: 4px;
+    @apply bg-gray-100 dark:bg-gray-800 rounded;
   }
 
   #widget-chat-history::-webkit-scrollbar-thumb {
-    background-color: var(--surface-2); /* Changed --surface-3 to --surface-2 */
-    border-radius: 4px;
-    border: 2px solid var(--surface-1);
+    @apply bg-gray-300 dark:bg-gray-600 rounded;
+  }
+
+  #widget-chat-history::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-gray-500;
   }
 </style>

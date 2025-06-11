@@ -126,25 +126,26 @@ export const bannerList: BannerItem[] = [
   }, 
   {
     type: 'video',
-    src: '/videos/starmap.webm',  // Place this file in /public/videos/
+    src: '/videos/deep-time.webm',  // Place this file in /public/videos/
     fallbackImage: banner2Fallback,      // Fallback image for unsupported browsers
     alt: 'Animated banner',
     preload: 'none'  // Don't preload video until needed
   },
-  {
+   {
     type: 'video',
-    src: '/videos/cookbook2.webm',  // Place this file in /public/videos/
+    src: '/videos/cookbook.webm',  // Place this file in /public/videos/
     fallbackImage: banner3Fallback,      // Fallback image for unsupported browsers
     alt: 'MegaMeal Cookbook',
     preload: 'none',  // Don't preload video until needed
   },
+  /*
   {
     type: 'video',
     src: '/videos/reviews.webm',  // Place this file in /public/videos/
     fallbackImage: banner4Fallback,      // Fallback image for unsupported browsers
     alt: 'Reviews and testimonials',
     preload: 'none'  // Don't preload video until needed
-  },
+  }, */
 
   // Image items - existing images
   
@@ -231,7 +232,7 @@ export const linkPreviewData: Record<string, LinkPreviewInfo> = {
     icon: 'book-open'
   },
   '/cookbook/': {
-    title: 'The Cookbook Project - Under Construction',
+    title: 'The Cookbook Project',
     description: 'Discover our comprehensive cookbook featuring recipes, cooking techniques, and culinary tips inspired by the MEGAMEAL universe. Perfect for aspiring chefs and food enthusiasts.',
     icon: 'user-group'
   },

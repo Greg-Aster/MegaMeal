@@ -86,7 +86,7 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
             )}
             <!-- Mascot Controls -->
             <LightDarkSwitch client:load></LightDarkSwitch>
-            <button aria-label="Menu" name="Nav Menu" class="btn-plain scale-animation rounded-lg w-11 h-11 active:scale-90 md:!hidden" id="nav-menu-switch">
+<!--             <button aria-label="Menu" name="Nav Menu" class="btn-plain scale-animation rounded-lg w-11 h-11 active:scale-90 md:!hidden" id="nav-menu-switch">
                 <Icon name="material-symbols:menu-rounded" class="text-[1.25rem]"></Icon>
             </button>
             <button aria-label="Dismiss Mascot" title="Dismiss Mascot" id="navbar-dismiss-mascot-button" class="btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90">
@@ -94,7 +94,7 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
             </button>
             <button aria-label="Bring back mascot" title="Bring back mascot" id="navbar-bring-back-mascot-button" class="btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90" style="display: none;">
                 🥄
-            </button>
+            </button> -->
 
             <!-- Fullscreen Mode Toggle -->
             <button aria-label="Toggle Fullscreen Mode" title="Toggle Fullscreen Mode" class="btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90" id="fullscreen-btn">
@@ -154,7 +154,7 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
         }
     
         // Mascot Controls (Bleepy) - PRESERVED EXACTLY AS-IS
-        dismissMascotBtn = document.getElementById("navbar-dismiss-mascot-button");
+/*         dismissMascotBtn = document.getElementById("navbar-dismiss-mascot-button");
         bringBackMascotBtn = document.getElementById("navbar-bring-back-mascot-button");
     
         if (dismissMascotBtn) {
@@ -179,7 +179,7 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
                 dismissMascotBtn.style.display = 'flex';
                 bringBackMascotBtn.style.display = 'none';
             }
-        }
+        } */
     
         // UPDATED: Fullscreen Mode Toggle Functionality
         initializeFullscreenMode();
@@ -300,7 +300,7 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
     }
     
     // Bleepy mascot visibility event listener - PRESERVED EXACTLY AS-IS
-    document.addEventListener('bleepy:visibilityChanged', (event: Event) => {
+/*     document.addEventListener('bleepy:visibilityChanged', (event: Event) => {
         const customEvent = event as CustomEvent;
         const { visible } = customEvent.detail;
         if (dismissMascotBtn && bringBackMascotBtn) {
@@ -312,7 +312,7 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
                 bringBackMascotBtn.style.display = 'flex';
             }
         }
-    });
+    }); */
     
     // Initialize everything
     loadButtonScript();
