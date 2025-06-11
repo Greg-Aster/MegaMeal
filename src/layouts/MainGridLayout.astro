@@ -482,6 +482,7 @@ if (post && post.data) {
         customAvatar={postData?.customAvatar || ''}
         customName={postData?.customName || ''}
         customBio={postData?.customBio || ''}
+        pageMascotContext={Astro.props.pageMascotContext}
       ></SideBar>
       
       <!-- ========================================================= -->
@@ -662,6 +663,8 @@ if (post && post.data) {
     initializeBannerAnimation();
     initializeParallaxEffect();
     initializeEventListeners();
+    initializeCookbookFeatures(); // Add this line
+
   });
 
   /**
@@ -836,5 +839,110 @@ if (post && post.data) {
     }
   }
   
-  // Removed duplicate DOMContentLoaded listener
+// REPLACE the massive cookbook script with this simple version
+// Add this to your MainGridLayout.astro script section
+
+/**
+ * SIMPLE COOKBOOK FUNCTIONALITY - JUST WHAT WORKS
+ */
+ function initializeCookbookFeatures() {
+  // Only run on cookbook pages
+  if (!window.location.pathname.includes('cookbook')) {
+    // If NOT on cookbook page, restore normal state
+    restoreNormalState();
+    return;
+  }
+  
+  console.log('Cookbook page detected, enabling features');
+  
+  // Save original state ONCE when first visiting any cookbook page
+  if (!localStorage.getItem('cookbookOriginalState')) {
+    const originalState = localStorage.getItem('fullscreenMode') === 'true';
+    localStorage.setItem('cookbookOriginalState', originalState.toString());
+    console.log('Saved original fullscreen state:', originalState);
+  }
+  
+  // Enable fullscreen for cookbook
+  localStorage.setItem('fullscreenMode', 'true');
+  localStorage.setItem('fullscreenBannerOverride', 'true');
+  document.body.classList.add('force-mobile-view');
+  
+  // Initialize view toggle
+  initializeViewToggle();
+}
+
+/**
+ * Restore the user's original fullscreen preference
+ */
+function restoreNormalState() {
+  const originalState = localStorage.getItem('cookbookOriginalState');
+  
+  if (originalState !== null) {
+    const wasOriginallyFullscreen = originalState === 'true';
+    
+    if (!wasOriginallyFullscreen) {
+      // User wasn't originally in fullscreen, so disable it
+      localStorage.setItem('fullscreenMode', 'false');
+      localStorage.removeItem('fullscreenBannerOverride');
+      document.body.classList.remove('force-mobile-view');
+      console.log('Restored to non-fullscreen (original state)');
+    } else {
+      console.log('Keeping fullscreen (was original state)');
+    }
+  }
+}
+
+/**
+ * Simple view toggle for cookbook pages
+ */
+function initializeViewToggle() {
+  const galleryBtn = document.getElementById('gallery-view-btn');
+  const listBtn = document.getElementById('list-view-btn');
+  const galleryView = document.getElementById('gallery-view');
+  const listView = document.getElementById('list-view');
+  
+  if (!galleryBtn || !listBtn || !galleryView || !listView) return;
+  
+  // Get saved preference
+  const savedView = localStorage.getItem('cookbookView') || 'gallery';
+  
+  // Apply initial state
+  if (savedView === 'list') {
+    showListView();
+  } else {
+    showGalleryView();
+  }
+  
+  // Event listeners
+  galleryBtn.addEventListener('click', () => {
+    showGalleryView();
+    localStorage.setItem('cookbookView', 'gallery');
+  });
+  
+  listBtn.addEventListener('click', () => {
+    showListView();
+    localStorage.setItem('cookbookView', 'list');
+  });
+  
+  function showGalleryView() {
+    galleryView.classList.remove('hidden');
+    listView.classList.add('hidden');
+    galleryBtn.className = "px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm";
+    listBtn.className = "px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white";
+  }
+  
+  function showListView() {
+    galleryView.classList.add('hidden');
+    listView.classList.remove('hidden');
+    listBtn.className = "px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm";
+    galleryBtn.className = "px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white";
+  }
+}
+
+// Debug helper to reset everything
+window.resetCookbookState = function() {
+  localStorage.removeItem('cookbookOriginalState');
+  localStorage.removeItem('cookbookView');
+  console.log('Cookbook state reset. Refresh page to test.');
+};
 </script>

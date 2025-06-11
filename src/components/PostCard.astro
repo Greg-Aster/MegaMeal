@@ -3,7 +3,6 @@
 // Updated PostCard component with mobile-friendly layout fixes
 
 import path from 'path';
-import PostMetadata from './PostMeta.astro';
 import ImageWrapper from './misc/ImageWrapper.astro';
 import { Icon } from 'astro-icon/components';
 import { i18n } from '../i18n/translation';
@@ -18,7 +17,6 @@ interface Props {
   url: string;
   published: Date;
   updated?: Date;
-  tags: string[];
   category: string;
   image: string;
   description: string;
@@ -33,7 +31,6 @@ const {
   url,
   published,
   updated,
-  tags,
   category,
   image,
   description,
@@ -49,9 +46,6 @@ const hasCover = image !== undefined && image !== null && image !== '' &&
 
 // Get local post card config
 const config = postCardConfig.localPosts;
-
-// Set the cover width based on the configuration
-const coverWidth = `${config.layout.imageSizePercentage}%`;
 
 const { remarkPluginFrontmatter } = await entry.render();
 
@@ -78,7 +72,7 @@ const dateStr = published.toISOString().split('T')[0];
   data-post-date={dateStr}
   data-post-timestamp={timestamp}
   data-post-category={category?.toLowerCase()}
-  data-post-tags={tags?.join(',')?.toLowerCase()}
+
   data-post-image={image}
   data-post-description={description}>
   
@@ -162,18 +156,37 @@ const dateStr = published.toISOString().split('T')[0];
     </a>
 
     <!-- METADATA - Hidden on ALL mobile devices, visible on desktop only -->
-    <PostMetadata 
-      published={published} 
-      updated={updated} 
-      tags={tags} 
-      category={category} 
-      hideTagsForMobile={config.content.hideTagsOnMobile} 
-      hideUpdateDate={!config.content.showUpdateDate} 
-      class="mb-4 hidden md:block" />
+    <div class="mb-4 hidden md:block text-sm text-black/60 dark:text-white/60 flex gap-5 items-center">
+      <time datetime={published.toISOString()}>
+        {published.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        })}
+      </time>
+      {updated && config.content.showUpdateDate && (
+        <>
+          <span class="text-black/30 dark:text-white/30">•</span>
+          <span>Updated {updated.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+          })}</span>
+        </>
+      )}
+      {category && (
+        <>
+          <span class="text-black/30 dark:text-white/30">•</span>
+          <span class="capitalize">{category}</span>
+        </>
+      )}
+    </div>
 
-    <!-- DESCRIPTION - grows to fill available space -->
+    <!-- DESCRIPTION - Positioned from container bottom -->
     <div class:list={[
-      "flex-grow transition text-75 mb-4",
+      "absolute bottom-10 left-4 right-4 transition text-75",
+      // Desktop: adjust for different padding
+      "md:bottom-10 md:left-9 md:right-2",
       // Responsive line clamping
       "line-clamp-3 sm:line-clamp-2 md:line-clamp-3",
       `md:line-clamp-${config.styling.descriptionLines}`
@@ -181,9 +194,9 @@ const dateStr = published.toISOString().split('T')[0];
       {description || remarkPluginFrontmatter.excerpt}
     </div>
 
-    <!-- WORD COUNT AND READ TIME -->
+    <!-- WORD COUNT AND READ TIME - Fixed at container bottom -->
     {(config.content.showWordCount || config.content.showReadTime) && (
-      <div class="text-sm text-black/30 dark:text-white/30 flex gap-4 transition mt-auto">
+      <div class="absolute bottom-4 left-4 right-4 md:left-9 md:right-2 text-sm text-black/30 dark:text-white/30 flex gap-4 transition">
         {config.content.showWordCount && (
           <div>{remarkPluginFrontmatter.words} {" " + i18n(I18nKey.wordsCount)}</div>
         )}
@@ -210,7 +223,7 @@ const dateStr = published.toISOString().split('T')[0];
 <!-- MOBILE SEPARATOR (only visible on mobile) -->
 <div class="transition border-t-[1px] border-dashed mx-6 border-black/10 dark:border-white/[0.15] last:border-t-0 md:hidden"></div>
 
-<style define:vars={{coverWidth}}>
+<style>
   /* Ensure proper layering for image overlays */
   .blur-background {
     z-index: 1;

@@ -22,110 +22,143 @@ const listViewId = `list-view-${Math.random().toString(36).substring(2,9)}`;
 console.log("ListView.astro: Generated ID:", listViewId);
 ---
 
-<div class="list-view relative" id={listViewId}>
+<div class="timeline-interface relative w-full h-full" id={listViewId}>
+  <!-- Cosmic Background System -->
   <div class="absolute inset-0 -z-10 overflow-hidden">
-    <img src={background} alt="Timeline background" class="w-full h-full object-cover opacity-25" />
-    <div class="absolute inset-0 bg-gradient-to-r from-[oklch(0.35_0.05_var(--hue))] to-[oklch(0.25_0.05_var(--hue))] opacity-40 dark:opacity-30"></div>
+    <img src={background} alt="Timeline background" class="w-full h-full object-cover opacity-20 dark:opacity-15" />
+    <div class="absolute inset-0 bg-gradient-to-br from-[oklch(0.25_0.03_var(--hue))] via-[oklch(0.15_0.05_var(--hue))] to-[oklch(0.10_0.08_var(--hue))] opacity-60 dark:from-[oklch(0.08_0.02_var(--hue))] dark:via-[oklch(0.04_0.03_var(--hue))] dark:to-[oklch(0.02_0.04_var(--hue))] dark:opacity-95"></div>
+    <div class="scanlines absolute inset-0 opacity-10 dark:opacity-5"></div>
   </div>
 
-  <!-- Interaction Guide -->
-  <div class="absolute top-2 right-2 z-20 bg-black/70 text-white text-xs px-3 py-2 rounded-md backdrop-blur-sm">
-    <div class="flex items-center gap-2">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-      </svg>
-      <span>Click to select • Click again to view</span>
+  <!-- Compact Interface Header -->
+  <div class="absolute top-2 left-2 right-2 z-20">
+    <div class="flex items-center justify-between">
+      <!-- Terminal Status -->
+      <div class="flex items-center gap-2">
+        <div class="w-2 h-2 rounded-full bg-[var(--primary)] animate-pulse"></div>
+        <span class="text-xs font-mono text-75 tracking-wider">TEMPORAL_DB</span>
+      </div>
+      
+      <!-- Interaction Guide -->
+      <div class="flex items-center gap-2 card-base2 px-2 py-1">
+        <svg class="w-3 h-3 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span class="text-xs font-mono text-75">SELECT → ACCESS</span>
+      </div>
     </div>
   </div>
 
-  <div class="relative z-10 overflow-y-auto scrollbar-timeline" style="max-height: calc(100vh - 160px);">
-    <div class="px-4 pt-12"> <!-- Added top padding for guide -->
+  <!-- Main Data Stream -->
+  <div class="data-stream relative z-10 overflow-y-auto scrollbar-timeline pt-12 pb-8" style="max-height: calc(100vh - 120px);">
+    <div class="px-3 space-y-4">
       {Object.entries(eventsByEra).map(([era, eraEvents]) => (
-        <div class="timeline-era mb-6">
-          <div class={`era-header px-3 py-2 rounded-md mb-2 font-bold ${getEraClasses(era)}`}>
-            {getEraDisplayName(era)} ({eraEvents[0]?.year} - {eraEvents[eraEvents.length - 1]?.year})
+        <div class="era-window card-base relative overflow-hidden">
+          <!-- Era Window Frame -->
+          <div class="era-window-header px-3 py-2 bg-[var(--surface-1)] border-b border-[var(--border-color)]">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="window-controls flex gap-1">
+                  <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                  <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                  <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                </div>
+                <h3 class="text-sm font-mono font-bold text-90 tracking-wide">
+                  {getEraDisplayName(era)}
+                </h3>
+              </div>
+              <div class="era-count text-xs font-mono text-50">
+                {eraEvents.length} entries
+              </div>
+            </div>
           </div>
 
-          <div class="era-events">
-            {eraEvents.map(event => (
+          <!-- Era Window Content -->
+          <div class="era-window-content p-3 space-y-2 bg-[var(--card-bg)]/50">
+            {eraEvents.map((event, index) => (
               <button
                 class:list={[
-                  "timeline-event-card group relative flex rounded-md p-3 mb-2 transition-all duration-200 text-left w-full border-2 border-transparent",
-                  "hover:border-[var(--primary)]/30 hover:shadow-lg hover:scale-[1.02]",
+                  "data-record group relative w-full text-left transition-all duration-200 ease-out rounded-md",
+                  "hover:scale-[1.01] hover:z-10",
                   selectedEventSlug === event.slug 
-                    ? 'bg-[var(--primary)]/10 border-[var(--primary)]/50 shadow-md scale-[1.01] selected' 
-                    : 'hover:bg-[var(--btn-card-bg-hover)]'
+                    ? 'record-selected scale-[1.005] z-20 bg-[var(--primary)]/10 border-[var(--primary)]/30' 
+                    : 'record-inactive hover:bg-[var(--surface-1)]'
                 ]}
                 data-era={event.era}
                 data-slug={event.slug}
                 data-title={event.title}
-                title={selectedEventSlug === event.slug ? "Click to view this event" : "Click to select this event"}
+                title={selectedEventSlug === event.slug ? "Click to access record" : "Click to select record"}
               >
+                <!-- Record Background -->
+                <div class="absolute inset-0 rounded-md border border-[var(--border-color)] group-hover:border-[var(--primary)]/30 transition-colors duration-200"></div>
+                
                 <!-- Selection Indicator -->
-                <div class="absolute left-0 top-0 bottom-0 w-1 bg-[var(--primary)] rounded-r-full transition-all duration-200 opacity-0 group-hover:opacity-50" 
-                     class:list={[selectedEventSlug === event.slug ? 'opacity-100' : 'opacity-0']}></div>
+                <div class:list={[
+                  "absolute left-0 top-0 bottom-0 w-1 bg-[var(--primary)] rounded-l-md transition-all duration-200",
+                  selectedEventSlug === event.slug ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'
+                ]}></div>
 
-                <!-- Action Indicator -->
-                <div class="absolute top-2 right-2 transition-all duration-200">
-                  {selectedEventSlug === event.slug ? (
-                    <!-- Go to event icon -->
-                    <div class="flex items-center gap-1 text-[var(--primary)] text-xs font-medium opacity-80">
-                      <span>View</span>
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                      </svg>
-                    </div>
-                  ) : (
-                    <!-- Select indicator -->
-                    <div class="text-[var(--primary)]/60 group-hover:text-[var(--primary)] transition-colors">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                      </svg>
-                    </div>
-                  )}
-                </div>
+                <!-- Record Content -->
+                <div class="relative flex items-start gap-3 p-3 pl-4">
+                  <!-- Data Node -->
+                  <div class="data-node flex-shrink-0 mt-1">
+                    <div class:list={[
+                      "w-2.5 h-2.5 rounded-full border transition-all duration-200",
+                      event.isKeyEvent 
+                        ? 'bg-[var(--primary)] border-[var(--primary)] shadow-md shadow-[var(--primary)]/30' 
+                        : 'bg-[var(--card-bg)] border-[var(--primary)]/60',
+                      selectedEventSlug === event.slug ? 'scale-125' : 'group-hover:scale-110 group-hover:border-[var(--primary)]'
+                    ]}></div>
+                  </div>
 
-                <div class="event-year w-16 font-bold text-center text-[var(--primary)] flex-shrink-0">
-                  {event.year}
-                </div>
-                
-                <div class="event-connector w-8 flex items-center justify-center relative flex-shrink-0">
-                  <div class="h-full w-0.5 bg-[var(--primary)] opacity-30"></div>
-                  <div class:list={[
-                    "w-3 h-3 rounded-full absolute transition-all duration-200",
-                    event.isKeyEvent 
-                      ? 'bg-[var(--primary)] group-hover:scale-125' 
-                      : 'border-2 border-[var(--primary)] bg-[var(--card-bg)] group-hover:scale-110',
-                    selectedEventSlug === event.slug ? 'scale-125 shadow-lg' : ''
-                  ]}></div>
-                </div>
-                
-                <div class="event-content flex-1 min-w-0"> <!-- min-w-0 for text truncation -->
-                  <div class="flex items-start justify-between gap-2">
-                    <div class="event-title font-bold text-75 group-hover:text-[var(--primary)] transition-colors leading-tight">
-                      {event.title}
+                  <!-- Record Information -->
+                  <div class="record-info flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-2 mb-1">
+                      <h4 class="font-mono font-semibold text-sm text-75 group-hover:text-[var(--primary)] transition-colors duration-200 leading-tight">
+                        {event.title}
+                      </h4>
+                      
+                      {event.isKeyEvent && (
+                        <span class="px-1.5 py-0.5 text-xs font-mono font-bold bg-[var(--primary)]/20 text-[var(--primary)] border border-[var(--primary)]/30 rounded flex-shrink-0">
+                          KEY
+                        </span>
+                      )}
                     </div>
-                    {event.isKeyEvent && (
-                      <span class="text-xs font-bold py-1 px-2 rounded-full bg-[var(--primary)]/20 text-[var(--primary)] flex-shrink-0">
-                        Key Event
-                      </span>
+
+                    <p class="text-xs text-50 group-hover:text-75 transition-colors duration-200 line-clamp-2 leading-relaxed">
+                      {event.description}
+                    </p>
+
+                    {event.location && (
+                      <div class="mt-2 flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-30 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                          <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span class="text-xs font-mono text-50 group-hover:text-75 transition-colors truncate">
+                          {event.location}
+                        </span>
+                      </div>
                     )}
                   </div>
-                  
-                  <div class="event-description text-50 text-sm mt-1 line-clamp-2 group-hover:text-75 transition-colors">
-                    {event.description}
+
+                  <!-- Status Indicator -->
+                  <div class="status-indicator flex-shrink-0 transition-all duration-200">
+                    {selectedEventSlug === event.slug ? (
+                      <div class="flex items-center gap-1 text-[var(--primary)] text-xs">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                      </div>
+                    ) : (
+                      <div class="opacity-40 group-hover:opacity-70 transition-opacity">
+                        <svg class="w-3 h-3 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                      </div>
+                    )}
                   </div>
-                  
-                  {event.location && (
-                    <div class="event-location text-xs mt-2 text-[var(--primary)]/80 flex items-center gap-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                      </svg>
-                      <span class="truncate">{event.location}</span>
-                    </div>
-                  )}
                 </div>
               </button>
             ))}
@@ -134,17 +167,21 @@ console.log("ListView.astro: Generated ID:", listViewId);
       ))}
 
       {Object.keys(eventsByEra).length === 0 && (
-        <div class="flex flex-col items-center justify-center py-10 text-center card-base p-8">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z" />
-          </svg>
-          <div class="text-75 font-bold mt-4">No timeline events found</div>
-          <div class="text-50 text-sm mt-2">
-            Add timelineYear to your posts to see them in this timeline
+        <div class="empty-database card-base p-6 text-center">
+          <div class="mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-[var(--primary)] opacity-60 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+            </svg>
+          </div>
+          <div class="text-90 font-mono font-bold mb-2">No Timeline Events Found</div>
+          <div class="text-50 text-sm font-mono">
+            Add timelineYear to your posts to populate the database
           </div>
         </div>
       )}
-      <div class="h-40"></div> <!-- Padding -->
+      
+      <!-- Bottom Buffer Space -->
+      <div class="h-60"></div>
     </div>
   </div>
 </div>
@@ -156,51 +193,51 @@ console.log("ListView.astro: Generated ID:", listViewId);
   if (rootElement) {
     console.log("ListView.astro script loaded for:", listViewId);
 
-    // Add visual feedback for click states
+    // Enhanced visual feedback
     rootElement.addEventListener('mousedown', (e) => {
-      const cardButton = e.target.closest('.timeline-event-card');
-      if (cardButton) {
-        cardButton.style.transform = 'scale(0.98)';
+      const recordButton = e.target.closest('.data-record');
+      if (recordButton) {
+        recordButton.style.transform = 'scale(0.995)';
       }
     });
 
     rootElement.addEventListener('mouseup', (e) => {
-      const cardButton = e.target.closest('.timeline-event-card');
-      if (cardButton) {
-        // Reset transform after short delay to show the click feedback
+      const recordButton = e.target.closest('.data-record');
+      if (recordButton) {
         setTimeout(() => {
-          cardButton.style.transform = '';
+          recordButton.style.transform = '';
         }, 100);
       }
     });
 
     rootElement.addEventListener('click', (e) => {
-      const cardButton = e.target.closest('.timeline-event-card');
-      if (cardButton) {
-        const slug = cardButton.dataset.slug;
-        const title = cardButton.dataset.title;
+      const recordButton = e.target.closest('.data-record');
+      if (recordButton) {
+        const slug = recordButton.dataset.slug;
+        const title = recordButton.dataset.title;
 
         // If already selected, navigate to the event
         if (currentSelectedSlug && currentSelectedSlug === slug) {
-          console.log(`ListView.astro: Navigating to /posts/${slug}/ (already selected)`);
+          console.log(`ListView.astro: Navigating to /posts/${slug}/`);
           
-          // Add visual feedback for navigation
-          cardButton.classList.add('scale-95');
+          recordButton.classList.add('scale-95');
           setTimeout(() => {
             window.location.href = `/posts/${slug}/`;
           }, 150);
           return;
         }
 
-        // Update visual selection immediately for responsive feedback
-        rootElement.querySelectorAll('.timeline-event-card').forEach(btn => {
-          btn.classList.remove('bg-[var(--primary)]/10', 'border-[var(--primary)]/50', 'shadow-md', 'scale-[1.01]', 'selected');
+        // Update selection
+        rootElement.querySelectorAll('.data-record').forEach(btn => {
+          btn.classList.remove('record-selected', 'z-20', 'bg-[var(--primary)]/10', 'border-[var(--primary)]/30');
+          btn.classList.add('record-inactive');
         });
         
-        cardButton.classList.add('bg-[var(--primary)]/10', 'border-[var(--primary)]/50', 'shadow-md', 'scale-[1.01]', 'selected');
+        recordButton.classList.remove('record-inactive');
+        recordButton.classList.add('record-selected', 'z-20', 'bg-[var(--primary)]/10', 'border-[var(--primary)]/30');
         currentSelectedSlug = slug;
 
-        console.log(`ListView.astro: Selected event - ${title} (${slug}). Click again to view.`);
+        console.log(`ListView.astro: Selected event - ${title} (${slug})`);
 
         // Dispatch selection event
         const selectEvent = new CustomEvent('list:select', {
@@ -212,13 +249,11 @@ console.log("ListView.astro: Generated ID:", listViewId);
       }
     });
 
-    // Remove double-click navigation since we have better single-click UX now
-    // But keep it as backup for power users
+    // Double-click for quick access
     rootElement.addEventListener('dblclick', (e) => {
-      const cardButton = e.target.closest('.timeline-event-card');
-      if (cardButton) {
-        const slug = cardButton.dataset.slug;
-        console.log(`ListView.astro: Double-click navigation to /posts/${slug}/`);
+      const recordButton = e.target.closest('.data-record');
+      if (recordButton) {
+        const slug = recordButton.dataset.slug;
         window.location.href = `/posts/${slug}/`;
       }
     });
@@ -228,13 +263,13 @@ console.log("ListView.astro: Generated ID:", listViewId);
         const newSelectedSlug = rootElement.dataset.selectedEventSlug;
         if (newSelectedSlug !== currentSelectedSlug) {
             currentSelectedSlug = newSelectedSlug;
-            rootElement.querySelectorAll('.timeline-event-card').forEach(btn => {
+            rootElement.querySelectorAll('.data-record').forEach(btn => {
                 const isSelected = btn.dataset.slug === currentSelectedSlug;
+                btn.classList.toggle('record-selected', isSelected);
+                btn.classList.toggle('record-inactive', !isSelected);
+                btn.classList.toggle('z-20', isSelected);
                 btn.classList.toggle('bg-[var(--primary)]/10', isSelected);
-                btn.classList.toggle('border-[var(--primary)]/50', isSelected);
-                btn.classList.toggle('shadow-md', isSelected);
-                btn.classList.toggle('scale-[1.01]', isSelected);
-                btn.classList.toggle('selected', isSelected);
+                btn.classList.toggle('border-[var(--primary)]/30', isSelected);
             });
         }
     });
@@ -242,7 +277,43 @@ console.log("ListView.astro: Generated ID:", listViewId);
 </script>
 
 <style>
-/* Add line clamp utility for description truncation */
+/* Enhanced Scrollbar */
+.scrollbar-timeline::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-timeline::-webkit-scrollbar-track {
+  background: var(--surface-1);
+}
+
+.scrollbar-timeline::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  opacity: 0.6;
+  border-radius: 3px;
+}
+
+.scrollbar-timeline::-webkit-scrollbar-thumb:hover {
+  opacity: 0.8;
+}
+
+/* Animated Scanlines */
+.scanlines {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    var(--primary) 2px,
+    var(--primary) 4px
+  );
+  animation: scanlineMove 4s linear infinite;
+}
+
+@keyframes scanlineMove {
+  0% { transform: translateY(-4px); }
+  100% { transform: translateY(0px); }
+}
+
+/* Line Clamp */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -250,31 +321,56 @@ console.log("ListView.astro: Generated ID:", listViewId);
   overflow: hidden;
 }
 
-/* Smooth transitions for all interactive elements */
-.timeline-event-card {
+/* Era Windows */
+.era-window {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+}
+
+/* Record Transitions */
+.data-record {
   transform-origin: center;
+  will-change: transform;
 }
 
-.timeline-event-card:active {
-  transform: scale(0.98);
+.data-record:active {
+  transform: scale(0.995) !important;
 }
 
-/* Custom scrollbar for the timeline */
-.scrollbar-timeline::-webkit-scrollbar {
-  width: 6px;
+/* Focus States */
+.data-record:focus,
+.data-record:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
-.scrollbar-timeline::-webkit-scrollbar-track {
-  background: transparent;
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .data-stream {
+    padding-top: 3rem;
+  }
+  
+  .era-window-content {
+    padding: 0.75rem;
+  }
+  
+  .data-record .p-3 {
+    padding: 0.75rem;
+  }
 }
 
-.scrollbar-timeline::-webkit-scrollbar-thumb {
-  background: var(--primary);
-  opacity: 0.3;
-  border-radius: 3px;
-}
-
-.scrollbar-timeline::-webkit-scrollbar-thumb:hover {
-  opacity: 0.6;
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .scanlines {
+    animation: none;
+  }
+  
+  .animate-pulse {
+    animation: none;
+  }
+  
+  .data-record {
+    transition: none !important;
+  }
 }
 </style>

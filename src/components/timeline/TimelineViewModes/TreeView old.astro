@@ -25,9 +25,11 @@ const groupedEvents = events.reduce((acc, event) => {
   return acc;
 }, {} as Record<string, TimelineEvent[]>);
 
-// Sort eras and keep events in their original order within each era
+// Sort eras and events within each era
 const sortedEras = Object.keys(groupedEvents).sort();
-// Note: Removed year sorting - events maintain their original chronological order
+Object.values(groupedEvents).forEach(eraEvents => {
+  eraEvents.sort((a, b) => a.year - b.year);
+});
 
 const treeViewId = `tree-view-${Math.random().toString(36).substring(2,9)}`;
 ---
@@ -101,7 +103,10 @@ const treeViewId = `tree-view-${Math.random().toString(36).substring(2,9)}`;
 
                     <!-- Event Content -->
                     <div class="event-content flex-1 min-w-0">
-                      <div class="flex items-center mb-2 flex-wrap gap-2">
+                      <div class="flex items-center mb-1 flex-wrap gap-2">
+                        <span class="year-badge bg-[var(--primary)]/20 text-[var(--primary)] font-bold text-sm px-2 py-0.5 rounded">
+                          {event.year}
+                        </span>
                         {event.isKeyEvent && (
                           <span class="key-event-badge bg-[var(--primary)] text-white text-xs font-bold py-0.5 px-2 rounded-full">
                             Key Event

@@ -19,20 +19,26 @@ const {
 const eventsWithLocations = events.filter(event => event.location);
 
 // Enhanced coordinate generation for better cosmic distribution
-function getUniverseCoordinates(location: string | undefined, year: number) {
+function getUniverseCoordinates(location: string | undefined, era: string = 'unknown') {
   if (!location) return { x: 50, y: 50, sector: 'unknown' };
   
   // Create hash from location for consistent positioning
   const locationHash = [...location].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 1000, 0);
-  const yearFactor = year % 100; // Use year for additional positioning variation
+  const eraHash = [...era].reduce((h, c) => (h * 17 + c.charCodeAt(0)) % 100, 0);
   
-  // Create sectors based on era/time periods
-  const sector = year < 2050 ? 'inner-core' : 
-                year < 2100 ? 'mid-rim' : 
-                year < 2200 ? 'outer-rim' : 'frontier';
+  // Create sectors based on era names instead of years
+  const eraToSector: Record<string, string> = {
+    'pre-war': 'inner-core',
+    'war': 'mid-rim',
+    'post-war': 'outer-rim',
+    'reconstruction': 'frontier',
+    'unknown': 'unknown'
+  };
+  
+  const sector = eraToSector[era.toLowerCase()] || 'frontier';
   
   // Distribute coordinates in cosmic spiral pattern
-  const angle = (locationHash + yearFactor) * 0.1;
+  const angle = (locationHash + eraHash) * 0.1;
   const radius = 20 + (locationHash % 60); // 20-80% from center
   
   const x = 50 + (Math.cos(angle) * radius * 0.8);
@@ -122,7 +128,7 @@ const mapViewId = `universe-map-${Math.random().toString(36).substring(2,9)}`;
           
           {Object.entries(eraGroups).map(([era, eraEvents]) => {
             if (eraEvents.length < 2) return null;
-            const coords = eraEvents.map(event => getUniverseCoordinates(event.location, event.year));
+            const coords = eraEvents.map(event => getUniverseCoordinates(event.location, event.era));
             return coords.slice(0, -1).map((coord, i) => {
               const nextCoord = coords[i + 1];
               return (
@@ -154,7 +160,7 @@ const mapViewId = `universe-map-${Math.random().toString(36).substring(2,9)}`;
         <!-- Universe Locations -->
         <div class="absolute inset-0 z-20">
           {eventsWithLocations.map((event) => {
-            const coords = getUniverseCoordinates(event.location, event.year);
+            const coords = getUniverseCoordinates(event.location, event.era);
             const sectorColors = {
               'inner-core': 'from-yellow-400 to-orange-500',
               'mid-rim': 'from-orange-400 to-red-500', 
@@ -169,7 +175,6 @@ const mapViewId = `universe-map-${Math.random().toString(36).substring(2,9)}`;
                 style={`left: ${coords.x}%; top: ${coords.y}%; transform: translate(-50%, -50%);`}
                 data-slug={event.slug}
                 data-title={event.title}
-                data-year={event.year}
                 data-location={event.location}
                 data-era={event.era}
                 data-sector={coords.sector}
@@ -198,11 +203,6 @@ const mapViewId = `universe-map-${Math.random().toString(36).substring(2,9)}`;
                   )}
                 </div>
 
-                <!-- Year Label -->
-                <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs font-bold text-cyan-300 bg-black/70 px-2 py-1 rounded backdrop-blur-sm border border-cyan-500/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {event.year}
-                </div>
-
                 <!-- Location Name -->
                 <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 text-xs font-medium text-white bg-black/80 px-2 py-1 rounded backdrop-blur-sm border border-purple-500/30 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                   {event.location}
@@ -221,7 +221,6 @@ const mapViewId = `universe-map-${Math.random().toString(36).substring(2,9)}`;
           <div class="flex-1">
             <h3 class="font-bold text-cyan-400 text-lg" id="info-title"></h3>
             <div class="flex items-center gap-3 mt-1">
-              <span class="text-purple-300 font-medium" id="info-year"></span>
               <span class="text-orange-300 text-sm" id="info-location"></span>
               <span class="text-xs px-2 py-1 rounded-full bg-gradient-to-r from-purple-600 to-pink-600" id="info-era"></span>
             </div>
@@ -328,7 +327,7 @@ const mapViewId = `universe-map-${Math.random().toString(36).substring(2,9)}`;
         return;
       }
       
-      const coords = getUniverseCoordinates(event.location, event.year);
+      const coords = getUniverseCoordinates(event.location, event.era);
       const sectorNames = {
         'inner-core': 'Inner Core Sector',
         'mid-rim': 'Mid Rim Territory', 
@@ -338,7 +337,6 @@ const mapViewId = `universe-map-${Math.random().toString(36).substring(2,9)}`;
       };
       
       rootElement.querySelector('#info-title').textContent = event.title;
-      rootElement.querySelector('#info-year').textContent = event.year;
       rootElement.querySelector('#info-location').textContent = event.location;
       rootElement.querySelector('#info-era').textContent = event.era || 'Unknown Era';
       rootElement.querySelector('#info-description').textContent = event.description;
@@ -358,17 +356,23 @@ const mapViewId = `universe-map-${Math.random().toString(36).substring(2,9)}`;
     }
     
     // Helper function to get coordinates (matches Astro component)
-    function getUniverseCoordinates(location, year) {
+    function getUniverseCoordinates(location, era = 'unknown') {
       if (!location) return { x: 50, y: 50, sector: 'unknown' };
       
       const locationHash = [...location].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 1000, 0);
-      const yearFactor = year % 100;
+      const eraHash = [...era].reduce((h, c) => (h * 17 + c.charCodeAt(0)) % 100, 0);
       
-      const sector = year < 2050 ? 'inner-core' : 
-                    year < 2100 ? 'mid-rim' : 
-                    year < 2200 ? 'outer-rim' : 'frontier';
+      const eraToSector = {
+        'pre-war': 'inner-core',
+        'war': 'mid-rim',
+        'post-war': 'outer-rim',
+        'reconstruction': 'frontier',
+        'unknown': 'unknown'
+      };
       
-      const angle = (locationHash + yearFactor) * 0.1;
+      const sector = eraToSector[era.toLowerCase()] || 'frontier';
+      
+      const angle = (locationHash + eraHash) * 0.1;
       const radius = 20 + (locationHash % 60);
       
       const x = 50 + (Math.cos(angle) * radius * 0.8);
@@ -410,7 +414,6 @@ const mapViewId = `universe-map-${Math.random().toString(36).substring(2,9)}`;
         const slug = location.dataset.slug;
         const eventData = {
           title: location.dataset.title,
-          year: parseInt(location.dataset.year),
           location: location.dataset.location,
           era: location.dataset.era,
           description: 'Loading event details...', // You might want to pass full event data
@@ -494,7 +497,6 @@ const mapViewId = `universe-map-${Math.random().toString(36).substring(2,9)}`;
         if (selectedLocation) {
           const eventData = {
             title: selectedLocation.dataset.title,
-            year: parseInt(selectedLocation.dataset.year),
             location: selectedLocation.dataset.location,
             era: selectedLocation.dataset.era,
             description: 'Event details...',
