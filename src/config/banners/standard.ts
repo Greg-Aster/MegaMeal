@@ -190,7 +190,7 @@ export const bannerList: BannerItem[] = [
 export const bannerLinks: (string | null)[] = [
   '',         // no for video banner (ComfyUI_00010_.webm)
   '/posts/explainer/',         // Link for video banner (ComfyUI_00010_.webm)
-  '',                // Link for video banner3 (cookbook.webm)  
+  '/posts/cookbook/cookbook-index/',                // Link for video banner3 (cookbook.webm)  
   '',                 // Link for banner4 (0003.png)
   null,                        // No link for banner4 (0004.png)
   '/contact',                  // Link for banner5 (0005.png)
