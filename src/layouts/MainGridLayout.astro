@@ -663,7 +663,7 @@ if (post && post.data) {
     initializeBannerAnimation();
     initializeParallaxEffect();
     initializeEventListeners();
-    initializeCookbookFeatures(); // Add this line
+    initializeSpecialPageFeatures(); // Updated to handle both cookbook and first-contact pages
 
   });
 
@@ -838,44 +838,49 @@ if (post && post.data) {
       bannerAnimation?: BannerAnimationAPI;
     }
   }
-  
-// REPLACE the massive cookbook script with this simple version
-// Add this to your MainGridLayout.astro script section
+// REPLACE the existing initializeCookbookFeatures function and related code with this updated version
 
 /**
- * SIMPLE COOKBOOK FUNCTIONALITY - JUST WHAT WORKS
+ * FULLSCREEN FUNCTIONALITY FOR SPECIAL PAGES (cookbook and first-contact)
  */
- function initializeCookbookFeatures() {
-  // Only run on cookbook pages
-  if (!window.location.pathname.includes('cookbook')) {
-    // If NOT on cookbook page, restore normal state
+ function initializeSpecialPageFeatures() {
+  const currentPath = window.location.pathname;
+  const isCookbookPage = currentPath.includes('cookbook');
+  const isFirstContactPage = currentPath.includes('first-contact');
+  const isSpecialPage = isCookbookPage || isFirstContactPage;
+  
+  if (!isSpecialPage) {
+    // If NOT on a special page, restore normal state
     restoreNormalState();
     return;
   }
   
-  console.log('Cookbook page detected, enabling features');
+  const pageType = isCookbookPage ? 'cookbook' : 'first-contact';
+  console.log(`${pageType} page detected, enabling fullscreen features`);
   
-  // Save original state ONCE when first visiting any cookbook page
-  if (!localStorage.getItem('cookbookOriginalState')) {
+  // Save original state ONCE when first visiting any special page
+  if (!localStorage.getItem('specialPageOriginalState')) {
     const originalState = localStorage.getItem('fullscreenMode') === 'true';
-    localStorage.setItem('cookbookOriginalState', originalState.toString());
+    localStorage.setItem('specialPageOriginalState', originalState.toString());
     console.log('Saved original fullscreen state:', originalState);
   }
   
-  // Enable fullscreen for cookbook
+  // Enable fullscreen for special pages
   localStorage.setItem('fullscreenMode', 'true');
   localStorage.setItem('fullscreenBannerOverride', 'true');
   document.body.classList.add('force-mobile-view');
   
-  // Initialize view toggle
-  initializeViewToggle();
+  // Initialize view toggle (only for cookbook pages)
+  if (isCookbookPage) {
+    initializeViewToggle();
+  }
 }
 
 /**
  * Restore the user's original fullscreen preference
  */
 function restoreNormalState() {
-  const originalState = localStorage.getItem('cookbookOriginalState');
+  const originalState = localStorage.getItem('specialPageOriginalState');
   
   if (originalState !== null) {
     const wasOriginallyFullscreen = originalState === 'true';
@@ -893,7 +898,7 @@ function restoreNormalState() {
 }
 
 /**
- * Simple view toggle for cookbook pages
+ * Simple view toggle for cookbook pages only
  */
 function initializeViewToggle() {
   const galleryBtn = document.getElementById('gallery-view-btn');
@@ -940,9 +945,9 @@ function initializeViewToggle() {
 }
 
 // Debug helper to reset everything
-window.resetCookbookState = function() {
-  localStorage.removeItem('cookbookOriginalState');
+window.resetSpecialPageState = function() {
+  localStorage.removeItem('specialPageOriginalState');
   localStorage.removeItem('cookbookView');
-  console.log('Cookbook state reset. Refresh page to test.');
+  console.log('Special page state reset. Refresh page to test.');
 };
 </script>
