@@ -35,6 +35,11 @@ console.log('SLUG PAGE - bannerType value (from post.data.bannerType):', bannerT
 console.log('SLUG PAGE - Condition for rendering Bleepy (bannerTypeCtx === "assistant"):', bannerTypeCtx === 'assistant');
 console.log('SLUG PAGE - shouldRenderAssistantBleepy:', shouldRenderAssistantBleepy);
 console.log('SLUG PAGE - hasMascotContext:', hasMascotContext);
+
+// Extract backgroundImage from frontmatter for dynamic background support
+const backgroundImage = post.data.backgroundImage;
+console.log('SLUG PAGE - backgroundImage from frontmatter:', backgroundImage);
+
 const { Content, headings } = await post.render()
 
 const { remarkPluginFrontmatter } = await post.render()
@@ -66,6 +71,7 @@ const jsonLd = {
   bannerLink={post.data.bannerLink}
   isPostPage={true}
   pageMascotContext={mascotCtx}
+  backgroundImage={backgroundImage}
 >
 
 <!-- Add these meta tags for better date extraction -->
