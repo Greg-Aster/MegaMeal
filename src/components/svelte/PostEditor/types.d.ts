@@ -1,6 +1,7 @@
 // Post-related types
 interface PostAdvancedOptions {
     avatarImage: string;
+    backgroundImage: string;
     authorName: string;
     authorBio: string;
     showImageOnPost: boolean;
@@ -65,6 +66,7 @@ interface PostAdvancedOptions {
     category?: string;
     draft?: boolean;
     avatarImage?: string;
+    backgroundImage?: string;
     authorName?: string;
     authorBio?: string;
     showImageOnPost?: boolean;

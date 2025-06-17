@@ -112,6 +112,7 @@ export type LIGHT_DARK_MODE =
     nextTitle?: string
     nextSlug?: string
     bannerLink?: string
+    backgroundImage?: string // DYNAMIC BACKGROUND IMAGE SUPPORT
 
     // Timeline-specific fields
     timelineYear?: string
@@ -119,7 +120,7 @@ export type LIGHT_DARK_MODE =
     isKeyEvent?: boolean
     timelineLocation?: string
     // Banner configuration
-    bannerType?: 'image' | 'video' | 'timeline'
+    bannerType?: 'image' | 'video' | 'timeline' | 'assistant' // Added 'assistant' type
     bannerData?: {
       videoId?: string       // For video banners
       imageUrl?: string      // For image banners (add this)

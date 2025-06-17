@@ -18,12 +18,13 @@ BANNER TYPES SUPPORTED:
 
 MAIN FEATURES:
 - Responsive banner system with mobile/desktop sizing
-- Parallax background effects (optional)
+- Parallax background effects (optional) with dynamic background image support
 - Automatic banner type detection from post frontmatter
 - Unified content grid layout with sidebar and main content
 - Table of Contents (TOC) positioning
 - Back-to-top functionality
 - Bleepy mascot integration
+- Dynamic background image system supporting post-specific backgrounds
 
 PROPS INTERFACE:
 - title: Page title
@@ -34,11 +35,18 @@ PROPS INTERFACE:
 - bannerLink: Optional link for banner clicks
 - isPostPage: Boolean flag for post-specific behavior
 - pageMascotContext: Context data for Bleepy mascot
+- backgroundImage: Dynamic background image override (NEW)
 
 CONFIGURATION:
 ALL banner behavior is controlled through banner.config.ts
 That file is the single source of truth for banner configuration.
 Modify banner.config.ts to change banner types, animation speed, sizing, etc.
+
+BACKGROUND IMAGE SYSTEM:
+- Supports dynamic background images from post frontmatter
+- Falls back to config default when no backgroundImage specified
+- Supports "none" or empty string to disable background
+- Works with parallax scrolling system
 
 MAINTENANCE NOTES:
 - All banner logic is centralized in banner.config.ts
@@ -114,6 +122,7 @@ interface Props {
   bannerLink?: string          // Optional link for banner clicks
   isPostPage?: boolean         // Flag for post-specific behavior
   pageMascotContext?: string;  // Context data for Bleepy mascot
+  backgroundImage?: string | null; // NEW: Dynamic background image override
 }
 
 // =====================================================================
@@ -129,12 +138,53 @@ const {
   headings = [], 
   post,
   bannerLink = '',
-  isPostPage = false
+  isPostPage = false,
+  backgroundImage // NEW: Extract backgroundImage prop
 } = Astro.props
 
 // Debug logging for development
 console.log('MAIN_GRID_LAYOUT - isPostPage prop received:', Astro.props.isPostPage);
 console.log('MAIN_GRID_LAYOUT - pageMascotContext prop received:', Astro.props.pageMascotContext);
+console.log('MAIN_GRID_LAYOUT - backgroundImage prop received:', backgroundImage);
+
+// =====================================================================
+// DYNAMIC BACKGROUND IMAGE LOGIC
+// =====================================================================
+// Determine which background image to use based on prop priority
+
+const getDynamicBackgroundImage = () => {
+  // If backgroundImage is explicitly "none" or empty string, return null (no background)
+  if (backgroundImage === "none" || backgroundImage === "") {
+    console.log('MAIN_GRID_LAYOUT - Background disabled via backgroundImage prop');
+    return null;
+  }
+  
+  // If backgroundImage is provided and not "none", use it
+  if (backgroundImage) {
+    console.log('MAIN_GRID_LAYOUT - Using custom backgroundImage:', backgroundImage);
+    return backgroundImage;
+  }
+  
+  // Fall back to config default if site banner is enabled
+  if (siteConfig.banner.enable && siteConfig.banner.src) {
+    console.log('MAIN_GRID_LAYOUT - Using config default background:', siteConfig.banner.src);
+    return siteConfig.banner.src;
+  }
+  
+  // No background available
+  console.log('MAIN_GRID_LAYOUT - No background image available');
+  return null;
+};
+
+const currentBackgroundImage = getDynamicBackgroundImage();
+const shouldShowParallaxBackground = currentBackgroundImage && siteConfig.banner.enable && bannerConfig.parallax.enabled;
+
+console.log('MAIN_GRID_LAYOUT - Final background image decision:', {
+  currentBackgroundImage,
+  shouldShowParallaxBackground,
+  siteConfigBannerEnable: siteConfig.banner.enable,
+  parallaxEnabled: bannerConfig.parallax.enabled
+});
 
 // =====================================================================
 // BANNER CONFIGURATION PROCESSING - SINGLE SOURCE OF TRUTH
@@ -219,16 +269,16 @@ if (post && post.data) {
 >
 
   <!-- =============================================================== -->
-  <!-- PARALLAX BACKGROUND SECTION                                   -->
+  <!-- PARALLAX BACKGROUND SECTION - NOW WITH DYNAMIC SUPPORT        -->
   <!-- =============================================================== -->
-  <!-- Optional parallax scrolling background (controlled by site config) -->
-  {siteConfig.banner.enable && bannerConfig.parallax.enabled && 
+  <!-- Optional parallax scrolling background with dynamic image support -->
+  {shouldShowParallaxBackground && 
     <div id="parallax-banner" class="fixed top-0 left-0 w-full h-screen z-[-1] overflow-hidden">
       <ImageWrapper 
         id="parallax-image" 
         alt="Site background image" 
         class="parallax-bg object-cover w-full h-[120vh]"
-        src={siteConfig.banner.src} 
+        src={currentBackgroundImage} 
         position={siteConfig.banner.position || 'center'}
       />
       {/* Optional image credit display */}

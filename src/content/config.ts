@@ -19,11 +19,12 @@ const postsCollection = defineCollection({
     showImageOnPost: z.boolean().optional(),
     mascotContext: z.string().optional(),
 
-    
+    // DYNAMIC BACKGROUND IMAGE SUPPORT - Add this field
+    backgroundImage: z.string().optional(),
+
     // Add bannerType field
     bannerType: z.enum(['image', 'video', 'timeline', 'assistant']).optional(),
     bannerLink: z.string().optional(),// for image banners link
-
 
     // Banner data
     bannerData: z.object({
