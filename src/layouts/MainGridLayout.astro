@@ -1,78 +1,7 @@
-<!--
-=====================================================================
-MAIN GRID LAYOUT COMPONENT (MainGridLayout.astro)
-=====================================================================
-
-PURPOSE:
-This is the primary layout component that handles all banner types and 
-organizes the main content structure for the website. It provides a 
-unified interface for displaying different types of banners and content.
-
-BANNER TYPES SUPPORTED:
-- Standard: Animated cycling through multiple images (default)
-- Video: YouTube video embeds in banners
-- Image: Static single images with optional links
-- Timeline: Interactive timeline displays
-- Assistant: AI assistant (Bleepy) interactive banners
-- None: No banner (minimal spacing)
-
-MAIN FEATURES:
-- Responsive banner system with mobile/desktop sizing
-- Parallax background effects (optional) with dynamic background image support
-- Automatic banner type detection from post frontmatter
-- Unified content grid layout with sidebar and main content
-- Table of Contents (TOC) positioning
-- Back-to-top functionality
-- Bleepy mascot integration
-- Dynamic background image system supporting post-specific backgrounds
-
-PROPS INTERFACE:
-- title: Page title
-- banner: Banner image URL (fallback)
-- description: Page description
-- headings: Array of headings for TOC generation
-- post: Post data object (contains banner configuration)
-- bannerLink: Optional link for banner clicks
-- isPostPage: Boolean flag for post-specific behavior
-- pageMascotContext: Context data for Bleepy mascot
-- backgroundImage: Dynamic background image override (NEW)
-
-CONFIGURATION:
-ALL banner behavior is controlled through banner.config.ts
-That file is the single source of truth for banner configuration.
-Modify banner.config.ts to change banner types, animation speed, sizing, etc.
-
-BACKGROUND IMAGE SYSTEM:
-- Supports dynamic background images from post frontmatter
-- Falls back to config default when no backgroundImage specified
-- Supports "none" or empty string to disable background
-- Works with parallax scrolling system
-
-MAINTENANCE NOTES:
-- All banner logic is centralized in banner.config.ts
-- Debug logging is available in browser console for banner animation
-- Performance optimizations include animation pausing when tab is hidden
-- CSS variables are used for responsive design and easy theming
-
-DEPENDENCIES:
-- banner.config.ts: Single source of truth for all banner configuration
-- Timeline components: For timeline banner functionality  
-- Bleepy components: For assistant banner functionality
-- Various utility components (Navbar, Footer, TOC, etc.)
-
-DEBUGGING:
-Check browser console for banner animation debug messages:
-- "Banner animation: Found X banner images"
-- "Banner animation: Started with Xms interval"
-Use window.bannerAnimation.start/stop/next() for manual control
-=====================================================================
--->
-
 ---
 // =====================================================================
-// COMPONENT IMPORTS
+// COMPONENT IMPORTS - CLEAN AND SIMPLE
 // =====================================================================
-// Import all necessary components and utilities
 import Footer from '@components/Footer.astro'
 import Navbar from '@components/Navbar.astro'
 import BackToTop from '@components/control/BackToTop.astro'
@@ -88,23 +17,18 @@ import TimelineController from '../components/timeline/TimelineBanner.astro';
 import '../styles/timeline-styles.css';
 import '../styles/banner-styles.css';
 
-
 // Bleepy (AI Assistant) related imports
 import Bleepy from '@components/bleepy/Bleepy.astro';
 import BleepyBanner from '@components/bleepy/BleepyBanner.astro';
 
-// Banner configuration - ALL banner logic is now in banner.config.ts
+// Banner configuration - ONLY import what works in Astro frontmatter
 import {
   bannerConfig,
   determineBannerConfiguration,
-  getResponsiveBannerDimensions,
   getFallbackBannerCSS,
   getBannerAnimationSettings,
   getBannerLink,
-  hasAnyBannerLinks,
-  getLinkPreviewData,
-  getIconSVG,
-  getPageSpecificOverlap // Import getPageSpecificOverlap
+  getPageSpecificOverlap
 } from '../config/banner.config';
 
 // =====================================================================
@@ -113,16 +37,16 @@ import {
 
 interface Props {
   title?: string
-  banner?: string              // Fallback banner image URL
+  banner?: string              
   description?: string
   lang?: string
   setOGTypeArticle?: boolean
-  headings?: MarkdownHeading[] // For TOC generation
-  post?: any                   // Post data object (contains banner configuration)
-  bannerLink?: string          // Optional link for banner clicks
-  isPostPage?: boolean         // Flag for post-specific behavior
-  pageMascotContext?: string;  // Context data for Bleepy mascot
-  backgroundImage?: string | null; // NEW: Dynamic background image override
+  headings?: MarkdownHeading[] 
+  post?: any                   
+  bannerLink?: string          
+  isPostPage?: boolean         
+  pageMascotContext?: string;  
+  backgroundImage?: string | null; 
 }
 
 // =====================================================================
@@ -131,7 +55,7 @@ interface Props {
 
 const { 
   title, 
-  banner = siteConfig.banner.src, // Use site default if no banner provided
+  banner = siteConfig.banner.src,
   description, 
   lang, 
   setOGTypeArticle, 
@@ -139,60 +63,35 @@ const {
   post,
   bannerLink = '',
   isPostPage = false,
-  backgroundImage // NEW: Extract backgroundImage prop
+  backgroundImage 
 } = Astro.props
-
-// Debug logging for development
-console.log('MAIN_GRID_LAYOUT - isPostPage prop received:', Astro.props.isPostPage);
-console.log('MAIN_GRID_LAYOUT - pageMascotContext prop received:', Astro.props.pageMascotContext);
-console.log('MAIN_GRID_LAYOUT - backgroundImage prop received:', backgroundImage);
 
 // =====================================================================
 // DYNAMIC BACKGROUND IMAGE LOGIC
 // =====================================================================
-// Determine which background image to use based on prop priority
 
 const getDynamicBackgroundImage = () => {
-  // If backgroundImage is explicitly "none" or empty string, return null (no background)
   if (backgroundImage === "none" || backgroundImage === "") {
-    console.log('MAIN_GRID_LAYOUT - Background disabled via backgroundImage prop');
     return null;
   }
-  
-  // If backgroundImage is provided and not "none", use it
   if (backgroundImage) {
-    console.log('MAIN_GRID_LAYOUT - Using custom backgroundImage:', backgroundImage);
     return backgroundImage;
   }
-  
-  // Fall back to config default if site banner is enabled
   if (siteConfig.banner.enable && siteConfig.banner.src) {
-    console.log('MAIN_GRID_LAYOUT - Using config default background:', siteConfig.banner.src);
     return siteConfig.banner.src;
   }
-  
-  // No background available
-  console.log('MAIN_GRID_LAYOUT - No background image available');
   return null;
 };
 
 const currentBackgroundImage = getDynamicBackgroundImage();
 const shouldShowParallaxBackground = currentBackgroundImage && siteConfig.banner.enable && bannerConfig.parallax.enabled;
 
-console.log('MAIN_GRID_LAYOUT - Final background image decision:', {
-  currentBackgroundImage,
-  shouldShowParallaxBackground,
-  siteConfigBannerEnable: siteConfig.banner.enable,
-  parallaxEnabled: bannerConfig.parallax.enabled
-});
-
 // =====================================================================
-// BANNER CONFIGURATION PROCESSING - SINGLE SOURCE OF TRUTH
+// BANNER CONFIGURATION PROCESSING
 // =====================================================================
-// ALL banner logic is now handled by banner.config.ts functions
 
-// Determine current page type for page-specific overlaps
-let currentPageType = 'default'; // Fallback
+// Determine current page type
+let currentPageType = 'default';
 const currentPath = Astro.url.pathname;
 
 if (currentPath === '/' || currentPath === '/home/') {
@@ -204,12 +103,11 @@ if (currentPath === '/' || currentPath === '/home/') {
 } else if (currentPath.startsWith('/about/')) {
   currentPageType = 'about';
 }
-// Add other page type checks as needed, e.g., for 'cookbook', 'reviews' if they have specific overlaps
 
-// Get complete banner configuration from banner.config.ts, now passing pageType
+// Get banner configuration
 const bannerConfiguration = determineBannerConfiguration(post, currentPageType, bannerLink);
 
-// Destructure the configuration for easy access
+// Destructure the configuration
 const {
   postData,
   bannerType,
@@ -219,7 +117,7 @@ const {
   currentBannerType
 } = bannerConfiguration;
 
-// Destructure banner type flags for template use
+// Destructure banner type flags
 const {
   hasTimelineBanner,
   hasVideoBanner,
@@ -230,20 +128,19 @@ const {
   isStandardPage
 } = bannerType;
 
-// Destructure layout values
+// Destructure layout values - SIMPLIFIED
 const {
   mainPanelTop,
   navbarSpacing,
   bannerHeight: BANNER_HEIGHT,
   bannerOverlap: BANNER_OVERLAP,
   mainContentOffset,
-  dynamicOverlap // Destructure the new dynamicOverlap
+  dynamicOverlap
 } = layout;
 
 // =====================================================================
-// BLEEPY (AI ASSISTANT) CONTEXT SETUP
+// BLEEPY CONTEXT SETUP
 // =====================================================================
-// Prepare context data for the Bleepy mascot if post data is available
 
 let contextForBleepy = null;
 if (post && post.data) {
@@ -269,9 +166,8 @@ if (post && post.data) {
 >
 
   <!-- =============================================================== -->
-  <!-- PARALLAX BACKGROUND SECTION - NOW WITH DYNAMIC SUPPORT        -->
+  <!-- PARALLAX BACKGROUND SECTION                                   -->
   <!-- =============================================================== -->
-  <!-- Optional parallax scrolling background with dynamic image support -->
   {shouldShowParallaxBackground && 
     <div id="parallax-banner" class="fixed top-0 left-0 w-full h-screen z-[-1] overflow-hidden">
       <ImageWrapper 
@@ -281,7 +177,6 @@ if (post && post.data) {
         src={currentBackgroundImage} 
         position={siteConfig.banner.position || 'center'}
       />
-      {/* Optional image credit display */}
       {siteConfig.banner.credit?.enable && 
         <div class="absolute bottom-4 right-4 text-white/50 text-xs bg-black/30 px-2 py-1 rounded">
           {siteConfig.banner.credit.text && 
@@ -291,7 +186,6 @@ if (post && post.data) {
           }
         </div>
       }
-      <!-- Optional overlay for better text readability -->
       <div class="absolute inset-0 bg-gradient-to-b from-black/20 to-black/50 pointer-events-none"></div>
     </div>
   }
@@ -299,7 +193,6 @@ if (post && post.data) {
   <!-- =============================================================== -->
   <!-- NAVIGATION BAR SECTION                                        -->
   <!-- =============================================================== -->
-  <!-- Fixed navigation bar that stays at the top -->
   <slot slot="head" name="head"></slot>
   <div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:px-4 mx-auto">
     <div id="navbar-wrapper" class="pointer-events-auto sticky top-0 transition-all">
@@ -307,419 +200,337 @@ if (post && post.data) {
     </div>
   </div>
 
-<!-- =============================================================== -->
-<!-- UNIFIED BANNER CONTAINER                                       -->
-<!-- =============================================================== -->
-<!-- This container handles ALL banner types in one unified system  -->
-<!-- Banner type is determined by banner.config.ts                  -->
-<div id="banner-container" 
-  class={`z-10 w-full relative transition-all duration-500
-    ${hasTimelineBanner ? 'has-timeline-banner' : ''}
-    ${hasVideoBanner ? 'has-video-banner' : ''}
-    ${hasImageBanner ? 'has-image-banner' : ''}
-    ${hasAssistantBanner ? 'has-assistant-banner' : ''}
-    ${hasStandardBanner ? 'has-standard-banner' : ''}
-    ${hasTimelineBanner || hasAssistantBanner ? '' : 'overflow-hidden'}`}
-  style={`margin-top: ${navbarSpacing};`}
->
+  <!-- =============================================================== -->
+  <!-- UNIFIED BANNER CONTAINER - PROPER HIERARCHY                   -->
+  <!-- =============================================================== -->
+  <div id="banner-container" 
+    class={`z-10 w-full relative transition-all duration-500
+      ${hasTimelineBanner ? 'has-timeline-banner' : ''}
+      ${hasVideoBanner ? 'has-video-banner' : ''}
+      ${hasImageBanner ? 'has-image-banner' : ''}
+      ${hasAssistantBanner ? 'has-assistant-banner' : ''}
+      ${hasStandardBanner ? 'has-standard-banner' : ''}`}
+    style={`margin-top: ${navbarSpacing};`}
+  >
 
-  <!-- ============================================================= -->
-  <!-- VIDEO BANNER CONTENT                                         -->
-  <!-- ============================================================= -->
-  <!-- Displays YouTube video embeds when video banner type is used -->
-  {hasVideoBanner && (
-    <div class="video-banner-content max-w-screen-2xl mx-auto px-4">
-      <div class="relative w-full pb-[56.25%] bg-black overflow-hidden shadow-lg rounded-lg">
-        <iframe
-          src={`https://www.youtube.com/embed/${hasPostBanner && post?.data?.bannerType === "video" ? post.data.bannerData.videoId : bannerDataSources.videoBannerData?.videoId}?autoplay=0&mute=0&controls=1`}
-          title="YouTube video player"
-          frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;"
-          allowfullscreen
-          class="absolute top-0 left-0 w-full h-full"
-        ></iframe>
-      </div>
-    </div>
-  )}
-
-  <!-- ============================================================= -->
-  <!-- ASSISTANT BANNER CONTENT (BLEEPY)                            -->
-  <!-- ============================================================= -->
-  <!-- Displays the AI assistant (Bleepy) when assistant banner type is used -->
-  {hasAssistantBanner && (
-    <div class="assistant-banner-content max-w-screen-2xl mx-auto px-0 py-0" style="height: 70vh;">
-      <BleepyBanner backgroundImageUrl={bannerDataSources.assistantBannerData?.imageUrl} />
-    </div>
-  )}
-
-  <!-- ============================================================= -->
-  <!-- TIMELINE BANNER CONTENT                                      -->
-  <!-- ============================================================= -->
-  <!-- Displays interactive timeline when timeline banner type is used -->
-  {hasTimelineBanner && (
-    <div class="timeline-banner-content max-w-screen-2xl mx-auto px-0 py-0">
-      <div class="timeline-banner-container">
-        <div class="timeline-banner-inner">
-          <TimelineController
-            category={hasPostBanner && post?.data?.bannerType === "timeline" ? post.data.bannerData.category : (bannerDataSources.timelineBannerData?.category || "MEGA MEAL")}
-            startYear={hasPostBanner && post?.data?.bannerType === "timeline" ? post.data.bannerData.startYear : bannerDataSources.timelineBannerData?.startYear}
-            endYear={hasPostBanner && post?.data?.bannerType === "timeline" ? post.data.bannerData.endYear : bannerDataSources.timelineBannerData?.endYear}
-            background={hasPostBanner && post?.data?.bannerType === "timeline" ? (post.data.bannerData.background || "/posts/timeline/universe.png") : (bannerDataSources.timelineBannerData?.background || "/posts/timeline/universe.png")}
-            compact={hasPostBanner && post?.data?.bannerType === "timeline" ? (post.data.bannerData.compact || false) : (bannerDataSources.timelineBannerData?.compact || false)}
-            class="timeline-banner-controller"
-            asBanner={true}
-            bannerHeight={hasPostBanner && post?.data?.bannerType === "timeline" ? (post.data.bannerData.height || "70vh") : (bannerDataSources.timelineBannerData?.height || "70vh")}
-          />
+    <!-- VIDEO BANNER -->
+    {hasVideoBanner && (
+      <div class="banner-container-video">
+        <div class="banner-aspect-container">
+          <div class="banner-content-wrapper">
+            <iframe
+              src={`https://www.youtube.com/embed/${hasPostBanner && post?.data?.bannerType === "video" ? post.data.bannerData.videoId : bannerDataSources.videoBannerData?.videoId}?autoplay=0&mute=0&controls=1`}
+              title="YouTube video player"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;"
+              allowfullscreen
+              class="absolute top-0 left-0 w-full h-full"
+            ></iframe>
+          </div>
         </div>
       </div>
-    </div>
-  )}
+    )}
 
-  <!-- ============================================================= -->
-  <!-- IMAGE BANNER CONTENT                                         -->
-  <!-- ============================================================= -->
-  <!-- Displays static images when image banner type is used        -->
-  <!-- Supports optional click-through links                        -->
-  {hasImageBanner && (
-    <div class="image-banner-content max-w-screen-2xl mx-auto px-0">
-      <div class="relative w-full overflow-hidden shadow-lg rounded-lg">
-        {/* Conditional link wrapper - only if finalBannerLink exists */}
-        {finalBannerLink ? (
-          <a 
-            href={finalBannerLink} 
-            aria-label="Banner Link" 
-            class="group block relative"
-          >
-            <div class="absolute transition pointer-events-none group-hover:bg-black/30 group-active:bg-black/50 w-full h-full z-50 flex items-center justify-center">
-              <Icon
-                name="fa6-solid:link"
-                class="transition opacity-0 scale-90 group-hover:scale-100 group-hover:opacity-100 text-white text-5xl"
-              ></Icon>
-            </div>
-            <img
-              src={hasPostBanner && post?.data?.bannerType === "image" ? (post.data.bannerData?.imageUrl || post.data.image) : (bannerDataSources.imageBannerData?.imageUrl || siteConfig.banner.src)}
-              alt={hasPostBanner ? (post.data.title || "Post banner image") : (title || "Banner image")}
-              class="w-full object-cover"
+    <!-- ASSISTANT BANNER -->
+    {hasAssistantBanner && (
+      <div class="banner-container-assistant">
+        <div class="banner-aspect-container">
+          <div class="banner-content-wrapper">
+            <BleepyBanner backgroundImageUrl={bannerDataSources.assistantBannerData?.imageUrl} />
+          </div>
+        </div>
+      </div>
+    )}
+
+    <!-- TIMELINE BANNER -->
+    {hasTimelineBanner && (
+      <div class="banner-container-timeline">
+        <div class="banner-aspect-container">
+          <div class="banner-content-wrapper">
+            <TimelineController
+              category={hasPostBanner && post?.data?.bannerType === "timeline" ? post.data.bannerData.category : (bannerDataSources.timelineBannerData?.category || "MEGA MEAL")}
+              startYear={hasPostBanner && post?.data?.bannerType === "timeline" ? post.data.bannerData.startYear : bannerDataSources.timelineBannerData?.startYear}
+              endYear={hasPostBanner && post?.data?.bannerType === "timeline" ? post.data.bannerData.endYear : bannerDataSources.timelineBannerData?.endYear}
+              background={hasPostBanner && post?.data?.bannerType === "timeline" ? (post.data.bannerData.background || "/posts/timeline/universe.png") : (bannerDataSources.timelineBannerData?.background || "/posts/timeline/universe.png")}
+              compact={hasPostBanner && post?.data?.bannerType === "timeline" ? (post.data.bannerData.compact || false) : (bannerDataSources.timelineBannerData?.compact || false)}
+              class="w-full h-full"
+              asBanner={true}
+              bannerHeight="100%"
             />
-          </a>
-        ) : (
-          <img
-            src={hasPostBanner && post?.data?.bannerType === "image" ? (post.data.bannerData?.imageUrl || post.data.image) : (bannerDataSources.imageBannerData?.imageUrl || siteConfig.banner.src)}
-            alt={hasPostBanner ? (post.data.title || "Post banner image") : (title || "Banner image")}
-            class="w-full object-cover"
-          />
-        )}
+          </div>
+        </div>
       </div>
-    </div>
-  )}
+    )}
 
-<!-- ============================================================= -->
-<!-- STANDARD ANIMATED BANNER - ENHANCED UX WITH VIDEO SUPPORT    -->
-<!-- ============================================================= -->
-<!-- All configuration and link preview data from banner.config.ts -->
-{hasStandardBanner && (
-  <div id="standard-banner-container" class="animated-banner-content max-w-screen-2xl mx-auto h-full relative" style={`height: ${BANNER_HEIGHT};`}>
-    {/* Cycle through all banner items (videos and images) from banner.config.ts */}
-    {bannerConfig.standardBannerConfig.bannerList.length > 0 ? bannerConfig.standardBannerConfig.bannerList.map((item, index) => {
-      const bannerLink = getBannerLink(index);
-      const isClickable = bannerLink !== null;
-      const isVideoItem = bannerConfig.standardBannerConfig.isVideoBannerItem(item);
-      const isImageItem = bannerConfig.standardBannerConfig.isImageBannerItem(item);
-      
-      return (
-        <div 
-          class="banner-slide absolute inset-0 w-full h-full transition-opacity"
-          style={`
-            transition-duration: ${bannerConfig.standardBannerConfig.animation.transitionDuration}ms;
-            opacity: ${index === 0 ? '1' : '0'};
-          `}
-          data-banner-index={index}
-        >
-          {/* ALL banner items get a banner-link wrapper - with or without actual links */}
-          <div
-            class="banner-link w-full h-full relative cursor-pointer group"
-            data-has-link={isClickable}
-            data-href={bannerLink}
-            aria-label={`Banner ${index + 1}${isClickable ? ' - Click to visit link' : ' - Click for information'}`}
-            role="button"
-            tabindex="0"
-          >
-            {/* BASIC hover overlay - enhanced overlays added by JavaScript */}
-            <div class="absolute inset-0 w-full h-full transition-all duration-300 opacity-0 group-hover:opacity-30 bg-black pointer-events-none z-10"></div>
-            
-            {/* BASIC click icon - enhanced preview added by JavaScript */}
-            <div class="absolute inset-0 w-full h-full flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 z-20 pointer-events-none">
-              <Icon
-                name="fa6-solid:circle-info"
-                class="text-white text-4xl drop-shadow-lg"
-              />
-            </div>
-            
-            {/* Render video or image content */}
-            {isVideoItem ? (
-              <>
-                {/* Video element */}
-                <video
-                  src={item.src}
-                  autoplay={bannerConfig.standardBannerConfig.video.autoplay}
-                  muted={bannerConfig.standardBannerConfig.video.muted}
-                  loop={bannerConfig.standardBannerConfig.video.loop}
-                  playsinline={bannerConfig.standardBannerConfig.video.playsInline}
-                  controls={bannerConfig.standardBannerConfig.video.controls}
-                  preload={item.preload || bannerConfig.standardBannerConfig.video.preload}
-                  class={`banner-video w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition} transition-transform duration-300 group-hover:scale-105`}
-                  style={`border-radius: ${bannerConfig.visual.borderRadius};`}
-                  onerror="this.style.display='none'; var ne = this.nextElementSibling; if (ne) ne.style.display='block';"
-                >
-                  Your browser does not support the video tag.
-                </video>
-                {/* Fallback image (hidden by default) */}
-                <Image
-                  src={item.fallbackImage}
-                  alt={item.alt}
-                  width={bannerConfig.layout.maxWidth}
-                  height={Math.round(bannerConfig.layout.maxWidth * 0.5625)}
-                  class={`banner-image-fallback w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition} transition-transform duration-300 group-hover:scale-105`}
-                  style={`border-radius: ${bannerConfig.visual.borderRadius}; display: none;`}
-                  loading="lazy"
+    <!-- IMAGE BANNER -->
+    {hasImageBanner && (
+      <div class="banner-container-image">
+        <div class="banner-aspect-container">
+          <div class="banner-content-wrapper">
+            {finalBannerLink ? (
+              <a 
+                href={finalBannerLink} 
+                aria-label="Banner Link" 
+                class="group block w-full h-full"
+              >
+                <div class="absolute transition pointer-events-none group-hover:bg-black/30 group-active:bg-black/50 w-full h-full z-50 flex items-center justify-center">
+                  <Icon
+                    name="fa6-solid:link"
+                    class="text-white drop-shadow-lg"
+                    style="font-size: clamp(2rem, 4vw, 4rem);"
+                  ></Icon>
+                </div>
+                <img
+                  src={hasPostBanner && post?.data?.bannerType === "image" ? (post.data.bannerData?.imageUrl || post.data.image) : (bannerDataSources.imageBannerData?.imageUrl || siteConfig.banner.src)}
+                  alt={hasPostBanner ? (post.data.title || "Post banner image") : (title || "Banner image")}
+                  class="w-full h-full object-cover"
                 />
-              </>
-            ) : isImageItem ? (
-              <Image
-                src={item.src}
-                alt={item.alt}
-                width={bannerConfig.layout.maxWidth}
-                height={Math.round(bannerConfig.layout.maxWidth * 0.5625)}
-                class={`banner-image w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition} transition-transform duration-300 group-hover:scale-105`}
-                style={`border-radius: ${bannerConfig.visual.borderRadius};`}
-                loading={index === 0 ? 'eager' : 'lazy'}
+              </a>
+            ) : (
+              <img
+                src={hasPostBanner && post?.data?.bannerType === "image" ? (post.data.bannerData?.imageUrl || post.data.image) : (bannerDataSources.imageBannerData?.imageUrl || siteConfig.banner.src)}
+                alt={hasPostBanner ? (post.data.title || "Post banner image") : (title || "Banner image")}
+                class="w-full h-full object-cover"
               />
-            ) : null}
+            )}
           </div>
         </div>
-      );
-    }) : (
-      <!-- Fallback display when no banner items are available -->
-      <div class="w-full h-full rounded-lg" style={`background: ${getFallbackBannerCSS()};`}></div>
+      </div>
     )}
-    
-    <!-- Optional gradient overlay for better text readability -->
-    {bannerConfig.visual.applyGradientOverlay && (
-      <div class="absolute inset-0 w-full h-full pointer-events-none" style={`background: ${bannerConfig.visual.gradientOverlay}; border-radius: ${bannerConfig.visual.borderRadius};`}></div>
+
+    <!-- STANDARD BANNER - FIXED HIERARCHY -->
+    {hasStandardBanner && (
+      <div class="banner-container-standard">
+        <div class="banner-aspect-container">
+          <div class="banner-content-wrapper">
+            <div id="standard-banner-container">
+              {bannerConfig.standardBannerConfig.bannerList.length > 0 ? bannerConfig.standardBannerConfig.bannerList.map((item, index) => {
+                const bannerLink = getBannerLink(index);
+                const isClickable = bannerLink !== null;
+                const isVideoItem = bannerConfig.standardBannerConfig.isVideoBannerItem(item);
+                const isImageItem = bannerConfig.standardBannerConfig.isImageBannerItem(item);
+                
+                return (
+                  <div 
+                    class="banner-slide absolute inset-0 w-full h-full transition-opacity"
+                    style={`
+                      transition-duration: ${bannerConfig.standardBannerConfig.animation.transitionDuration}ms;
+                      opacity: ${index === 0 ? '1' : '0'};
+                    `}
+                    data-banner-index={index}
+                  >
+                    <div
+                      class="banner-link group w-full h-full relative cursor-pointer"
+                      data-has-link={isClickable}
+                      data-href={bannerLink}
+                      aria-label={`Banner ${index + 1}${isClickable ? ' - Click to visit link' : ' - Click for information'}`}
+                      role="button"
+                      tabindex="0"
+                    >
+                      <div class="absolute inset-0 w-full h-full transition-all duration-300 opacity-0 group-hover:opacity-30 bg-black pointer-events-none z-10"></div>
+                      
+                      <div class="absolute inset-0 w-full h-full flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 z-20 pointer-events-none">
+                        <Icon
+                          name="fa6-solid:circle-info"
+                          class="text-white drop-shadow-lg"
+                          style="font-size: clamp(2rem, 4vw, 4rem);"
+                        />
+                      </div>
+                      
+                      {isVideoItem ? (
+                        <>
+                          <video
+                            src={item.src}
+                            autoplay={bannerConfig.standardBannerConfig.video.autoplay}
+                            muted={bannerConfig.standardBannerConfig.video.muted}
+                            loop={bannerConfig.standardBannerConfig.video.loop}
+                            playsinline={bannerConfig.standardBannerConfig.video.playsInline}
+                            controls={bannerConfig.standardBannerConfig.video.controls}
+                            preload={item.preload || bannerConfig.standardBannerConfig.video.preload}
+                            class={`banner-video w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition} transition-transform duration-300 group-hover:scale-105`}
+                            style={`border-radius: ${bannerConfig.visual.borderRadius};`}
+                            onerror="this.style.display='none'; var ne = this.nextElementSibling; if (ne) ne.style.display='block';"
+                          >
+                            Your browser does not support the video tag.
+                          </video>
+                          <Image
+                            src={item.fallbackImage}
+                            alt={item.alt}
+                            width={bannerConfig.layout.maxWidth}
+                            height={Math.round(bannerConfig.layout.maxWidth * 0.5625)}
+                            class={`banner-image-fallback w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition} transition-transform duration-300 group-hover:scale-105`}
+                            style={`border-radius: ${bannerConfig.visual.borderRadius}; display: none;`}
+                            loading="lazy"
+                          />
+                        </>
+                      ) : isImageItem ? (
+                        <Image
+                          src={item.src}
+                          alt={item.alt}
+                          width={bannerConfig.layout.maxWidth}
+                          height={Math.round(bannerConfig.layout.maxWidth * 0.5625)}
+                          class={`banner-image w-full h-full object-${bannerConfig.visual.objectFit} object-${bannerConfig.visual.objectPosition} transition-transform duration-300 group-hover:scale-105`}
+                          style={`border-radius: ${bannerConfig.visual.borderRadius};`}
+                          loading={index === 0 ? 'eager' : 'lazy'}
+                        />
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              }) : (
+                <div class="w-full h-full rounded-lg" style={`background: ${getFallbackBannerCSS()};`}></div>
+              )}
+              
+              {bannerConfig.visual.applyGradientOverlay && (
+                <div class="absolute inset-0 w-full h-full pointer-events-none" style={`background: ${bannerConfig.visual.gradientOverlay}; border-radius: ${bannerConfig.visual.borderRadius};`}></div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     )}
   </div>
-)}
-</div>
 
-<!-- =============================================================== -->
-<!-- MAIN CONTENT WRAPPER                                           -->
-<!-- =============================================================== -->
-<!-- Contains the main grid layout with sidebar and content area    -->
-<!-- Main content offset is controlled by banner.config.ts          -->
-<div class={`w-full z-30 pointer-events-none relative`}>
-  <div id="main-panel-wrapper" class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto" style={`top: ${mainPanelTop}; position: relative;`}>
-    <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-[17.5rem_auto] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
-       mx-auto gap-4 px-0 md:px-4" style={`margin-top: ${mainContentOffset};`}>
-       
-      <!-- ========================================================= -->
-      <!-- SIDEBAR SECTION                                          -->
-      <!-- ========================================================= -->
-      <!-- Contains author info, navigation, and other sidebar content -->
-      <SideBar 
-        class="mb-4 row-start-2 row-end-3 col-span-2 lg:row-start-1 lg:row-end-2 lg:col-span-1 lg:max-w-[17.5rem] onload-animation" 
-        headings={headings}
-        postSlug={postData?.slug || ''}
-        customAvatar={postData?.customAvatar || ''}
-        customName={postData?.customName || ''}
-        customBio={postData?.customBio || ''}
-        pageMascotContext={Astro.props.pageMascotContext}
-      ></SideBar>
-      
-      <!-- ========================================================= -->
-      <!-- MAIN CONTENT SECTION                                     -->
-      <!-- ========================================================= -->
-      <!-- The primary content area where page/post content is displayed -->
-      <main id="main" class="transition-swup-fade col-span-2 lg:col-span-1 overflow-hidden">
-        <div id="main-content-wrapper" class="onload-animation">
-          <slot></slot>
-          <!-- Footer for large screens (hidden on mobile) -->
-          <div class="footer col-span-2 onload-animation hidden lg:block">
-            <Footer></Footer>
+  <!-- =============================================================== -->
+  <!-- MAIN CONTENT WRAPPER                                           -->
+  <!-- =============================================================== -->
+  <div class={`w-full z-30 pointer-events-none relative`}>
+    <div id="main-panel-wrapper" class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto" style={`top: ${mainPanelTop}; position: relative;`}>
+      <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-[17.5rem_auto] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
+         mx-auto gap-4 px-0 md:px-4" style={`margin-top: ${mainContentOffset};`}>
+         
+        <!-- SIDEBAR SECTION -->
+        <SideBar 
+          class="mb-4 row-start-2 row-end-3 col-span-2 lg:row-start-1 lg:row-end-2 lg:col-span-1 lg:max-w-[17.5rem] onload-animation" 
+          headings={headings}
+          postSlug={postData?.slug || ''}
+          customAvatar={postData?.customAvatar || ''}
+          customName={postData?.customName || ''}
+          customBio={postData?.customBio || ''}
+          pageMascotContext={Astro.props.pageMascotContext}
+        ></SideBar>
+        
+        <!-- MAIN CONTENT SECTION -->
+        <main id="main" class="transition-swup-fade col-span-2 lg:col-span-1 overflow-hidden">
+          <div id="main-content-wrapper" class="onload-animation">
+            <slot></slot>
+            <div class="footer col-span-2 onload-animation hidden lg:block">
+              <Footer></Footer>
+            </div>
           </div>
+        </main>
+        
+        <!-- Footer for mobile screens -->
+        <div class="footer col-span-2 onload-animation block lg:hidden">
+          <Footer></Footer>
         </div>
-      </main>
-      
-      <!-- Footer for mobile screens (hidden on large screens) -->
-      <div class="footer col-span-2 onload-animation block lg:hidden">
-        <Footer></Footer>
       </div>
+
+      <BackToTop></BackToTop>
     </div>
-
-    <!-- Back to top button (floating action button) -->
-    <BackToTop></BackToTop>
   </div>
-</div>
 
-<!-- =============================================================== -->
-<!-- TABLE OF CONTENTS (TOC) SECTION                                -->
-<!-- =============================================================== -->
-<!-- Fixed position TOC that appears on large screens only          -->
-<div class="absolute w-full z-0 hidden 2xl:block">
-  <div class="relative max-w-[var(--page-width)] mx-auto">
-    {siteConfig.toc.enable && <div id="toc-wrapper" class="hidden lg:block transition absolute top-0 -right-[var(--toc-width)] w-[var(--toc-width)] flex items-center toc-animated">
-      <div id="toc-inner-wrapper" class="fixed top-14 w-[var(--toc-width)] h-[calc(100vh_-_20rem)] overflow-y-scroll overflow-x-hidden hide-scrollbar">
-        <div id="toc" class="w-full h-full transition-swup-fade ">
-          <div class="h-8 w-full"></div>
-          <TOC headings={headings}></TOC>
-          <div class="h-8 w-full"></div>
+  <!-- =============================================================== -->
+  <!-- TABLE OF CONTENTS SECTION                                      -->
+  <!-- =============================================================== -->
+  <div class="absolute w-full z-0 hidden 2xl:block">
+    <div class="relative max-w-[var(--page-width)] mx-auto">
+      {siteConfig.toc.enable && <div id="toc-wrapper" class="hidden lg:block transition absolute top-0 -right-[var(--toc-width)] w-[var(--toc-width)] flex items-center toc-animated">
+        <div id="toc-inner-wrapper" class="fixed top-14 w-[var(--toc-width)] h-[calc(100vh_-_20rem)] overflow-y-scroll overflow-x-hidden hide-scrollbar">
+          <div id="toc" class="w-full h-full transition-swup-fade ">
+            <div class="h-8 w-full"></div>
+            <TOC headings={headings}></TOC>
+            <div class="h-8 w-full"></div>
+          </div>
         </div>
-      </div>
-    </div>}
+      </div>}
 
-    {/* TOC div must exist for Swup navigation to work properly */}
-    {!siteConfig.toc.enable && <div id="toc"></div>}
+      {!siteConfig.toc.enable && <div id="toc"></div>}
+    </div>
   </div>
-</div>
 
-<!-- =============================================================== -->
-<!-- BLEEPY (AI ASSISTANT) INTEGRATION                              -->
-<!-- =============================================================== -->
-<!-- Global Bleepy mascot and context data for AI interactions     -->
-{contextForBleepy && (
-  <div id="bleepy-page-context" style="display: none;" data-context={JSON.stringify(contextForBleepy)}></div>
-)}
-<Bleepy mascotContext={Astro.props.pageMascotContext} instanceIdentifier="LAYOUT_BLEEPY" />
+  <!-- =============================================================== -->
+  <!-- BLEEPY INTEGRATION                                             -->
+  <!-- =============================================================== -->
+  {contextForBleepy && (
+    <div id="bleepy-page-context" style="display: none;" data-context={JSON.stringify(contextForBleepy)}></div>
+  )}
+  <Bleepy mascotContext={Astro.props.pageMascotContext} instanceIdentifier="LAYOUT_BLEEPY" />
 
 </Layout>
 
+<!-- =============================================================== -->
+<!-- SIMPLIFIED CSS - BANNER SPACING ONLY                          -->
+<!-- =============================================================== -->
 <style define:vars={{
-  'banner-height': bannerConfig.layout.height.desktop,
-  'banner-height-mobile': bannerConfig.layout.height.mobile,
-  'banner-overlap': BANNER_OVERLAP,
-  'banner-overlap-mobile': bannerConfig.layout.overlap.mobile,
-  'dynamic-overlap': dynamicOverlap,
-  'navbar-height': bannerConfig.navbar.height.desktop,
-  'navbar-height-mobile': bannerConfig.navbar.height.mobile,
-  'main-content-offset': bannerConfig.layout.mainContentOffset.desktop,
-  'main-content-offset-mobile': bannerConfig.layout.mainContentOffset.mobile,
-  'standard-navbar-spacing': bannerConfig.navbar.spacing.standard,
-  'timeline-navbar-spacing': bannerConfig.navbar.spacing.timeline,
-  'video-navbar-spacing': bannerConfig.navbar.spacing.video,
-  'image-navbar-spacing': bannerConfig.navbar.spacing.image,
-  'assistant-navbar-spacing': bannerConfig.navbar.spacing.assistant,
+  'main-content-offset': mainContentOffset,
 }}>
-  /* ============================================================= */
-  /* DYNAMIC BANNER TYPE-SPECIFIC SPACING                         */
-  /* ============================================================= */
-  /* These values come from banner.config.ts and need to be here  */
-  /* because they use dynamic Astro variables                     */
-  
+  /* Banner type-specific spacing - dynamic from config */
   .has-standard-banner {
-    margin-top: var(--standard-navbar-spacing) !important;
+    margin-top: 0 !important;
   }
   
   .has-timeline-banner {
-    margin-top: var(--timeline-navbar-spacing) !important;
+    margin-top: 5.5rem !important;
   }
   
   .has-video-banner {
-    margin-top: var(--video-navbar-spacing) !important;
+    margin-top: 5.5rem !important;
   }
   
   .has-image-banner {
-    margin-top: var(--image-navbar-spacing) !important;
+    margin-top: 0 !important;
   }
   
   .has-assistant-banner {
-    margin-top: var(--assistant-navbar-spacing) !important;
+    margin-top: 5.5rem !important;
   }
 
-  /* ============================================================= */
-  /* COMPONENT-SPECIFIC RESPONSIVE OVERRIDES                      */
-  /* ============================================================= */
-  /* These override main.css with dynamic values from config      */
-  
-  /* Banner container responsive heights using dynamic variables */
-  #banner-container {
-    height: var(--banner-height);
-  }
-  
-  @media (max-width: 768px) {
-    #banner-container {
-      height: var(--banner-height-mobile);
-    }
-  }
-
-  /* Standard banner transition optimization */
-  #standard-banner-container .banner-slide {
-    transition-property: opacity;
-    transition-timing-function: ease-in-out;
-    transition-duration: var(--banner-transition-duration, 0.4s);
-  }
-  
-  /* Large screen vignette effect - uses CSS variables for consistency */
-  @media (min-width: 1921px) {
-    .animated-banner-content:after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(to right, rgba(0,0,0,0.15), transparent 10%, transparent 90%, rgba(0,0,0,0.15));
-      z-index: 1;
-      pointer-events: none;
-    }
-  }
-
-  /* ============================================================= */
-  /* MAIN CONTENT POSITIONING WITH DYNAMIC VALUES                 */
-  /* ============================================================= */
-  /* Main content offset controlled by banner.config.ts values    */
-  
+  /* Main content positioning */
   #main-grid {
-    /* Use the dynamic offset values from config */
     margin-top: var(--main-content-offset);
-  }
-  
-  @media (max-width: 768px) {
-    #main-grid {
-      margin-top: var(--main-content-offset-mobile);
-    }
-  }
-
-  /* Dynamic overlap positioning for different page types */
-  #main-panel-wrapper {
-    /* Dynamic overlap is calculated in banner.config.ts based on page type */
-    --computed-overlap: var(--dynamic-overlap);
   }
 </style>
 
+<!-- =============================================================== -->
+<!-- JAVASCRIPT - BANNER DIMENSIONS & ANIMATION                     -->
+<!-- =============================================================== -->
 <script>
-  // Import banner animation utility and configuration
-  import { createBannerAnimation, VideoLoadingState } from '@/utils/bannerAnimation'; // Added VideoLoadingState
+  import { createBannerAnimation, VideoLoadingState } from '@/utils/bannerAnimation';
   import {
     getBannerAnimationSettings,
-    // getBannerLink, // No longer passed directly
-    // getLinkPreviewData, // No longer passed directly
-    // getIconSVG, // No longer passed directly
-    bannerConfig, // Still needed for isVideoBannerItem, isImageBannerItem
-    standardBannerConfig // Import standardBannerConfig to access getBannerItemPreviewDetails
+    bannerConfig,
+    standardBannerConfig
   } from '../config/banner.config';
+
+  // ⭐ CRITICAL: Function to inject config values into CSS
+  function updateBannerDimensions() {
+    try {
+      const config = bannerConfig?.dimensions;
+      if (config) {
+        document.documentElement.style.setProperty('--banner-aspect-ratio', config.aspectRatio);
+        document.documentElement.style.setProperty('--banner-max-width', config.maxWidth);
+        document.documentElement.style.setProperty('--banner-padding', config.padding);
+        document.documentElement.style.setProperty('--banner-border-radius', config.borderRadius);
+        console.log('Banner dimensions updated from config:', config);
+      } else {
+        console.warn('Banner config dimensions not available');
+      }
+    } catch (error) {
+      console.error('Failed to set banner dimensions:', error);
+    }
+  }
 
   // Initialize everything when DOM is ready
   document.addEventListener('DOMContentLoaded', () => {
+    updateBannerDimensions();        // ⭐ CRITICAL: Set CSS variables first
     initializePageAnimations();
     initializeBannerAnimation();
     initializeParallaxEffect();
     initializeEventListeners();
-    initializeSpecialPageFeatures(); // Updated to handle both cookbook and first-contact pages
-
+    initializeSpecialPageFeatures();
   });
 
-  /**
-   * Initialize page load animations
-   */
   function initializePageAnimations() {
     updateNavbarHeight();
     
@@ -730,7 +541,6 @@ if (post && post.data) {
       }, 100 + (index * 50));
     });
     
-    // Show post image if present
     const postImage = document.getElementById('post-image');
     if (postImage) {
       setTimeout(() => {
@@ -739,21 +549,15 @@ if (post && post.data) {
     }
   }
 
-  /**
-   * Initialize banner animation using the centralized utility
-   * Much cleaner - all logic is now in the banner system!
-   */
   function initializeBannerAnimation() {
-    // Create banner animation with configuration
     const bannerController = createBannerAnimation({
       containerId: 'standard-banner-container',
       animationConfig: getBannerAnimationSettings(),
-      getBannerItemPreviewDetails: standardBannerConfig.getBannerItemPreviewDetails, // Pass the new function
-      isVideoBannerItem: bannerConfig.standardBannerConfig.isVideoBannerItem, // Keep for now
-      isImageBannerItem: bannerConfig.standardBannerConfig.isImageBannerItem  // Keep for now
+      getBannerItemPreviewDetails: standardBannerConfig.getBannerItemPreviewDetails,
+      isVideoBannerItem: bannerConfig.standardBannerConfig.isVideoBannerItem,
+      isImageBannerItem: bannerConfig.standardBannerConfig.isImageBannerItem
     });
 
-    // Initialize the animation system
     const initialized = bannerController.initialize();
     
     if (initialized) {
@@ -763,10 +567,6 @@ if (post && post.data) {
     }
   }
 
-  /**
-   * Efficient parallax effect
-   * Configuration from banner.config.ts
-   */
   function initializeParallaxEffect() {
     const parallaxBanner = document.getElementById('parallax-banner');
     if (!parallaxBanner) return;
@@ -794,7 +594,6 @@ if (post && post.data) {
       }
     });
 
-    // Fade in parallax banner after initial setup
     window.addEventListener('load', () => {
       setTimeout(() => {
         parallaxBanner.classList.add('loaded');
@@ -802,9 +601,6 @@ if (post && post.data) {
     });
   }
 
-  /**
-   * Update navbar height CSS variable
-   */
   function updateNavbarHeight() {
     const navbar = document.getElementById('navbar-wrapper');
     if (navbar) {
@@ -813,11 +609,7 @@ if (post && post.data) {
     }
   }
 
-  /**
-   * Initialize event listeners
-   */
   function initializeEventListeners() {
-    // TOC visibility on scroll
     window.addEventListener('scroll', () => {
       const scrollY = window.scrollY;
       const tocWrapper = document.querySelector('#toc-wrapper');
@@ -830,22 +622,103 @@ if (post && post.data) {
       }
     });
     
-    // Handle resize events
     window.addEventListener('resize', () => {
       updateNavbarHeight();
     });
 
-    // Apply background opacity from config if available
-    // Assuming siteConfig is globally available or attached to window elsewhere.
-    // For type safety, we should declare it if it's expected on window.
     if ((window as any).siteConfig && (window as any).siteConfig.transparency) {
       document.documentElement.style.setProperty('--bg-opacity', (window as any).siteConfig.transparency);
     }
   }
 
-  // Preserve global banner animation interface for TypeScript
-  // This should match the more complete definition in bannerAnimation.ts
-  // Unified Global API type declaration (from bannerAnimation.ts)
+  function initializeSpecialPageFeatures() {
+    const currentPath = window.location.pathname;
+    const isCookbookPage = currentPath.includes('cookbook');
+    const isFirstContactPage = currentPath.includes('first-contact');
+    const isSpecialPage = isCookbookPage || isFirstContactPage;
+    
+    if (!isSpecialPage) {
+      restoreNormalState();
+      return;
+    }
+    
+    const pageType = isCookbookPage ? 'cookbook' : 'first-contact';
+    console.log(`${pageType} page detected, enabling fullscreen features`);
+    
+    if (!localStorage.getItem('specialPageOriginalState')) {
+      const originalState = localStorage.getItem('fullscreenMode') === 'true';
+      localStorage.setItem('specialPageOriginalState', originalState.toString());
+      console.log('Saved original fullscreen state:', originalState);
+    }
+    
+    localStorage.setItem('fullscreenMode', 'true');
+    localStorage.setItem('fullscreenBannerOverride', 'true');
+    document.body.classList.add('force-mobile-view');
+    
+    if (isCookbookPage) {
+      initializeViewToggle();
+    }
+  }
+
+  function restoreNormalState() {
+    const originalState = localStorage.getItem('specialPageOriginalState');
+    
+    if (originalState !== null) {
+      const wasOriginallyFullscreen = originalState === 'true';
+      
+      if (!wasOriginallyFullscreen) {
+        localStorage.setItem('fullscreenMode', 'false');
+        localStorage.removeItem('fullscreenBannerOverride');
+        document.body.classList.remove('force-mobile-view');
+        console.log('Restored to non-fullscreen (original state)');
+      } else {
+        console.log('Keeping fullscreen (was original state)');
+      }
+    }
+  }
+
+  function initializeViewToggle() {
+    const galleryBtn = document.getElementById('gallery-view-btn');
+    const listBtn = document.getElementById('list-view-btn');
+    const galleryView = document.getElementById('gallery-view');
+    const listView = document.getElementById('list-view');
+    
+    if (!galleryBtn || !listBtn || !galleryView || !listView) return;
+    
+    const savedView = localStorage.getItem('cookbookView') || 'gallery';
+    
+    if (savedView === 'list') {
+      showListView();
+    } else {
+      showGalleryView();
+    }
+    
+    galleryBtn.addEventListener('click', () => {
+      showGalleryView();
+      localStorage.setItem('cookbookView', 'gallery');
+    });
+    
+    listBtn.addEventListener('click', () => {
+      showListView();
+      localStorage.setItem('cookbookView', 'list');
+    });
+    
+    function showGalleryView() {
+      galleryView.classList.remove('hidden');
+      listView.classList.add('hidden');
+      galleryBtn.className = "px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm";
+      listBtn.className = "px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white";
+    }
+    
+    function showListView() {
+      galleryView.classList.add('hidden');
+      listView.classList.remove('hidden');
+      listBtn.className = "px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm";
+      galleryBtn.className = "px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white";
+    }
+  }
+
+  // TypeScript interfaces for global types
   interface BannerAnimationAPI {
     start: () => void;
     stop: () => void;
@@ -860,7 +733,7 @@ if (post && post.data) {
     getTotalSlides: () => number;
     isManuallyNavigating: () => boolean;
     isVideoSlide: (index: number) => boolean;
-    getVideoLoadingState: (index: number) => VideoLoadingState; // Make sure VideoLoadingState is imported or defined
+    getVideoLoadingState: (index: number) => VideoLoadingState;
     getVideoStats: () => {
       totalVideos: number;
       loadedCount: number;
@@ -888,116 +761,11 @@ if (post && post.data) {
       bannerAnimation?: BannerAnimationAPI;
     }
   }
-// REPLACE the existing initializeCookbookFeatures function and related code with this updated version
 
-/**
- * FULLSCREEN FUNCTIONALITY FOR SPECIAL PAGES (cookbook and first-contact)
- */
- function initializeSpecialPageFeatures() {
-  const currentPath = window.location.pathname;
-  const isCookbookPage = currentPath.includes('cookbook');
-  const isFirstContactPage = currentPath.includes('first-contact');
-  const isSpecialPage = isCookbookPage || isFirstContactPage;
-  
-  if (!isSpecialPage) {
-    // If NOT on a special page, restore normal state
-    restoreNormalState();
-    return;
-  }
-  
-  const pageType = isCookbookPage ? 'cookbook' : 'first-contact';
-  console.log(`${pageType} page detected, enabling fullscreen features`);
-  
-  // Save original state ONCE when first visiting any special page
-  if (!localStorage.getItem('specialPageOriginalState')) {
-    const originalState = localStorage.getItem('fullscreenMode') === 'true';
-    localStorage.setItem('specialPageOriginalState', originalState.toString());
-    console.log('Saved original fullscreen state:', originalState);
-  }
-  
-  // Enable fullscreen for special pages
-  localStorage.setItem('fullscreenMode', 'true');
-  localStorage.setItem('fullscreenBannerOverride', 'true');
-  document.body.classList.add('force-mobile-view');
-  
-  // Initialize view toggle (only for cookbook pages)
-  if (isCookbookPage) {
-    initializeViewToggle();
-  }
-}
-
-/**
- * Restore the user's original fullscreen preference
- */
-function restoreNormalState() {
-  const originalState = localStorage.getItem('specialPageOriginalState');
-  
-  if (originalState !== null) {
-    const wasOriginallyFullscreen = originalState === 'true';
-    
-    if (!wasOriginallyFullscreen) {
-      // User wasn't originally in fullscreen, so disable it
-      localStorage.setItem('fullscreenMode', 'false');
-      localStorage.removeItem('fullscreenBannerOverride');
-      document.body.classList.remove('force-mobile-view');
-      console.log('Restored to non-fullscreen (original state)');
-    } else {
-      console.log('Keeping fullscreen (was original state)');
-    }
-  }
-}
-
-/**
- * Simple view toggle for cookbook pages only
- */
-function initializeViewToggle() {
-  const galleryBtn = document.getElementById('gallery-view-btn');
-  const listBtn = document.getElementById('list-view-btn');
-  const galleryView = document.getElementById('gallery-view');
-  const listView = document.getElementById('list-view');
-  
-  if (!galleryBtn || !listBtn || !galleryView || !listView) return;
-  
-  // Get saved preference
-  const savedView = localStorage.getItem('cookbookView') || 'gallery';
-  
-  // Apply initial state
-  if (savedView === 'list') {
-    showListView();
-  } else {
-    showGalleryView();
-  }
-  
-  // Event listeners
-  galleryBtn.addEventListener('click', () => {
-    showGalleryView();
-    localStorage.setItem('cookbookView', 'gallery');
-  });
-  
-  listBtn.addEventListener('click', () => {
-    showListView();
-    localStorage.setItem('cookbookView', 'list');
-  });
-  
-  function showGalleryView() {
-    galleryView.classList.remove('hidden');
-    listView.classList.add('hidden');
-    galleryBtn.className = "px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm";
-    listBtn.className = "px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white";
-  }
-  
-  function showListView() {
-    galleryView.classList.add('hidden');
-    listView.classList.remove('hidden');
-    listBtn.className = "px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm";
-    galleryBtn.className = "px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white";
-  }
-}
-
-// Debug helper to reset everything
-window.resetSpecialPageState = function() {
-  localStorage.removeItem('specialPageOriginalState');
-  localStorage.removeItem('cookbookView');
-  console.log('Special page state reset. Refresh page to test.');
-};
+  // Debug helper
+  window.resetSpecialPageState = function() {
+    localStorage.removeItem('specialPageOriginalState');
+    localStorage.removeItem('cookbookView');
+    console.log('Special page state reset. Refresh page to test.');
+  };
 </script>
