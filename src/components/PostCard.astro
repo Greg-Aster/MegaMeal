@@ -1,6 +1,6 @@
 ---
 // src/components/PostCard.astro
-// Updated PostCard component with mobile-friendly layout fixes
+// Updated PostCard component with flexbox layout to fix mobile overlap issues
 
 import path from 'path';
 import ImageWrapper from './misc/ImageWrapper.astro';
@@ -54,13 +54,13 @@ const timestamp = published.getTime();
 const dateStr = published.toISOString().split('T')[0];
 ---
 
-<!-- UPDATED: Horizontal layout on all screen sizes -->
+<!-- UPDATED: Horizontal layout on all screen sizes with flexbox content -->
 <div
   class:list={[
     "card-base w-full overflow-hidden relative local-post mb-6 md:mb-0",
     // All mobile sizes: horizontal layout with appropriate heights
     "flex flex-row",
-    "h-[10rem] xs:h-[11rem] sm:h-[12rem]",
+    "h-[12rem] xs:h-[13rem] sm:h-[14rem]", // Increased mobile heights for better content spacing
     // Desktop: horizontal layout with fixed height
     "md:h-[14rem]",
     config.layout.cardBorderRadius, 
@@ -72,7 +72,6 @@ const dateStr = published.toISOString().split('T')[0];
   data-post-date={dateStr}
   data-post-timestamp={timestamp}
   data-post-category={category?.toLowerCase()}
-
   data-post-image={image}
   data-post-description={description}>
   
@@ -122,11 +121,11 @@ const dateStr = published.toISOString().split('T')[0];
     </a>
   )}
 
-  <!-- CONTENT SECTION: Responsive spacing and layout -->
+  <!-- CONTENT SECTION: FLEXBOX LAYOUT - No more overlapping! -->
   <div class:list={[
-    "relative flex flex-col h-full transition-all",
+    "relative flex flex-col justify-between h-full transition-all", // KEY CHANGE: Added justify-between
     // Mobile portrait: full width with padding
-    "w-full p-4 pb-6",
+    "w-full p-4",
     // Mobile landscape: adjust for image width
     hasCover 
       ? "sm:w-3/5 sm:pl-4 sm:pr-6 sm:py-4" 
@@ -137,75 +136,80 @@ const dateStr = published.toISOString().split('T')[0];
       : "md:w-[calc(100%_-_52px_-_12px)] md:pl-9 md:pr-2 md:py-4"
   ]}>
     
-    <!-- TITLE -->
-    <a href={url}
-       class:list={[
-         "transition group w-full block font-bold mb-3 text-90",
-         "hover:text-[var(--primary)] dark:hover:text-[var(--primary)]", 
-         "active:text-[var(--title-active)] dark:active:text-[var(--title-active)]",
-         // Desktop-only: side indicator
-         "md:before:w-1 md:before:h-5 md:before:rounded-md md:before:bg-[var(--primary)]",
-         "md:before:absolute md:before:top-[35px] md:before:left-[18px] md:before:block",
-         config.styling.titleSize
-       ]}>
-      {title}
-      <!-- Desktop hover arrow -->
-      <Icon 
-        class="text-[var(--primary)] text-[2rem] transition hidden md:inline absolute translate-y-0.5 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0" 
-        name="material-symbols:chevron-right-rounded" />
-    </a>
+    <!-- TOP SECTION: Title and Metadata -->
+    <div class="flex-shrink-0">
+      <!-- TITLE -->
+      <a href={url}
+         class:list={[
+           "transition group w-full block font-bold mb-3 text-90",
+           "hover:text-[var(--primary)] dark:hover:text-[var(--primary)]", 
+           "active:text-[var(--title-active)] dark:active:text-[var(--title-active)]",
+           // Desktop-only: side indicator
+           "md:before:w-1 md:before:h-5 md:before:rounded-md md:before:bg-[var(--primary)]",
+           "md:before:absolute md:before:top-[35px] md:before:left-[18px] md:before:block",
+           config.styling.titleSize
+         ]}>
+        {title}
+        <!-- Desktop hover arrow -->
+        <Icon 
+          class="text-[var(--primary)] text-[2rem] transition hidden md:inline absolute translate-y-0.5 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0" 
+          name="material-symbols:chevron-right-rounded" />
+      </a>
 
-    <!-- METADATA - Hidden on ALL mobile devices, visible on desktop only -->
-    <div class="mb-4 hidden md:block text-sm text-black/60 dark:text-white/60 flex gap-5 items-center">
-      <time datetime={published.toISOString()}>
-        {published.toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'short', 
-          day: 'numeric' 
-        })}
-      </time>
-      {updated && config.content.showUpdateDate && (
-        <>
-          <span class="text-black/30 dark:text-white/30">•</span>
-          <span>Updated {updated.toLocaleDateString('en-US', { 
+      <!-- METADATA - Hidden on ALL mobile devices, visible on desktop only -->
+      <div class="mb-4 hidden md:block text-sm text-black/60 dark:text-white/60 flex gap-5 items-center">
+        <time datetime={published.toISOString()}>
+          {published.toLocaleDateString('en-US', { 
             year: 'numeric', 
             month: 'short', 
             day: 'numeric' 
-          })}</span>
-        </>
-      )}
-      {category && (
-        <>
-          <span class="text-black/30 dark:text-white/30">•</span>
-          <span class="capitalize">{category}</span>
-        </>
-      )}
-    </div>
-
-    <!-- DESCRIPTION - Positioned from container bottom -->
-    <div class:list={[
-      "absolute bottom-10 left-4 right-4 transition text-75",
-      // Desktop: adjust for different padding
-      "md:bottom-10 md:left-9 md:right-2",
-      // Responsive line clamping
-      "line-clamp-3 sm:line-clamp-2 md:line-clamp-3",
-      `md:line-clamp-${config.styling.descriptionLines}`
-    ]}>
-      {description || remarkPluginFrontmatter.excerpt}
-    </div>
-
-    <!-- WORD COUNT AND READ TIME - Fixed at container bottom -->
-    {(config.content.showWordCount || config.content.showReadTime) && (
-      <div class="absolute bottom-4 left-4 right-4 md:left-9 md:right-2 text-sm text-black/30 dark:text-white/30 flex gap-4 transition">
-        {config.content.showWordCount && (
-          <div>{remarkPluginFrontmatter.words} {" " + i18n(I18nKey.wordsCount)}</div>
+          })}
+        </time>
+        {updated && config.content.showUpdateDate && (
+          <>
+            <span class="text-black/30 dark:text-white/30">•</span>
+            <span>Updated {updated.toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'short', 
+              day: 'numeric' 
+            })}</span>
+          </>
         )}
-        {config.content.showWordCount && config.content.showReadTime && <div>|</div>}
-        {config.content.showReadTime && (
-          <div>{remarkPluginFrontmatter.minutes} {" " + i18n(I18nKey.minutesCount)}</div>
+        {category && (
+          <>
+            <span class="text-black/30 dark:text-white/30">•</span>
+            <span class="capitalize">{category}</span>
+          </>
         )}
       </div>
-    )}
+    </div>
+
+    <!-- BOTTOM SECTION: Description and Word Count -->
+    <div class="flex-shrink-0 space-y-3"> <!-- REMOVED absolute positioning -->
+      
+      <!-- DESCRIPTION - Now uses normal flow -->
+      <div class:list={[
+        "transition text-75",
+        // Responsive line clamping
+        "line-clamp-2 sm:line-clamp-2 md:line-clamp-3",
+        `md:line-clamp-${config.styling.descriptionLines}`
+      ]}>
+        {description || remarkPluginFrontmatter.excerpt}
+      </div>
+
+      <!-- WORD COUNT AND READ TIME - Now uses normal flow -->
+      {(config.content.showWordCount || config.content.showReadTime) && (
+        <div class="text-sm text-black/30 dark:text-white/30 flex gap-4 transition">
+          {config.content.showWordCount && (
+            <div>{remarkPluginFrontmatter.words} {" " + i18n(I18nKey.wordsCount)}</div>
+          )}
+          {config.content.showWordCount && config.content.showReadTime && <div>|</div>}
+          {config.content.showReadTime && (
+            <div>{remarkPluginFrontmatter.minutes} {" " + i18n(I18nKey.minutesCount)}</div>
+          )}
+        </div>
+      )}
+    </div>
   </div>
 
   <!-- ENTER BUTTON for cards without cover on desktop -->
