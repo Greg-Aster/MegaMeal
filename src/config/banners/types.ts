@@ -349,3 +349,54 @@ export interface BannerItemPreviewDetails {
   previewIconSVG: string;     // The actual SVG string for the icon
   isVideoButton: boolean;     // True if the banner item is a video
 }
+
+/**
+ * ⭐ NEW: Banner dimensions configuration interface
+ * Centralizes all banner sizing and aspect ratio settings
+ */
+export interface BannerDimensionsConfig {
+  aspectRatio: string;                    // Default aspect ratio (e.g., "56.25%" for 16:9)
+  maxWidth: string;                       // Maximum banner width (e.g., "90vw")
+  padding: string;                        // Responsive padding (e.g., "2.5vw")
+  containerSpacing: string;               // Space around banner containers
+  borderRadius: string;                   // Border radius for banner corners
+
+  // Alternative aspect ratios for different use cases
+  aspectRatios: {
+    standard: string;                     // 16:9 for standard banners
+    video: string;                        // 16:9 for videos
+    image: string;                        // 16:9 for images
+    timeline: string;                     // 16:9 for timeline
+    assistant: string;                    // 16:9 for assistant
+    ultrawide: string;                    // 21:9 ultrawide option
+    square: string;                       // 1:1 square option
+    portrait: string;                     // 3:4 portrait option
+  };
+
+  // Responsive overrides
+  responsive: {
+    mobile: {
+      maxWidth: string;                   // Mobile max width
+      padding: string;                    // Mobile padding
+      aspectRatio?: string;               // Optional mobile aspect ratio override
+    };
+    desktop: {
+      maxWidth?: string;                  // Desktop max width override
+    };
+  };
+}
+
+/**
+ * ⭐ UPDATED: Enhanced visual configuration interface
+ * Now includes the unified dimensions system
+ */
+export interface BannerVisualConfig {
+  objectFit: 'cover' | 'contain' | 'fill';
+  objectPosition: string;
+  applyGradientOverlay: boolean;
+  gradientOverlay: string;
+  borderRadius: string;
+  
+  // ⭐ NEW: Unified dimensions configuration
+  dimensions: BannerDimensionsConfig;
+}

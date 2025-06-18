@@ -79,9 +79,7 @@
 
     /* Banner container - ensures proper sizing and overflow handling */
     #standard-banner-container {
-        position: relative;
         overflow: hidden;
-        min-height: 200px; /* Fallback height for loading states */
     }
 
     /* Base banner slide - shared properties for all slide types */
