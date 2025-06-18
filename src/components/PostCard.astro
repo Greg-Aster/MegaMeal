@@ -1,6 +1,6 @@
 ---
 // src/components/PostCard.astro
-// Updated PostCard component with flexbox layout to fix mobile overlap issues
+// UNIFIED: Single responsive system that works the same across all screen sizes
 
 import path from 'path';
 import ImageWrapper from './misc/ImageWrapper.astro';
@@ -40,29 +40,22 @@ const {
 
 const className = Astro.props.class;
 
-// Modify the hasCover logic
 const hasCover = image !== undefined && image !== null && image !== '' && 
   (!isPostPage || (isPostPage && entry.data.showImageOnPost !== false));
 
-// Get local post card config
 const config = postCardConfig.localPosts;
-
 const { remarkPluginFrontmatter } = await entry.render();
 
-// Calculate timestamp for data attribute
 const timestamp = published.getTime();
 const dateStr = published.toISOString().split('T')[0];
 ---
 
-<!-- UPDATED: Horizontal layout on all screen sizes with flexbox content -->
+<!-- UNIFIED: Same horizontal flexbox layout for all screen sizes -->
 <div
   class:list={[
     "card-base w-full overflow-hidden relative local-post mb-6 md:mb-0",
-    // All mobile sizes: horizontal layout with appropriate heights
-    "flex flex-row",
-    "h-[12rem] xs:h-[13rem] sm:h-[14rem]", // Increased mobile heights for better content spacing
-    // Desktop: horizontal layout with fixed height
-    "md:h-[14rem]",
+    "flex flex-row-reverse", // Images on right side for all screen sizes
+    "h-[12rem] sm:h-[13rem] md:h-[14rem]", // Simple responsive heights
     config.layout.cardBorderRadius, 
     className
   ]}
@@ -75,23 +68,18 @@ const dateStr = published.toISOString().split('T')[0];
   data-post-image={image}
   data-post-description={description}>
   
-  <!-- IMAGE SECTION: Horizontal layout on all screen sizes -->
+  <!-- IMAGE SECTION: Consistent across all screen sizes -->
   {hasCover && (
     <a href={url} 
        aria-label={title}
        class:list={[
          "group relative rounded-xl overflow-hidden bg-black shrink-0",
-         // Small mobile: reasonable width for horizontal layout
-         "w-32 h-auto",
-         // Larger mobile: slightly bigger
-         "xs:w-36 sm:w-40",
-         // Desktop: fixed dimensions, absolute positioning
-         "md:w-[16rem] md:h-[12.5rem] md:absolute md:top-3 md:bottom-3 md:right-3",
-         // Margins
-         "m-3 md:m-0"
+         "m-3", // Consistent margin
+         // Simple responsive sizing - no absolute positioning complexity
+         "w-32 sm:w-40 md:w-48 lg:w-56"
        ]}>
       
-      <!-- Blurred background for aesthetic appeal -->
+      <!-- Blurred background -->
       <div class="absolute inset-0 blur-background">
         <ImageWrapper 
           src={image} 
@@ -100,17 +88,15 @@ const dateStr = published.toISOString().split('T')[0];
           class="w-full h-full object-cover blur-md scale-110 opacity-60" />
       </div>
       
-      <!-- Hover overlay -->
+      <!-- Hover effects -->
       <div class="absolute pointer-events-none z-10 w-full h-full group-hover:bg-black/30 group-active:bg-black/50 transition"></div>
-      
-      <!-- Hover icon -->
       <div class="absolute pointer-events-none z-20 w-full h-full flex items-center justify-center">
         <Icon 
           name="material-symbols:chevron-right-rounded"
           class="transition opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-100 text-white text-5xl" />
       </div>
       
-      <!-- Main crisp image -->
+      <!-- Main image -->
       <div class="absolute inset-0 main-image z-5">
         <ImageWrapper 
           src={image} 
@@ -121,20 +107,9 @@ const dateStr = published.toISOString().split('T')[0];
     </a>
   )}
 
-  <!-- CONTENT SECTION: FLEXBOX LAYOUT - No more overlapping! -->
-  <div class:list={[
-    "relative flex flex-col justify-between h-full transition-all", // KEY CHANGE: Added justify-between
-    // Mobile portrait: full width with padding
-    "w-full p-4",
-    // Mobile landscape: adjust for image width
-    hasCover 
-      ? "sm:w-3/5 sm:pl-4 sm:pr-6 sm:py-4" 
-      : "sm:w-full sm:px-6 sm:py-4",
-    // Desktop: adjust for absolute positioned image
-    hasCover
-      ? "md:w-[calc(100%_-_18rem_-_12px)] md:pl-9 md:pr-2 md:py-4"
-      : "md:w-[calc(100%_-_52px_-_12px)] md:pl-9 md:pr-2 md:py-4"
-  ]}>
+  <!-- CONTENT SECTION: Fixed spacing layout instead of justify-between -->
+  <div class="flex flex-col flex-1 p-4 py-5 pr-3 pl-8">
+    <!-- Note: Removed justify-between for fixed spacing control -->
     
     <!-- TOP SECTION: Title and Metadata -->
     <div class="flex-shrink-0">
@@ -144,20 +119,22 @@ const dateStr = published.toISOString().split('T')[0];
            "transition group w-full block font-bold mb-3 text-90",
            "hover:text-[var(--primary)] dark:hover:text-[var(--primary)]", 
            "active:text-[var(--title-active)] dark:active:text-[var(--title-active)]",
-           // Desktop-only: side indicator
-           "md:before:w-1 md:before:h-5 md:before:rounded-md md:before:bg-[var(--primary)]",
-           "md:before:absolute md:before:top-[35px] md:before:left-[18px] md:before:block",
-           config.styling.titleSize
+           config.styling.titleSize,
+           // Simple hover effect for all sizes
+           "relative",
+           // Blue accent line on the left - responsive spacing
+           "before:w-1 before:h-5 before:rounded-md before:bg-[var(--primary)]",
+           "before:absolute before:top-2 before:-left-4 before:block"
          ]}>
         {title}
-        <!-- Desktop hover arrow -->
-        <Icon 
-          class="text-[var(--primary)] text-[2rem] transition hidden md:inline absolute translate-y-0.5 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0" 
-          name="material-symbols:chevron-right-rounded" />
+        <!-- Responsive hover arrow -->
+<!--        <Icon 
+          class="text-[var(--primary)] text-[1.5rem] md:text-[2rem] transition absolute translate-y-0.5 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0" 
+          name="material-symbols:chevron-right-rounded" />  -->
       </a>
 
-      <!-- METADATA - Hidden on ALL mobile devices, visible on desktop only -->
-      <div class="mb-4 hidden md:block text-sm text-black/60 dark:text-white/60 flex gap-5 items-center">
+      <!-- METADATA: Show on larger screens -->
+      <div class="mb-3 hidden md:block text-sm text-black/60 dark:text-white/60 flex gap-4 items-center">
         <time datetime={published.toISOString()}>
           {published.toLocaleDateString('en-US', { 
             year: 'numeric', 
@@ -184,22 +161,21 @@ const dateStr = published.toISOString().split('T')[0];
       </div>
     </div>
 
-    <!-- BOTTOM SECTION: Description and Word Count -->
-    <div class="flex-shrink-0 space-y-3"> <!-- REMOVED absolute positioning -->
+    <!-- DESCRIPTION SECTION: Fixed spacing from title/metadata -->
+    <div class="mt-4 space-y-3"> <!-- Fixed 1rem spacing from above content -->
       
-      <!-- DESCRIPTION - Now uses normal flow -->
+      <!-- DESCRIPTION -->
       <div class:list={[
         "transition text-75",
-        // Responsive line clamping
-        "line-clamp-2 sm:line-clamp-2 md:line-clamp-3",
-        `md:line-clamp-${config.styling.descriptionLines}`
+        "line-clamp-2 md:line-clamp-3", // Simple responsive line clamping
+        "text-ellipsis overflow-hidden", // Ensure proper ellipsis handling
       ]}>
         {description || remarkPluginFrontmatter.excerpt}
       </div>
 
-      <!-- WORD COUNT AND READ TIME - Now uses normal flow -->
+      <!-- WORD COUNT AND READ TIME -->
       {(config.content.showWordCount || config.content.showReadTime) && (
-        <div class="text-sm text-black/30 dark:text-white/30 flex gap-4 transition">
+        <div class="text-xs md:text-sm text-black/30 dark:text-white/30 flex gap-3 transition">
           {config.content.showWordCount && (
             <div>{remarkPluginFrontmatter.words} {" " + i18n(I18nKey.wordsCount)}</div>
           )}
@@ -212,23 +188,22 @@ const dateStr = published.toISOString().split('T')[0];
     </div>
   </div>
 
-  <!-- ENTER BUTTON for cards without cover on desktop -->
+  <!-- ENTER BUTTON: Simplified for cards without cover (positioned on right) -->
   {!hasCover && config.layout.showEnterButton && (
     <a href={url} 
        aria-label={title} 
-       class="!hidden md:!flex btn-regular w-[3.25rem] absolute right-3 top-3 bottom-3 rounded-xl bg-[var(--enter-btn-bg)] hover:bg-[var(--enter-btn-bg-hover)] active:bg-[var(--enter-btn-bg-active)] active:scale-95">
+       class="hidden md:flex btn-regular w-12 h-12 m-4 mr-4 rounded-xl bg-[var(--enter-btn-bg)] hover:bg-[var(--enter-btn-bg-hover)] active:bg-[var(--enter-btn-bg-active)] active:scale-95 items-center justify-center flex-shrink-0">
       <Icon 
         name="material-symbols:chevron-right-rounded"
-        class="transition text-[var(--primary)] text-4xl mx-auto" />
+        class="transition text-[var(--primary)] text-2xl" />
     </a>
   )}
 </div>
 
-<!-- MOBILE SEPARATOR (only visible on mobile) -->
+<!-- MOBILE SEPARATOR -->
 <div class="transition border-t-[1px] border-dashed mx-6 border-black/10 dark:border-white/[0.15] last:border-t-0 md:hidden"></div>
 
 <style>
-  /* Ensure proper layering for image overlays */
   .blur-background {
     z-index: 1;
   }
@@ -237,10 +212,44 @@ const dateStr = published.toISOString().split('T')[0];
     z-index: 5;
   }
 
-  /* Ensure images always use proper object-fit */
   .postcard-image {
     object-fit: cover !important;
     width: 100% !important;
     height: 100% !important;
   }
+
+  /* Ensure line-clamp works properly with ellipsis */
+  .line-clamp-2,
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .line-clamp-2 {
+    -webkit-line-clamp: 2;
+  }
+
+  .line-clamp-3 {
+    -webkit-line-clamp: 3;
+  }
+
+  /* Optional: Fade-out effect alternative (uncomment to use instead of ellipsis) */
+  /*
+  .description-fade {
+    position: relative;
+  }
+  
+  .description-fade::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 30%;
+    height: 1.2em;
+    background: linear-gradient(to right, transparent, var(--card-bg));
+    pointer-events: none;
+  }
+  */
 </style>
