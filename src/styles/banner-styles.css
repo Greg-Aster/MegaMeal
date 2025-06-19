@@ -8,11 +8,12 @@
     
     /* 🎯 SINGLE SOURCE: Banner dimensions from config */
     :root {
-        /* These will be set dynamically from banner.config.ts */
-        --banner-aspect-ratio: 56.25%;
-        --banner-max-width: 90vw;
-        --banner-padding: 2.5vw;
-        --banner-border-radius: 0.5rem;
+
+    /* 🎯 NEW: Dynamic overlap system */
+        --banner-overlap-home: 10rem;
+        --banner-overlap-posts: 2.5rem;
+        --banner-overlap-other: 4rem;
+        --banner-overlap-current: var(--banner-overlap-other); /* Default */
         
         /* Only keep timing/animation properties that aren't standard Tailwind */
         --banner-transition-duration: 0.4s;
