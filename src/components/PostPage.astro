@@ -16,7 +16,7 @@ const interval = 50
 const animationEnabled = postCardConfig.localPosts.styling.animationEnabled;
 ---
 
-<div id="posts-container" class="transition flex flex-col rounded-[var(--radius-large)] bg-[var(--card-bg)] py-1 md:py-0 md:bg-transparent md:gap-4 mb-4">
+<div id="posts-container" class="transition flex flex-col rounded-[var(--radius-large)] py-1 md:py-0 gap-3 sm:gap-5 md:gap-5 lg:gap-6 mb-4">
     <!-- Regular local posts (server-rendered) with data attributes for friend content integration -->
     {page.data.map((entry: any) => {
         const dateStr = formatDateToYYYYMMDD(entry.data.published);
