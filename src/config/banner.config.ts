@@ -201,7 +201,7 @@ export const bannerConfig: BannerConfig = {
       image: "-0.5rem",
       timeline: "-0.5rem",
       assistant: "-0.5rem",
-      standard: "clamp(-5rem, -4vw, -1.5rem)",  // 🎯 1.5rem mobile → 5rem desktop overlap
+      standard: "clamp(-5rem, -4vw, -2.5rem)",  // 🎯 1.5rem mobile → 5rem desktop overlap
       none: "12rem"
     }
   },
