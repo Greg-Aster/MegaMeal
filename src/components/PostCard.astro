@@ -53,9 +53,10 @@ const dateStr = published.toISOString().split('T')[0];
 <!-- UNIFIED: Same horizontal flexbox layout for all screen sizes -->
 <div
   class:list={[
-    "card-base w-full overflow-hidden relative local-post mb-6 md:mb-0",
+    "card-base w-full overflow-hidden relative local-post",
     "flex flex-row-reverse", // Images on right side for all screen sizes
-    "h-[12rem] sm:h-[13rem] md:h-[14rem]", // Simple responsive heights
+    // 🎯 RESPONSIVE HEIGHTS - compact on mobile, comfortable on desktop
+    "h-[10rem] sm:h-[10.5rem] md:h-[12rem] lg:h-[14rem]",
     config.layout.cardBorderRadius, 
     className
   ]}
@@ -74,9 +75,9 @@ const dateStr = published.toISOString().split('T')[0];
        aria-label={title}
        class:list={[
          "group relative rounded-xl overflow-hidden bg-black shrink-0",
-         "m-3", // Consistent margin
-         // Simple responsive sizing - no absolute positioning complexity
-         "w-32 sm:w-40 md:w-48 lg:w-56"
+         "m-2 sm:m-3", // 🎯 RESPONSIVE MARGINS - tighter on mobile
+         // 🎯 RESPONSIVE IMAGE SIZING - proportional to card height
+         "w-28 sm:w-36 md:w-44 lg:w-52"
        ]}>
       
       <!-- Blurred background -->
@@ -107,19 +108,20 @@ const dateStr = published.toISOString().split('T')[0];
     </a>
   )}
 
-  <!-- CONTENT SECTION: Fixed spacing layout instead of justify-between -->
-  <div class="flex flex-col flex-1 p-4 py-5 pr-3 pl-8">
+  <!-- CONTENT SECTION: Fixed spacing layout with responsive padding -->
+  <div class="flex flex-col flex-1 p-3 sm:p-4 py-4 sm:py-5 pr-2 sm:pr-3 pl-6 sm:pl-8">
     <!-- Note: Removed justify-between for fixed spacing control -->
     
     <!-- TOP SECTION: Title and Metadata -->
     <div class="flex-shrink-0">
-      <!-- TITLE -->
+      <!-- TITLE - 🎯 RESPONSIVE TEXT SIZING -->
       <a href={url}
          class:list={[
-           "transition group w-full block font-bold mb-3 text-90",
+           "transition group w-full block font-bold mb-2 sm:mb-3 text-90",
            "hover:text-[var(--primary)] dark:hover:text-[var(--primary)]", 
            "active:text-[var(--title-active)] dark:active:text-[var(--title-active)]",
-           config.styling.titleSize,
+           // 🎯 RESPONSIVE TITLE SIZE - scales properly on all devices
+           "text-base sm:text-2xl md:text-3xl lg:text-4xl",
            // Simple hover effect for all sizes
            "relative",
            // Blue accent line on the left - responsive spacing
@@ -127,14 +129,10 @@ const dateStr = published.toISOString().split('T')[0];
            "before:absolute before:top-2 before:-left-4 before:block"
          ]}>
         {title}
-        <!-- Responsive hover arrow -->
-<!--        <Icon 
-          class="text-[var(--primary)] text-[1.5rem] md:text-[2rem] transition absolute translate-y-0.5 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0" 
-          name="material-symbols:chevron-right-rounded" />  -->
       </a>
 
-      <!-- METADATA: Show on larger screens -->
-      <div class="mb-3 hidden md:block text-sm text-black/60 dark:text-white/60 flex gap-4 items-center">
+      <!-- METADATA: Show on larger screens - 🎯 RESPONSIVE SIZING -->
+      <div class="mb-2 sm:mb-3 hidden md:block text-xs md:text-sm text-black/60 dark:text-white/60 flex gap-4 items-center">
         <time datetime={published.toISOString()}>
           {published.toLocaleDateString('en-US', { 
             year: 'numeric', 
@@ -161,19 +159,21 @@ const dateStr = published.toISOString().split('T')[0];
       </div>
     </div>
 
-    <!-- DESCRIPTION SECTION: Fixed spacing from title/metadata -->
-    <div class="mt-4 space-y-3"> <!-- Fixed 1rem spacing from above content -->
+    <!-- DESCRIPTION SECTION: Progressive responsive spacing from title/metadata -->
+    <div class="mt-2 sm:mt-3 md:mt-4 lg:mt-5 space-y-2 sm:space-y-3"> <!-- 🎯 PROGRESSIVE RESPONSIVE SPACING -->
       
-      <!-- DESCRIPTION -->
+      <!-- DESCRIPTION - 🎯 RESPONSIVE TEXT SIZING -->
       <div class:list={[
         "transition text-75",
+        // 🎯 RESPONSIVE DESCRIPTION SIZE - smaller on mobile, comfortable on desktop
+        "text-sm sm:text-base md:text-base",
         "line-clamp-2 md:line-clamp-3", // Simple responsive line clamping
         "text-ellipsis overflow-hidden", // Ensure proper ellipsis handling
       ]}>
         {description || remarkPluginFrontmatter.excerpt}
       </div>
 
-      <!-- WORD COUNT AND READ TIME -->
+      <!-- WORD COUNT AND READ TIME - 🎯 ALREADY RESPONSIVE -->
       {(config.content.showWordCount || config.content.showReadTime) && (
         <div class="text-xs md:text-sm text-black/30 dark:text-white/30 flex gap-3 transition">
           {config.content.showWordCount && (
@@ -200,8 +200,7 @@ const dateStr = published.toISOString().split('T')[0];
   )}
 </div>
 
-<!-- MOBILE SEPARATOR -->
-<div class="transition border-t-[1px] border-dashed mx-6 border-black/10 dark:border-white/[0.15] last:border-t-0 md:hidden"></div>
+
 
 <style>
   .blur-background {
@@ -234,22 +233,4 @@ const dateStr = published.toISOString().split('T')[0];
   .line-clamp-3 {
     -webkit-line-clamp: 3;
   }
-
-  /* Optional: Fade-out effect alternative (uncomment to use instead of ellipsis) */
-  /*
-  .description-fade {
-    position: relative;
-  }
-  
-  .description-fade::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 30%;
-    height: 1.2em;
-    background: linear-gradient(to right, transparent, var(--card-bg));
-    pointer-events: none;
-  }
-  */
 </style>
