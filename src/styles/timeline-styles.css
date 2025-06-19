@@ -632,32 +632,6 @@
     }
 
     /* ===================================================================
-     * BANNER TYPE-SPECIFIC SPACING - CRITICAL FOR MAINGRIDLAYOUT
-     * ===================================================================
-     */
-
-    /* Banner container spacing for different banner types */
-    .has-standard-banner {
-        margin-top: 0 !important;
-    }
-    
-    .has-timeline-banner {
-        margin-top: 5.5rem !important;
-    }
-    
-    .has-video-banner {
-        margin-top: 5.5rem !important;
-    }
-    
-    .has-image-banner {
-        margin-top: 0 !important;
-    }
-    
-    .has-assistant-banner {
-        margin-top: 5.5rem !important;
-    }
-
-    /* ===================================================================
      * RESPONSIVE DESIGN - ENHANCED FOR MOBILE
      * ===================================================================
      */

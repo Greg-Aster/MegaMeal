@@ -1,6 +1,6 @@
 /**
  * ===================================================================
- * BANNER CONFIGURATION - CLEAN, DRY & TAILWIND-FRIENDLY
+ * BANNER CONFIGURATION - CLEANED & SIMPLIFIED
  * ===================================================================
  */
 
@@ -30,39 +30,24 @@ import { isAssistantBannerData } from './banners/assistant'
 import { isNoneBannerData } from './banners/none'
 
 // =====================================================================
-// SIMPLIFIED, DRY INTERFACES
+// SIMPLIFIED INTERFACES - REMOVED UNUSED VALUES
 // =====================================================================
 
 /**
- * 🎯 SINGLE RESPONSIVE SYSTEM - Tailwind-aligned
+ * 🎯 ACTUAL BANNER DIMENSIONS - Only used by CSS
  */
 export interface BannerDimensions {
-  aspectRatio: string;           // Single aspect ratio (56.25% = 16:9)
+  aspectRatio: string;           // 16:9 aspect ratio (critical)
   maxWidth: string;              // Max banner width (responsive)
   padding: string;               // Horizontal padding (responsive)
   borderRadius: string;          // Border radius
 }
 
 /**
- * 🎯 SIMPLIFIED SPACING - Just what's needed for overlaps
- */
-export interface BannerSpacing {
-  navbar: {
-    withBanner: string;          // Navbar spacing when banner present
-    withoutBanner: string;       // Navbar spacing when no banner
-  };
-  overlap: {
-    home: string;                // Content overlap on home (your feature!)
-    posts: string;               // Content overlap on posts
-    other: string;               // Content overlap on other pages
-  };
-}
-
-/**
- * 🎯 MAIN CONFIG - Simplified & DRY
+ * 🎯 MAIN CONFIG - CLEANED UP
  */
 export interface BannerConfig {
-  // Banner type configs (keep existing)
+  // Banner type configs
   defaultBannerType: BannerType;
   defaultBannerData: BannerData;
   standardBannerConfig: typeof standardBannerConfig;
@@ -72,67 +57,33 @@ export interface BannerConfig {
   assistantBannerConfig: typeof assistantBannerConfig;
   noneBannerConfig: typeof noneBannerConfig;
   
-  // Simplified configuration
+  // Actual working configuration
   dimensions: BannerDimensions;
-  spacing: BannerSpacing;
   
-  // PRESERVED: Existing layout structure (needed by MainGridLayout.astro)
+  // WORKING: Layout values used by MainGridLayout.astro
   layout: {
     height: string;
-    overlap: string;
     maxWidth: number;
-    noneBannerPlaceholderHeight: string;
     mainContentOffset: string;
-    pageOverlaps: {
-      home: string;
-      post: string;
-      archive: string;
-      about: string;
-    };
   };
 
-  // PRESERVED: Visual config (needed by existing code)
+  // WORKING: Visual config used by existing code
   visual: {
     objectFit: string;
     objectPosition: string;
     applyGradientOverlay: boolean;
     gradientOverlay: string;
     borderRadius: string;
-    dimensions: {
-      aspectRatio: string;
-      maxWidth: string;
-      padding: string;
-      containerSpacing: string;
-      borderRadius: string;
-      aspectRatios: {
-        standard: string;
-        video: string;
-        image: string;
-        timeline: string;
-        assistant: string;
-        ultrawide: string;
-        square: string;
-        portrait: string;
-      };
-      responsive: {
-        mobile: {
-          maxWidth: string;
-          padding: string;
-        };
-        desktop: {
-          maxWidth: string;
-        };
-      };
-    };
   };
 
-  // PRESERVED: Existing structures that are being used
+  // WORKING: Fallback configuration
   fallback: {
     enabled: boolean;
     type: string;
     value: string;
   };
 
+  // WORKING: Navbar spacing for different banner types
   navbar: {
     height: string;
     spacing: {
@@ -145,23 +96,26 @@ export interface BannerConfig {
     };
   };
 
+  // 🎯 WORKING: The REAL overlap system - this controls banner overlap!
   panel: {
     top: {
       video: string;
       image: string;
       timeline: string;
       assistant: string;
-      standard: string;
+      standard: string;      // ⭐ THIS IS YOUR BANNER OVERLAP CONTROL!
       none: string;
     };
   };
 
+  // WORKING: Parallax configuration
   parallax: {
     enabled: boolean;
     scrollFactor: number;
     easingFactor: number;
   };
   
+  // WORKING: Navigation configuration
   navigation?: {
     enabled: boolean;
     showPositionIndicator: boolean;
@@ -179,15 +133,15 @@ export interface BannerConfig {
 
 /**
  * ===================================================================
- * MAIN CONFIGURATION - CLEAN & SIMPLE
+ * MAIN CONFIGURATION - CLEANED & WORKING
  * ===================================================================
  */
 export const bannerConfig: BannerConfig = {
   // Default banner type
   defaultBannerType: 'standard',
-  defaultBannerData: {} as any, // Set automatically below
+  defaultBannerData: {} as any,
   
-  // Banner type configurations (keep existing)
+  // Banner type configurations
   standardBannerConfig,
   videoBannerConfig,
   imageBannerConfig,
@@ -195,116 +149,71 @@ export const bannerConfig: BannerConfig = {
   assistantBannerConfig,
   noneBannerConfig,
   
-  // 🎯 SINGLE DIMENSIONS SYSTEM
+  // 🎯 WORKING: CSS dimensions system
   dimensions: {
-    aspectRatio: '56.25%',       // 16:9 ratio
-    maxWidth: '90vw',            // Responsive width
-    padding: '2.5vw',            // Responsive padding
-    borderRadius: '0.5rem',      // Standard Tailwind radius
-  },
-  
-  // 🎯 SIMPLIFIED SPACING (preserves your overlap feature)
-  spacing: {
-    navbar: {
-      withBanner: '0',           // No spacing when banner present
-      withoutBanner: '5.5rem',   // Standard navbar height when no banner
-    },
-    overlap: {
-      home: '10rem',             // Your home page overlap feature
-      posts: '2.5rem',           // Post page overlap
-      other: '4rem',             // Other pages overlap
-    }
+    aspectRatio: '56.25%',       // 16:9 ratio (critical for your content)
+    maxWidth: 'clamp(100vw, 90vw, 85vw)',    // Full width on mobile
+    padding: 'clamp(0.0vw, 0vw, 4vw)',    // Even less padding
+    borderRadius: '.5rem',      // Standard Tailwind radius
   },
 
-  // PRESERVED: Original layout structure (used by MainGridLayout.astro)
+  // WORKING: Layout used by MainGridLayout.astro
   layout: {
     height: '60vh',
-    overlap: '2rem',
     maxWidth: 3840,
-    noneBannerPlaceholderHeight: '1.5rem',
     mainContentOffset: '1.5rem',
-    pageOverlaps: {
-      home: '10rem',
-      post: '2.5rem', 
-      archive: '4rem',
-      about: '3rem'
-    }
   },
   
-  // PRESERVED: Visual config (used by existing code)
+  // WORKING: Visual config used by existing code
   visual: {
     objectFit: 'cover',
     objectPosition: 'center',
     applyGradientOverlay: true,
     gradientOverlay: 'linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.3))',
     borderRadius: '0.5rem',
-    
-    dimensions: {
-      aspectRatio: '56.25%',
-      maxWidth: '120vw',
-      padding: '2.5vw',
-      containerSpacing: '0.5rem',
-      borderRadius: '0.5rem',
-      
-      aspectRatios: {
-        standard: '56.25%',
-        video: '56.25%',
-        image: '56.25%',
-        timeline: '56.25%',
-        assistant: '56.25%',
-        ultrawide: '42.86%',
-        square: '100%',
-        portrait: '133.33%'
-      },
-      
-      responsive: {
-        mobile: {
-          maxWidth: '95vw',
-          padding: '1.5vw'
-        },
-        desktop: {
-          maxWidth: '85vw'
-        }
-      }
-    }
   },
   
-  // PRESERVED: Other configurations
+  // WORKING: Fallback configuration
   fallback: {
     enabled: true,
     type: 'gradient',
     value: 'linear-gradient(135deg, oklch(0.6 0.2 var(--hue)), oklch(0.4 0.3 var(--hue)))'
   },
 
+  // WORKING: Navbar spacing - NOW RESPONSIVE!
   navbar: {
     height: '5rem',
     spacing: {
-      standard: "0",
+      standard: "clamp(3rem, 4vw, 3rem)",    // 🎯 1.5rem mobile → 5rem desktop
       timeline: "5.5rem",
       video: "5.5rem",
-      image: "0",
+      image: "clamp(1.5rem, 4vw, 5rem)",       // 🎯 Same responsive spacing
       assistant: "5.5rem",
       none: "-8rem"
     }
   },
 
+  // 🎯 WORKING: THE REAL OVERLAP SYSTEM!
+  // These values control how much content overlaps the banner
   panel: {
     top: {
       video: "-0.5rem",
       image: "-0.5rem",
       timeline: "-0.5rem",
       assistant: "-0.5rem",
-      standard: "-5.5rem",
+      standard: "clamp(-5rem, -4vw, -1.5rem)",  // 🎯 1.5rem mobile → 5rem desktop overlap
       none: "12rem"
     }
   },
 
+  // WORKING: Parallax configuration
   parallax: {
     enabled: true,
     scrollFactor: -0.02,
     easingFactor: 0.1
   },
   
+  // WORKING: Navigation configuration
   navigation: {
     enabled: true,
     showPositionIndicator: true,
@@ -321,7 +230,7 @@ export const bannerConfig: BannerConfig = {
 }
 
 // =====================================================================
-// SIMPLIFIED HELPER FUNCTIONS
+// SIMPLIFIED HELPER FUNCTIONS - CLEANED UP
 // =====================================================================
 
 export function isFullscreenModeActive(): boolean {
@@ -435,7 +344,7 @@ export function getBannerDataSources(bannerType: BannerDeterminationResult, post
 }
 
 /**
- * 🎯 PRESERVED: Original determineBannerConfiguration API
+ * 🎯 MAIN API: Banner configuration determination
  */
 export function determineBannerConfiguration(post: any, pageType: string, defaultBannerLink: string = '') {
   if (isFullscreenModeActive()) {
@@ -463,7 +372,7 @@ export function determineBannerConfiguration(post: any, pageType: string, defaul
         bannerHeight: '0',
         bannerOverlap: '0',
         dynamicOverlap: '0',
-        mainContentOffset: "1.5rem"
+        mainContentOffset: bannerConfig.layout.mainContentOffset
       },
       finalBannerLink: '',
       currentBannerType: 'none' as BannerType
@@ -474,12 +383,11 @@ export function determineBannerConfiguration(post: any, pageType: string, defaul
   const bannerType = determineBannerType(post, postData);
   const bannerDataSources = getBannerDataSources(bannerType, post);
   
+  // 🎯 THE REAL WORKING VALUES
   const mainPanelTop = getPanelTopPosition(bannerType.currentBannerType);
   const navbarSpacing = bannerConfig.navbar.spacing[bannerType.currentBannerType];
   const bannerHeight = bannerConfig.layout.height;
-  const bannerOverlap = bannerConfig.layout.overlap;
   const mainContentOffset = bannerConfig.layout.mainContentOffset;
-  const dynamicOverlap = getPageSpecificOverlap(pageType);
   
   const finalBannerLink = postData?.bannerLink || defaultBannerLink;
   
@@ -488,11 +396,11 @@ export function determineBannerConfiguration(post: any, pageType: string, defaul
     bannerType,
     bannerDataSources,
     layout: {
-      mainPanelTop,
+      mainPanelTop,                    // 🎯 THIS CONTROLS OVERLAP!
       navbarSpacing,
       bannerHeight,
-      bannerOverlap,
-      dynamicOverlap,
+      bannerOverlap: '0',              // Removed unused value
+      dynamicOverlap: '0',             // Removed unused value
       mainContentOffset
     },
     finalBannerLink,
@@ -501,17 +409,12 @@ export function determineBannerConfiguration(post: any, pageType: string, defaul
 }
 
 // =====================================================================
-// SIMPLE UTILITY FUNCTIONS
+// SIMPLIFIED UTILITY FUNCTIONS - KEPT ONLY WORKING ONES
 // =====================================================================
 
-// =====================================================================
-// PRESERVED: All original utility functions
-// =====================================================================
-
-export function getResponsiveBannerDimensions(): { height: string; overlap: string; } {
+export function getResponsiveBannerDimensions(): { height: string; } {
   return {
     height: bannerConfig.layout.height,
-    overlap: bannerConfig.layout.overlap
   };
 }
 
@@ -526,6 +429,7 @@ export function getBannerAnimationSettings(): BannerAnimationConfig {
   return bannerConfig.standardBannerConfig.getBannerAnimationSettings();
 }
 
+// 🎯 THE FUNCTION THAT CONTROLS OVERLAP!
 export function getPanelTopPosition(bannerType: BannerType): string {
   switch(bannerType) {
     case 'video': return bannerConfig.panel.top.video;
@@ -533,24 +437,13 @@ export function getPanelTopPosition(bannerType: BannerType): string {
     case 'timeline': return bannerConfig.panel.top.timeline;
     case 'assistant': return bannerConfig.panel.top.assistant;
     case 'none': return bannerConfig.panel.top.none;
-    default: return bannerConfig.panel.top.standard;
+    default: return bannerConfig.panel.top.standard;  // ⭐ THIS IS YOUR OVERLAP!
   }
 }
 
 export function getPageSpecificOverlap(pageType: string): string {
-  const overlaps = bannerConfig.layout.pageOverlaps;
-  
-  switch(pageType) {
-    case 'home': return overlaps.home;
-    case 'post':
-    case 'posts':
-    case 'blog': return overlaps.post;
-    case 'archive':
-    case 'categories':
-    case 'tags': return overlaps.archive;
-    case 'about': return overlaps.about;
-    default: return bannerConfig.layout.overlap;
-  }
+  // This function is no longer used but kept for compatibility
+  return '0';
 }
 
 export function getNavbarHeight(): string {
@@ -583,6 +476,7 @@ export { isVideoBannerData, isImageBannerData, isTimelineBannerData, isAssistant
 export function isStandardBannerData(data: any): data is any {
   return data && typeof data === 'object' && Object.keys(data).length === 0;
 }
+
 export { standardBannerConfig, videoBannerConfig, imageBannerConfig, timelineBannerConfig, assistantBannerConfig, noneBannerConfig }
 
 // Re-export types

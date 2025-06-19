@@ -194,7 +194,7 @@ if (post && post.data) {
   <!-- NAVIGATION BAR SECTION                                        -->
   <!-- =============================================================== -->
   <slot slot="head" name="head"></slot>
-  <div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:px-4 mx-auto">
+  <div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-2 md:px-4 mx-auto">
     <div id="navbar-wrapper" class="pointer-events-auto sticky top-0 transition-all">
       <Navbar></Navbar>
     </div>
@@ -397,7 +397,7 @@ if (post && post.data) {
   <div class={`w-full z-30 pointer-events-none relative`}>
     <div id="main-panel-wrapper" class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto" style={`top: ${mainPanelTop}; position: relative;`}>
       <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-[17.5rem_auto] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
-         mx-auto gap-4 px-0 md:px-4" style={`margin-top: ${mainContentOffset};`}>
+         mx-auto gap-4 px-2 md:px-4" style={`margin-top: ${mainContentOffset};`}>
          
         <!-- SIDEBAR SECTION -->
         <SideBar 
@@ -460,32 +460,11 @@ if (post && post.data) {
 </Layout>
 
 <!-- =============================================================== -->
-<!-- SIMPLIFIED CSS - BANNER SPACING ONLY                          -->
+<!-- MAIN CONTENT POSITIONING - NO MORE 768PX BREAKPOINT JUMPS     -->
 <!-- =============================================================== -->
 <style define:vars={{
   'main-content-offset': mainContentOffset,
 }}>
-  /* Banner type-specific spacing - dynamic from config */
-  .has-standard-banner {
-    margin-top: 0 !important;
-  }
-  
-  .has-timeline-banner {
-    margin-top: 5.5rem !important;
-  }
-  
-  .has-video-banner {
-    margin-top: 5.5rem !important;
-  }
-  
-  .has-image-banner {
-    margin-top: 0 !important;
-  }
-  
-  .has-assistant-banner {
-    margin-top: 5.5rem !important;
-  }
-
   /* Main content positioning */
   #main-grid {
     margin-top: var(--main-content-offset);
