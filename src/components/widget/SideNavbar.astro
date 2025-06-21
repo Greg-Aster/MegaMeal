@@ -95,10 +95,11 @@ const getNavIcon = (name: string): string => {
   - h-full: Full height of parent
   - flex flex-col: Vertical flexbox layout
   - relative: For positioning expandable panels
-  - max-w-full: Prevent width overflow
-  - overflow-hidden: Clip content that exceeds bounds
+  - w-full: Take full width of grid column (FIXED: was max-w-full)
+  - overflow-visible: Allow panels to show outside container on desktop
+  - md:overflow-hidden: Prevent overflow on mobile
 -->
-<div id="unified-sidenav" class:list={[className, "card-base p-2 h-full flex flex-col relative max-w-full overflow-hidden"]} style={style}>
+<div id="unified-sidenav" class:list={[className, "card-base p-2 h-full flex flex-col relative w-full overflow-visible md:overflow-hidden"]} style={style}>
 
   <!-- =============================================================== -->
   <!-- SITE LOGO/HOME LINK -->
@@ -150,6 +151,7 @@ const getNavIcon = (name: string): string => {
     These panels slide out from the right side when dropdown buttons are clicked
     One panel is created for each navigation item that has dropdown children
     They use absolute positioning and are hidden by default
+    FIXED: Now responsive width and proper mobile handling
   -->
 {processedLinks.filter(link => link.dropdown).map((link) => (
   <div id={`sidenav-dropdown-${link.name.toLowerCase()}`} class="expandable-panel card-base shadow-lg rounded-lg">
@@ -166,7 +168,7 @@ const getNavIcon = (name: string): string => {
             class="btn-plain rounded-md px-3 py-2 text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left whitespace-nowrap"
           >
             <Icon name={getNavIcon(dropdownItem.name)} class="text-base flex-shrink-0" />
-            <span class="flex-1">{dropdownItem.name}</span>
+            <span class="flex-1 min-w-0 truncate">{dropdownItem.name}</span>
             {/* External link indicator */}
             {dropdownItem.external && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.75rem] flex-shrink-0" />}
           </a>
@@ -209,6 +211,7 @@ const getNavIcon = (name: string): string => {
     This panel shows ALL navigation links in a flat list
     It slides out from the right when the menu toggle button is clicked
     Useful for quick access to all navigation items
+    FIXED: Now responsive and properly positioned
   -->
   <div id="sidenav-menu-panel" class="expandable-panel card-base shadow-lg rounded-lg">
     <div class="p-2">
@@ -222,7 +225,7 @@ const getNavIcon = (name: string): string => {
             class="nav-menu-link btn-plain rounded-md px-3 py-2 text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left whitespace-nowrap"
           >
             <Icon name={getNavIcon(link.name)} class="text-base flex-shrink-0" />
-            <span class="flex-1">{link.name}</span>
+            <span class="flex-1 min-w-0 truncate">{link.name}</span>
             {link.external && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.75rem] flex-shrink-0" />}
           </a>
         ))}
@@ -317,7 +320,6 @@ const getNavIcon = (name: string): string => {
     </div>
   </div>
 
-
 </div>
 
 <!-- =============================================================== -->
@@ -325,61 +327,106 @@ const getNavIcon = (name: string): string => {
 <!-- =============================================================== -->
 <style>
   /* =============================================================== */
-  /* EXPANDABLE PANEL SYSTEM */
+  /* EXPANDABLE PANEL SYSTEM - FIXED FOR RESPONSIVE BEHAVIOR */
   /* =============================================================== */
   /* 
     These panels slide out from the right side of the navigation
     They are positioned absolutely relative to the main container
     
-    How it works:
-    1. Panels start positioned to the right of the container (left: 100%)
-    2. margin-left adds a small gap between container and panel
-    3. JavaScript toggles between panel-closed and panel-open classes
-    4. Transitions create smooth slide-in/out animations
+    FIXED: Responsive width and proper mobile behavior
+    - Mobile: Use viewport-based positioning to avoid overflow
+    - Desktop: Use relative positioning for better control
   */
   
   .expandable-panel {
-    position: absolute;        /* Position relative to nearest relative parent */
-    top: 0;                   /* Align with top of container */
-    left: 100%;               /* Position to the right of container */
-    margin-left: 0.5rem;      /* Small gap between container and panel */
-    width: 200px;             /* Fixed width for consistency */
-    height: auto;             /* Height adjusts to content */
-    z-index: 50;              /* Ensure panels appear above other content */
+    position: absolute;
+    top: 0;
+    z-index: 50;
     transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+    
+    /* MOBILE: Position from left edge of viewport */
+    left: calc(5rem + 0.5rem); /* 5rem sidebar + 0.5rem gap */
+    width: calc(100vw - 5rem - 1rem); /* Full viewport minus sidebar and gaps */
+    max-width: 200px; /* Maximum width on larger screens */
+    
+    /* TABLET */
+    @media (min-width: 768px) {
+      left: calc(12rem + 0.5rem); /* 12rem sidebar + 0.5rem gap */
+      width: calc(100vw - 12rem - 2rem); /* Adjust for tablet sidebar */
+      max-width: 250px;
+    }
+    
+    /* DESKTOP */
+    @media (min-width: 1024px) {
+      left: 100%; /* Position relative to sidebar container */
+      margin-left: 0.5rem;
+      width: 280px; /* Fixed width on desktop */
+      max-width: none;
+    }
   }
   
   /* CLOSED STATE */
   /* Panel is invisible and slightly shifted left */
   .panel-closed {
-    opacity: 0;                    /* Invisible */
-    transform: translateX(-15px);  /* Shifted 15px to the left */
-    pointer-events: none;          /* Can't be clicked when closed */
+    opacity: 0;
+    transform: translateX(-15px);
+    pointer-events: none;
   }
   
   /* OPEN STATE */
   /* Panel is visible and in normal position */
   .panel-open {
-    opacity: 1;                    /* Fully visible */
-    transform: translateX(0);      /* Normal position */
-    pointer-events: auto;          /* Can be clicked when open */
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
   }
 
   /* =============================================================== */
-  /* DISPLAY SETTINGS PANEL FIX */
+  /* MOBILE SPECIFIC FIXES */
   /* =============================================================== */
-  /* Fix the DisplaySettings panel to slide from the right properly */
   
-  :global(#display-setting.float-panel-closed) {
-    transform: translateX(100%) !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
+  /* On mobile, ensure panels don't cause horizontal scroll */
+  @media (max-width: 767px) {
+    .expandable-panel {
+      /* Ensure panels stay within viewport bounds */
+      right: 0.5rem; /* Add right margin */
+      left: auto; /* Override left positioning */
+      width: calc(100vw - 5rem - 1rem); /* Sidebar width + margins */
+      max-width: calc(100vw - 5rem - 1rem);
+    }
+    
+    /* Make text smaller on mobile to fit better */
+    .expandable-panel .text-sm {
+      font-size: 0.75rem;
+    }
+    
+    /* Reduce padding on mobile */
+    .expandable-panel .p-2 {
+      padding: 0.375rem;
+    }
+  }
+
+  /* =============================================================== */
+  /* PREVENT HORIZONTAL SCROLL */
+  /* =============================================================== */
+  
+  /* Ensure the sidebar itself never causes overflow */
+  #unified-sidenav {
+    min-width: 0; /* Allow shrinking */
+    flex-shrink: 0; /* But don't shrink the actual sidebar */
   }
   
-  :global(#display-setting:not(.float-panel-closed)) {
-    transform: translateX(0) !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
+  /* Ensure buttons respect container width */
+  #unified-sidenav button,
+  #unified-sidenav a {
+    min-width: 0; /* Allow content to shrink */
+  }
+  
+  /* Ensure text content doesn't overflow */
+  #unified-sidenav .truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 </style>
 
@@ -408,6 +455,34 @@ const getNavIcon = (name: string): string => {
     const fsBtn = document.getElementById('sidenav-fullscreen-btn');
 
     // ===================================================================
+    // DROPDOWN PANELS LOGIC - FIXED
+    // ===================================================================
+    // Handle dropdown buttons and their corresponding panels
+    
+    const dropdownButtons = document.querySelectorAll('.nav-dropdown-btn');
+    dropdownButtons.forEach(button => {
+      const dropdownName = button.getAttribute('data-dropdown-name');
+      const panel = document.getElementById(`sidenav-dropdown-${dropdownName?.toLowerCase()}`);
+      
+      if (panel) {
+        // Initialize panel as closed
+        panel.classList.add('panel-closed');
+        
+        // Handle button clicks
+        button.addEventListener('click', (e) => {
+          e.stopPropagation();
+          
+          // Close other panels first
+          closeAllPanels();
+          
+          // Toggle this panel
+          panel.classList.toggle('panel-open');
+          panel.classList.toggle('panel-closed');
+        });
+      }
+    });
+
+    // ===================================================================
     // NAVIGATION PANEL TOGGLE
     // ===================================================================
     // Handles the main navigation menu that slides out from the right
@@ -419,10 +494,30 @@ const getNavIcon = (name: string): string => {
         
         // Toggle panel when button is clicked
         menuToggleBtn.addEventListener('click', (e) => {
-            e.stopPropagation();  // Prevent event from bubbling up
+            e.stopPropagation();
+            
+            // Close other panels first
+            closeAllPanels(menuPanel);
+            
+            // Toggle this panel
             menuPanel.classList.toggle('panel-open');
             menuPanel.classList.toggle('panel-closed');
         });
+    }
+
+    // ===================================================================
+    // UTILITY FUNCTION: CLOSE ALL PANELS
+    // ===================================================================
+    // Closes all expandable panels except the one specified
+    
+    function closeAllPanels(except = null) {
+      const allPanels = document.querySelectorAll('.expandable-panel');
+      allPanels.forEach(panel => {
+        if (panel !== except && panel.classList.contains('panel-open')) {
+          panel.classList.remove('panel-open');
+          panel.classList.add('panel-closed');
+        }
+      });
     }
 
     // ===================================================================
@@ -505,12 +600,17 @@ const getNavIcon = (name: string): string => {
     searchBtn?.addEventListener('click', () => {
       const searchPanel = document.getElementById('search-panel'); 
       if (searchPanel) {
+        // Close expandable panels first
+        closeAllPanels();
+        
         // Toggle panel visibility
         searchPanel.classList.toggle('float-panel-closed');
         
         // Focus the search input for immediate typing
         const searchInput = searchPanel.querySelector('input[type="search"]');
-        if (searchInput) (searchInput as HTMLInputElement).focus();
+        if (searchInput && !searchPanel.classList.contains('float-panel-closed')) {
+          setTimeout(() => (searchInput as HTMLInputElement).focus(), 100);
+        }
       } else {
         console.warn('Sidenav: Search Panel with id="search-panel" not found.');
       }
@@ -619,7 +719,7 @@ const getNavIcon = (name: string): string => {
     }
 
     // ===================================================================
-    // OUTSIDE CLICK HANDLER
+    // OUTSIDE CLICK HANDLER - IMPROVED
     // ===================================================================
     // Closes open panels when user clicks outside of them
     // Provides intuitive UX for dismissing panels
@@ -628,21 +728,14 @@ const getNavIcon = (name: string): string => {
         const target = e.target;
         
         if (target instanceof Element) {
-            // Close navigation panel if clicking outside
-            if (menuPanel?.classList.contains('panel-open') && 
-                !menuPanel.contains(target) && 
-                !menuToggleBtn?.contains(target)) {
-                 menuPanel.classList.remove('panel-open');
-                 menuPanel.classList.add('panel-closed');
-            }
+            // Check if click is inside any expandable panel or their trigger buttons
+            const clickedPanel = target.closest('.expandable-panel');
+            const clickedButton = target.closest('.nav-dropdown-btn, #sidenav-menu-toggle');
             
-            // TODO: Add similar logic for other panels if needed
-            // Example:
-            // if (someOtherPanel?.classList.contains('panel-open') && 
-            //     !someOtherPanel.contains(target) && 
-            //     !someOtherToggleBtn?.contains(target)) {
-            //   closePanel(someOtherPanel);
-            // }
+            // If click is outside all panels and buttons, close all panels
+            if (!clickedPanel && !clickedButton) {
+                closeAllPanels();
+            }
         }
     });
   }
