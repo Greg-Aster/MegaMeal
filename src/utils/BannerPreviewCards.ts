@@ -51,7 +51,7 @@ export class BannerPreviewCards {
       this.createPreviewCardForSlide(slide as HTMLElement, index);
     });
     
-    console.log(`Preview Cards: Created ${this.bannerSlides.length} preview cards`);
+    // console.log(`Preview Cards: Created ${this.bannerSlides.length} preview cards`);
   }
 
   /**
@@ -61,13 +61,13 @@ export class BannerPreviewCards {
     const bannerLinkElement = slideElement.querySelector('.banner-link') as HTMLElement;
     
     if (!bannerLinkElement) {
-      console.warn(`Preview Cards: No .banner-link element found for slide ${index}`);
+      // console.warn(`Preview Cards: No .banner-link element found for slide ${index}`);
       return;
     }
 
     const previewDetails = this.config.getBannerItemPreviewDetails(index);
     if (!previewDetails) {
-      console.warn(`Preview Cards: No preview details found for slide ${index}`);
+      // console.warn(`Preview Cards: No preview details found for slide ${index}`);
       return;
     }
 
@@ -88,7 +88,7 @@ export class BannerPreviewCards {
     // Setup event listeners
     this.setupPreviewCardEvents(bannerLinkElement, previewOverlay, index);
     
-    console.log(`Preview Cards: Setup complete for slide ${index}. HasValidLink: ${previewDetails.hasValidLink}`);
+    // console.log(`Preview Cards: Setup complete for slide ${index}. HasValidLink: ${previewDetails.hasValidLink}`);
   }
 
   /**
@@ -382,7 +382,7 @@ export class BannerPreviewCards {
       this.config.onPreviewShow(index);
     }
     
-    console.log(`Preview Cards: Showing preview for slide ${index}`);
+    // console.log(`Preview Cards: Showing preview for slide ${index}`);
   }
 
   public hidePreviewCard(previewOverlay: HTMLElement, index: number): void {
@@ -399,7 +399,7 @@ export class BannerPreviewCards {
       this.config.onPreviewHide(index);
     }
     
-    console.log(`Preview Cards: Hiding preview for slide ${index}`);
+    // console.log(`Preview Cards: Hiding preview for slide ${index}`);
   }
 
   public hideAllPreviewCards(): void {

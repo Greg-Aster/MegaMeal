@@ -81,8 +81,8 @@ export class BannerAnimationController {
     if (!this.findBannerElements()) return false;
     if (!this.validateBannerSetup()) return false;
 
-    console.log('Banner Controller: Starting with modular architecture');
-
+/*     console.log('Banner Controller: Starting with modular architecture');
+ */
     // Initialize in proper order
     this.initializeSlideStates();
     this.initializeModules();
@@ -96,20 +96,20 @@ export class BannerAnimationController {
   private findBannerElements(): boolean {
     this.bannerContainer = document.getElementById(this.config.containerId);
     if (!this.bannerContainer) {
-      console.log('Banner Controller: No banner container found');
-      return false;
+/*       console.log('Banner Controller: No banner container found');
+ */      return false;
     }
     
     this.bannerSlides = this.bannerContainer.querySelectorAll('.banner-slide');
-    console.log(`Banner Controller: Found ${this.bannerSlides.length} banner slides`);
-    
+/*     console.log(`Banner Controller: Found ${this.bannerSlides.length} banner slides`);
+ */    
     return true;
   }
 
   private validateBannerSetup(): boolean {
     if (!this.bannerSlides || this.bannerSlides.length <= 1) {
-      console.log('Banner Controller: Not enough slides for animation (need at least 2)');
-      return false;
+/*       console.log('Banner Controller: Not enough slides for animation (need at least 2)');
+ */      return false;
     }
     return true;
   }
@@ -162,7 +162,7 @@ export class BannerAnimationController {
   private async transitionToSlide(targetIndex: number): Promise<void> {
     if (!this.bannerSlides || targetIndex === this.currentIndex) return;
 
-    console.log(`Banner Controller: Transitioning from ${this.currentIndex} to ${targetIndex}`);
+    // console.log(`Banner Controller: Transitioning from ${this.currentIndex} to ${targetIndex}`);
 
     try {
       // Wait for target content to be ready
@@ -176,7 +176,7 @@ export class BannerAnimationController {
       this.videoManager.cleanupDistantVideos(targetIndex);
       
     } catch (error) {
-      console.error('Banner Controller: Transition failed, continuing anyway:', error);
+      // console.error('Banner Controller: Transition failed, continuing anyway:', error);
       this.executeTransition(targetIndex);
     }
   }
@@ -234,7 +234,7 @@ export class BannerAnimationController {
       this.animationTimeout = 0;
     }
     
-    console.log(`Banner Controller: Paused (${reason})`);
+    // console.log(`Banner Controller: Paused (${reason})`);
   }
 
   public resumeAnimation(reason: string): void {
@@ -247,7 +247,7 @@ export class BannerAnimationController {
       this.startAnimationTimer();
     }
     
-    console.log(`Banner Controller: Resumed (${reason})`);
+    // console.log(`Banner Controller: Resumed (${reason})`);
   }
 
   private startAnimationTimer(): void {
@@ -268,7 +268,7 @@ export class BannerAnimationController {
       return;
     }
 
-    console.log(`Banner Controller: Manual navigation to ${targetIndex}`);
+    // console.log(`Banner Controller: Manual navigation to ${targetIndex}`);
     
     this.previewCards.hideAllPreviewCards();
     this.isManualNavigation = true;
@@ -413,7 +413,7 @@ export class BannerAnimationController {
   }
 
   private handleVideoError(index: number, error: Error): void {
-    console.warn(`Banner Controller: Video error for slide ${index}:`, error);
+    // console.warn(`Banner Controller: Video error for slide ${index}:`, error);
     // Error handling is done by the video manager
   }
 
