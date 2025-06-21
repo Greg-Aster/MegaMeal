@@ -79,8 +79,14 @@ const getNavIcon = (name: string): string => {
     'Cookbook': 'material-symbols:menu-book-outline',
     'Gastronomy': 'material-symbols:restaurant',
     'Map': 'material-symbols:map',
+    'Store': 'material-symbols:attach-money',
   };
-  // Return mapped icon or fallback to generic link icon
+  
+  // Debug: Log unmapped navigation items to help identify missing mappings
+  if (!iconMap[name]) {
+    console.log(`🔍 Unmapped navigation item: "${name}" - using fallback link icon`);
+  }
+  
   return iconMap[name] || 'material-symbols:link';
 };
 ---
@@ -89,17 +95,16 @@ const getNavIcon = (name: string): string => {
 <!-- MAIN SIDE NAVIGATION CONTAINER -->
 <!-- =============================================================== -->
 <!-- 
-  The main container uses:
+  The main container uses Tailwind classes for responsive behavior:
   - card-base: Styling from main.css for consistent card appearance
   - p-2: Padding of 0.5rem on all sides
   - h-full: Full height of parent
   - flex flex-col: Vertical flexbox layout
   - relative: For positioning expandable panels
-  - w-full: Take full width of grid column (FIXED: was max-w-full)
-  - overflow-visible: Allow panels to show outside container on desktop
-  - md:overflow-hidden: Prevent overflow on mobile
+  - w-full: Take full width of grid column
+  - overflow-visible lg:overflow-hidden: Allow panels on desktop, prevent on mobile
 -->
-<div id="unified-sidenav" class:list={[className, "card-base p-2 h-full flex flex-col relative w-full overflow-visible md:overflow-hidden"]} style={style}>
+<div id="unified-sidenav" class:list={[className, "card-base p-2 h-full flex flex-col relative w-full overflow-visible lg:overflow-hidden"]} style={style}>
 
   <!-- =============================================================== -->
   <!-- SITE LOGO/HOME LINK -->
@@ -151,10 +156,17 @@ const getNavIcon = (name: string): string => {
     These panels slide out from the right side when dropdown buttons are clicked
     One panel is created for each navigation item that has dropdown children
     They use absolute positioning and are hidden by default
-    FIXED: Now responsive width and proper mobile handling
+    Using Tailwind responsive positioning with minimal custom CSS
   -->
 {processedLinks.filter(link => link.dropdown).map((link) => (
-  <div id={`sidenav-dropdown-${link.name.toLowerCase()}`} class="expandable-panel card-base shadow-lg rounded-lg">
+  <div 
+    id={`sidenav-dropdown-${link.name.toLowerCase()}`} 
+    class="sidenav-panel opacity-0 -translate-x-4 pointer-events-none transition-all duration-200 ease-in-out absolute top-0 z-50 card-base shadow-lg rounded-lg
+           w-48 max-w-[calc(100vw-6rem)] 
+           left-[calc(5rem+0.5rem)] 
+           md:left-[calc(12rem+0.5rem)] md:w-56 md:max-w-[calc(100vw-13rem)]
+           lg:left-full lg:ml-2 lg:w-64 lg:max-w-none"
+  >
     <div class="p-2">
       <!-- Panel Title -->
       <div class="text-xs font-medium text-center mb-2 text-neutral-400 px-2">{link.name}</div>
@@ -165,7 +177,7 @@ const getNavIcon = (name: string): string => {
             aria-label={dropdownItem.name}
             href={dropdownItem.external ? dropdownItem.url : url(dropdownItem.url)}
             target={dropdownItem.external ? "_blank" : null}
-            class="btn-plain rounded-md px-3 py-2 text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left whitespace-nowrap"
+            class="btn-plain rounded-md px-3 py-2 text-sm md:text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left"
           >
             <Icon name={getNavIcon(dropdownItem.name)} class="text-base flex-shrink-0" />
             <span class="flex-1 min-w-0 truncate">{dropdownItem.name}</span>
@@ -211,9 +223,16 @@ const getNavIcon = (name: string): string => {
     This panel shows ALL navigation links in a flat list
     It slides out from the right when the menu toggle button is clicked
     Useful for quick access to all navigation items
-    FIXED: Now responsive and properly positioned
+    Using Tailwind responsive classes
   -->
-  <div id="sidenav-menu-panel" class="expandable-panel card-base shadow-lg rounded-lg">
+  <div 
+    id="sidenav-menu-panel" 
+    class="sidenav-panel opacity-0 -translate-x-4 pointer-events-none transition-all duration-200 ease-in-out absolute top-0 z-50 card-base shadow-lg rounded-lg
+           w-48 max-w-[calc(100vw-6rem)] 
+           left-[calc(5rem+0.5rem)] 
+           md:left-[calc(12rem+0.5rem)] md:w-56 md:max-w-[calc(100vw-13rem)]
+           lg:left-full lg:ml-2 lg:w-64 lg:max-w-none"
+  >
     <div class="p-2">
       <div class="text-xs font-medium text-center mb-2 text-neutral-400 px-2">Navigation</div>
       <div class="flex flex-col gap-1">
@@ -222,7 +241,7 @@ const getNavIcon = (name: string): string => {
             aria-label={link.name}
             href={link.external ? link.url : url(link.url)}
             target={link.external ? "_blank" : null}
-            class="nav-menu-link btn-plain rounded-md px-3 py-2 text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left whitespace-nowrap"
+            class="nav-menu-link btn-plain rounded-md px-3 py-2 text-sm md:text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left"
           >
             <Icon name={getNavIcon(link.name)} class="text-base flex-shrink-0" />
             <span class="flex-1 min-w-0 truncate">{link.name}</span>
@@ -283,14 +302,7 @@ const getNavIcon = (name: string): string => {
             </div>
             <!-- VERTICAL HUE SLIDER -->
             <div class="w-full flex justify-center">
-              <div class="w-6 h-24 rounded relative overflow-hidden" style="background: linear-gradient(to bottom, 
-                hsl(360, 100%, 50%), 
-                hsl(300, 100%, 50%), 
-                hsl(240, 100%, 50%), 
-                hsl(180, 100%, 50%), 
-                hsl(120, 100%, 50%), 
-                hsl(60, 100%, 50%), 
-                hsl(0, 100%, 50%));">
+              <div class="w-6 h-24 rounded relative overflow-hidden hue-gradient">
                 <input 
                   type="range" 
                   id="inline-hue-input"
@@ -299,11 +311,10 @@ const getNavIcon = (name: string): string => {
                   value="230" 
                   step="5"
                   orient="vertical"
-                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  style="writing-mode: bt-lr; -webkit-appearance: slider-vertical;"
+                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer hue-slider"
                   aria-label="Theme Hue"
                 />
-                <div id="hue-thumb" class="absolute left-0 w-full h-0.5 bg-white border border-black/30 rounded-sm pointer-events-none shadow-sm" style="top: calc((360 - 230)/360 * 100% - 1px);"></div>
+                <div id="hue-thumb" class="absolute left-0 w-full h-0.5 bg-white border border-black/30 rounded-sm pointer-events-none shadow-sm hue-thumb"></div>
               </div>
             </div>
           </div>
@@ -323,94 +334,46 @@ const getNavIcon = (name: string): string => {
 </div>
 
 <!-- =============================================================== -->
-<!-- CSS STYLES -->
+<!-- MINIMAL CSS STYLES - ONLY WHAT TAILWIND CAN'T DO -->
 <!-- =============================================================== -->
 <style>
   /* =============================================================== */
-  /* EXPANDABLE PANEL SYSTEM - FIXED FOR RESPONSIVE BEHAVIOR */
+  /* PANEL STATES - Using simple class toggles instead of complex positioning */
   /* =============================================================== */
-  /* 
-    These panels slide out from the right side of the navigation
-    They are positioned absolutely relative to the main container
-    
-    FIXED: Responsive width and proper mobile behavior
-    - Mobile: Use viewport-based positioning to avoid overflow
-    - Desktop: Use relative positioning for better control
-  */
   
-  .expandable-panel {
-    position: absolute;
-    top: 0;
-    z-index: 50;
-    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
-    
-    /* MOBILE: Position from left edge of viewport */
-    left: calc(5rem + 0.5rem); /* 5rem sidebar + 0.5rem gap */
-    width: calc(100vw - 5rem - 1rem); /* Full viewport minus sidebar and gaps */
-    max-width: 200px; /* Maximum width on larger screens */
-    
-    /* TABLET */
-    @media (min-width: 768px) {
-      left: calc(12rem + 0.5rem); /* 12rem sidebar + 0.5rem gap */
-      width: calc(100vw - 12rem - 2rem); /* Adjust for tablet sidebar */
-      max-width: 250px;
-    }
-    
-    /* DESKTOP */
-    @media (min-width: 1024px) {
-      left: 100%; /* Position relative to sidebar container */
-      margin-left: 0.5rem;
-      width: 280px; /* Fixed width on desktop */
-      max-width: none;
-    }
+  /* Open state for panels */
+  .sidenav-panel.panel-open {
+    @apply opacity-100 translate-x-0 pointer-events-auto;
   }
   
-  /* CLOSED STATE */
-  /* Panel is invisible and slightly shifted left */
-  .panel-closed {
-    opacity: 0;
-    transform: translateX(-15px);
-    pointer-events: none;
-  }
-  
-  /* OPEN STATE */
-  /* Panel is visible and in normal position */
-  .panel-open {
-    opacity: 1;
-    transform: translateX(0);
-    pointer-events: auto;
-  }
-
   /* =============================================================== */
-  /* MOBILE SPECIFIC FIXES */
+  /* HUE SLIDER - Custom gradient and positioning that Tailwind can't handle */
   /* =============================================================== */
   
-  /* On mobile, ensure panels don't cause horizontal scroll */
-  @media (max-width: 767px) {
-    .expandable-panel {
-      /* Ensure panels stay within viewport bounds */
-      right: 0.5rem; /* Add right margin */
-      left: auto; /* Override left positioning */
-      width: calc(100vw - 5rem - 1rem); /* Sidebar width + margins */
-      max-width: calc(100vw - 5rem - 1rem);
-    }
-    
-    /* Make text smaller on mobile to fit better */
-    .expandable-panel .text-sm {
-      font-size: 0.75rem;
-    }
-    
-    /* Reduce padding on mobile */
-    .expandable-panel .p-2 {
-      padding: 0.375rem;
-    }
+  .hue-gradient {
+    background: linear-gradient(to bottom, 
+      hsl(360, 100%, 50%), 
+      hsl(300, 100%, 50%), 
+      hsl(240, 100%, 50%), 
+      hsl(180, 100%, 50%), 
+      hsl(120, 100%, 50%), 
+      hsl(60, 100%, 50%), 
+      hsl(0, 100%, 50%));
   }
-
+  
+  .hue-slider {
+    writing-mode: bt-lr; 
+    -webkit-appearance: slider-vertical;
+  }
+  
+  .hue-thumb {
+    top: calc((360 - 230)/360 * 100% - 1px);
+  }
+  
   /* =============================================================== */
-  /* PREVENT HORIZONTAL SCROLL */
+  /* SIDEBAR CONSTRAINTS - Prevent any layout issues */
   /* =============================================================== */
   
-  /* Ensure the sidebar itself never causes overflow */
   #unified-sidenav {
     min-width: 0; /* Allow shrinking */
     flex-shrink: 0; /* But don't shrink the actual sidebar */
@@ -420,13 +383,6 @@ const getNavIcon = (name: string): string => {
   #unified-sidenav button,
   #unified-sidenav a {
     min-width: 0; /* Allow content to shrink */
-  }
-  
-  /* Ensure text content doesn't overflow */
-  #unified-sidenav .truncate {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 </style>
 
@@ -455,7 +411,7 @@ const getNavIcon = (name: string): string => {
     const fsBtn = document.getElementById('sidenav-fullscreen-btn');
 
     // ===================================================================
-    // DROPDOWN PANELS LOGIC - FIXED
+    // DROPDOWN PANELS LOGIC - SIMPLIFIED
     // ===================================================================
     // Handle dropdown buttons and their corresponding panels
     
@@ -465,9 +421,6 @@ const getNavIcon = (name: string): string => {
       const panel = document.getElementById(`sidenav-dropdown-${dropdownName?.toLowerCase()}`);
       
       if (panel) {
-        // Initialize panel as closed
-        panel.classList.add('panel-closed');
-        
         // Handle button clicks
         button.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -477,7 +430,6 @@ const getNavIcon = (name: string): string => {
           
           // Toggle this panel
           panel.classList.toggle('panel-open');
-          panel.classList.toggle('panel-closed');
         });
       }
     });
@@ -489,9 +441,6 @@ const getNavIcon = (name: string): string => {
     // Shows all navigation links in a flat list
     
     if (menuToggleBtn && menuPanel) {
-        // Start with panel closed
-        menuPanel.classList.add('panel-closed');
-        
         // Toggle panel when button is clicked
         menuToggleBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -501,7 +450,6 @@ const getNavIcon = (name: string): string => {
             
             // Toggle this panel
             menuPanel.classList.toggle('panel-open');
-            menuPanel.classList.toggle('panel-closed');
         });
     }
 
@@ -511,11 +459,10 @@ const getNavIcon = (name: string): string => {
     // Closes all expandable panels except the one specified
     
     function closeAllPanels(except = null) {
-      const allPanels = document.querySelectorAll('.expandable-panel');
+      const allPanels = document.querySelectorAll('.sidenav-panel');
       allPanels.forEach(panel => {
         if (panel !== except && panel.classList.contains('panel-open')) {
           panel.classList.remove('panel-open');
-          panel.classList.add('panel-closed');
         }
       });
     }
@@ -558,12 +505,7 @@ const getNavIcon = (name: string): string => {
       e.stopPropagation();
       
       if (inlineSlider) {
-        const isHidden = inlineSlider.classList.contains('hidden');
-        if (isHidden) {
-          inlineSlider.classList.remove('hidden');
-        } else {
-          inlineSlider.classList.add('hidden');
-        }
+        inlineSlider.classList.toggle('hidden');
       }
     });
     
@@ -729,7 +671,7 @@ const getNavIcon = (name: string): string => {
         
         if (target instanceof Element) {
             // Check if click is inside any expandable panel or their trigger buttons
-            const clickedPanel = target.closest('.expandable-panel');
+            const clickedPanel = target.closest('.sidenav-panel');
             const clickedButton = target.closest('.nav-dropdown-btn, #sidenav-menu-toggle');
             
             // If click is outside all panels and buttons, close all panels
