@@ -1,0 +1,673 @@
+---
+// =====================================================================
+// SIDE NAVIGATION COMPONENT
+// =====================================================================
+// This component creates a compact side navigation panel for mobile/tablet
+// It includes:
+// - Site logo/home link
+// - Main navigation links (with dropdown support)
+// - Quick action buttons (search, menu, categories)
+// - Settings panel (theme, fullscreen, assistant toggle)
+// - Expandable panels that slide out from the right side
+
+// =====================================================================
+// IMPORTS
+// =====================================================================
+import { Icon } from 'astro-icon/components';
+import { LinkPreset, type NavBarLink } from '../../types/config';
+import { navBarConfig, siteConfig } from '../../config/config';
+import { LinkPresets } from '../../constants/link-presets';
+import { url } from '../../utils/url-utils';
+
+// DisplaySettings removed - will be added to parent SideBar.astro instead
+
+// =====================================================================
+// TYPESCRIPT INTERFACES
+// =====================================================================
+interface Props {
+  class?: string;    // Additional CSS classes to apply to the container
+  style?: string;    // Inline styles for the container
+}
+
+// =====================================================================
+// PROPS DESTRUCTURING
+// =====================================================================
+const { class: className, style } = Astro.props;
+
+// =====================================================================
+// AUTHENTICATION CHECK
+// =====================================================================
+// Check if user is logged in (affects what navigation items are shown)
+const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false;
+
+// =====================================================================
+// NAVIGATION LINKS PROCESSING
+// =====================================================================
+
+// Create a flat list of ALL navigation links (including dropdown items)
+// This is used for the expandable navigation panel
+const allLinks = navBarConfig.links.flatMap((item: NavBarLink | LinkPreset) => {
+  // Convert LinkPreset numbers to actual link objects
+  const link = typeof item === 'number' ? LinkPresets[item] : item;
+  // If it's a dropdown, return all dropdown items; otherwise return the link itself
+  return link.dropdown ? link.dropdown : link;
+});
+
+// Process links while keeping dropdown structure intact
+// This is used for the main navigation section that shows dropdown buttons
+const processedLinks = navBarConfig.links.map((item: NavBarLink | LinkPreset) => {
+  if (typeof item === 'number') {
+    return LinkPresets[item];  // Convert preset number to link object
+  }
+  return item;  // Already a link object, return as-is
+});
+
+// =====================================================================
+// ICON MAPPING FUNCTION
+// =====================================================================
+// Maps navigation link names to their corresponding Material Symbols icons
+// Add new mappings here when adding new navigation items
+const getNavIcon = (name: string): string => {
+  const iconMap: Record<string, string> = {
+    'Home': 'material-symbols:home-outline',
+    'Archive': 'material-symbols:archive-outline',
+    'About': 'material-symbols:person-outline',
+    'Projects': 'material-symbols:work-outline',
+    'Blog': 'material-symbols:article-outline',
+    'Contact': 'material-symbols:mail-outline',
+    'Timeline': 'material-symbols:timeline',
+    'Cookbook': 'material-symbols:menu-book-outline',
+    'Gastronomy': 'material-symbols:restaurant',
+    'Map': 'material-symbols:map',
+  };
+  // Return mapped icon or fallback to generic link icon
+  return iconMap[name] || 'material-symbols:link';
+};
+---
+
+<!-- =============================================================== -->
+<!-- MAIN SIDE NAVIGATION CONTAINER -->
+<!-- =============================================================== -->
+<!-- 
+  The main container uses:
+  - card-base: Styling from main.css for consistent card appearance
+  - p-2: Padding of 0.5rem on all sides
+  - h-full: Full height of parent
+  - flex flex-col: Vertical flexbox layout
+  - relative: For positioning expandable panels
+  - max-w-full: Prevent width overflow
+  - overflow-hidden: Clip content that exceeds bounds
+-->
+<div id="unified-sidenav" class:list={[className, "card-base p-2 h-full flex flex-col relative max-w-full overflow-hidden"]} style={style}>
+
+  <!-- =============================================================== -->
+  <!-- SITE LOGO/HOME LINK -->
+  <!-- =============================================================== -->
+  <!-- Small colored bar that serves as a minimal logo and home link -->
+  <div class="w-full flex justify-center mb-3">
+    <a href={url('/')} aria-label="Go to Homepage" class="w-8 h-1 bg-[var(--primary)] rounded-full hover:opacity-80 transition-opacity"></a>
+  </div>
+
+  <!-- =============================================================== -->
+  <!-- MAIN NAVIGATION LINKS SECTION -->
+  <!-- =============================================================== -->
+  <!-- 
+    Shows the primary navigation items from your config
+    - Regular links: Navigate directly when clicked
+    - Dropdown links: Show as buttons that open expandable panels
+  -->
+  <div class="flex flex-col gap-1 mb-3 border-b border-black/10 dark:border-white/10 pb-3">
+    {processedLinks.map((link) => (
+      link.dropdown ? (
+        <!-- DROPDOWN NAVIGATION BUTTON -->
+        <!-- This button will trigger an expandable panel to show dropdown items -->
+        <button 
+          data-dropdown-name={link.name}
+          aria-label={`${link.name} Menu`}
+          class="nav-dropdown-btn btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200"
+        >
+          <Icon name={getNavIcon(link.name)} class="text-lg" />
+        </button>
+      ) : (
+        <!-- DIRECT NAVIGATION LINK -->
+        <!-- Regular link that navigates directly to the URL -->
+        <a
+          aria-label={link.name}
+          href={link.external ? link.url : url(link.url)}
+          target={link.external ? "_blank" : null}
+          class="btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200"
+        >
+          <Icon name={getNavIcon(link.name)} class="text-lg" />
+        </a>
+      )
+    ))}
+  </div>
+
+  <!-- =============================================================== -->
+  <!-- DROPDOWN PANELS -->
+  <!-- =============================================================== -->
+  <!-- 
+    These panels slide out from the right side when dropdown buttons are clicked
+    One panel is created for each navigation item that has dropdown children
+    They use absolute positioning and are hidden by default
+  -->
+{processedLinks.filter(link => link.dropdown).map((link) => (
+  <div id={`sidenav-dropdown-${link.name.toLowerCase()}`} class="expandable-panel card-base shadow-lg rounded-lg">
+    <div class="p-2">
+      <!-- Panel Title -->
+      <div class="text-xs font-medium text-center mb-2 text-neutral-400 px-2">{link.name}</div>
+      <!-- Dropdown Items -->
+      <div class="flex flex-col gap-1">
+        {link.dropdown.map((dropdownItem) => (
+          <a
+            aria-label={dropdownItem.name}
+            href={dropdownItem.external ? dropdownItem.url : url(dropdownItem.url)}
+            target={dropdownItem.external ? "_blank" : null}
+            class="btn-plain rounded-md px-3 py-2 text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left whitespace-nowrap"
+          >
+            <Icon name={getNavIcon(dropdownItem.name)} class="text-base flex-shrink-0" />
+            <span class="flex-1">{dropdownItem.name}</span>
+            {/* External link indicator */}
+            {dropdownItem.external && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.75rem] flex-shrink-0" />}
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+))}
+  
+  <!-- =============================================================== -->
+  <!-- PRIMARY ACTION BUTTONS -->
+  <!-- =============================================================== -->
+  <!-- 
+    Quick access buttons for common actions:
+    - Menu Toggle: Opens/closes the main navigation panel
+    - Search: Opens the search panel  
+    - Categories: Shows categories (customize behavior in script)
+  -->
+  <div class="flex flex-col gap-2 mb-3">
+    <!-- NAVIGATION MENU TOGGLE -->
+    <button id="sidenav-menu-toggle" aria-label="Toggle Navigation Menu" class="btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
+      <Icon name="material-symbols:menu-rounded" class="text-lg" />
+    </button>
+    
+    <!-- SEARCH BUTTON -->
+    <button id="sidenav-search-btn" aria-label="Search" class="btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
+      <Icon name="material-symbols:search" class="text-lg" />
+    </button>
+    
+    <!-- CATEGORIES BUTTON -->
+    <button id="sidenav-categories-btn" aria-label="Categories" class="btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
+      <Icon name="material-symbols:category-outline" class="text-lg"></Icon>
+    </button>
+  </div>
+
+  <!-- =============================================================== -->
+  <!-- EXPANDABLE NAVIGATION PANEL -->
+  <!-- =============================================================== -->
+  <!-- 
+    This panel shows ALL navigation links in a flat list
+    It slides out from the right when the menu toggle button is clicked
+    Useful for quick access to all navigation items
+  -->
+  <div id="sidenav-menu-panel" class="expandable-panel card-base shadow-lg rounded-lg">
+    <div class="p-2">
+      <div class="text-xs font-medium text-center mb-2 text-neutral-400 px-2">Navigation</div>
+      <div class="flex flex-col gap-1">
+        {allLinks.map((link) => (
+          <a
+            aria-label={link.name}
+            href={link.external ? link.url : url(link.url)}
+            target={link.external ? "_blank" : null}
+            class="nav-menu-link btn-plain rounded-md px-3 py-2 text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left whitespace-nowrap"
+          >
+            <Icon name={getNavIcon(link.name)} class="text-base flex-shrink-0" />
+            <span class="flex-1">{link.name}</span>
+            {link.external && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.75rem] flex-shrink-0" />}
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+  
+  <!-- =============================================================== -->
+  <!-- SETTINGS & UTILITY BUTTONS -->
+  <!-- =============================================================== -->
+  <!-- 
+    Bottom section with utility controls:
+    - Assistant (Bleepy) toggle
+    - Theme switcher (light/dark mode)
+    - Display settings (if not fixed in config)
+    - Fullscreen toggle (desktop only)
+    
+    Uses mt-auto to push this section to the bottom of the container
+  -->
+  <div class="border-t border-black/10 dark:border-white/10 pt-2 mt-auto">
+    <div class="flex flex-col gap-1">
+      
+      <!-- ASSISTANT (BLEEPY) TOGGLE -->
+      <!-- Shows different icons based on assistant visibility state -->
+      <button id="sidenav-bleepy-btn" aria-label="Toggle Assistant" class="btn-plain rounded-md h-8 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
+        <span id="bleepy-icon-show">🍴</span>  <!-- Fork = show assistant -->
+        <span id="bleepy-icon-hide" class="hidden">🥄</span>  <!-- Spoon = hide assistant -->
+      </button>
+      
+      <!-- THEME TOGGLE -->
+      <!-- Switches between light and dark mode -->
+      <button id="sidenav-theme-btn" aria-label="Toggle Theme" class="btn-plain rounded-md h-8 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
+        <Icon name="material-symbols:dark-mode-outline" class="text-sm dark:hidden" />  <!-- Show in light mode -->
+        <Icon name="material-symbols:light-mode-outline" class="text-sm hidden dark:block" />  <!-- Show in dark mode -->
+      </button>
+      
+      <!-- DISPLAY SETTINGS BUTTON -->
+      <!-- Shows inline hue slider when clicked -->
+      {!siteConfig.themeColor.fixed && (
+        <div class="w-full overflow-hidden">
+          <button id="sidenav-settings-btn" aria-label="Display Settings" class="btn-plain rounded-md h-8 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
+            <Icon name="material-symbols:palette-outline" class="text-sm" />
+          </button>
+          
+          <!-- INLINE HUE SLIDER - appears when button is clicked -->
+          <div id="inline-hue-slider" class="hidden mt-2 px-1 py-2 bg-[var(--card-bg)] rounded-md border border-black/10 dark:border-white/10 max-w-full overflow-hidden">
+            <div class="flex items-center justify-between gap-1 mb-2 text-xs">
+              <span class="font-medium text-neutral-600 dark:text-neutral-400 flex-shrink-0">Hue</span>
+              <div id="hue-value-display" class="bg-[var(--btn-regular-bg)] text-[var(--btn-content)] px-1 py-1 rounded text-xs font-bold min-w-[1.5rem] text-center flex-shrink-0">
+                230
+              </div>
+              <button id="hue-reset-btn" aria-label="Reset Hue" class="btn-plain rounded px-1 py-1 text-xs active:scale-90 flex-shrink-0">
+                <Icon name="fa6-solid:arrow-rotate-left" class="text-xs" />
+              </button>
+            </div>
+            <!-- VERTICAL HUE SLIDER -->
+            <div class="w-full flex justify-center">
+              <div class="w-6 h-24 rounded relative overflow-hidden" style="background: linear-gradient(to bottom, 
+                hsl(360, 100%, 50%), 
+                hsl(300, 100%, 50%), 
+                hsl(240, 100%, 50%), 
+                hsl(180, 100%, 50%), 
+                hsl(120, 100%, 50%), 
+                hsl(60, 100%, 50%), 
+                hsl(0, 100%, 50%));">
+                <input 
+                  type="range" 
+                  id="inline-hue-input"
+                  min="0" 
+                  max="360" 
+                  value="230" 
+                  step="5"
+                  orient="vertical"
+                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  style="writing-mode: bt-lr; -webkit-appearance: slider-vertical;"
+                  aria-label="Theme Hue"
+                />
+                <div id="hue-thumb" class="absolute left-0 w-full h-0.5 bg-white border border-black/30 rounded-sm pointer-events-none shadow-sm" style="top: calc((360 - 230)/360 * 100% - 1px);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <!-- FULLSCREEN TOGGLE -->
+      <!-- Only visible on desktop (md breakpoint and up) -->
+      <!-- Uses browser's fullscreen API -->
+      <button id="sidenav-fullscreen-btn" aria-label="Toggle Fullscreen Mode" class="btn-plain rounded-md h-8 w-full items-center justify-center active:scale-90 transition-all duration-200 hidden md:flex">
+        <Icon name="fa6-solid:expand" class="fullscreen-icon text-sm"></Icon>  <!-- Enter fullscreen -->
+        <Icon name="fa6-solid:compress" class="fullscreen-exit-icon text-sm hidden"></Icon>  <!-- Exit fullscreen -->
+      </button>
+    </div>
+  </div>
+
+
+</div>
+
+<!-- =============================================================== -->
+<!-- CSS STYLES -->
+<!-- =============================================================== -->
+<style>
+  /* =============================================================== */
+  /* EXPANDABLE PANEL SYSTEM */
+  /* =============================================================== */
+  /* 
+    These panels slide out from the right side of the navigation
+    They are positioned absolutely relative to the main container
+    
+    How it works:
+    1. Panels start positioned to the right of the container (left: 100%)
+    2. margin-left adds a small gap between container and panel
+    3. JavaScript toggles between panel-closed and panel-open classes
+    4. Transitions create smooth slide-in/out animations
+  */
+  
+  .expandable-panel {
+    position: absolute;        /* Position relative to nearest relative parent */
+    top: 0;                   /* Align with top of container */
+    left: 100%;               /* Position to the right of container */
+    margin-left: 0.5rem;      /* Small gap between container and panel */
+    width: 200px;             /* Fixed width for consistency */
+    height: auto;             /* Height adjusts to content */
+    z-index: 50;              /* Ensure panels appear above other content */
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+  }
+  
+  /* CLOSED STATE */
+  /* Panel is invisible and slightly shifted left */
+  .panel-closed {
+    opacity: 0;                    /* Invisible */
+    transform: translateX(-15px);  /* Shifted 15px to the left */
+    pointer-events: none;          /* Can't be clicked when closed */
+  }
+  
+  /* OPEN STATE */
+  /* Panel is visible and in normal position */
+  .panel-open {
+    opacity: 1;                    /* Fully visible */
+    transform: translateX(0);      /* Normal position */
+    pointer-events: auto;          /* Can be clicked when open */
+  }
+
+  /* =============================================================== */
+  /* DISPLAY SETTINGS PANEL FIX */
+  /* =============================================================== */
+  /* Fix the DisplaySettings panel to slide from the right properly */
+  
+  :global(#display-setting.float-panel-closed) {
+    transform: translateX(100%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  
+  :global(#display-setting:not(.float-panel-closed)) {
+    transform: translateX(0) !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+</style>
+
+<!-- =============================================================== -->
+<!-- JAVASCRIPT - EVENT HANDLERS AND INTERACTION LOGIC -->
+<!-- =============================================================== -->
+<script>
+  // ===================================================================
+  // MAIN INITIALIZATION FUNCTION
+  // ===================================================================
+  // This function sets up all event listeners and interactive behavior
+  // It's called when the DOM is ready and after Astro page transitions
+  
+  function initializeSideNav() {
+    // ===================================================================
+    // GET DOM ELEMENTS
+    // ===================================================================
+    // Cache references to DOM elements we'll be working with
+    const menuToggleBtn = document.getElementById('sidenav-menu-toggle');
+    const menuPanel = document.getElementById('sidenav-menu-panel');
+    const settingsBtn = document.getElementById('sidenav-settings-btn');
+    const searchBtn = document.getElementById('sidenav-search-btn');
+    const categoriesBtn = document.getElementById('sidenav-categories-btn');
+    const bleepyBtn = document.getElementById('sidenav-bleepy-btn');
+    const themeBtn = document.getElementById('sidenav-theme-btn');
+    const fsBtn = document.getElementById('sidenav-fullscreen-btn');
+
+    // ===================================================================
+    // NAVIGATION PANEL TOGGLE
+    // ===================================================================
+    // Handles the main navigation menu that slides out from the right
+    // Shows all navigation links in a flat list
+    
+    if (menuToggleBtn && menuPanel) {
+        // Start with panel closed
+        menuPanel.classList.add('panel-closed');
+        
+        // Toggle panel when button is clicked
+        menuToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();  // Prevent event from bubbling up
+            menuPanel.classList.toggle('panel-open');
+            menuPanel.classList.toggle('panel-closed');
+        });
+    }
+
+    // ===================================================================
+    // DISPLAY SETTINGS - INLINE HUE SLIDER
+    // ===================================================================
+    // Shows/hides the inline hue slider and handles hue changes
+    
+    const inlineSlider = document.getElementById('inline-hue-slider');
+    const hueInput = document.getElementById('inline-hue-input');
+    const hueDisplay = document.getElementById('hue-value-display');
+    const hueThumb = document.getElementById('hue-thumb');
+    const hueResetBtn = document.getElementById('hue-reset-btn');
+    
+    // Get current hue from CSS or localStorage
+    function getCurrentHue() {
+      return parseInt(localStorage.getItem('hue') || '230');
+    }
+    
+    // Set hue and update everything
+    function setHue(newHue) {
+      localStorage.setItem('hue', newHue.toString());
+      document.documentElement.style.setProperty('--hue', newHue);
+      
+      if (hueDisplay) hueDisplay.textContent = newHue;
+      if (hueInput) hueInput.value = newHue;
+      if (hueThumb) {
+        // Vertical slider: invert position (360 at top, 0 at bottom)
+        hueThumb.style.top = `calc((360 - ${newHue})/360 * 100% - 1px)`;
+      }
+    }
+    
+    // Initialize with current hue
+    const currentHue = getCurrentHue();
+    setHue(currentHue);
+    
+    // Toggle slider visibility
+    settingsBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      
+      if (inlineSlider) {
+        const isHidden = inlineSlider.classList.contains('hidden');
+        if (isHidden) {
+          inlineSlider.classList.remove('hidden');
+        } else {
+          inlineSlider.classList.add('hidden');
+        }
+      }
+    });
+    
+    // Handle hue changes
+    hueInput?.addEventListener('input', (e) => {
+      const newHue = parseInt(e.target.value);
+      setHue(newHue);
+    });
+    
+    // Handle reset button
+    hueResetBtn?.addEventListener('click', () => {
+      const defaultHue = 230; // Your default hue
+      setHue(defaultHue);
+    });
+    
+    // Close slider when clicking outside
+    document.addEventListener('click', (e) => {
+      if (inlineSlider && !inlineSlider.classList.contains('hidden')) {
+        const target = e.target;
+        if (target instanceof Element) {
+          // Check if click is outside the slider and button
+          if (!inlineSlider.contains(target) && !settingsBtn?.contains(target)) {
+            inlineSlider.classList.add('hidden');
+          }
+        }
+      }
+    });
+
+    // ===================================================================
+    // SEARCH PANEL TOGGLE
+    // ===================================================================
+    // Opens the site search panel and focuses the search input
+    
+    searchBtn?.addEventListener('click', () => {
+      const searchPanel = document.getElementById('search-panel'); 
+      if (searchPanel) {
+        // Toggle panel visibility
+        searchPanel.classList.toggle('float-panel-closed');
+        
+        // Focus the search input for immediate typing
+        const searchInput = searchPanel.querySelector('input[type="search"]');
+        if (searchInput) (searchInput as HTMLInputElement).focus();
+      } else {
+        console.warn('Sidenav: Search Panel with id="search-panel" not found.');
+      }
+    });
+
+    // ===================================================================
+    // CATEGORIES BUTTON
+    // ===================================================================
+    // Currently shows an alert - customize this for your needs
+    // You might want to open a categories modal or navigate to a categories page
+    
+    categoriesBtn?.addEventListener('click', () => {
+        // TODO: Replace this alert with your desired categories functionality
+        // Examples:
+        // - Open a categories modal
+        // - Navigate to /categories page
+        // - Toggle a categories sidebar
+        alert('Categories button clicked. Implement modal logic here.');
+    });
+
+    // ===================================================================
+    // ASSISTANT (BLEEPY) TOGGLE LOGIC
+    // ===================================================================
+    // Manages the site assistant/mascot visibility
+    // Uses custom events to communicate with other components
+    
+    if(bleepyBtn) {
+        // Get icon elements for state display
+        const showIcon = bleepyBtn.querySelector('#bleepy-icon-show');  // 🍴 (fork)
+        const hideIcon = bleepyBtn.querySelector('#bleepy-icon-hide');  // 🥄 (spoon)
+        let isMascotVisible = true;  // Track current state
+        
+        // Handle button clicks
+        bleepyBtn.addEventListener('click', () => {
+            // Send appropriate event based on current state
+            const eventName = isMascotVisible ? 'bleepy:hide' : 'bleepy:show';
+            document.dispatchEvent(new CustomEvent(eventName));
+        });
+
+        // Listen for visibility changes from other components
+        document.addEventListener('bleepy:visibilityChanged', (event) => {
+            const customEvent = event as CustomEvent;
+            isMascotVisible = customEvent.detail.visible;
+            
+            // Update icon display based on state
+            if (isMascotVisible) {
+                showIcon?.classList.remove('hidden');  // Show fork (can hide)
+                hideIcon?.classList.add('hidden');     // Hide spoon
+            } else {
+                showIcon?.classList.add('hidden');     // Hide fork  
+                hideIcon?.classList.remove('hidden');  // Show spoon (can show)
+            }
+        });
+        
+        // Initially hide the mascot
+        document.dispatchEvent(new CustomEvent('bleepy:hide'));
+    }
+
+    // ===================================================================
+    // THEME TOGGLE
+    // ===================================================================
+    // Switches between light and dark mode
+    // Updates localStorage and document classes
+    
+    themeBtn?.addEventListener('click', () => {
+      // Toggle the 'dark' class on the document element
+      const isDark = document.documentElement.classList.toggle('dark');
+      
+      // Save preference to localStorage
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+
+    // ===================================================================
+    // FULLSCREEN TOGGLE LOGIC
+    // ===================================================================
+    // Uses the browser's Fullscreen API to enter/exit fullscreen mode
+    // Only visible on desktop devices (md breakpoint and up)
+    
+    if (fsBtn) {
+        const expandIcon = fsBtn.querySelector('.fullscreen-icon');    // Expand arrow
+        const compressIcon = fsBtn.querySelector('.fullscreen-exit-icon'); // Compress arrow
+        
+        // Function to update icon based on fullscreen state
+        const updateIcon = () => {
+            const isFullscreen = !!document.fullscreenElement;
+            expandIcon?.classList.toggle('hidden', isFullscreen);   // Hide expand when in fullscreen
+            compressIcon?.classList.toggle('hidden', !isFullscreen); // Hide compress when not in fullscreen
+        };
+        
+        // Handle button clicks
+        fsBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                // Enter fullscreen
+                document.documentElement.requestFullscreen();
+            } else {
+                // Exit fullscreen
+                document.exitFullscreen();
+            }
+        });
+        
+        // Listen for fullscreen changes (user can also use ESC key)
+        document.addEventListener('fullscreenchange', updateIcon);
+        
+        // Set initial icon state
+        updateIcon();
+    }
+
+    // ===================================================================
+    // OUTSIDE CLICK HANDLER
+    // ===================================================================
+    // Closes open panels when user clicks outside of them
+    // Provides intuitive UX for dismissing panels
+    
+    document.addEventListener('click', (e) => {
+        const target = e.target;
+        
+        if (target instanceof Element) {
+            // Close navigation panel if clicking outside
+            if (menuPanel?.classList.contains('panel-open') && 
+                !menuPanel.contains(target) && 
+                !menuToggleBtn?.contains(target)) {
+                 menuPanel.classList.remove('panel-open');
+                 menuPanel.classList.add('panel-closed');
+            }
+            
+            // TODO: Add similar logic for other panels if needed
+            // Example:
+            // if (someOtherPanel?.classList.contains('panel-open') && 
+            //     !someOtherPanel.contains(target) && 
+            //     !someOtherToggleBtn?.contains(target)) {
+            //   closePanel(someOtherPanel);
+            // }
+        }
+    });
+  }
+
+  // ===================================================================
+  // EVENT LISTENERS SETUP
+  // ===================================================================
+  // Initialize the component when:
+  // 1. DOM is ready (initial page load)
+  // 2. After Astro page transitions (astro:page-load event)
+  
+  // Add multiple initialization attempts to ensure it works
+  function initWithDelay() {
+    setTimeout(initializeSideNav, 100);
+  }
+  
+  // Try multiple event listeners
+  document.addEventListener('astro:page-load', initWithDelay);
+  document.addEventListener('DOMContentLoaded', initWithDelay);
+  window.addEventListener('load', initWithDelay);
+  
+  // Immediate attempt
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWithDelay);
+  } else {
+    initWithDelay();
+  }
+</script>

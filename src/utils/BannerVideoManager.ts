@@ -65,8 +65,8 @@ export class BannerVideoManager {
   public initialize(bannerSlides: NodeListOf<Element>): void {
     this.bannerSlides = bannerSlides;
     this.initializeVideoStates();
-    console.log('Video Manager: Initialized for', bannerSlides.length, 'slides');
-  }
+/*     console.log('Video Manager: Initialized for', bannerSlides.length, 'slides');
+ */  }
 
   /**
    * Initialize loading state for all slides
@@ -124,8 +124,8 @@ export class BannerVideoManager {
       return Promise.resolve();
     }
 
-    console.log(`Video Manager: Starting load for video ${index}`);
-
+/*     console.log(`Video Manager: Starting load for video ${index}`);
+ */
     // Update state to loading
     this.updateVideoState(index, VideoLoadingState.LOADING, videoElement);
 
@@ -147,8 +147,8 @@ export class BannerVideoManager {
   private createVideoLoadPromise(videoElement: HTMLVideoElement, index: number): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
-        console.warn(`Video Manager: Timeout loading video ${index}`);
-        this.handleVideoError(index, new Error(`Video load timeout for index ${index}`));
+/*         console.warn(`Video Manager: Timeout loading video ${index}`);
+ */        this.handleVideoError(index, new Error(`Video load timeout for index ${index}`));
         reject(new Error(`Video load timeout for index ${index}`));
       }, this.videoLoadTimeout);
 
@@ -157,8 +157,8 @@ export class BannerVideoManager {
         videoElement.removeEventListener('canplay', onCanPlay);
         videoElement.removeEventListener('error', onError);
         
-        console.log(`Video Manager: Successfully loaded video ${index}`);
-        this.updateVideoState(index, VideoLoadingState.LOADED);
+/*         console.log(`Video Manager: Successfully loaded video ${index}`);
+ */        this.updateVideoState(index, VideoLoadingState.LOADED);
         resolve();
       };
 
@@ -168,8 +168,8 @@ export class BannerVideoManager {
         videoElement.removeEventListener('error', onError);
         
         const error = new Error(`Video load error for index ${index}`);
-        console.error(`Video Manager: Failed to load video ${index}`, event);
-        this.handleVideoError(index, error);
+/*         console.error(`Video Manager: Failed to load video ${index}`, event);
+ */        this.handleVideoError(index, error);
         reject(error);
       };
 
@@ -200,8 +200,8 @@ export class BannerVideoManager {
       videoElement.style.display = 'none';
       imageElement.style.display = 'block';
       
-      console.log(`Video Manager: Fallback to image for slide ${index}`);
-    }
+/*       console.log(`Video Manager: Fallback to image for slide ${index}`);
+ */    }
 
     // Update loading state
     this.updateVideoState(index, VideoLoadingState.ERROR);
@@ -261,11 +261,11 @@ export class BannerVideoManager {
       if (this.isVideoSlide(nextIndex)) {
         const videoInfo = this.videoLoadingInfo.get(nextIndex);
         if (videoInfo && videoInfo.state === VideoLoadingState.UNLOADED) {
-          console.log(`Video Manager: Preloading video ${nextIndex}`);
-          preloadPromises.push(
+/*           console.log(`Video Manager: Preloading video ${nextIndex}`);
+ */          preloadPromises.push(
             this.loadVideo(nextIndex).catch(err => {
-              console.warn(`Video Manager: Failed to preload video ${nextIndex}:`, err);
-            })
+/*               console.warn(`Video Manager: Failed to preload video ${nextIndex}:`, err);
+ */            })
           );
         }
       }
@@ -312,17 +312,17 @@ export class BannerVideoManager {
 
     const videoInfo = this.videoLoadingInfo.get(index);
     if (!videoInfo?.element || videoInfo.state !== VideoLoadingState.LOADED) {
-      console.warn(`Video Manager: Cannot play video ${index} - not loaded`);
-      return;
+/*       console.warn(`Video Manager: Cannot play video ${index} - not loaded`);
+ */      return;
     }
 
     try {
       videoInfo.element.currentTime = 0;
       await videoInfo.element.play();
-      console.log(`Video Manager: Playing video ${index}`);
-    } catch (error) {
-      console.warn(`Video Manager: Failed to play video ${index}:`, error);
-    }
+/*       console.log(`Video Manager: Playing video ${index}`);
+ */    } catch (error) {
+/*       console.warn(`Video Manager: Failed to play video ${index}:`, error);
+ */    }
   }
 
   /**
@@ -334,8 +334,8 @@ export class BannerVideoManager {
     const videoInfo = this.videoLoadingInfo.get(index);
     if (videoInfo?.element) {
       videoInfo.element.pause();
-      console.log(`Video Manager: Paused video ${index}`);
-    }
+/*       console.log(`Video Manager: Paused video ${index}`);
+ */    }
   }
 
   /**
@@ -364,8 +364,8 @@ export class BannerVideoManager {
         .filter(v => v.state === VideoLoadingState.LOADED).length;
 
       if (loadedCount > this.maxLoadedVideos && info.state === VideoLoadingState.LOADED && info.element) {
-        console.log(`Video Manager: Cleaning up distant video ${index}`);
-        
+/*         console.log(`Video Manager: Cleaning up distant video ${index}`);
+ */        
         // Reset video element
         info.element.pause();
         info.element.currentTime = 0;
@@ -411,6 +411,6 @@ export class BannerVideoManager {
     });
     
     this.videoLoadingInfo.clear();
-    console.log('Video Manager: Cleaned up all videos');
-  }
+/*     console.log('Video Manager: Cleaned up all videos');
+ */  }
 }

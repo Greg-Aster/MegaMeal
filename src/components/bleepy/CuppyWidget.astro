@@ -419,8 +419,8 @@ console.log(`CUPPYWIDGET.ASTRO (Server): Prop pageMascotContext received:`, page
       this.specialAnimationInterval = setInterval(() => this.tryPlayRandomVisualEffect(), 18000 + Math.random() * 5000);
 
       // Debug: Log available messages
-      console.log('Available greeting messages:', cuppyGreetingMessages);
-      console.log('Available random dialogues:', cuppyRandomDialogues);
+      // console.log('Available greeting messages:', cuppyGreetingMessages);
+      // console.log('Available random dialogues:', cuppyRandomDialogues);
 
       this.isInitialized = true;
       console.log('Sidebar Cuppy Widget initialized successfully');
@@ -488,10 +488,10 @@ console.log(`CUPPYWIDGET.ASTRO (Server): Prop pageMascotContext received:`, page
 
     private showInitialGreeting() {
       setTimeout(() => {
-        console.log('Showing initial greeting, available greetings:', cuppyGreetingMessages?.length);
+        // console.log('Showing initial greeting, available greetings:', cuppyGreetingMessages?.length);
         if (cuppyGreetingMessages && cuppyGreetingMessages.length > 0) {
           const randomGreeting = cuppyGreetingMessages[Math.floor(Math.random() * cuppyGreetingMessages.length)];
-          console.log('Selected greeting:', randomGreeting);
+          // console.log('Selected greeting:', randomGreeting);
           this.startMultipartSpeech(randomGreeting); // Use startMultipartSpeech
         } else {
           console.log('No greeting messages available, using fallback');
@@ -732,14 +732,14 @@ console.log(`CUPPYWIDGET.ASTRO (Server): Prop pageMascotContext received:`, page
     private triggerProactiveDialogue() {
       if (this.conversationHistory.length > 0) return; // Don't interrupt active conversations
 
-      console.log('Triggering proactive dialogue, available messages:', cuppyRandomDialogues?.length);
+      // console.log('Triggering proactive dialogue, available messages:', cuppyRandomDialogues?.length);
       
       if (cuppyRandomDialogues && cuppyRandomDialogues.length > 0) {
         const randomDialogue = cuppyRandomDialogues[Math.floor(Math.random() * cuppyRandomDialogues.length)];
-        console.log('Selected random dialogue:', randomDialogue);
+        // console.log('Selected random dialogue:', randomDialogue);
         this.startMultipartSpeech(randomDialogue); // Use startMultipartSpeech
       } else {
-        console.log('No random dialogues available, using fallback');
+        // console.log('No random dialogues available, using fallback');
         this.startMultipartSpeech("..."); // Use startMultipartSpeech
       }
 
@@ -749,7 +749,7 @@ console.log(`CUPPYWIDGET.ASTRO (Server): Prop pageMascotContext received:`, page
     private startProactiveDialogueTimer() {
       clearTimeout(this.proactiveDialogueTimer);
       const randomDelay = Math.random() * (30000 - 20000) + 20000; // 20-30 seconds for testing
-      console.log('Starting proactive dialogue timer for', randomDelay, 'ms');
+      // console.log('Starting proactive dialogue timer for', randomDelay, 'ms');
       this.proactiveDialogueTimer = setTimeout(() => {
         this.triggerProactiveDialogue();
       }, randomDelay);

@@ -3,6 +3,7 @@ import Profile from './Profile.astro'
 import Tag from './Tags.astro'
 import Categories from './Categories.astro'
 import CuppyWidget from '../bleepy/CuppyWidget.astro'
+import SideNavbar from './SideNavbar.astro'
 import type { MarkdownHeading } from 'astro'
 import TOC from './TOC.astro'
 
@@ -26,22 +27,38 @@ const pageMascotContext = Astro.props.pageMascotContext
 
 ---
 <div id="sidebar" class:list={[className, "w-full"]}>
-    <div class="flex flex-col w-full gap-4 mb-4">
-        <Profile 
-          slug={postSlug} 
-          customAvatar={customAvatar}
-          customName={customName}
-          customBio={customBio}
-        ></Profile>
-    </div>
-    <div id="sidebar-sticky" class="transition-all duration-700 flex flex-col w-full gap-4 top-4 sticky top-4">
-        <Categories class="onload-animation" style="animation-delay: 150ms"></Categories>
-       <!--  <Tag class="onload-animation" style="animation-delay: 250ms"></Tag> -->
-        <CuppyWidget 
-          class="onload-animation" 
-          style="animation-delay: 200ms"
+    
+    <!-- MOBILE PORTRAIT MODE: Show compact SideNavbar (sm breakpoint and below) -->
+    <div class="block sm:hidden w-full">
+        <SideNavbar 
+          class="onload-animation"
+          postSlug={postSlug}
           pageMascotContext={pageMascotContext}
-        ></CuppyWidget>
-
+        />
     </div>
+    
+    <!-- DESKTOP/TABLET MODE: Show full widgets (sm breakpoint and above) -->
+    <div class="hidden sm:block w-full">
+        <!-- Profile Section -->
+        <div class="flex flex-col w-full gap-4 mb-4">
+            <Profile 
+              slug={postSlug} 
+              customAvatar={customAvatar}
+              customName={customName}
+              customBio={customBio}
+            />
+        </div>
+        
+        <!-- Sticky Widgets Section -->
+        <div id="sidebar-sticky" class="transition-all duration-700 flex flex-col w-full gap-4 top-4 sticky top-4">
+            <Categories class="onload-animation" style="animation-delay: 150ms" />
+           <!--  <Tag class="onload-animation" style="animation-delay: 250ms"></Tag> -->
+            <CuppyWidget 
+              class="onload-animation" 
+              style="animation-delay: 200ms"
+              pageMascotContext={pageMascotContext}
+            />
+        </div>
+    </div>
+    
 </div>
