@@ -6,6 +6,7 @@ import Footer from '@components/Footer.astro'
 import Navbar from '@components/Navbar.astro'
 import BackToTop from '@components/control/BackToTop.astro'
 import SideBar from '@components/widget/SideBar.astro'
+import Profile from '@components/widget/Profile.astro'
 import Layout from './Layout.astro'
 import { Icon } from 'astro-icon/components'
 import { siteConfig } from '../config/config'
@@ -397,7 +398,37 @@ if (post && post.data) {
   <div class={`w-full z-30 pointer-events-none relative`}>
     <div id="main-panel-wrapper" class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto" style={`top: ${mainPanelTop}; position: relative;`}>
       <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-[5rem_1fr] md:grid-cols-[12rem_1fr] lg:grid-cols-[16.5rem_auto] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
-         mx-auto gap-2 sm:gap-3 md:gap-4 px-2 md:px-4" style={`margin-top: ${mainContentOffset};`}>
+         mx-auto gap-2 sm:gap-3 md:gap-4 px-2 md:px-4 relative" style={`margin-top: ${mainContentOffset};`}>
+         
+        <!-- =============================================================== -->
+        <!-- MOBILE PROFILE OVERLAY - POSITIONED ABOVE SIDEBAR             -->
+        <!-- =============================================================== -->
+        <!-- This overlay shows the Profile widget positioned above the sidebar on mobile -->
+        <div 
+          id="mobile-profile-overlay" 
+          class="absolute bottom-full left-2 w-[17.5rem] z-[60] opacity-0 translate-y-4 pointer-events-none transition-all duration-300 md:hidden"
+          style="margin-bottom: 1.5rem;"
+        >
+          <div class="p-2">
+            <div class="card-base p-3 shadow-xl">
+              <!-- Close button -->
+              <div class="flex justify-end mb-2">
+                <button id="mobile-profile-close" aria-label="Close Profile" class="btn-plain rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-black/10 dark:hover:bg-white/10">
+                  ✕
+                </button>
+              </div>
+              <!-- Profile widget content -->
+              <div id="mobile-profile-content">
+                <Profile 
+                  slug={postData?.slug || ''} 
+                  customAvatar={postData?.customAvatar || ''}
+                  customName={postData?.customName || ''}
+                  customBio={postData?.customBio || ''}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
          
         <!-- SIDEBAR SECTION -->
         <SideBar 
@@ -502,6 +533,70 @@ if (post && post.data) {
     }
   }
 
+  // ===================================================================
+  // MOBILE PROFILE OVERLAY FUNCTIONALITY
+  // ===================================================================
+  
+  function initializeMobileProfileOverlay() {
+    const overlay = document.getElementById('mobile-profile-overlay');
+    const closeBtn = document.getElementById('mobile-profile-close');
+    
+    if (!overlay || !closeBtn) {
+      console.warn('Profile overlay elements not found');
+      return;
+    }
+    
+    console.log('Mobile profile overlay initialized');
+    
+    // Function to show the overlay
+    function showProfileOverlay() {
+      console.log('Showing profile overlay');
+      overlay.classList.remove('pointer-events-none', 'opacity-0', 'translate-y-4');
+      overlay.classList.add('opacity-100', 'translate-y-0');
+    }
+    
+    // Function to hide the overlay
+    function hideProfileOverlay() {
+      console.log('Hiding profile overlay');
+      overlay.classList.add('pointer-events-none', 'opacity-0', 'translate-y-4');
+      overlay.classList.remove('opacity-100', 'translate-y-0');
+    }
+    
+    // Listen for the custom event from SideNavbar
+    document.addEventListener('profile:toggle', (e) => {
+      console.log('Profile toggle event received');
+      const isVisible = overlay.classList.contains('opacity-100');
+      
+      if (isVisible) {
+        hideProfileOverlay();
+      } else {
+        showProfileOverlay();
+      }
+    });
+    
+    // Close button functionality
+    closeBtn.addEventListener('click', hideProfileOverlay);
+    
+    // Click outside to close (only if clicking on main content area or banner)
+    document.addEventListener('click', (e) => {
+      const target = e.target as Element;
+      const isVisible = overlay.classList.contains('opacity-100');
+      
+      if (isVisible && 
+          !overlay.contains(target) && 
+          !target.closest('#unified-sidenav')) {
+        hideProfileOverlay();
+      }
+    });
+    
+    // Escape key to close
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.classList.contains('opacity-100')) {
+        hideProfileOverlay();
+      }
+    });
+  }
+
   // Initialize everything when DOM is ready
   document.addEventListener('DOMContentLoaded', () => {
     updateBannerDimensions();        // ⭐ CRITICAL: Set CSS variables first
@@ -510,6 +605,7 @@ if (post && post.data) {
     initializeParallaxEffect();
     initializeEventListeners();
     initializeSpecialPageFeatures();
+    initializeMobileProfileOverlay(); // ⭐ NEW: Initialize profile overlay
   });
 
   function initializePageAnimations() {
