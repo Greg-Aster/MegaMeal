@@ -80,6 +80,7 @@ const getNavIcon = (name: string): string => {
     'Gastronomy': 'material-symbols:restaurant',
     'Map': 'material-symbols:map',
     'Store': 'material-symbols:attach-money',
+    'Profile': 'material-symbols:account-circle-outline',
   };
   
   // Debug: Log unmapped navigation items to help identify missing mappings
@@ -213,6 +214,11 @@ const getNavIcon = (name: string): string => {
     <!-- CATEGORIES BUTTON -->
     <button id="sidenav-categories-btn" aria-label="Categories" class="btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
       <Icon name="material-symbols:category-outline" class="text-lg"></Icon>
+    </button>
+    
+    <!-- PROFILE BUTTON -->
+    <button id="sidenav-profile-btn" aria-label="Profile" class="btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
+      <Icon name="material-symbols:account-circle-outline" class="text-lg"></Icon>
     </button>
   </div>
 
@@ -403,6 +409,7 @@ const getNavIcon = (name: string): string => {
     // Cache references to DOM elements we'll be working with
     const menuToggleBtn = document.getElementById('sidenav-menu-toggle');
     const menuPanel = document.getElementById('sidenav-menu-panel');
+    const profileBtn = document.getElementById('sidenav-profile-btn');
     const settingsBtn = document.getElementById('sidenav-settings-btn');
     const searchBtn = document.getElementById('sidenav-search-btn');
     const categoriesBtn = document.getElementById('sidenav-categories-btn');
@@ -450,6 +457,24 @@ const getNavIcon = (name: string): string => {
             
             // Toggle this panel
             menuPanel.classList.toggle('panel-open');
+        });
+    }
+
+    // ===================================================================
+    // PROFILE BUTTON TOGGLE
+    // ===================================================================
+    // Handles the profile button click by dispatching a custom event
+    // The MainGridLayout will listen for this event and show the profile overlay
+    
+    if (profileBtn) {
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            // Close any open sidebar panels first
+            closeAllPanels();
+            
+            // Dispatch custom event to MainGridLayout
+            document.dispatchEvent(new CustomEvent('profile:toggle'));
         });
     }
 
