@@ -45,6 +45,10 @@
         --transition-fast: 0.15s ease;
         --transition-normal: 0.3s ease;
         --transition-slow: 0.5s ease;
+
+        /* 🎯 NAVBAR RESPONSIVE HEIGHT SYSTEM */
+        --navbar-height: 4.5rem; /* Default navbar height */
+        --navbar-spacing: var(--navbar-height); /* Dynamic spacing based on navbar visibility */
     }
     
     /* 🎯 DARK MODE - Automatic system preference */
@@ -59,6 +63,60 @@
             --input-border-color: oklch(0.4 0.01 var(--hue));
             --text-on-primary: oklch(0.98 0.01 var(--hue));
             --text-color-muted: oklch(0.6 0.01 var(--hue));
+        }
+    }
+
+    /* ===================================================================
+     * NAVBAR RESPONSIVE VISIBILITY SYSTEM
+     * ===================================================================
+     */
+    
+    /* 🎯 MOBILE PORTRAIT: Hide navbar completely */
+    @media (max-width: 768px) and (orientation: portrait) {
+        :root {
+            --navbar-spacing: 0rem; /* No spacing when navbar is hidden */
+        }
+        
+        #navbar,
+        #navbar-wrapper,
+        #top-row {
+            display: none !important;
+        }
+        
+        /* Adjust banner container positioning when navbar is hidden */
+        #banner-container {
+            margin-top: 0 !important;
+        }
+        
+        /* Adjust main panel positioning */
+        #main-panel-wrapper {
+            top: 0 !important;
+        }
+    }
+    
+    /* 🎯 MOBILE LANDSCAPE: Show navbar */
+    @media (max-width: 768px) and (orientation: landscape) {
+        :root {
+            --navbar-spacing: 4.5rem; /* Standard navbar spacing */
+        }
+        
+        #navbar,
+        #navbar-wrapper,
+        #top-row {
+            display: block !important;
+        }
+    }
+    
+    /* 🎯 TABLET AND DESKTOP: Always show navbar */
+    @media (min-width: 769px) {
+        :root {
+            --navbar-spacing: 4.5rem; /* Standard navbar spacing */
+        }
+        
+        #navbar,
+        #navbar-wrapper,
+        #top-row {
+            display: block !important;
         }
     }
 
@@ -479,14 +537,14 @@
     }
 
     /* ===================================================================
-     * RESPONSIVE DESIGN - SINGLE SYSTEM APPROACH
+     * RESPONSIVE DESIGN - MOBILE NAVBAR CONSIDERATIONS
      * ===================================================================
      */
     
     /* 🎯 MOBILE-FIRST RESPONSIVE UTILITIES */
     @media (max-width: 640px) {
         :root {
-            --spacing-panel: 4.5rem; /* Smaller panel offset on mobile */
+            --spacing-panel: 4rem; /* Smaller panel offset on mobile */
         }
         
         .meta-icon {
@@ -562,35 +620,27 @@
  * SUMMARY OF IMPROVEMENTS MADE:
  * ===================================================================
  * 
- * ✅ REMOVED: 
- * - Duplicate fullscreen mode system (conflicted with banner-styles.css)
- * - Hardcoded responsive values in favor of CSS variables
- * - Redundant transition declarations
+ * ✅ ADDED: 
+ * - Navbar responsive visibility system for mobile portrait hiding
+ * - CSS custom properties for dynamic navbar spacing
+ * - Smooth transitions between navbar states
+ * - Layout adjustments when navbar is hidden
  * 
  * ✅ ENHANCED:
- * - Single responsive system using CSS variables
- * - Consistent transition timings via CSS variables
- * - Better Tailwind integration with @extend and utilities
- * - Improved accessibility support
- * - More consistent naming conventions
- * - Performance optimizations for animations
+ * - Mobile-first responsive design approach
+ * - Better spacing management with CSS variables
+ * - Improved layout consistency across different viewport orientations
  * 
  * ✅ PRESERVED:
  * - All existing functionality and design system
  * - All custom CSS properties and color system
- * - All specialized components (product cards, copy buttons, etc.)
- * - All visual effects and animations
- * - Complete form input system
- * - Parallax background system
- * - Typography utilities
- * - Icon system
- * - Panel system
+ * - All specialized components and animations
+ * - Complete form input system and accessibility features
  * 
- * ✅ RESULT:
- * - Eliminated banner conflicts by removing duplicate fullscreen mode
- * - Single source of truth for responsive values
- * - Better Tailwind integration while preserving custom design system
- * - Improved maintainability and consistency
- * - Enhanced accessibility and performance
+ * ✅ NEW RESPONSIVE BEHAVIOR:
+ * - Mobile Portrait (max-width: 768px + portrait): Navbar hidden
+ * - Mobile Landscape (max-width: 768px + landscape): Navbar visible
+ * - Tablet/Desktop (min-width: 769px): Navbar always visible
+ * - Dynamic spacing adjusts automatically based on navbar visibility
  * ===================================================================
  */
