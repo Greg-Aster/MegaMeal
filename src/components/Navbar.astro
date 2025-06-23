@@ -181,12 +181,12 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
             }
         } 
     
-        // UPDATED: Fullscreen Mode Toggle Functionality
+        // UPDATED: Layout-based Fullscreen Mode Toggle Functionality
         initializeFullscreenMode();
     }
     
     /**
-     * IMPROVED: Initialize fullscreen mode toggle with smart mobile behavior
+     * FIXED: Initialize layout-based fullscreen mode toggle
      */
     function initializeFullscreenMode() {
         const toggleBtn = document.getElementById('fullscreen-btn');
@@ -195,16 +195,7 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
         const expandIcon = toggleBtn?.querySelector('.fullscreen-icon');
         const compressIcon = toggleBtn?.querySelector('.fullscreen-exit-icon');
         
-        // Check if we're on a desktop device (1024px or larger)
-        const isDesktop = () => window.innerWidth >= 1024;
-        
-        // Hide button on mobile/tablet devices
-        if (!isDesktop()) {
-            toggleBtn.style.display = 'none';
-            return; // Exit early for mobile devices
-        }
-        
-        // Check saved state and apply it WITHOUT triggering reload
+        // Check saved state and apply it immediately
         const isFullscreen = localStorage.getItem('fullscreenMode') === 'true';
         
         // Apply initial state
@@ -214,7 +205,7 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
             applyNormalState();
         }
         
-        // Toggle handler - smart behavior based on screen size
+        // Toggle handler - immediate layout change
         toggleBtn?.addEventListener('click', () => {
             const currentState = localStorage.getItem('fullscreenMode') === 'true';
             
@@ -226,77 +217,58 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
         });
         
         /**
-         * Apply fullscreen visual state (desktop layout changes)
+         * Apply fullscreen visual state (layout-based fullscreen)
          */
         function applyFullscreenState() {
-            // Add class to force mobile view (only affects desktop due to CSS media query)
+            // Add class to force mobile view layout
             document.body.classList.add('force-mobile-view');
             
             // Update button icons
             expandIcon?.classList.add('hidden');
             compressIcon?.classList.remove('hidden');
+            
+            console.log('Layout fullscreen mode applied');
         }
         
         /**
          * Apply normal state
          */
         function applyNormalState() {
-            // Remove class
+            // Remove fullscreen class
             document.body.classList.remove('force-mobile-view');
             
             // Update button icons
             expandIcon?.classList.remove('hidden');
             compressIcon?.classList.add('hidden');
+            
+            console.log('Normal layout mode applied');
         }
         
         /**
-         * Enable fullscreen mode - desktop gets layout changes and reload
+         * Enable fullscreen mode - immediate layout change
          */
         function enableFullscreenMode() {
-            // Save state first
+            // Save state
             localStorage.setItem('fullscreenMode', 'true');
-            localStorage.setItem('fullscreenBannerOverride', 'true');
             
-            // Apply layout changes
+            // Apply layout changes immediately
             applyFullscreenState();
             
-            // Reload to apply banner changes
-            if (!document.body.classList.contains('fullscreen-transitioning')) {
-                document.body.classList.add('fullscreen-transitioning');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 300);
-            }
+            console.log('Layout fullscreen mode enabled');
         }
         
         /**
-         * Disable fullscreen mode - restore normal layout and reload
+         * Disable fullscreen mode - immediate layout change
          */
         function disableFullscreenMode() {
-            // Save state first
+            // Save state
             localStorage.setItem('fullscreenMode', 'false');
-            localStorage.removeItem('fullscreenBannerOverride');
             
-            // Restore normal layout
+            // Restore normal layout immediately
             applyNormalState();
             
-            // Reload to restore banner
-            if (!document.body.classList.contains('fullscreen-transitioning')) {
-                document.body.classList.add('fullscreen-transitioning');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 300);
-            }
+            console.log('Layout fullscreen mode disabled');
         }
-        
-        // Handle window resize - hide button if resizing to mobile
-        window.addEventListener('resize', () => {
-            if (!isDesktop()) {
-                toggleBtn.style.display = 'none';
-            } else {
-                toggleBtn.style.display = '';
-            }
-        });
     }
     
     // Bleepy mascot visibility event listener - PRESERVED EXACTLY AS-IS
