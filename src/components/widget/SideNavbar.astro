@@ -1,14 +1,16 @@
 ---
 // =====================================================================
-// SIDE NAVIGATION COMPONENT
+// SIDE NAVIGATION COMPONENT - REFACTORED
 // =====================================================================
 // This component creates a compact side navigation panel for mobile/tablet
-// It includes:
-// - Site logo/home link
-// - Main navigation links (with dropdown support)
-// - Quick action buttons (search, menu, categories)
-// - Settings panel (theme, fullscreen, assistant toggle)
-// - Expandable panels that slide out from the right side
+// REORGANIZED STRUCTURE:
+// 1. Home button (top)
+// 2. Profile button (just below home)
+// 3. Main navigation links (filtered - no Archive/About/Restaurant)
+// 4. Store button (moved down)
+// 5. Menu toggle (Archive/About as subitems)
+// 6. Bleepy button (assistant toggle)
+// 7. Settings gear (search, fullscreen, theme as submenu)
 
 // =====================================================================
 // IMPORTS
@@ -18,8 +20,6 @@ import { LinkPreset, type NavBarLink } from '../../types/config';
 import { navBarConfig, siteConfig } from '../../config/config';
 import { LinkPresets } from '../../constants/link-presets';
 import { url } from '../../utils/url-utils';
-
-// DisplaySettings removed - will be added to parent SideBar.astro instead
 
 // =====================================================================
 // TYPESCRIPT INTERFACES
@@ -41,32 +41,58 @@ const { class: className, style } = Astro.props;
 const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false;
 
 // =====================================================================
-// NAVIGATION LINKS PROCESSING
+// NAVIGATION LINKS PROCESSING - REFACTORED
 // =====================================================================
 
-// Create a flat list of ALL navigation links (including dropdown items)
-// This is used for the expandable navigation panel
+// Items to exclude from main navigation (will be in menu toggle)
+const excludeFromMainNav = ['Archive', 'About'];
+// Items to block out completely
+const blockedItems = ['Gastronomy']; // Restaurant/Gastronomy blocked
+
+// Process links while filtering out specific items
+const processedLinks = navBarConfig.links
+  .map((item: NavBarLink | LinkPreset) => {
+    if (typeof item === 'number') {
+      return LinkPresets[item];  // Convert preset number to link object
+    }
+    return item;  // Already a link object, return as-is
+  })
+  .filter(link => {
+    // Filter out blocked items and items that go in menu toggle
+    return !blockedItems.includes(link.name) && !excludeFromMainNav.includes(link.name);
+  });
+
+// Find Home link for top positioning
+const homeLink = navBarConfig.links
+  .map((item: NavBarLink | LinkPreset) => typeof item === 'number' ? LinkPresets[item] : item)
+  .find(link => link.name === 'Home');
+
+// Find Store link for separate positioning
+const storeLink = processedLinks.find(link => link.name === 'Store');
+
+// Find Archive and About links for menu toggle
+const menuToggleLinks = navBarConfig.links
+  .map((item: NavBarLink | LinkPreset) => typeof item === 'number' ? LinkPresets[item] : item)
+  .filter(link => excludeFromMainNav.includes(link.name));
+
+// Create a flat list of ALL navigation links for the menu panel (excluding blocked items)
 const allLinks = navBarConfig.links.flatMap((item: NavBarLink | LinkPreset) => {
-  // Convert LinkPreset numbers to actual link objects
   const link = typeof item === 'number' ? LinkPresets[item] : item;
-  // If it's a dropdown, return all dropdown items; otherwise return the link itself
+  if (blockedItems.includes(link.name)) return []; // Skip blocked items
   return link.dropdown ? link.dropdown : link;
 });
 
-// Process links while keeping dropdown structure intact
-// This is used for the main navigation section that shows dropdown buttons
-const processedLinks = navBarConfig.links.map((item: NavBarLink | LinkPreset) => {
-  if (typeof item === 'number') {
-    return LinkPresets[item];  // Convert preset number to link object
-  }
-  return item;  // Already a link object, return as-is
-});
+// Main navigation links (excluding Home, Store, Archive, About, and blocked items)
+const mainNavLinks = processedLinks.filter(link => 
+  link.name !== 'Home' && 
+  link.name !== 'Store' && 
+  !excludeFromMainNav.includes(link.name)
+);
 
 // =====================================================================
 // ICON MAPPING FUNCTION
 // =====================================================================
 // Maps navigation link names to their corresponding Material Symbols icons
-// Add new mappings here when adding new navigation items
 const getNavIcon = (name: string): string => {
   const iconMap: Record<string, string> = {
     'Home': 'material-symbols:home-outline',
@@ -81,6 +107,9 @@ const getNavIcon = (name: string): string => {
     'Map': 'material-symbols:map',
     'Store': 'material-symbols:attach-money',
     'Profile': 'material-symbols:account-circle-outline',
+    'Settings': 'material-symbols:settings-outline',
+    'Search': 'material-symbols:search',
+    'Menu': 'material-symbols:menu-rounded',
   };
   
   // Debug: Log unmapped navigation items to help identify missing mappings
@@ -95,287 +124,142 @@ const getNavIcon = (name: string): string => {
 <!-- =============================================================== -->
 <!-- MAIN SIDE NAVIGATION CONTAINER -->
 <!-- =============================================================== -->
-<!-- 
-  The main container uses Tailwind classes for responsive behavior:
-  - card-base: Styling from main.css for consistent card appearance
-  - p-2: Padding of 0.5rem on all sides
-  - h-full: Full height of parent
-  - flex flex-col: Vertical flexbox layout
-  - relative: For positioning expandable panels
-  - w-full: Take full width of grid column
-  - overflow-visible lg:overflow-hidden: Allow panels on desktop, prevent on mobile
--->
 <div id="unified-sidenav" class:list={[className, "card-base p-2 h-full flex flex-col relative w-full overflow-visible lg:overflow-hidden"]} style={style}>
 
   <!-- =============================================================== -->
-  <!-- SITE LOGO/HOME LINK -->
+  <!-- 1. HOME BUTTON (TOP) -->
   <!-- =============================================================== -->
-  <!-- Small colored bar that serves as a minimal logo and home link -->
   <div class="w-full flex justify-center mb-3">
-    <a href={url('/')} aria-label="Go to Homepage" class="w-8 h-1 bg-[var(--primary)] rounded-full hover:opacity-80 transition-opacity"></a>
+    {homeLink ? (
+      <a 
+        href={homeLink.external ? homeLink.url : url(homeLink.url)} 
+        target={homeLink.external ? "_blank" : null}
+        aria-label="Go to Homepage" 
+        class="btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200"
+      >
+        <Icon name={getNavIcon(homeLink.name)} class="text-lg" />
+      </a>
+    ) : (
+      <!-- Fallback home link -->
+      <a href={url('/')} aria-label="Go to Homepage" class="w-8 h-1 bg-[var(--primary)] rounded-full hover:opacity-80 transition-opacity"></a>
+    )}
   </div>
 
   <!-- =============================================================== -->
-  <!-- MAIN NAVIGATION LINKS SECTION -->
+  <!-- 2. PROFILE BUTTON (JUST BELOW HOME) -->
   <!-- =============================================================== -->
-  <!-- 
-    Shows the primary navigation items from your config
-    - Regular links: Navigate directly when clicked
-    - Dropdown links: Show as buttons that open expandable panels
-  -->
-  <div class="flex flex-col gap-1 mb-3 border-b border-black/10 dark:border-white/10 pb-3">
-    {processedLinks.map((link) => (
-      link.dropdown ? (
-        <!-- DROPDOWN NAVIGATION BUTTON -->
-        <!-- This button will trigger an expandable panel to show dropdown items -->
-        <button 
-          data-dropdown-name={link.name}
-          aria-label={`${link.name} Menu`}
-          class="nav-dropdown-btn btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200"
-        >
-          <Icon name={getNavIcon(link.name)} class="text-lg" />
-        </button>
-      ) : (
-        <!-- DIRECT NAVIGATION LINK -->
-        <!-- Regular link that navigates directly to the URL -->
-        <a
-          aria-label={link.name}
-          href={link.external ? link.url : url(link.url)}
-          target={link.external ? "_blank" : null}
-          class="btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200"
-        >
-          <Icon name={getNavIcon(link.name)} class="text-lg" />
-        </a>
-      )
-    ))}
-  </div>
-
-  <!-- =============================================================== -->
-  <!-- DROPDOWN PANELS -->
-  <!-- =============================================================== -->
-  <!-- 
-    These panels slide out from the right side when dropdown buttons are clicked
-    One panel is created for each navigation item that has dropdown children
-    They use absolute positioning and are hidden by default
-    Using Tailwind responsive positioning with minimal custom CSS
-  -->
-{processedLinks.filter(link => link.dropdown).map((link) => (
-  <div 
-    id={`sidenav-dropdown-${link.name.toLowerCase()}`} 
-    class="sidenav-panel opacity-0 -translate-x-4 pointer-events-none transition-all duration-200 ease-in-out absolute top-0 z-50 card-base shadow-lg rounded-lg
-           w-48 max-w-[calc(100vw-6rem)] 
-           left-[calc(5rem+0.5rem)] 
-           md:left-[calc(12rem+0.5rem)] md:w-56 md:max-w-[calc(100vw-13rem)]
-           lg:left-full lg:ml-2 lg:w-64 lg:max-w-none"
-  >
-    <div class="p-2">
-      <!-- Panel Title -->
-      <div class="text-xs font-medium text-center mb-2 text-neutral-400 px-2">{link.name}</div>
-      <!-- Dropdown Items -->
-      <div class="flex flex-col gap-1">
-        {link.dropdown.map((dropdownItem) => (
-          <a
-            aria-label={dropdownItem.name}
-            href={dropdownItem.external ? dropdownItem.url : url(dropdownItem.url)}
-            target={dropdownItem.external ? "_blank" : null}
-            class="btn-plain rounded-md px-3 py-2 text-sm md:text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left"
-          >
-            <Icon name={getNavIcon(dropdownItem.name)} class="text-base flex-shrink-0" />
-            <span class="flex-1 min-w-0 truncate">{dropdownItem.name}</span>
-            {/* External link indicator */}
-            {dropdownItem.external && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.75rem] flex-shrink-0" />}
-          </a>
-        ))}
-      </div>
-    </div>
-  </div>
-))}
-  
-  <!-- =============================================================== -->
-  <!-- PRIMARY ACTION BUTTONS -->
-  <!-- =============================================================== -->
-  <!-- 
-    Quick access buttons for common actions:
-    - Menu Toggle: Opens/closes the main navigation panel
-    - Search: Opens the search panel  
-    - Categories: Shows categories (customize behavior in script)
-  -->
-  <div class="flex flex-col gap-2 mb-3">
-    <!-- NAVIGATION MENU TOGGLE -->
-    <button id="sidenav-menu-toggle" aria-label="Toggle Navigation Menu" class="btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
-      <Icon name="material-symbols:menu-rounded" class="text-lg" />
-    </button>
-    
-    <!-- SEARCH BUTTON -->
-    <button id="sidenav-search-btn" aria-label="Search" class="btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
-      <Icon name="material-symbols:search" class="text-lg" />
-    </button>
-    
-    <!-- CATEGORIES BUTTON -->
-    <button id="sidenav-categories-btn" aria-label="Categories" class="btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
-      <Icon name="material-symbols:category-outline" class="text-lg"></Icon>
-    </button>
-    
-    <!-- PROFILE BUTTON -->
+  <div class="w-full mb-3">
     <button id="sidenav-profile-btn" aria-label="Profile" class="btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
       <Icon name="material-symbols:account-circle-outline" class="text-lg"></Icon>
     </button>
   </div>
 
   <!-- =============================================================== -->
-  <!-- EXPANDABLE NAVIGATION PANEL -->
+  <!-- 3. MAIN NAVIGATION LINKS (FILTERED) -->
   <!-- =============================================================== -->
-  <!-- 
-    This panel shows ALL navigation links in a flat list
-    It slides out from the right when the menu toggle button is clicked
-    Useful for quick access to all navigation items
-    Using Tailwind responsive classes
-  -->
-  <div 
-    id="sidenav-menu-panel" 
-    class="sidenav-panel opacity-0 -translate-x-4 pointer-events-none transition-all duration-200 ease-in-out absolute top-0 z-50 card-base shadow-lg rounded-lg
-           w-48 max-w-[calc(100vw-6rem)] 
-           left-[calc(5rem+0.5rem)] 
-           md:left-[calc(12rem+0.5rem)] md:w-56 md:max-w-[calc(100vw-13rem)]
-           lg:left-full lg:ml-2 lg:w-64 lg:max-w-none"
-  >
-    <div class="p-2">
-      <div class="text-xs font-medium text-center mb-2 text-neutral-400 px-2">Navigation</div>
-      <div class="flex flex-col gap-1">
-        {allLinks.map((link) => (
+  <!-- Shows primary navigation items (excluding Home, Store, Archive, About, Restaurant) -->
+  {mainNavLinks.length > 0 && (
+    <div class="flex flex-col gap-1 mb-3 border-b border-black/10 dark:border-white/10 pb-3">
+      {mainNavLinks.map((link) => (
+        link.dropdown ? (
+          <!-- DROPDOWN NAVIGATION BUTTON -->
+          <button 
+            data-dropdown-name={link.name}
+            aria-label={`${link.name} Menu`}
+            class="nav-dropdown-btn btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200"
+          >
+            <Icon name={getNavIcon(link.name)} class="text-lg" />
+          </button>
+        ) : (
+          <!-- DIRECT NAVIGATION LINK -->
           <a
             aria-label={link.name}
             href={link.external ? link.url : url(link.url)}
             target={link.external ? "_blank" : null}
-            class="nav-menu-link btn-plain rounded-md px-3 py-2 text-sm md:text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left"
+            class="btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200"
           >
-            <Icon name={getNavIcon(link.name)} class="text-base flex-shrink-0" />
-            <span class="flex-1 min-w-0 truncate">{link.name}</span>
-            {link.external && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.75rem] flex-shrink-0" />}
+            <Icon name={getNavIcon(link.name)} class="text-lg" />
           </a>
-        ))}
-      </div>
+        )
+      ))}
     </div>
+  )}
+
+  <!-- =============================================================== -->
+  <!-- DROPDOWN PANELS FOR MAIN NAV -->
+  <!-- =============================================================== -->
+  <!-- REMOVED: Panels moved to MainGridLayout.astro for proper positioning -->
+
+  <!-- =============================================================== -->
+  <!-- 4. STORE BUTTON (MOVED DOWN) -->
+  <!-- =============================================================== -->
+  {storeLink && (
+    <div class="w-full mb-3">
+      <a
+        aria-label={storeLink.name}
+        href={storeLink.external ? storeLink.url : url(storeLink.url)}
+        target={storeLink.external ? "_blank" : null}
+        class="btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200"
+      >
+        <Icon name={getNavIcon(storeLink.name)} class="text-lg" />
+      </a>
+    </div>
+  )}
+
+  <!-- =============================================================== -->
+  <!-- 5. MENU TOGGLE (ARCHIVE/ABOUT AS SUBITEMS) -->
+  <!-- =============================================================== -->
+  <div class="w-full mb-3">
+    <button id="sidenav-menu-toggle" aria-label="Toggle Navigation Menu" class="btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
+      <Icon name="material-symbols:menu-rounded" class="text-lg" />
+    </button>
   </div>
-  
+
   <!-- =============================================================== -->
-  <!-- SETTINGS & UTILITY BUTTONS -->
+  <!-- MENU TOGGLE PANEL (ARCHIVE/ABOUT + ALL LINKS) -->
   <!-- =============================================================== -->
-  <!-- 
-    Bottom section with utility controls:
-    - Assistant (Bleepy) toggle
-    - Theme switcher (light/dark mode)
-    - Display settings (if not fixed in config)
-    - Fullscreen toggle (desktop only)
-    
-    Uses mt-auto to push this section to the bottom of the container
-  -->
+  <!-- REMOVED: Panel moved to MainGridLayout.astro for proper positioning -->
+
+  <!-- =============================================================== -->
+  <!-- 6. BLEEPY BUTTON (ASSISTANT TOGGLE) -->
+  <!-- =============================================================== -->
   <div class="border-t border-black/10 dark:border-white/10 pt-2 mt-auto">
-    <div class="flex flex-col gap-1">
-      
-      <!-- ASSISTANT (BLEEPY) TOGGLE -->
-      <!-- Shows different icons based on assistant visibility state -->
-      <button id="sidenav-bleepy-btn" aria-label="Toggle Assistant" class="btn-plain rounded-md h-8 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
+    <div class="w-full mb-2">
+      <button id="sidenav-bleepy-btn" aria-label="Toggle Assistant" class="btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
         <span id="bleepy-icon-show">🍴</span>  <!-- Fork = show assistant -->
         <span id="bleepy-icon-hide" class="hidden">🥄</span>  <!-- Spoon = hide assistant -->
       </button>
-      
-      <!-- THEME TOGGLE -->
-      <!-- Switches between light and dark mode -->
-      <button id="sidenav-theme-btn" aria-label="Toggle Theme" class="btn-plain rounded-md h-8 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
-        <Icon name="material-symbols:dark-mode-outline" class="text-sm dark:hidden" />  <!-- Show in light mode -->
-        <Icon name="material-symbols:light-mode-outline" class="text-sm hidden dark:block" />  <!-- Show in dark mode -->
-      </button>
-      
-      <!-- DISPLAY SETTINGS BUTTON -->
-      <!-- Shows inline hue slider when clicked -->
-      {!siteConfig.themeColor.fixed && (
-        <div class="w-full overflow-hidden">
-          <button id="sidenav-settings-btn" aria-label="Display Settings" class="btn-plain rounded-md h-8 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
-            <Icon name="material-symbols:palette-outline" class="text-sm" />
-          </button>
-          
-          <!-- INLINE HUE SLIDER - appears when button is clicked -->
-          <div id="inline-hue-slider" class="hidden mt-2 px-1 py-2 bg-[var(--card-bg)] rounded-md border border-black/10 dark:border-white/10 max-w-full overflow-hidden">
-            <div class="flex items-center justify-between gap-1 mb-2 text-xs">
-              <span class="font-medium text-neutral-600 dark:text-neutral-400 flex-shrink-0">Hue</span>
-              <div id="hue-value-display" class="bg-[var(--btn-regular-bg)] text-[var(--btn-content)] px-1 py-1 rounded text-xs font-bold min-w-[1.5rem] text-center flex-shrink-0">
-                230
-              </div>
-              <button id="hue-reset-btn" aria-label="Reset Hue" class="btn-plain rounded px-1 py-1 text-xs active:scale-90 flex-shrink-0">
-                <Icon name="fa6-solid:arrow-rotate-left" class="text-xs" />
-              </button>
-            </div>
-            <!-- VERTICAL HUE SLIDER -->
-            <div class="w-full flex justify-center">
-              <div class="w-6 h-24 rounded relative overflow-hidden hue-gradient">
-                <input 
-                  type="range" 
-                  id="inline-hue-input"
-                  min="0" 
-                  max="360" 
-                  value="230" 
-                  step="5"
-                  orient="vertical"
-                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer hue-slider"
-                  aria-label="Theme Hue"
-                />
-                <div id="hue-thumb" class="absolute left-0 w-full h-0.5 bg-white border border-black/30 rounded-sm pointer-events-none shadow-sm hue-thumb"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      <!-- FULLSCREEN TOGGLE -->
-      <!-- Only visible on desktop (md breakpoint and up) -->
-      <!-- Uses browser's fullscreen API -->
-      <button id="sidenav-fullscreen-btn" aria-label="Toggle Fullscreen Mode" class="btn-plain rounded-md h-8 w-full items-center justify-center active:scale-90 transition-all duration-200 hidden md:flex">
-        <Icon name="fa6-solid:expand" class="fullscreen-icon text-sm"></Icon>  <!-- Enter fullscreen -->
-        <Icon name="fa6-solid:compress" class="fullscreen-exit-icon text-sm hidden"></Icon>  <!-- Exit fullscreen -->
+    </div>
+
+    <!-- =============================================================== -->
+    <!-- 7. SETTINGS GEAR (SEARCH, FULLSCREEN, THEME SUBMENU) -->
+    <!-- =============================================================== -->
+    <div class="w-full">
+      <button id="sidenav-settings-toggle" aria-label="Settings Menu" class="btn-regular rounded-lg h-10 w-full flex items-center justify-center active:scale-90 transition-all duration-200">
+        <Icon name="material-symbols:settings-outline" class="text-lg" />
       </button>
     </div>
   </div>
+
+  <!-- =============================================================== -->
+  <!-- SETTINGS SUBMENU PANEL -->
+  <!-- =============================================================== -->
+  <!-- REMOVED: Panel moved to MainGridLayout.astro for proper positioning -->
 
 </div>
 
 <!-- =============================================================== -->
-<!-- MINIMAL CSS STYLES - ONLY WHAT TAILWIND CAN'T DO -->
+<!-- MINIMAL CSS STYLES - ONLY SIDEBAR CONSTRAINTS -->
 <!-- =============================================================== -->
+<!-- 
+  BUTTON STYLING SYSTEM:
+  - Main navigation buttons: btn-regular + rounded-lg + h-10 (consistent grey background)
+  - Submenu items: btn-plain + rounded-md + py-2.5 (transparent with hover states)
+  - All buttons: w-full for consistent width, consistent icon sizing (text-lg for main, text-base for submenu)
+  
+  NOTE: Panel styles and hue slider styles moved to MainGridLayout.astro
+-->
 <style>
-  /* =============================================================== */
-  /* PANEL STATES - Using simple class toggles instead of complex positioning */
-  /* =============================================================== */
-  
-  /* Open state for panels */
-  .sidenav-panel.panel-open {
-    @apply opacity-100 translate-x-0 pointer-events-auto;
-  }
-  
-  /* =============================================================== */
-  /* HUE SLIDER - Custom gradient and positioning that Tailwind can't handle */
-  /* =============================================================== */
-  
-  .hue-gradient {
-    background: linear-gradient(to bottom, 
-      hsl(360, 100%, 50%), 
-      hsl(300, 100%, 50%), 
-      hsl(240, 100%, 50%), 
-      hsl(180, 100%, 50%), 
-      hsl(120, 100%, 50%), 
-      hsl(60, 100%, 50%), 
-      hsl(0, 100%, 50%));
-  }
-  
-  .hue-slider {
-    writing-mode: bt-lr; 
-    -webkit-appearance: slider-vertical;
-  }
-  
-  .hue-thumb {
-    top: calc((360 - 230)/360 * 100% - 1px);
-  }
-  
   /* =============================================================== */
   /* SIDEBAR CONSTRAINTS - Prevent any layout issues */
   /* =============================================================== */
@@ -393,85 +277,26 @@ const getNavIcon = (name: string): string => {
 </style>
 
 <!-- =============================================================== -->
-<!-- JAVASCRIPT - EVENT HANDLERS AND INTERACTION LOGIC -->
+<!-- JAVASCRIPT - SIMPLIFIED (PANELS MOVED TO MAINGRIDLAYOUT) -->
 <!-- =============================================================== -->
 <script>
-  // ===================================================================
-  // MAIN INITIALIZATION FUNCTION
-  // ===================================================================
-  // This function sets up all event listeners and interactive behavior
-  // It's called when the DOM is ready and after Astro page transitions
-  
   function initializeSideNav() {
     // ===================================================================
-    // GET DOM ELEMENTS
+    // PROFILE BUTTON TOGGLE - RESTORED
     // ===================================================================
-    // Cache references to DOM elements we'll be working with
-    const menuToggleBtn = document.getElementById('sidenav-menu-toggle');
-    const menuPanel = document.getElementById('sidenav-menu-panel');
     const profileBtn = document.getElementById('sidenav-profile-btn');
-    const settingsBtn = document.getElementById('sidenav-settings-btn');
-    const searchBtn = document.getElementById('sidenav-search-btn');
-    const categoriesBtn = document.getElementById('sidenav-categories-btn');
-    const bleepyBtn = document.getElementById('sidenav-bleepy-btn');
-    const themeBtn = document.getElementById('sidenav-theme-btn');
-    const fsBtn = document.getElementById('sidenav-fullscreen-btn');
-
-    // ===================================================================
-    // DROPDOWN PANELS LOGIC - SIMPLIFIED
-    // ===================================================================
-    // Handle dropdown buttons and their corresponding panels
-    
-    const dropdownButtons = document.querySelectorAll('.nav-dropdown-btn');
-    dropdownButtons.forEach(button => {
-      const dropdownName = button.getAttribute('data-dropdown-name');
-      const panel = document.getElementById(`sidenav-dropdown-${dropdownName?.toLowerCase()}`);
-      
-      if (panel) {
-        // Handle button clicks
-        button.addEventListener('click', (e) => {
-          e.stopPropagation();
-          
-          // Close other panels first
-          closeAllPanels();
-          
-          // Toggle this panel
-          panel.classList.toggle('panel-open');
-        });
-      }
-    });
-
-    // ===================================================================
-    // NAVIGATION PANEL TOGGLE
-    // ===================================================================
-    // Handles the main navigation menu that slides out from the right
-    // Shows all navigation links in a flat list
-    
-    if (menuToggleBtn && menuPanel) {
-        // Toggle panel when button is clicked
-        menuToggleBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            
-            // Close other panels first
-            closeAllPanels(menuPanel);
-            
-            // Toggle this panel
-            menuPanel.classList.toggle('panel-open');
-        });
-    }
-
-    // ===================================================================
-    // PROFILE BUTTON TOGGLE
-    // ===================================================================
-    // Handles the profile button click by dispatching a custom event
-    // The MainGridLayout will listen for this event and show the profile overlay
     
     if (profileBtn) {
         profileBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             
             // Close any open sidebar panels first
-            closeAllPanels();
+            const allPanels = document.querySelectorAll('.sidenav-panel');
+            allPanels.forEach(panel => {
+              if (panel.classList.contains('panel-open')) {
+                panel.classList.remove('panel-open');
+              }
+            });
             
             // Dispatch custom event to MainGridLayout
             document.dispatchEvent(new CustomEvent('profile:toggle'));
@@ -479,252 +304,48 @@ const getNavIcon = (name: string): string => {
     }
 
     // ===================================================================
-    // UTILITY FUNCTION: CLOSE ALL PANELS
+    // ASSISTANT (BLEEPY) TOGGLE LOGIC - ONLY FUNCTIONALITY REMAINING IN SIDENAV
     // ===================================================================
-    // Closes all expandable panels except the one specified
-    
-    function closeAllPanels(except = null) {
-      const allPanels = document.querySelectorAll('.sidenav-panel');
-      allPanels.forEach(panel => {
-        if (panel !== except && panel.classList.contains('panel-open')) {
-          panel.classList.remove('panel-open');
-        }
-      });
-    }
-
-    // ===================================================================
-    // DISPLAY SETTINGS - INLINE HUE SLIDER
-    // ===================================================================
-    // Shows/hides the inline hue slider and handles hue changes
-    
-    const inlineSlider = document.getElementById('inline-hue-slider');
-    const hueInput = document.getElementById('inline-hue-input');
-    const hueDisplay = document.getElementById('hue-value-display');
-    const hueThumb = document.getElementById('hue-thumb');
-    const hueResetBtn = document.getElementById('hue-reset-btn');
-    
-    // Get current hue from CSS or localStorage
-    function getCurrentHue() {
-      return parseInt(localStorage.getItem('hue') || '230');
-    }
-    
-    // Set hue and update everything
-    function setHue(newHue) {
-      localStorage.setItem('hue', newHue.toString());
-      document.documentElement.style.setProperty('--hue', newHue);
-      
-      if (hueDisplay) hueDisplay.textContent = newHue;
-      if (hueInput) hueInput.value = newHue;
-      if (hueThumb) {
-        // Vertical slider: invert position (360 at top, 0 at bottom)
-        hueThumb.style.top = `calc((360 - ${newHue})/360 * 100% - 1px)`;
-      }
-    }
-    
-    // Initialize with current hue
-    const currentHue = getCurrentHue();
-    setHue(currentHue);
-    
-    // Toggle slider visibility
-    settingsBtn?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      
-      if (inlineSlider) {
-        inlineSlider.classList.toggle('hidden');
-      }
-    });
-    
-    // Handle hue changes
-    hueInput?.addEventListener('input', (e) => {
-      const newHue = parseInt(e.target.value);
-      setHue(newHue);
-    });
-    
-    // Handle reset button
-    hueResetBtn?.addEventListener('click', () => {
-      const defaultHue = 230; // Your default hue
-      setHue(defaultHue);
-    });
-    
-    // Close slider when clicking outside
-    document.addEventListener('click', (e) => {
-      if (inlineSlider && !inlineSlider.classList.contains('hidden')) {
-        const target = e.target;
-        if (target instanceof Element) {
-          // Check if click is outside the slider and button
-          if (!inlineSlider.contains(target) && !settingsBtn?.contains(target)) {
-            inlineSlider.classList.add('hidden');
-          }
-        }
-      }
-    });
-
-    // ===================================================================
-    // SEARCH PANEL TOGGLE
-    // ===================================================================
-    // Opens the site search panel and focuses the search input
-    
-    searchBtn?.addEventListener('click', () => {
-      const searchPanel = document.getElementById('search-panel'); 
-      if (searchPanel) {
-        // Close expandable panels first
-        closeAllPanels();
-        
-        // Toggle panel visibility
-        searchPanel.classList.toggle('float-panel-closed');
-        
-        // Focus the search input for immediate typing
-        const searchInput = searchPanel.querySelector('input[type="search"]');
-        if (searchInput && !searchPanel.classList.contains('float-panel-closed')) {
-          setTimeout(() => (searchInput as HTMLInputElement).focus(), 100);
-        }
-      } else {
-        console.warn('Sidenav: Search Panel with id="search-panel" not found.');
-      }
-    });
-
-    // ===================================================================
-    // CATEGORIES BUTTON
-    // ===================================================================
-    // Currently shows an alert - customize this for your needs
-    // You might want to open a categories modal or navigate to a categories page
-    
-    categoriesBtn?.addEventListener('click', () => {
-        // TODO: Replace this alert with your desired categories functionality
-        // Examples:
-        // - Open a categories modal
-        // - Navigate to /categories page
-        // - Toggle a categories sidebar
-        alert('Categories button clicked. Implement modal logic here.');
-    });
-
-    // ===================================================================
-    // ASSISTANT (BLEEPY) TOGGLE LOGIC
-    // ===================================================================
-    // Manages the site assistant/mascot visibility
-    // Uses custom events to communicate with other components
+    const bleepyBtn = document.getElementById('sidenav-bleepy-btn');
     
     if(bleepyBtn) {
-        // Get icon elements for state display
-        const showIcon = bleepyBtn.querySelector('#bleepy-icon-show');  // 🍴 (fork)
-        const hideIcon = bleepyBtn.querySelector('#bleepy-icon-hide');  // 🥄 (spoon)
-        let isMascotVisible = true;  // Track current state
+        const showIcon = bleepyBtn.querySelector('#bleepy-icon-show');
+        const hideIcon = bleepyBtn.querySelector('#bleepy-icon-hide');
+        let isMascotVisible = true;
         
-        // Handle button clicks
         bleepyBtn.addEventListener('click', () => {
-            // Send appropriate event based on current state
             const eventName = isMascotVisible ? 'bleepy:hide' : 'bleepy:show';
             document.dispatchEvent(new CustomEvent(eventName));
         });
 
-        // Listen for visibility changes from other components
         document.addEventListener('bleepy:visibilityChanged', (event) => {
             const customEvent = event as CustomEvent;
             isMascotVisible = customEvent.detail.visible;
             
-            // Update icon display based on state
             if (isMascotVisible) {
-                showIcon?.classList.remove('hidden');  // Show fork (can hide)
-                hideIcon?.classList.add('hidden');     // Hide spoon
+                showIcon?.classList.remove('hidden');
+                hideIcon?.classList.add('hidden');
             } else {
-                showIcon?.classList.add('hidden');     // Hide fork  
-                hideIcon?.classList.remove('hidden');  // Show spoon (can show)
+                showIcon?.classList.add('hidden');
+                hideIcon?.classList.remove('hidden');
             }
         });
         
-        // Initially hide the mascot
         document.dispatchEvent(new CustomEvent('bleepy:hide'));
     }
-
-    // ===================================================================
-    // THEME TOGGLE
-    // ===================================================================
-    // Switches between light and dark mode
-    // Updates localStorage and document classes
-    
-    themeBtn?.addEventListener('click', () => {
-      // Toggle the 'dark' class on the document element
-      const isDark = document.documentElement.classList.toggle('dark');
-      
-      // Save preference to localStorage
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    });
-
-    // ===================================================================
-    // FULLSCREEN TOGGLE LOGIC
-    // ===================================================================
-    // Uses the browser's Fullscreen API to enter/exit fullscreen mode
-    // Only visible on desktop devices (md breakpoint and up)
-    
-    if (fsBtn) {
-        const expandIcon = fsBtn.querySelector('.fullscreen-icon');    // Expand arrow
-        const compressIcon = fsBtn.querySelector('.fullscreen-exit-icon'); // Compress arrow
-        
-        // Function to update icon based on fullscreen state
-        const updateIcon = () => {
-            const isFullscreen = !!document.fullscreenElement;
-            expandIcon?.classList.toggle('hidden', isFullscreen);   // Hide expand when in fullscreen
-            compressIcon?.classList.toggle('hidden', !isFullscreen); // Hide compress when not in fullscreen
-        };
-        
-        // Handle button clicks
-        fsBtn.addEventListener('click', () => {
-            if (!document.fullscreenElement) {
-                // Enter fullscreen
-                document.documentElement.requestFullscreen();
-            } else {
-                // Exit fullscreen
-                document.exitFullscreen();
-            }
-        });
-        
-        // Listen for fullscreen changes (user can also use ESC key)
-        document.addEventListener('fullscreenchange', updateIcon);
-        
-        // Set initial icon state
-        updateIcon();
-    }
-
-    // ===================================================================
-    // OUTSIDE CLICK HANDLER - IMPROVED
-    // ===================================================================
-    // Closes open panels when user clicks outside of them
-    // Provides intuitive UX for dismissing panels
-    
-    document.addEventListener('click', (e) => {
-        const target = e.target;
-        
-        if (target instanceof Element) {
-            // Check if click is inside any expandable panel or their trigger buttons
-            const clickedPanel = target.closest('.sidenav-panel');
-            const clickedButton = target.closest('.nav-dropdown-btn, #sidenav-menu-toggle');
-            
-            // If click is outside all panels and buttons, close all panels
-            if (!clickedPanel && !clickedButton) {
-                closeAllPanels();
-            }
-        }
-    });
   }
 
   // ===================================================================
-  // EVENT LISTENERS SETUP
+  // EVENT LISTENERS SETUP - SIMPLIFIED
   // ===================================================================
-  // Initialize the component when:
-  // 1. DOM is ready (initial page load)
-  // 2. After Astro page transitions (astro:page-load event)
-  
-  // Add multiple initialization attempts to ensure it works
   function initWithDelay() {
     setTimeout(initializeSideNav, 100);
   }
   
-  // Try multiple event listeners
   document.addEventListener('astro:page-load', initWithDelay);
   document.addEventListener('DOMContentLoaded', initWithDelay);
   window.addEventListener('load', initWithDelay);
   
-  // Immediate attempt
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initWithDelay);
   } else {
