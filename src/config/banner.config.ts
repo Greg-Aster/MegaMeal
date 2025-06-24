@@ -1,6 +1,6 @@
 /**
  * ===================================================================
- * BANNER CONFIGURATION - CLEANED & SIMPLIFIED
+ * BANNER CONFIGURATION - RESTORED WORKING VERSION + MOBILE PORTRAIT FIX
  * ===================================================================
  */
 
@@ -30,7 +30,32 @@ import { isAssistantBannerData } from './banners/assistant'
 import { isNoneBannerData } from './banners/none'
 
 // =====================================================================
-// SIMPLIFIED INTERFACES - REMOVED UNUSED VALUES
+// BACKGROUND IMAGE HELPERS - RESTORED
+// =====================================================================
+
+export function getDynamicBackgroundImage(backgroundImage?: string | null): string | null {
+  if (backgroundImage === "none" || backgroundImage === "") {
+    return null;
+  }
+  if (backgroundImage) {
+    return backgroundImage;
+  }
+  
+  // Check if siteConfig is available (client-side)
+  if (typeof window !== 'undefined' && (window as any).siteConfig?.banner?.enable && (window as any).siteConfig?.banner?.src) {
+    return (window as any).siteConfig.banner.src;
+  }
+  
+  return null;
+}
+
+export function getShouldShowParallaxBackground(backgroundImage?: string | null): boolean {
+  const currentBackgroundImage = getDynamicBackgroundImage(backgroundImage);
+  return !!(currentBackgroundImage && bannerConfig.parallax.enabled);
+}
+
+// =====================================================================
+// RESTORED INTERFACES - BACK TO WORKING VERSION
 // =====================================================================
 
 /**
@@ -44,7 +69,7 @@ export interface BannerDimensions {
 }
 
 /**
- * 🎯 MAIN CONFIG - CLEANED UP
+ * 🎯 MAIN CONFIG - RESTORED WORKING VERSION
  */
 export interface BannerConfig {
   // Banner type configs
@@ -94,6 +119,8 @@ export interface BannerConfig {
       assistant: string;
       none: string;
     };
+    // ⭐ MOBILE PORTRAIT FIX: Special spacing when navbar hidden
+    mobilePortraitSpacing: string;
   };
 
   // 🎯 WORKING: The REAL overlap system - this controls banner overlap!
@@ -133,7 +160,7 @@ export interface BannerConfig {
 
 /**
  * ===================================================================
- * MAIN CONFIGURATION - CLEANED & WORKING
+ * MAIN CONFIGURATION - RESTORED WORKING VERSION
  * ===================================================================
  */
 export const bannerConfig: BannerConfig = {
@@ -180,29 +207,30 @@ export const bannerConfig: BannerConfig = {
     value: 'linear-gradient(135deg, oklch(0.6 0.2 var(--hue)), oklch(0.4 0.3 var(--hue)))'
   },
 
-  // WORKING: Navbar spacing - NOW RESPONSIVE!
+  // WORKING: Navbar spacing - RESTORED WORKING VALUES
   navbar: {
     height: '5rem',
     spacing: {
-      standard: "clamp(3rem, 4vw, 3rem)",    // 🎯 1.5rem mobile → 5rem desktop
-      timeline: "5.5rem",
-      video: "5.5rem",
-      image: "clamp(1.5rem, 4vw, 5rem)",       // 🎯 Same responsive spacing
-      assistant: "5.5rem",
-      none: "-8rem"
-    }
+      standard: "clamp(3rem, 4vw, 3rem)",    // 🎯 WORKING VALUE
+      timeline: "5.5rem",                     // 🎯 WORKING VALUE
+      video: "clamp(0rem, 6.5vw, 5.5rem)",                        // 🎯 WORKING VALUE
+      image: "clamp(1.5rem, 4vw, 5rem)",     // 🎯 WORKING VALUE
+      assistant: "5.5rem",                    // 🎯 WORKING VALUE
+      none: "-8rem"                           // 🎯 WORKING VALUE
+    },
+    // ⭐ MOBILE PORTRAIT FIX: Only addition to working system
+    mobilePortraitSpacing: '1.5rem'
   },
 
-  // 🎯 WORKING: THE REAL OVERLAP SYSTEM!
-  // These values control how much content overlaps the banner
+  // 🎯 WORKING: THE REAL OVERLAP SYSTEM - RESTORED WORKING VALUES!
   panel: {
     top: {
-      video: "-0.5rem",
-      image: "-0.5rem",
-      timeline: "-0.5rem",
-      assistant: "-0.5rem",
-      standard: "clamp(-5rem, -4vw, -2.5rem)",  // 🎯 1.5rem mobile → 5rem desktop overlap
-      none: "12rem"
+      video: "-0.5rem",                               // 🎯 WORKING VALUE
+      image: "-0.5rem",                               // 🎯 WORKING VALUE
+      timeline: "-0.5rem",                            // 🎯 WORKING VALUE
+      assistant: "-0.5rem",                           // 🎯 WORKING VALUE
+      standard: "clamp(-5rem, -4vw, -2.5rem)",      // 🎯 WORKING VALUE - THIS CONTROLS OVERLAP!
+      none: "12rem"                                   // 🎯 WORKING VALUE
     }
   },
 
@@ -230,7 +258,22 @@ export const bannerConfig: BannerConfig = {
 }
 
 // =====================================================================
-// SIMPLIFIED HELPER FUNCTIONS - CLEANED UP
+// MOBILE PORTRAIT DETECTION - ONLY NEW ADDITION
+// =====================================================================
+
+function isMobilePortrait(): boolean {
+  if (typeof window === 'undefined') return false;
+  const windowWidth = window.innerWidth;
+  const windowHeight = window.innerHeight;
+  return windowWidth <= 768 && windowHeight > windowWidth;
+}
+
+function shouldHideNavbar(): boolean {
+  return isMobilePortrait();
+}
+
+// =====================================================================
+// RESTORED HELPER FUNCTIONS - WORKING VERSION
 // =====================================================================
 
 export function isFullscreenModeActive(): boolean {
@@ -344,7 +387,7 @@ export function getBannerDataSources(bannerType: BannerDeterminationResult, post
 }
 
 /**
- * 🎯 MAIN API: Banner configuration determination
+ * 🎯 MAIN API: Banner configuration determination - RESTORED + MOBILE PORTRAIT FIX
  */
 export function determineBannerConfiguration(post: any, pageType: string, defaultBannerLink: string = '') {
   if (isFullscreenModeActive()) {
@@ -383,9 +426,14 @@ export function determineBannerConfiguration(post: any, pageType: string, defaul
   const bannerType = determineBannerType(post, postData);
   const bannerDataSources = getBannerDataSources(bannerType, post);
   
-  // 🎯 THE REAL WORKING VALUES
+  // 🎯 THE REAL WORKING VALUES - RESTORED
   const mainPanelTop = getPanelTopPosition(bannerType.currentBannerType);
-  const navbarSpacing = bannerConfig.navbar.spacing[bannerType.currentBannerType];
+  
+  // ⭐ MOBILE PORTRAIT FIX: Only change the navbar spacing calculation
+  const navbarSpacing = shouldHideNavbar() 
+    ? bannerConfig.navbar.mobilePortraitSpacing
+    : bannerConfig.navbar.spacing[bannerType.currentBannerType];
+    
   const bannerHeight = bannerConfig.layout.height;
   const mainContentOffset = bannerConfig.layout.mainContentOffset;
   
@@ -396,8 +444,8 @@ export function determineBannerConfiguration(post: any, pageType: string, defaul
     bannerType,
     bannerDataSources,
     layout: {
-      mainPanelTop,                    // 🎯 THIS CONTROLS OVERLAP!
-      navbarSpacing,
+      mainPanelTop,                    // 🎯 THIS CONTROLS OVERLAP! (RESTORED)
+      navbarSpacing,                   // ⭐ MOBILE PORTRAIT AWARE
       bannerHeight,
       bannerOverlap: '0',              // Removed unused value
       dynamicOverlap: '0',             // Removed unused value
@@ -409,7 +457,7 @@ export function determineBannerConfiguration(post: any, pageType: string, defaul
 }
 
 // =====================================================================
-// SIMPLIFIED UTILITY FUNCTIONS - KEPT ONLY WORKING ONES
+// RESTORED UTILITY FUNCTIONS - KEPT ONLY WORKING ONES
 // =====================================================================
 
 export function getResponsiveBannerDimensions(): { height: string; } {
@@ -429,7 +477,7 @@ export function getBannerAnimationSettings(): BannerAnimationConfig {
   return bannerConfig.standardBannerConfig.getBannerAnimationSettings();
 }
 
-// 🎯 THE FUNCTION THAT CONTROLS OVERLAP!
+// 🎯 THE FUNCTION THAT CONTROLS OVERLAP! - RESTORED
 export function getPanelTopPosition(bannerType: BannerType): string {
   switch(bannerType) {
     case 'video': return bannerConfig.panel.top.video;
@@ -468,6 +516,20 @@ export function getLinkPreviewData(url: string): LinkPreviewInfo {
 
 export function getIconSVG(iconName: string): string {
   return bannerConfig.standardBannerConfig.getIconSVG(iconName);
+}
+
+// =====================================================================
+// DEPRECATED FUNCTIONS - KEPT FOR BACKWARDS COMPATIBILITY
+// =====================================================================
+
+/** @deprecated Use getPanelTopPosition instead */
+export function calculateBannerLayout() {
+  console.warn('calculateBannerLayout is deprecated, using working system instead');
+}
+
+/** @deprecated Use shouldHideNavbar instead */
+export function getShouldShowNavbar() {
+  return !shouldHideNavbar();
 }
 
 // Re-export type guards and configurations

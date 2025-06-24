@@ -264,7 +264,7 @@ export class BannerPreviewCards {
     return pauseIndicator;
   }
 
-  private createClickIndicator(hasValidLink: boolean): HTMLElement {
+/*   private createClickIndicator(hasValidLink: boolean): HTMLElement {
     const clickIndicator = document.createElement('div');
     clickIndicator.className = 'banner-click-indicator btn-regular';
     clickIndicator.innerHTML = `
@@ -274,7 +274,7 @@ export class BannerPreviewCards {
       <span class="ml-1 text-xs">${hasValidLink ? 'Click for link' : 'Click for info'}</span>
     `;
     return clickIndicator;
-  }
+  } */
 
   /**
    * Create position indicators - EXTRACTED

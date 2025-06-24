@@ -23,14 +23,15 @@ import { url } from '../utils/url-utils';
 import Bleepy from '@components/bleepy/Bleepy.astro';
 import BleepyBanner from '@components/bleepy/BleepyBanner.astro';
 
-// Banner configuration - ONLY import what works in Astro frontmatter
+// ⭐ RESTORED: Import working banner configuration
 import {
-  bannerConfig,
   determineBannerConfiguration,
-  getFallbackBannerCSS,
+  getDynamicBackgroundImage,
+  getShouldShowParallaxBackground,
   getBannerAnimationSettings,
+  getFallbackBannerCSS,
   getBannerLink,
-  getPageSpecificOverlap
+  bannerConfig
 } from '../config/banner.config';
 
 // =====================================================================
@@ -69,47 +70,16 @@ const {
 } = Astro.props
 
 // =====================================================================
-// DYNAMIC BACKGROUND IMAGE LOGIC
+// ⭐ RESTORED: Use working banner configuration system
 // =====================================================================
 
-const getDynamicBackgroundImage = () => {
-  if (backgroundImage === "none" || backgroundImage === "") {
-    return null;
-  }
-  if (backgroundImage) {
-    return backgroundImage;
-  }
-  if (siteConfig.banner.enable && siteConfig.banner.src) {
-    return siteConfig.banner.src;
-  }
-  return null;
-};
-
-const currentBackgroundImage = getDynamicBackgroundImage();
-const shouldShowParallaxBackground = currentBackgroundImage && siteConfig.banner.enable && bannerConfig.parallax.enabled;
-
-// =====================================================================
-// BANNER CONFIGURATION PROCESSING
-// =====================================================================
-
-// Determine current page type
-let currentPageType = 'default';
+// Get current path for page type determination
 const currentPath = Astro.url.pathname;
 
-if (currentPath === '/' || currentPath === '/home/') {
-  currentPageType = 'home';
-} else if (currentPath.startsWith('/posts/') || currentPath.startsWith('/blog/')) {
-  currentPageType = 'post';
-} else if (currentPath.startsWith('/archive/') || currentPath.startsWith('/categories/') || currentPath.startsWith('/tags/')) {
-  currentPageType = 'archive';
-} else if (currentPath.startsWith('/about/')) {
-  currentPageType = 'about';
-}
+// ⭐ RESTORED: Use the working banner configuration function
+const bannerConfiguration = determineBannerConfiguration(post, 'default', bannerLink);
 
-// Get banner configuration
-const bannerConfiguration = determineBannerConfiguration(post, currentPageType, bannerLink);
-
-// Destructure the configuration
+// Destructure the processed configuration - WORKING STRUCTURE
 const {
   postData,
   bannerType,
@@ -130,17 +100,20 @@ const {
   isStandardPage
 } = bannerType;
 
-// Destructure layout values - UPDATED FOR RESPONSIVE NAVBAR
+// ⭐ RESTORED: Use working layout values
 const {
-  mainPanelTop,
-  bannerHeight: BANNER_HEIGHT,
-  bannerOverlap: BANNER_OVERLAP,
-  mainContentOffset,
-  dynamicOverlap
+  mainPanelTop,        // This controls the overlap (WORKING)
+  navbarSpacing,       // This controls navbar spacing (WORKING + MOBILE PORTRAIT FIX)
+  bannerHeight,
+  mainContentOffset
 } = layout;
 
-// ⭐ NEW: Use CSS variable for responsive navbar spacing
-const responsiveNavbarSpacing = 'var(--navbar-spacing)';
+// =====================================================================
+// ⭐ RESTORED: Background image logic (working)
+// =====================================================================
+
+const currentBackgroundImage = getDynamicBackgroundImage(backgroundImage);
+const shouldShowParallaxBackground = getShouldShowParallaxBackground(backgroundImage);
 
 // =====================================================================
 // BLEEPY CONTEXT SETUP
@@ -205,7 +178,7 @@ if (post && post.data) {
   </div>
 
   <!-- =============================================================== -->
-  <!-- UNIFIED BANNER CONTAINER - RESPONSIVE SPACING                 -->
+  <!-- ⭐ RESTORED: Banner container with working spacing calculation -->
   <!-- =============================================================== -->
   <div id="banner-container" 
     class={`z-10 w-full relative transition-all duration-500
@@ -214,7 +187,7 @@ if (post && post.data) {
       ${hasImageBanner ? 'has-image-banner' : ''}
       ${hasAssistantBanner ? 'has-assistant-banner' : ''}
       ${hasStandardBanner ? 'has-standard-banner' : ''}`}
-    style={`margin-top: ${responsiveNavbarSpacing};`}
+    style={`margin-top: ${navbarSpacing};`}
   >
 
     <!-- VIDEO BANNER -->
@@ -302,7 +275,7 @@ if (post && post.data) {
       </div>
     )}
 
-    <!-- STANDARD BANNER - FIXED HIERARCHY -->
+    <!-- STANDARD BANNER -->
     {hasStandardBanner && (
       <div class="banner-container-standard">
         <div class="banner-aspect-container">
@@ -396,7 +369,7 @@ if (post && post.data) {
   </div>
 
   <!-- =============================================================== -->
-  <!-- MAIN CONTENT WRAPPER - RESPONSIVE POSITIONING                 -->
+  <!-- ⭐ RESTORED: Main content with working positioning             -->
   <!-- =============================================================== -->
   <div class={`w-full z-30 pointer-events-none relative`}>
     <div id="main-panel-wrapper" class="responsive-panel-wrapper relative max-w-[var(--page-width)] mx-auto pointer-events-auto" style={`top: ${mainPanelTop}; position: relative;`}>
@@ -406,7 +379,6 @@ if (post && post.data) {
         <!-- =============================================================== -->
         <!-- MOBILE PROFILE OVERLAY - POSITIONED RELATIVE TO PROFILE BUTTON -->
         <!-- =============================================================== -->
-        <!-- This overlay shows the Profile widget positioned near the profile button -->
         <div 
           id="mobile-profile-overlay" 
           class="opacity-0 translate-y-4 pointer-events-none transition-all duration-300 z-[60] md:hidden"
@@ -414,13 +386,11 @@ if (post && post.data) {
         >
           <div class="p-2">
             <div class="card-base p-3 shadow-xl">
-              <!-- Close button -->
               <div class="flex justify-end mb-2">
                 <button id="mobile-profile-close" aria-label="Close Profile" class="btn-plain rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-black/10 dark:hover:bg-white/10">
                   ✕
                 </button>
               </div>
-              <!-- Profile widget content -->
               <div id="mobile-profile-content">
                 <Profile 
                   slug={postData?.slug || ''} 
@@ -447,7 +417,6 @@ if (post && post.data) {
         <!-- =============================================================== -->
         <!-- SIDENAV SUBMENU PANELS - POSITIONED RELATIVE TO MAIN LAYOUT    -->
         <!-- =============================================================== -->
-        <!-- These panels need to be in MainGridLayout to escape sidebar constraints -->
         
         <!-- MENU TOGGLE PANEL (ARCHIVE/ABOUT + ALL LINKS) -->
         <div 
@@ -543,7 +512,6 @@ if (post && post.data) {
                         <Icon name="fa6-solid:arrow-rotate-left" class="text-xs" />
                       </button>
                     </div>
-                    <!-- VERTICAL HUE SLIDER -->
                     <div class="w-full flex justify-center">
                       <div class="w-6 h-24 rounded relative overflow-hidden hue-gradient">
                         <input 
@@ -617,60 +585,30 @@ if (post && post.data) {
 </Layout>
 
 <!-- =============================================================== -->
-<!-- RESPONSIVE LAYOUT STYLES - NAVBAR-AWARE POSITIONING            -->
+<!-- ⭐ RESTORED: Styles using working banner calculation values     -->
 <!-- =============================================================== -->
 <style define:vars={{
   'main-content-offset': mainContentOffset,
+  'main-panel-top': mainPanelTop,
+  'navbar-spacing': navbarSpacing,
+  'banner-height': bannerHeight,
 }}>
-  /* Main content positioning - responsive to navbar visibility */
+  /* ⭐ RESTORED: Use working calculated values from banner configuration */
   #main-grid {
     margin-top: var(--main-content-offset);
   }
   
-  /* ⭐ NEW: Responsive panel wrapper adjustments */
   .responsive-panel-wrapper {
-    /* Adjust top positioning based on navbar visibility */
+    top: var(--main-panel-top);
     transition: top 0.3s ease;
   }
   
-  /* ⭐ NEW: Banner container responsive spacing */
   #banner-container {
-    /* Smooth transition when navbar appears/disappears */
+    margin-top: var(--navbar-spacing);
     transition: margin-top 0.3s ease, transform 0.3s ease;
   }
   
-  /* ⭐ NEW: Mobile portrait specific adjustments */
-  @media (max-width: 768px) and (orientation: portrait) {
-    .responsive-panel-wrapper {
-      /* Optimize spacing when navbar is hidden */
-      top: 0 !important;
-    }
-    
-    #banner-container {
-      /* Remove extra top margin when navbar is hidden */
-      margin-top: 0 !important;
-    }
-    
-    /* Adjust main grid top margin for better mobile portrait experience */
-    #main-grid {
-      margin-top: 1rem;
-    }
-  }
-  
-  /* ⭐ NEW: Mobile landscape and desktop consistency */
-  @media (min-width: 769px), (max-width: 768px) and (orientation: landscape) {
-    .responsive-panel-wrapper {
-      /* Standard positioning when navbar is visible */
-      top: var(--main-panel-top, 0);
-    }
-    
-    #banner-container {
-      /* Standard navbar spacing when visible */
-      margin-top: var(--navbar-spacing);
-    }
-  }
-  
-  /* ⭐ NEW: Sidenav panel states and hue slider styles */
+  /* Sidenav panel states and hue slider styles */
   .sidenav-panel.panel-open {
     @apply opacity-100 translate-x-0 pointer-events-auto;
   }
@@ -697,55 +635,212 @@ if (post && post.data) {
 </style>
 
 <!-- =============================================================== -->
-<!-- JAVASCRIPT - ENHANCED WITH RESPONSIVE NAVBAR AWARENESS         -->
+<!-- ⭐ RESTORED: Only client-side features that work with restored system -->
 <!-- =============================================================== -->
 <script>
   import { createBannerAnimation, VideoLoadingState } from '@/utils/bannerAnimation';
   import {
     getBannerAnimationSettings,
-    bannerConfig,
-    standardBannerConfig
+    bannerConfig
   } from '../config/banner.config';
 
-  // ⭐ ENHANCED: Function to inject config values and handle responsive navbar
-  function updateBannerDimensions() {
-    try {
-      const config = bannerConfig?.dimensions;
-      if (config) {
-        document.documentElement.style.setProperty('--banner-aspect-ratio', config.aspectRatio);
-        document.documentElement.style.setProperty('--banner-max-width', config.maxWidth);
-        document.documentElement.style.setProperty('--banner-padding', config.padding);
-        document.documentElement.style.setProperty('--banner-border-radius', config.borderRadius);
-        console.log('Banner dimensions updated from config:', config);
-      } else {
-        console.warn('Banner config dimensions not available');
-      }
-    } catch (error) {
-      console.error('Failed to set banner dimensions:', error);
+  // ⭐ RESTORED: Initialize only features that don't conflict with working system
+  document.addEventListener('DOMContentLoaded', () => {
+    initializePageAnimations();
+    initializeBannerAnimation();
+    initializeParallaxEffect();
+    initializeScrollListeners();
+    initializeSpecialPageFeatures();
+    initializeMobileProfileOverlay();
+    initializeSidenavPanels();
+  });
+
+  function initializePageAnimations() {
+    const elements = document.querySelectorAll('.onload-animation');
+    elements.forEach((element, index) => {
+      setTimeout(() => {
+        element.classList.add('loaded');
+      }, 100 + (index * 50));
+    });
+    
+    const postImage = document.getElementById('post-image');
+    if (postImage) {
+      setTimeout(() => {
+        postImage.classList.remove('opacity-0', 'scale-105');
+      }, 100);
     }
   }
 
-  // ⭐ NEW: Handle responsive navbar height and spacing updates
-  function updateResponsiveNavbarSpacing() {
-    const navbar = document.getElementById('navbar-wrapper');
-    if (navbar) {
-      const navbarHeight = navbar.offsetHeight;
-      const isNavbarVisible = window.getComputedStyle(navbar).display !== 'none';
-      
-      // Update CSS variables based on navbar visibility
-      if (isNavbarVisible) {
-        document.documentElement.style.setProperty('--navbar-height', `${navbarHeight}px`);
-        document.documentElement.style.setProperty('--navbar-spacing', `${navbarHeight}px`);
-      } else {
-        document.documentElement.style.setProperty('--navbar-height', '0px');
-        document.documentElement.style.setProperty('--navbar-spacing', '0px');
-      }
-      
-      console.log(`Navbar spacing updated: visible=${isNavbarVisible}, height=${navbarHeight}px`);
+  function initializeBannerAnimation() {
+    const bannerController = createBannerAnimation({
+      containerId: 'standard-banner-container',
+      animationConfig: getBannerAnimationSettings(),
+      getBannerItemPreviewDetails: bannerConfig.standardBannerConfig.getBannerItemPreviewDetails,
+      isVideoBannerItem: bannerConfig.standardBannerConfig.isVideoBannerItem,
+      isImageBannerItem: bannerConfig.standardBannerConfig.isImageBannerItem
+    });
+
+    const initialized = bannerController.initialize();
+    
+    if (initialized) {
+      console.log('Banner animation system initialized successfully');
+    } else {
+      console.log('Banner animation system initialization skipped (not applicable)');
     }
   }
 
-  // ⭐ NEW: Initialize sidenav panel functionality
+  function initializeParallaxEffect() {
+    const parallaxBanner = document.getElementById('parallax-banner');
+    if (!parallaxBanner) return;
+    
+    const parallaxImage = document.getElementById('parallax-image');
+    if (!parallaxImage) return;
+    
+    const scrollFactor = bannerConfig.parallax.scrollFactor;
+    let ticking = false;
+
+    function updateParallax() {
+      const scrollY = window.scrollY;
+      const offset = scrollY * scrollFactor;
+      
+      if (parallaxImage) {
+        parallaxImage.style.transform = `translate3d(0, ${offset}px, 0)`;
+      }
+      ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(updateParallax);
+        ticking = true;
+      }
+    });
+
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        parallaxBanner.classList.add('loaded');
+      }, 100);
+    });
+  }
+
+  function initializeScrollListeners() {
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const tocWrapper = document.querySelector('#toc-wrapper');
+      if (tocWrapper) {
+        if (scrollY > 300) {
+          tocWrapper.classList.remove('toc-hide');
+        } else {
+          tocWrapper.classList.add('toc-hide');
+        }
+      }
+    });
+
+    // Set transparency if configured
+    if ((window as any).siteConfig && (window as any).siteConfig.transparency) {
+      document.documentElement.style.setProperty('--bg-opacity', (window as any).siteConfig.transparency);
+    }
+  }
+
+  // ===================================================================
+  // MOBILE PROFILE OVERLAY FUNCTIONALITY
+  // ===================================================================
+  
+  function initializeMobileProfileOverlay() {
+    const overlay = document.getElementById('mobile-profile-overlay');
+    const closeBtn = document.getElementById('mobile-profile-close');
+    const profileBtn = document.getElementById('sidenav-profile-btn');
+    
+    if (!overlay || !closeBtn) {
+      console.warn('Profile overlay elements not found');
+      return;
+    }
+    
+    console.log('Mobile profile overlay initialized');
+    
+    function positionProfileOverlay() {
+      if (!profileBtn) return;
+      
+      const buttonRect = profileBtn.getBoundingClientRect();
+      const overlayWidth = overlay.offsetWidth;
+      const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
+      
+      let left = buttonRect.left - overlayWidth - 8;
+      let top = buttonRect.top;
+      
+      if (left < 8) {
+        left = buttonRect.right + 8;
+      }
+      
+      if (left + overlayWidth > screenWidth - 8) {
+        left = screenWidth - overlayWidth - 8;
+      }
+      
+      if (top + overlay.offsetHeight > screenHeight - 8) {
+        top = screenHeight - overlay.offsetHeight - 8;
+      }
+      
+      if (top < 8) {
+        top = 8;
+      }
+      
+      overlay.style.position = 'fixed';
+      overlay.style.left = `${left}px`;
+      overlay.style.top = `${top}px`;
+    }
+    
+    function showProfileOverlay() {
+      console.log('Showing profile overlay');
+      positionProfileOverlay();
+      overlay.classList.remove('pointer-events-none', 'opacity-0', 'translate-y-4');
+      overlay.classList.add('opacity-100', 'translate-y-0');
+    }
+    
+    function hideProfileOverlay() {
+      console.log('Hiding profile overlay');
+      overlay.classList.add('pointer-events-none', 'opacity-0', 'translate-y-4');
+      overlay.classList.remove('opacity-100', 'translate-y-0');
+    }
+    
+    document.addEventListener('profile:toggle', (e) => {
+      console.log('Profile toggle event received');
+      const isVisible = overlay.classList.contains('opacity-100');
+      
+      if (isVisible) {
+        hideProfileOverlay();
+      } else {
+        showProfileOverlay();
+      }
+    });
+    
+    closeBtn.addEventListener('click', hideProfileOverlay);
+    
+    document.addEventListener('click', (e) => {
+      const target = e.target as Element;
+      const isVisible = overlay.classList.contains('opacity-100');
+      
+      if (isVisible && 
+          !overlay.contains(target) && 
+          !target.closest('#unified-sidenav')) {
+        hideProfileOverlay();
+      }
+    });
+    
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.classList.contains('opacity-100')) {
+        hideProfileOverlay();
+      }
+    });
+    
+    window.addEventListener('resize', () => {
+      const isVisible = overlay.classList.contains('opacity-100');
+      if (isVisible) {
+        positionProfileOverlay();
+      }
+    });
+  }
+
   function initializeSidenavPanels() {
     const menuToggleBtn = document.getElementById('sidenav-menu-toggle');
     const menuPanel = document.getElementById('sidenav-menu-panel');
@@ -756,45 +851,6 @@ if (post && post.data) {
     const fsBtn = document.getElementById('sidenav-fullscreen-btn');
     const displayBtn = document.getElementById('sidenav-display-btn');
 
-    // ⭐ NEW: Dynamic panel positioning function
-    function positionPanelRelativeToButton(panel, button) {
-      if (!panel || !button) return;
-      
-      const buttonRect = button.getBoundingClientRect();
-      const panelWidth = panel.offsetWidth;
-      const screenWidth = window.innerWidth;
-      const screenHeight = window.innerHeight;
-      
-      // Calculate position to the left of the button
-      let left = buttonRect.left - panelWidth - 8; // 8px gap
-      let top = buttonRect.top;
-      
-      // Ensure panel doesn't go off the left edge
-      if (left < 8) {
-        left = buttonRect.right + 8; // Show on right instead
-      }
-      
-      // Ensure panel doesn't go off the right edge
-      if (left + panelWidth > screenWidth - 8) {
-        left = screenWidth - panelWidth - 8;
-      }
-      
-      // Ensure panel doesn't go off the bottom
-      if (top + panel.offsetHeight > screenHeight - 8) {
-        top = screenHeight - panel.offsetHeight - 8;
-      }
-      
-      // Ensure panel doesn't go off the top
-      if (top < 8) {
-        top = 8;
-      }
-      
-      // Apply positioning
-      panel.style.left = `${left}px`;
-      panel.style.top = `${top}px`;
-    }
-
-    // Close all panels utility
     function closeAllSidenavPanels(except = null) {
       const allPanels = document.querySelectorAll('.sidenav-panel');
       allPanels.forEach(panel => {
@@ -804,33 +860,24 @@ if (post && post.data) {
       });
     }
 
-    // Menu toggle panel
     if (menuToggleBtn && menuPanel) {
       menuToggleBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         closeAllSidenavPanels(menuPanel);
-        
-        // Position panel relative to button before showing
         positionPanelRelativeToButton(menuPanel, menuToggleBtn);
-        
         menuPanel.classList.toggle('panel-open');
       });
     }
 
-    // Settings panel toggle
     if (settingsToggleBtn && settingsPanel) {
       settingsToggleBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         closeAllSidenavPanels(settingsPanel);
-        
-        // Position panel relative to button before showing
         positionPanelRelativeToButton(settingsPanel, settingsToggleBtn);
-        
         settingsPanel.classList.toggle('panel-open');
       });
     }
 
-    // Search functionality
     searchBtn?.addEventListener('click', () => {
       const searchPanel = document.getElementById('search-panel'); 
       if (searchPanel) {
@@ -844,13 +891,11 @@ if (post && post.data) {
       }
     });
 
-    // Theme toggle
     themeBtn?.addEventListener('click', () => {
       const isDark = document.documentElement.classList.toggle('dark');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
     });
 
-    // Fullscreen toggle
     if (fsBtn) {
       const expandIcon = fsBtn.querySelector('.fullscreen-icon');
       const compressIcon = fsBtn.querySelector('.fullscreen-exit-icon');
@@ -915,21 +960,6 @@ if (post && post.data) {
       setHue(defaultHue);
     });
 
-    // ⭐ NEW: Handle window resize - reposition open panels
-    window.addEventListener('resize', () => {
-      const openMenuPanel = document.querySelector('#sidenav-menu-panel.panel-open');
-      const openSettingsPanel = document.querySelector('#sidenav-settings-panel.panel-open');
-      
-      if (openMenuPanel && menuToggleBtn) {
-        positionPanelRelativeToButton(openMenuPanel, menuToggleBtn);
-      }
-      
-      if (openSettingsPanel && settingsToggleBtn) {
-        positionPanelRelativeToButton(openSettingsPanel, settingsToggleBtn);
-      }
-    });
-
-    // Outside click handler for sidenav panels
     document.addEventListener('click', (e) => {
       const target = e.target;
       
@@ -937,7 +967,6 @@ if (post && post.data) {
         const clickedPanel = target.closest('.sidenav-panel');
         const clickedButton = target.closest('#sidenav-menu-toggle, #sidenav-settings-toggle, #sidenav-display-btn');
         
-        // Close inline slider if clicking outside
         if (inlineSlider && !inlineSlider.classList.contains('hidden')) {
           if (!inlineSlider.contains(target) && !displayBtn?.contains(target)) {
             inlineSlider.classList.add('hidden');
@@ -951,258 +980,35 @@ if (post && post.data) {
     });
   }
 
-  // ⭐ NEW: Orientation change handler for responsive navbar
-  function handleOrientationChange() {
-    console.log('Orientation changed, updating navbar spacing');
+  function positionPanelRelativeToButton(panel, button) {
+    if (!panel || !button) return;
     
-    // Small delay to allow CSS media queries to apply
-    setTimeout(() => {
-      updateResponsiveNavbarSpacing();
-      updateNavbarHeight(); // Legacy function for compatibility
-    }, 100);
-  }
-
-  // ===================================================================
-  // MOBILE PROFILE OVERLAY FUNCTIONALITY
-  // ===================================================================
-  
-  function initializeMobileProfileOverlay() {
-    const overlay = document.getElementById('mobile-profile-overlay');
-    const closeBtn = document.getElementById('mobile-profile-close');
-    const profileBtn = document.getElementById('sidenav-profile-btn');
+    const buttonRect = button.getBoundingClientRect();
+    const panelWidth = panel.offsetWidth;
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
     
-    if (!overlay || !closeBtn) {
-      console.warn('Profile overlay elements not found');
-      return;
+    let left = buttonRect.left - panelWidth - 8;
+    let top = buttonRect.top;
+    
+    if (left < 8) {
+      left = buttonRect.right + 8;
     }
     
-    console.log('Mobile profile overlay initialized');
-    
-    // ⭐ NEW: Position overlay relative to profile button
-    function positionProfileOverlay() {
-      if (!profileBtn) return;
-      
-      const buttonRect = profileBtn.getBoundingClientRect();
-      const overlayWidth = overlay.offsetWidth;
-      const screenWidth = window.innerWidth;
-      const screenHeight = window.innerHeight;
-      
-      // Calculate position to the left of the button
-      let left = buttonRect.left - overlayWidth - 8; // 8px gap
-      let top = buttonRect.top;
-      
-      // Ensure overlay doesn't go off the left edge
-      if (left < 8) {
-        left = buttonRect.right + 8; // Show on right instead
-      }
-      
-      // Ensure overlay doesn't go off the right edge
-      if (left + overlayWidth > screenWidth - 8) {
-        left = screenWidth - overlayWidth - 8;
-      }
-      
-      // Ensure overlay doesn't go off the bottom
-      if (top + overlay.offsetHeight > screenHeight - 8) {
-        top = screenHeight - overlay.offsetHeight - 8;
-      }
-      
-      // Ensure overlay doesn't go off the top
-      if (top < 8) {
-        top = 8;
-      }
-      
-      // Apply positioning - need to convert to fixed positioning
-      overlay.style.position = 'fixed';
-      overlay.style.left = `${left}px`;
-      overlay.style.top = `${top}px`;
+    if (left + panelWidth > screenWidth - 8) {
+      left = screenWidth - panelWidth - 8;
     }
     
-    // Function to show the overlay
-    function showProfileOverlay() {
-      console.log('Showing profile overlay');
-      
-      // Position first, then show
-      positionProfileOverlay();
-      
-      overlay.classList.remove('pointer-events-none', 'opacity-0', 'translate-y-4');
-      overlay.classList.add('opacity-100', 'translate-y-0');
+    if (top + panel.offsetHeight > screenHeight - 8) {
+      top = screenHeight - panel.offsetHeight - 8;
     }
     
-    // Function to hide the overlay
-    function hideProfileOverlay() {
-      console.log('Hiding profile overlay');
-      overlay.classList.add('pointer-events-none', 'opacity-0', 'translate-y-4');
-      overlay.classList.remove('opacity-100', 'translate-y-0');
+    if (top < 8) {
+      top = 8;
     }
     
-    // Listen for the custom event from SideNavbar
-    document.addEventListener('profile:toggle', (e) => {
-      console.log('Profile toggle event received');
-      const isVisible = overlay.classList.contains('opacity-100');
-      
-      if (isVisible) {
-        hideProfileOverlay();
-      } else {
-        showProfileOverlay();
-      }
-    });
-    
-    // Close button functionality
-    closeBtn.addEventListener('click', hideProfileOverlay);
-    
-    // Click outside to close (only if clicking on main content area or banner)
-    document.addEventListener('click', (e) => {
-      const target = e.target as Element;
-      const isVisible = overlay.classList.contains('opacity-100');
-      
-      if (isVisible && 
-          !overlay.contains(target) && 
-          !target.closest('#unified-sidenav')) {
-        hideProfileOverlay();
-      }
-    });
-    
-    // Escape key to close
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && overlay.classList.contains('opacity-100')) {
-        hideProfileOverlay();
-      }
-    });
-    
-    // ⭐ NEW: Handle window resize - reposition if open
-    window.addEventListener('resize', () => {
-      const isVisible = overlay.classList.contains('opacity-100');
-      if (isVisible) {
-        positionProfileOverlay();
-      }
-    });
-  }
-
-  // Initialize everything when DOM is ready
-  document.addEventListener('DOMContentLoaded', () => {
-    updateBannerDimensions();         // ⭐ CRITICAL: Set CSS variables first
-    updateResponsiveNavbarSpacing();  // ⭐ NEW: Set responsive navbar spacing
-    initializePageAnimations();
-    initializeBannerAnimation();
-    initializeParallaxEffect();
-    initializeEventListeners();
-    initializeSpecialPageFeatures();
-    initializeMobileProfileOverlay(); // ⭐ Initialize profile overlay
-    initializeSidenavPanels();        // ⭐ NEW: Initialize sidenav panels
-  });
-
-  function initializePageAnimations() {
-    updateNavbarHeight();
-    
-    const elements = document.querySelectorAll('.onload-animation');
-    elements.forEach((element, index) => {
-      setTimeout(() => {
-        element.classList.add('loaded');
-      }, 100 + (index * 50));
-    });
-    
-    const postImage = document.getElementById('post-image');
-    if (postImage) {
-      setTimeout(() => {
-        postImage.classList.remove('opacity-0', 'scale-105');
-      }, 100);
-    }
-  }
-
-  function initializeBannerAnimation() {
-    const bannerController = createBannerAnimation({
-      containerId: 'standard-banner-container',
-      animationConfig: getBannerAnimationSettings(),
-      getBannerItemPreviewDetails: standardBannerConfig.getBannerItemPreviewDetails,
-      isVideoBannerItem: bannerConfig.standardBannerConfig.isVideoBannerItem,
-      isImageBannerItem: bannerConfig.standardBannerConfig.isImageBannerItem
-    });
-
-    const initialized = bannerController.initialize();
-    
-    if (initialized) {
-      console.log('Banner animation system initialized successfully');
-    } else {
-      console.log('Banner animation system initialization skipped (not applicable)');
-    }
-  }
-
-  function initializeParallaxEffect() {
-    const parallaxBanner = document.getElementById('parallax-banner');
-    if (!parallaxBanner) return;
-    
-    const parallaxImage = document.getElementById('parallax-image');
-    if (!parallaxImage) return;
-    
-    const scrollFactor = bannerConfig.parallax.scrollFactor;
-    let ticking = false;
-
-    function updateParallax() {
-      const scrollY = window.scrollY;
-      const offset = scrollY * scrollFactor;
-      
-      if (parallaxImage) {
-        parallaxImage.style.transform = `translate3d(0, ${offset}px, 0)`;
-      }
-      ticking = false;
-    }
-
-    window.addEventListener('scroll', () => {
-      if (!ticking) {
-        requestAnimationFrame(updateParallax);
-        ticking = true;
-      }
-    });
-
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        parallaxBanner.classList.add('loaded');
-      }, 100);
-    });
-  }
-
-  function updateNavbarHeight() {
-    const navbar = document.getElementById('navbar-wrapper');
-    if (navbar) {
-      const navbarHeight = navbar.offsetHeight;
-      document.documentElement.style.setProperty('--navbar-height', `${navbarHeight}px`);
-    }
-  }
-
-  function initializeEventListeners() {
-    window.addEventListener('scroll', () => {
-      const scrollY = window.scrollY;
-      const tocWrapper = document.querySelector('#toc-wrapper');
-      if (tocWrapper) {
-        if (scrollY > 300) {
-          tocWrapper.classList.remove('toc-hide');
-        } else {
-          tocWrapper.classList.add('toc-hide');
-        }
-      }
-    });
-    
-    // ⭐ ENHANCED: Listen for resize AND orientation changes
-    window.addEventListener('resize', () => {
-      updateNavbarHeight();
-      updateResponsiveNavbarSpacing();
-    });
-
-    // ⭐ NEW: Handle orientation changes specifically
-    window.addEventListener('orientationchange', handleOrientationChange);
-    
-    // ⭐ NEW: Handle media query changes for navbar visibility
-    if (window.matchMedia) {
-      const portraitQuery = window.matchMedia('(max-width: 768px) and (orientation: portrait)');
-      const landscapeQuery = window.matchMedia('(max-width: 768px) and (orientation: landscape)');
-      
-      portraitQuery.addListener(handleOrientationChange);
-      landscapeQuery.addListener(handleOrientationChange);
-    }
-
-    if ((window as any).siteConfig && (window as any).siteConfig.transparency) {
-      document.documentElement.style.setProperty('--bg-opacity', (window as any).siteConfig.transparency);
-    }
+    panel.style.left = `${left}px`;
+    panel.style.top = `${top}px`;
   }
 
   function initializeSpecialPageFeatures() {
@@ -1333,27 +1139,21 @@ if (post && post.data) {
         transparency?: string | number;
       };
       bannerAnimation?: BannerAnimationAPI;
+      debugBanner?: () => void;
+      resetSpecialPageState?: () => void;
     }
   }
 
-  // ⭐ NEW: Debug helper for responsive navbar
-  window.debugNavbar = function() {
-    const navbar = document.getElementById('navbar-wrapper');
-    const isVisible = navbar ? window.getComputedStyle(navbar).display !== 'none' : false;
-    const navbarHeight = navbar ? navbar.offsetHeight : 0;
-    const navbarSpacing = getComputedStyle(document.documentElement).getPropertyValue('--navbar-spacing');
-    
-    console.log('Navbar Debug Info:', {
-      isVisible,
-      navbarHeight,
-      navbarSpacing,
-      orientation: screen.orientation?.type || 'unknown',
-      windowWidth: window.innerWidth,
-      windowHeight: window.innerHeight
+  // ⭐ DEBUG: Helper functions for the restored working system
+  window.debugBanner = function() {
+    console.log('Banner Debug Info (RESTORED SYSTEM):', {
+      bannerContainer: document.getElementById('banner-container')?.className || 'not found',
+      bannerSpacing: document.getElementById('banner-container')?.style.marginTop || 'not set',
+      mainPanelTop: document.getElementById('main-panel-wrapper')?.style.top || 'not set',
+      mainContentOffset: document.getElementById('main-grid')?.style.marginTop || 'not set'
     });
   };
 
-  // Debug helper
   window.resetSpecialPageState = function() {
     localStorage.removeItem('specialPageOriginalState');
     localStorage.removeItem('cookbookView');
