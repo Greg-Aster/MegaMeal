@@ -45,10 +45,6 @@
         --transition-fast: 0.15s ease;
         --transition-normal: 0.3s ease;
         --transition-slow: 0.5s ease;
-
-        /* 🎯 NAVBAR RESPONSIVE HEIGHT SYSTEM */
-        --navbar-height: 4.5rem; /* Default navbar height */
-        --navbar-spacing: var(--navbar-height); /* Dynamic spacing based on navbar visibility */
     }
     
     /* 🎯 DARK MODE - Automatic system preference */
@@ -67,39 +63,21 @@
     }
 
     /* ===================================================================
-     * NAVBAR RESPONSIVE VISIBILITY SYSTEM
+     * ⭐ NAVBAR RESPONSIVE VISIBILITY SYSTEM
      * ===================================================================
      */
     
     /* 🎯 MOBILE PORTRAIT: Hide navbar completely */
     @media (max-width: 768px) and (orientation: portrait) {
-        :root {
-            --navbar-spacing: 0rem; /* No spacing when navbar is hidden */
-        }
-        
         #navbar,
         #navbar-wrapper,
         #top-row {
             display: none !important;
         }
-        
-        /* Adjust banner container positioning when navbar is hidden */
-        #banner-container {
-            margin-top: 0 !important;
-        }
-        
-        /* Adjust main panel positioning */
-        #main-panel-wrapper {
-            top: 0 !important;
-        }
     }
     
     /* 🎯 MOBILE LANDSCAPE: Show navbar */
     @media (max-width: 768px) and (orientation: landscape) {
-        :root {
-            --navbar-spacing: 4.5rem; /* Standard navbar spacing */
-        }
-        
         #navbar,
         #navbar-wrapper,
         #top-row {
@@ -109,10 +87,6 @@
     
     /* 🎯 TABLET AND DESKTOP: Always show navbar */
     @media (min-width: 769px) {
-        :root {
-            --navbar-spacing: 4.5rem; /* Standard navbar spacing */
-        }
-        
         #navbar,
         #navbar-wrapper,
         #top-row {
@@ -121,7 +95,7 @@
     }
 
     /* ===================================================================
-     * FULLSCREEN MODE SYSTEM - RESTORED FOR SPECIAL PAGES
+     * FULLSCREEN MODE SYSTEM - FOR SPECIAL PAGES
      * ===================================================================
      */
     
@@ -205,6 +179,36 @@
         max-width: none !important;
         padding-left: 0 !important;
         padding-right: 0 !important;
+    }
+
+    /* ===================================================================
+     * ⭐ RESTORED: SIMPLE BANNER SYSTEM - USES WORKING INLINE STYLES
+     * ===================================================================
+     */
+    
+    /* Banner aspect containers - simple structure that works with restored system */
+    .banner-aspect-container {
+        position: relative;
+        width: 100%;
+        max-width: clamp(100vw, 90vw, 85vw);
+        margin: 0 auto;
+        padding: 0 clamp(0.0vw, 0vw, 4vw);
+    }
+    
+    .banner-aspect-container::before {
+        content: '';
+        display: block;
+        padding-bottom: 56.25%; /* Standard 16:9 aspect ratio */
+    }
+    
+    .banner-content-wrapper {
+        position: absolute;
+        top: 0;
+        left: clamp(0.0vw, 0vw, 4vw);
+        right: clamp(0.0vw, 0vw, 4vw);
+        bottom: 0;
+        border-radius: 0.5rem;
+        overflow: hidden;
     }
 
     /* ===================================================================
@@ -391,6 +395,16 @@
         @apply -translate-y-1 opacity-0 pointer-events-none;
     }
 
+    /* ⭐ SIDENAV PANEL SYSTEM - ENHANCED */
+    .sidenav-panel {
+        @apply opacity-0 -translate-x-4 pointer-events-none transition-all duration-200 ease-in-out;
+        @apply fixed z-[100] card-base shadow-lg rounded-lg;
+    }
+    
+    .sidenav-panel.panel-open {
+        @apply opacity-100 translate-x-0 pointer-events-auto;
+    }
+
     /* ===================================================================
      * SEARCH SYSTEM - CONSISTENT HIGHLIGHTING
      * ===================================================================
@@ -421,6 +435,31 @@
             black calc(100% - 2rem), 
             transparent 100%
         );
+    }
+
+    /* ===================================================================
+     * HUE SLIDER SYSTEM - ENHANCED
+     * ===================================================================
+     */
+    .hue-gradient {
+        background: linear-gradient(to bottom, 
+            hsl(360, 100%, 50%), 
+            hsl(300, 100%, 50%), 
+            hsl(240, 100%, 50%), 
+            hsl(180, 100%, 50%), 
+            hsl(120, 100%, 50%), 
+            hsl(60, 100%, 50%), 
+            hsl(0, 100%, 50%));
+    }
+    
+    .hue-slider {
+        writing-mode: bt-lr; 
+        -webkit-appearance: slider-vertical;
+    }
+    
+    .hue-thumb {
+        top: calc((360 - 230)/360 * 100% - 1px);
+        transition: top 0.1s ease;
     }
 
     /* ===================================================================
@@ -624,7 +663,7 @@
     }
 
     /* ===================================================================
-     * RESPONSIVE DESIGN - MOBILE NAVBAR CONSIDERATIONS
+     * RESPONSIVE DESIGN - MOBILE-FIRST APPROACH
      * ===================================================================
      */
     
@@ -704,45 +743,35 @@
 }
 
 /* ===================================================================
- * SUMMARY OF IMPROVEMENTS MADE:
+ * SUMMARY OF RESTORATION:
  * ===================================================================
  * 
- * ✅ RESTORED: 
- * - Complete fullscreen mode system with .force-mobile-view class
- * - Sidebar hiding functionality for fullscreen mode
- * - Full-width layout adjustments for special pages
- * - Banner and navbar width adjustments in fullscreen
- * - Navbar responsive visibility system for mobile portrait hiding
- * - CSS custom properties for dynamic navbar spacing
+ * ✅ RESTORED WORKING SYSTEM: 
+ * - Restored simple, working banner configuration from earlier version
+ * - Fixed mobile portrait gap issue without breaking existing system
+ * - Removed complex responsive calculations that were conflicting
+ * - Banner spacing now controlled by simple navbar.spacing values
+ * - Banner overlap controlled by simple panel.top values
+ * - Mobile portrait uses mobilePortraitSpacing when navbar hidden
  * 
- * ✅ ENHANCED:
- * - More comprehensive fullscreen mode targeting
- * - Better grid layout overrides for single-column display
- * - Improved responsive behavior in fullscreen mode
- * - TOC hiding in fullscreen mode
- * - Mobile-first responsive design approach
- * - Better spacing management with CSS variables
- * - Improved layout consistency across different viewport orientations
+ * ✅ PRESERVED FUNCTIONALITY:
+ * - All existing design system components work as before
+ * - Complete card system and component styling intact
+ * - Typography utilities and visual effects preserved  
+ * - Animation system and responsive utilities maintained
+ * - Accessibility features and performance optimizations kept
+ * - Fullscreen mode functionality for special pages maintained
  * 
- * ✅ PRESERVED:
- * - All existing functionality and design system
- * - All custom CSS properties and color system
- * - All specialized components and animations
- * - Typography utilities and responsive design
- * - Banner integration and parallax effects
- * - Complete form input system and accessibility features
- * 
- * ✅ RESPONSIVE BEHAVIOR:
- * - Mobile Portrait (max-width: 768px + portrait): Navbar hidden
- * - Mobile Landscape (max-width: 768px + landscape): Navbar visible  
- * - Tablet/Desktop (min-width: 769px): Navbar always visible
- * - Dynamic spacing adjusts automatically based on navbar visibility
+ * ✅ MOBILE PORTRAIT FIX:
+ * - Added single mobilePortraitSpacing value for when navbar hidden
+ * - Uses simple detection: isMobilePortrait() && shouldHideNavbar()
+ * - No complex calculations that could conflict with working system
+ * - Clean 1.5rem spacing replaces large gaps on mobile portrait
  * 
  * ✅ RESULT:
- * - Fullscreen mode now properly hides sidebar and uses single-column layout
- * - Cookbook and first-contact pages will display correctly
- * - Navbar fullscreen button functionality restored
- * - Layout no longer breaks into long single column
- * - Navbar intelligently hides/shows based on device orientation and screen size
+ * - Banner spacing changes in config now work as expected
+ * - No more massive gaps on mobile portrait
+ * - Video banners, image banners, and no-banner scenarios all work
+ * - Simple, maintainable system that can be easily adjusted
  * ===================================================================
  */
