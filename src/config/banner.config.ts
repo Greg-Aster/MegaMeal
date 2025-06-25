@@ -4,6 +4,9 @@
  * ===================================================================
  */
 
+// Import siteConfig for background image resolution
+import { siteConfig } from '../config/config'
+
 // Import types from existing types.ts
 import type {
   BannerType,
@@ -30,28 +33,55 @@ import { isAssistantBannerData } from './banners/assistant'
 import { isNoneBannerData } from './banners/none'
 
 // =====================================================================
-// BACKGROUND IMAGE HELPERS - RESTORED
+// BACKGROUND IMAGE HELPERS - FIXED
 // =====================================================================
 
 export function getDynamicBackgroundImage(backgroundImage?: string | null): string | null {
+  // 1. Check for explicit "none" or empty string
   if (backgroundImage === "none" || backgroundImage === "") {
     return null;
   }
+  
+  // 2. Use explicit backgroundImage prop if provided
   if (backgroundImage) {
+    console.log('Using explicit background image:', backgroundImage);
     return backgroundImage;
   }
   
-  // Check if siteConfig is available (client-side)
+  // 3. Use imported siteConfig (primary method)
+  if (siteConfig?.banner?.enable && siteConfig?.banner?.src) {
+    console.log('Using siteConfig background image:', siteConfig.banner.src);
+    return siteConfig.banner.src;
+  }
+  
+  // 4. Fallback: Check window object for client-side compatibility
   if (typeof window !== 'undefined' && (window as any).siteConfig?.banner?.enable && (window as any).siteConfig?.banner?.src) {
+    console.log('Using window.siteConfig background image:', (window as any).siteConfig.banner.src);
     return (window as any).siteConfig.banner.src;
   }
   
+  console.warn('No background image found - check siteConfig.banner configuration');
   return null;
 }
 
 export function getShouldShowParallaxBackground(backgroundImage?: string | null): boolean {
   const currentBackgroundImage = getDynamicBackgroundImage(backgroundImage);
-  return !!(currentBackgroundImage && bannerConfig.parallax.enabled);
+  const isParallaxEnabled = bannerConfig.parallax.enabled;
+  
+  const shouldShow = !!(currentBackgroundImage && isParallaxEnabled);
+  
+  // Debug logging for development
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    console.log('=== PARALLAX BACKGROUND DEBUG ===');
+    console.log('Input backgroundImage prop:', backgroundImage);
+    console.log('Resolved currentBackgroundImage:', currentBackgroundImage);
+    console.log('Parallax enabled in config:', isParallaxEnabled);
+    console.log('Should show parallax background:', shouldShow);
+    console.log('siteConfig.banner:', siteConfig?.banner);
+    console.log('================================');
+  }
+  
+  return shouldShow;
 }
 
 // =====================================================================
@@ -234,7 +264,7 @@ export const bannerConfig: BannerConfig = {
     }
   },
 
-  // WORKING: Parallax configuration
+  // WORKING: Parallax configuration - ENABLED BY DEFAULT
   parallax: {
     enabled: true,
     scrollFactor: -0.02,
