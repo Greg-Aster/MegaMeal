@@ -1,5 +1,6 @@
 ---
-import Profile from './Profile.astro'
+// Remove Profile import - we're using Svelte Profile now
+// import Profile from './Profile.astro'  ← REMOVE THIS LINE
 import Tag from './Tags.astro'
 import Categories from './Categories.astro'
 import CuppyWidget from '../bleepy/CuppyWidget.astro'
@@ -15,6 +16,7 @@ interface Props {
     customName? : string    // Add custom name
     customBio? : string     // Add custom bio
     pageMascotContext? : string  // Add page context for Cuppy
+    hideProfile? : boolean  // ← ADD THIS to prevent duplicates
 }
 
 const className = Astro.props.class
@@ -24,6 +26,7 @@ const customAvatar = Astro.props.customAvatar
 const customName = Astro.props.customName
 const customBio = Astro.props.customBio
 const pageMascotContext = Astro.props.pageMascotContext
+const hideProfile = Astro.props.hideProfile || false  // ← ADD THIS
 
 ---
 <div id="sidebar" class:list={[className, "w-full"]}>
@@ -39,15 +42,17 @@ const pageMascotContext = Astro.props.pageMascotContext
     
     <!-- DESKTOP/TABLET MODE: Show full widgets (sm breakpoint and above) -->
     <div class="hidden md:block w-full">
-        <!-- Profile Section -->
-        <div class="flex flex-col w-full gap-4 mb-4">
-            <Profile 
-              slug={postSlug} 
-              customAvatar={customAvatar}
-              customName={customName}
-              customBio={customBio}
-            />
-        </div>
+        <!-- Profile Section - REMOVED (now handled by Svelte component in MainGridLayout) -->
+        <!-- {!hideProfile && (
+            <div class="flex flex-col w-full gap-4 mb-4">
+                <Profile 
+                  slug={postSlug} 
+                  customAvatar={customAvatar}
+                  customName={customName}
+                  customBio={customBio}
+                />
+            </div>
+        )} -->
         
         <!-- Sticky Widgets Section -->
         <div id="sidebar-sticky" class="transition-all duration-700 flex flex-col w-full gap-4 top-4 sticky top-4">
