@@ -1,0 +1,298 @@
+<!-- Profile.svelte -->
+<script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
+
+  // Props
+  export let slug = '';
+  export let customAvatar = '';
+  export let customName = '';
+  export let customBio = '';
+  export let isHomePage = false;
+  export let profileConfig: any;
+  export let avatarConfig: any;
+
+  // State
+  let currentAvatarIndex = 0;
+  let animationDirection = 1;
+  let animationTimer: number | null = null;
+
+  // Computed values
+  $: useDefaultAvatars = !customAvatar;
+  $: displayName = customName || profileConfig?.name || 'Author';
+  $: displayBio = customBio || profileConfig?.bio || '';
+  $: socialLinks = profileConfig?.links || [];
+
+  // Avatar selection logic
+  $: activeAvatarIndex = (() => {
+    if (isHomePage || !useDefaultAvatars) return 0;
+    return getAvatarIndexFromSlug(slug, avatarConfig?.avatarList?.length || 1);
+  })();
+
+  $: selectedAvatar = (() => {
+    if (!useDefaultAvatars) return customAvatar;
+    if (isHomePage && avatarConfig?.homeAvatar) {
+      // Handle both string and object avatar configs
+      return typeof avatarConfig.homeAvatar === 'string' 
+        ? avatarConfig.homeAvatar 
+        : avatarConfig.homeAvatar.src || avatarConfig.homeAvatar;
+    }
+    if (avatarConfig?.avatarList?.length > 0) {
+      const avatar = avatarConfig.avatarList[activeAvatarIndex];
+      return typeof avatar === 'string' ? avatar : avatar.src || avatar;
+    }
+    return '';
+  })();
+
+  $: avatarList = (() => {
+    if (!avatarConfig?.avatarList) return [];
+    return avatarConfig.avatarList.map(avatar => 
+      typeof avatar === 'string' ? avatar : avatar.src || avatar
+    );
+  })();
+
+  $: hasMultipleAvatars = useDefaultAvatars && 
+                         avatarList.length > 1 && 
+                         !isHomePage;
+
+  function getAvatarIndexFromSlug(slug: string, arrayLength: number): number {
+    if (!slug || arrayLength === 0) return 0;
+    
+    // Simple hash function
+    let hash = 0;
+    for (let i = 0; i < slug.length; i++) {
+      const char = slug.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash) % arrayLength;
+  }
+
+  function startAvatarAnimation() {
+    if (!hasMultipleAvatars || !avatarList.length) return;
+
+    // Initialize currentAvatarIndex to the selected avatar
+    currentAvatarIndex = activeAvatarIndex;
+
+    animationTimer = setInterval(() => {
+      // Update index based on direction
+      currentAvatarIndex += animationDirection;
+
+      // Bounce animation - reverse direction at boundaries
+      if (currentAvatarIndex >= avatarList.length) {
+        currentAvatarIndex = avatarList.length - 1;
+        animationDirection = -1;
+      }
+      if (currentAvatarIndex < 0) {
+        currentAvatarIndex = 0;
+        animationDirection = 1;
+      }
+    }, avatarConfig?.animationInterval || 3500);
+  }
+
+  function stopAvatarAnimation() {
+    if (animationTimer) {
+      clearInterval(animationTimer);
+      animationTimer = null;
+    }
+  }
+
+  onMount(() => {
+    // Initialize currentAvatarIndex to the selected avatar
+    currentAvatarIndex = activeAvatarIndex;
+    
+    // Debug logging (only if we have valid config)
+    if (avatarConfig || profileConfig) {
+      console.log('Profile component mounted:', {
+        slug,
+        useDefaultAvatars,
+        hasMultipleAvatars,
+        avatarListLength: avatarList.length,
+        selectedAvatar: selectedAvatar || 'none',
+        activeAvatarIndex,
+        currentAvatarIndex,
+        profileName: displayName
+      });
+    }
+
+    if (hasMultipleAvatars) {
+      startAvatarAnimation();
+    }
+  });
+
+  onDestroy(() => {
+    stopAvatarAnimation();
+  });
+
+  // Handle navigation changes (Astro page transitions)
+  onMount(() => {
+    const handlePageLoad = () => {
+      stopAvatarAnimation();
+      if (hasMultipleAvatars) {
+        setTimeout(startAvatarAnimation, 100);
+      }
+    };
+
+    document.addEventListener('astro:page-load', handlePageLoad);
+    return () => {
+      document.removeEventListener('astro:page-load', handlePageLoad);
+    };
+  });
+</script>
+
+<div class="card-base p-3">
+  <a
+    aria-label="Go to About Page"
+    href="/about/"
+    class="group block relative mx-auto mt-1 lg:mx-0 lg:mt-0 mb-3 max-w-[12rem] lg:max-w-none overflow-hidden rounded-xl active:scale-95"
+  >
+    <div class="absolute transition pointer-events-none group-hover:bg-black/30 group-active:bg-black/50 w-full h-full z-50 flex items-center justify-center">
+      <svg 
+        class="transition opacity-0 scale-90 group-hover:scale-100 group-hover:opacity-100 text-white w-12 h-12"
+        fill="none" 
+        stroke="currentColor" 
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+              d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 114 0v2m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+      </svg>
+    </div>
+
+    <!-- Image container with relative positioning -->
+    <div class="relative w-full aspect-square">
+      {#if useDefaultAvatars}
+        {#if isHomePage || !hasMultipleAvatars}
+          <!-- Single avatar (home page or single avatar) -->
+          {#if selectedAvatar}
+            <img
+              src={selectedAvatar}
+              alt="Profile Image of the Site Owner"
+              class="avatar-image w-full h-full object-contain opacity-100 rounded-xl"
+              loading="eager"
+            />
+          {:else}
+            <!-- Fallback avatar placeholder -->
+            <div class="avatar-image w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl">
+              <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+            </div>
+          {/if}
+        {:else}
+          <!-- Multiple avatars with animation -->
+          {#each avatarList as src, index}
+            {#if src}
+              <img
+                {src}
+                alt="Profile Image of the Author"
+                class="avatar-image absolute inset-0 w-full h-full object-contain transition-opacity duration-1000 rounded-xl"
+                class:opacity-100={index === currentAvatarIndex}
+                class:opacity-0={index !== currentAvatarIndex}
+                loading={index === activeAvatarIndex ? 'eager' : 'lazy'}
+              />
+            {/if}
+          {/each}
+        {/if}
+      {:else}
+        <!-- Custom avatar -->
+        {#if customAvatar}
+          <img
+            src={customAvatar}
+            alt="Profile Image of {displayName}"
+            class="avatar-image w-full h-full object-contain opacity-100 rounded-xl"
+            loading="eager"
+          />
+        {:else}
+          <!-- Fallback avatar placeholder -->
+          <div class="avatar-image w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl">
+            <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+          </div>
+        {/if}
+      {/if}
+    </div>
+  </a>
+
+  <div class="px-2">
+    <div class="font-bold text-xl text-center mb-1 dark:text-neutral-50 transition">
+      {displayName}
+    </div>
+    <div class="h-1 w-5 bg-[var(--primary)] mx-auto rounded-full mb-2 transition"></div>
+    <div class="text-center text-neutral-400 mb-2.5 transition">
+      {displayBio}
+    </div>
+    
+    <!-- Social Links -->
+    {#if socialLinks.length > 0}
+      <div class="flex gap-2 justify-center mb-1">
+        {#if socialLinks.length > 1}
+          {#each socialLinks as link}
+            <a
+              rel="me"
+              aria-label={link.name}
+              href={link.url}
+              target="_blank"
+              class="btn-regular rounded-lg h-10 w-10 active:scale-90 flex items-center justify-center"
+            >
+              <!-- Social icon SVGs -->
+              {#if link.icon.includes('github')}
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+              {:else if link.icon.includes('twitter')}
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                </svg>
+              {:else if link.icon.includes('linkedin')}
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+              {:else if link.icon.includes('mail') || link.icon.includes('email')}
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+              {:else}
+                <!-- Generic link icon for unknown types -->
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                </svg>
+              {/if}
+            </a>
+          {/each}
+        {:else}
+          <!-- Single link with label -->
+          <a
+            rel="me"
+            aria-label={socialLinks[0].name}
+            href={socialLinks[0].url}
+            target="_blank"
+            class="btn-regular rounded-lg h-10 gap-2 px-3 font-bold active:scale-95 flex items-center"
+          >
+            {#if socialLinks[0].icon.includes('github')}
+              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+            {:else}
+              <!-- Other single link icons... -->
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+              </svg>
+            {/if}
+            {socialLinks[0].name}
+          </a>
+        {/if}
+      </div>
+    {/if}
+  </div>
+</div>
+
+<style>
+  .avatar-image {
+    border-radius: 0.75rem;
+  }
+  
+  /* Ensure smooth transitions */
+  .transition-opacity {
+    transition: opacity 1s ease-in-out;
+  }
+</style>

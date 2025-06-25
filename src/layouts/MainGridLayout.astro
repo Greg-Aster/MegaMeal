@@ -2,15 +2,14 @@
 // =====================================================================
 // COMPONENT IMPORTS - CLEAN AND SIMPLE
 // =====================================================================
-import Footer from '@components/Footer.astro'
-import Navbar from '@components/Navbar.astro'
-import BackToTop from '@components/control/BackToTop.astro'
-import SideBar from '@components/widget/SideBar.astro'
-import Profile from '@components/widget/Profile.astro'
-import Layout from './Layout.astro'
-import { Icon } from 'astro-icon/components'
-import { siteConfig } from '../config/config'
-import type { MarkdownHeading } from 'astro'
+import Footer from '@components/Footer.astro';
+import Navbar from '@components/Navbar.astro';
+import BackToTop from '@components/control/BackToTop.astro';
+import SideBar from '@components/widget/SideBar.astro';
+import Layout from './Layout.astro';
+import { Icon } from 'astro-icon/components';
+import { siteConfig } from '../config/config';
+import type { MarkdownHeading } from 'astro';
 import TOC from "../components/widget/TOC.astro";
 import ImageWrapper from "../components/misc/ImageWrapper.astro";
 import { Image } from 'astro:assets';
@@ -22,6 +21,18 @@ import { url } from '../utils/url-utils';
 // Bleepy (AI Assistant) related imports
 import Bleepy from '@components/bleepy/Bleepy.astro';
 import BleepyBanner from '@components/bleepy/BleepyBanner.astro';
+
+// ⭐ NEW: Import Svelte components for client-side functionality
+import SidenavPanels from '@components/client/SidenavPanels.svelte';
+import MobileProfileOverlay from '@components/client/MobileProfileOverlay.svelte';
+import SpecialPageFeatures from '@components/client/SpecialPageFeatures.svelte';
+import ScrollEffects from '@components/client/ScrollEffects.svelte';
+import PageAnimations from '@components/client/PageAnimations.svelte';
+import Profile from '@components/client/Profile.svelte';
+
+// Profile and avatar configs for Svelte components
+import { profileConfig } from '../config/config';
+import { avatarConfig } from '../config/avatar.config';
 
 // ⭐ RESTORED: Import working banner configuration
 import {
@@ -39,15 +50,15 @@ import {
 // =====================================================================
 
 interface Props {
-  title?: string
-  banner?: string              
-  description?: string
-  lang?: string
-  setOGTypeArticle?: boolean
-  headings?: MarkdownHeading[] 
-  post?: any                   
-  bannerLink?: string          
-  isPostPage?: boolean         
+  title?: string;
+  banner?: string;              
+  description?: string;
+  lang?: string;
+  setOGTypeArticle?: boolean;
+  headings?: MarkdownHeading[];
+  post?: any;                   
+  bannerLink?: string;          
+  isPostPage?: boolean;         
   pageMascotContext?: string;  
   backgroundImage?: string | null; 
 }
@@ -67,7 +78,7 @@ const {
   bannerLink = '',
   isPostPage = false,
   backgroundImage 
-} = Astro.props
+} = Astro.props;
 
 // =====================================================================
 // ⭐ RESTORED: Use working banner configuration system
@@ -373,166 +384,35 @@ if (post && post.data) {
   <!-- =============================================================== -->
   <div class={`w-full z-30 pointer-events-none relative`}>
     <div id="main-panel-wrapper" class="responsive-panel-wrapper relative max-w-[var(--page-width)] mx-auto pointer-events-auto" style={`top: ${mainPanelTop}; position: relative;`}>
-      <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-[5rem_1fr] md:grid-cols-[12rem_1fr] lg:grid-cols-[16.5rem_auto] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto]
-         mx-auto gap-2 sm:gap-3 md:gap-4 px-2 md:px-4 relative" style={`margin-top: ${mainContentOffset};`}>
-         
-        <!-- =============================================================== -->
-        <!-- MOBILE PROFILE OVERLAY - POSITIONED RELATIVE TO PROFILE BUTTON -->
-        <!-- =============================================================== -->
-        <div 
-          id="mobile-profile-overlay" 
-          class="opacity-0 translate-y-4 pointer-events-none transition-all duration-300 z-[60] md:hidden"
-          style="position: fixed; width: 17.5rem;"
-        >
-          <div class="p-2">
-            <div class="card-base p-3 shadow-xl">
-              <div class="flex justify-end mb-2">
-                <button id="mobile-profile-close" aria-label="Close Profile" class="btn-plain rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-black/10 dark:hover:bg-white/10">
-                  ✕
-                </button>
-              </div>
-              <div id="mobile-profile-content">
-                <Profile 
-                  slug={postData?.slug || ''} 
-                  customAvatar={postData?.customAvatar || ''}
-                  customName={postData?.customName || ''}
-                  customBio={postData?.customBio || ''}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+      <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-[5rem_1fr] md:grid-cols-[12rem_1fr] lg:grid-cols-[16.5rem_auto] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto] mx-auto gap-2 sm:gap-3 md:gap-4 px-2 md:px-4 relative" style={`margin-top: ${mainContentOffset};`}>
          
         <!-- SIDEBAR SECTION -->
-        <SideBar 
-          class="mb-4 col-span-1 lg:max-w-[17.5rem] onload-animation" 
-          headings={headings}
-          postSlug={postData?.slug || ''}
-          customAvatar={postData?.customAvatar || ''}
-          customName={postData?.customName || ''}
-          customBio={postData?.customBio || ''}
-          pageMascotContext={Astro.props.pageMascotContext}
-        ></SideBar>
-        
-        <!-- =============================================================== -->
-        <!-- SIDENAV SUBMENU PANELS - POSITIONED RELATIVE TO MAIN LAYOUT    -->
-        <!-- =============================================================== -->
-        
-        <!-- MENU TOGGLE PANEL (ARCHIVE/ABOUT + ALL LINKS) -->
-        <div 
-          id="sidenav-menu-panel" 
-          class="sidenav-panel opacity-0 -translate-x-4 pointer-events-none transition-all duration-200 ease-in-out fixed z-[100] card-base shadow-lg rounded-lg w-48 md:w-56 lg:w-64"
-        >
-          <div class="p-2">
-            <div class="text-xs font-medium text-center mb-2 text-neutral-400 px-2">Navigation</div>
-            
-            <!-- Archive and About Links (Priority) -->
-            <div class="flex flex-col gap-1 mb-3 border-b border-black/10 dark:border-white/10 pb-2">
-              <a href={url('/archive/')} class="nav-menu-link btn-plain rounded-md px-3 py-2.5 text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left w-full">
-                <Icon name="material-symbols:archive-outline" class="text-base flex-shrink-0" />
-                <span class="flex-1 min-w-0 truncate">Archive</span>
-              </a>
-              <a href={url('/about/')} class="nav-menu-link btn-plain rounded-md px-3 py-2.5 text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left w-full">
-                <Icon name="material-symbols:person-outline" class="text-base flex-shrink-0" />
-                <span class="flex-1 min-w-0 truncate">About</span>
-              </a>
-            </div>
-            
-            <!-- All Other Links -->
-            <div class="flex flex-col gap-1">
-              <a href={url('/')} class="nav-menu-link btn-plain rounded-md px-3 py-2.5 text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left w-full">
-                <Icon name="material-symbols:home-outline" class="text-base flex-shrink-0" />
-                <span class="flex-1 min-w-0 truncate">Home</span>
-              </a>
-              <a href={url('/projects/')} class="nav-menu-link btn-plain rounded-md px-3 py-2.5 text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left w-full">
-                <Icon name="material-symbols:work-outline" class="text-base flex-shrink-0" />
-                <span class="flex-1 min-w-0 truncate">Projects</span>
-              </a>
-              <a href={url('/posts/')} class="nav-menu-link btn-plain rounded-md px-3 py-2.5 text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left w-full">
-                <Icon name="material-symbols:article-outline" class="text-base flex-shrink-0" />
-                <span class="flex-1 min-w-0 truncate">Blog</span>
-              </a>
-              <a href={url('/timeline/')} class="nav-menu-link btn-plain rounded-md px-3 py-2.5 text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left w-full">
-                <Icon name="material-symbols:timeline" class="text-base flex-shrink-0" />
-                <span class="flex-1 min-w-0 truncate">Timeline</span>
-              </a>
-              <a href={url('/cookbook/')} class="nav-menu-link btn-plain rounded-md px-3 py-2.5 text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left w-full">
-                <Icon name="material-symbols:menu-book-outline" class="text-base flex-shrink-0" />
-                <span class="flex-1 min-w-0 truncate">Cookbook</span>
-              </a>
-            </div>
+        <div class="mb-4 col-span-1 lg:max-w-[17.5rem] onload-animation">
+          <!-- Svelte Profile Component - Desktop Only -->
+          <div class="hidden md:block mb-4">
+            <Profile
+              client:load
+              slug={postData?.slug || ''}
+              customAvatar={postData?.customAvatar || ''}
+              customName={postData?.customName || ''}
+              customBio={postData?.customBio || ''}
+              isHomePage={currentPath === '/'}
+              profileConfig={profileConfig}
+              avatarConfig={avatarConfig}
+            />
           </div>
-        </div>
-
-        <!-- SETTINGS SUBMENU PANEL -->
-        <div 
-          id="sidenav-settings-panel" 
-          class="sidenav-panel opacity-0 -translate-x-4 pointer-events-none transition-all duration-200 ease-in-out fixed z-[100] card-base shadow-lg rounded-lg w-48 md:w-56 lg:w-64"
-        >
-          <div class="p-2">
-            <div class="text-xs font-medium text-center mb-2 text-neutral-400 px-2">Settings</div>
-            <div class="flex flex-col gap-1">
-              
-              <!-- SEARCH BUTTON -->
-              <button id="sidenav-search-btn" class="btn-plain rounded-md px-3 py-2.5 text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left w-full">
-                <Icon name="material-symbols:search" class="text-base flex-shrink-0" />
-                <span class="flex-1 min-w-0 truncate">Search</span>
-              </button>
-              
-              <!-- THEME TOGGLE -->
-              <button id="sidenav-theme-btn" class="btn-plain rounded-md px-3 py-2.5 text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left w-full">
-                <Icon name="material-symbols:dark-mode-outline" class="text-base flex-shrink-0 dark:hidden" />
-                <Icon name="material-symbols:light-mode-outline" class="text-base flex-shrink-0 hidden dark:block" />
-                <span class="flex-1 min-w-0 truncate">Theme</span>
-              </button>
-              
-              <!-- FULLSCREEN TOGGLE -->
-              <button id="sidenav-fullscreen-btn" class="btn-plain rounded-md px-3 py-2.5 text-sm font-medium active:scale-95 transition-all duration-200 items-center gap-2 text-left w-full hidden md:flex">
-                <Icon name="fa6-solid:expand" class="fullscreen-icon text-base flex-shrink-0"></Icon>
-                <Icon name="fa6-solid:compress" class="fullscreen-exit-icon text-base flex-shrink-0 hidden"></Icon>
-                <span class="flex-1 min-w-0 truncate">Fullscreen</span>
-              </button>
-              
-              <!-- DISPLAY SETTINGS (HUE SLIDER) -->
-              {!siteConfig.themeColor.fixed && (
-                <>
-                  <button id="sidenav-display-btn" class="btn-plain rounded-md px-3 py-2.5 text-sm font-medium active:scale-95 transition-all duration-200 flex items-center gap-2 text-left w-full">
-                    <Icon name="material-symbols:palette-outline" class="text-base flex-shrink-0" />
-                    <span class="flex-1 min-w-0 truncate">Colors</span>
-                  </button>
-                  
-                  <!-- INLINE HUE SLIDER -->
-                  <div id="inline-hue-slider" class="hidden mt-1 px-2 py-2 bg-[var(--card-bg)] rounded-md border border-black/10 dark:border-white/10">
-                    <div class="flex items-center justify-between gap-1 mb-2 text-xs">
-                      <span class="font-medium text-neutral-600 dark:text-neutral-400 flex-shrink-0">Hue</span>
-                      <div id="hue-value-display" class="bg-[var(--btn-regular-bg)] text-[var(--btn-content)] px-1 py-1 rounded text-xs font-bold min-w-[1.5rem] text-center flex-shrink-0">
-                        230
-                      </div>
-                      <button id="hue-reset-btn" aria-label="Reset Hue" class="btn-plain rounded px-1 py-1 text-xs active:scale-90 flex-shrink-0">
-                        <Icon name="fa6-solid:arrow-rotate-left" class="text-xs" />
-                      </button>
-                    </div>
-                    <div class="w-full flex justify-center">
-                      <div class="w-6 h-24 rounded relative overflow-hidden hue-gradient">
-                        <input 
-                          type="range" 
-                          id="inline-hue-input"
-                          min="0" 
-                          max="360" 
-                          value="230" 
-                          step="5"
-                          orient="vertical"
-                          class="absolute inset-0 w-full h-full opacity-0 cursor-pointer hue-slider"
-                          aria-label="Theme Hue"
-                        />
-                        <div id="hue-thumb" class="absolute left-0 w-full h-0.5 bg-white border border-black/30 rounded-sm pointer-events-none shadow-sm hue-thumb"></div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+          
+          <!-- Sidebar with other widgets (no profile) -->
+          <SideBar 
+            class="flex-1" 
+            headings={headings}
+            postSlug={postData?.slug || ''}
+            customAvatar={postData?.customAvatar || ''}
+            customName={postData?.customName || ''}
+            customBio={postData?.customBio || ''}
+            pageMascotContext={Astro.props.pageMascotContext}
+            hideProfile={true}
+          ></SideBar>
         </div>
         
         <!-- MAIN CONTENT SECTION -->
@@ -582,6 +462,33 @@ if (post && post.data) {
   )}
   <Bleepy mascotContext={Astro.props.pageMascotContext} instanceIdentifier="LAYOUT_BLEEPY" />
 
+  <!-- =============================================================== -->
+  <!-- ⭐ NEW: CLIENT-SIDE SVELTE COMPONENTS                          -->
+  <!-- =============================================================== -->
+  
+  <!-- Sidenav panels with settings and navigation -->
+  <SidenavPanels client:load siteConfig={siteConfig} />
+  
+  <!-- Mobile profile overlay -->
+  <MobileProfileOverlay 
+    client:load 
+    postSlug={postData?.slug || ''}
+    customAvatar={postData?.customAvatar || ''}
+    customName={postData?.customName || ''}
+    customBio={postData?.customBio || ''}
+    profileConfig={profileConfig}
+    avatarConfig={avatarConfig}
+  />
+  
+  <!-- Special page features (cookbook, first-contact) -->
+  <SpecialPageFeatures client:load currentPath={currentPath} />
+  
+  <!-- Scroll effects and parallax -->
+  <ScrollEffects client:load bannerConfig={bannerConfig} siteConfig={siteConfig} />
+  
+  <!-- Page load animations -->
+  <PageAnimations client:load />
+
 </Layout>
 
 <!-- =============================================================== -->
@@ -607,71 +514,17 @@ if (post && post.data) {
     margin-top: var(--navbar-spacing);
     transition: margin-top 0.3s ease, transform 0.3s ease;
   }
-  
-  /* Sidenav panel states and hue slider styles */
-  .sidenav-panel.panel-open {
-    @apply opacity-100 translate-x-0 pointer-events-auto;
-  }
-  
-  .hue-gradient {
-    background: linear-gradient(to bottom, 
-      hsl(360, 100%, 50%), 
-      hsl(300, 100%, 50%), 
-      hsl(240, 100%, 50%), 
-      hsl(180, 100%, 50%), 
-      hsl(120, 100%, 50%), 
-      hsl(60, 100%, 50%), 
-      hsl(0, 100%, 50%));
-  }
-  
-  .hue-slider {
-    writing-mode: bt-lr; 
-    -webkit-appearance: slider-vertical;
-  }
-  
-  .hue-thumb {
-    top: calc((360 - 230)/360 * 100% - 1px);
-  }
 </style>
 
 <!-- =============================================================== -->
-<!-- ⭐ RESTORED: Only client-side features that work with restored system -->
+<!-- ⭐ MINIMAL: Only essential banner animation script remains      -->
 <!-- =============================================================== -->
 <script>
-  import { createBannerAnimation, VideoLoadingState } from '@/utils/bannerAnimation';
-  import {
-    getBannerAnimationSettings,
-    bannerConfig
-  } from '../config/banner.config';
+  import { createBannerAnimation } from '@/utils/bannerAnimation';
+  import { getBannerAnimationSettings, bannerConfig } from '../config/banner.config';
 
-  // ⭐ RESTORED: Initialize only features that don't conflict with working system
+  // Only initialize banner animation - everything else is handled by Svelte components
   document.addEventListener('DOMContentLoaded', () => {
-    initializePageAnimations();
-    initializeBannerAnimation();
-    initializeParallaxEffect();
-    initializeScrollListeners();
-    initializeSpecialPageFeatures();
-    initializeMobileProfileOverlay();
-    initializeSidenavPanels();
-  });
-
-  function initializePageAnimations() {
-    const elements = document.querySelectorAll('.onload-animation');
-    elements.forEach((element, index) => {
-      setTimeout(() => {
-        element.classList.add('loaded');
-      }, 100 + (index * 50));
-    });
-    
-    const postImage = document.getElementById('post-image');
-    if (postImage) {
-      setTimeout(() => {
-        postImage.classList.remove('opacity-0', 'scale-105');
-      }, 100);
-    }
-  }
-
-  function initializeBannerAnimation() {
     const bannerController = createBannerAnimation({
       containerId: 'standard-banner-container',
       animationConfig: getBannerAnimationSettings(),
@@ -684,479 +537,6 @@ if (post && post.data) {
     
     if (initialized) {
       console.log('Banner animation system initialized successfully');
-    } else {
-      console.log('Banner animation system initialization skipped (not applicable)');
     }
-  }
-
-  function initializeParallaxEffect() {
-    const parallaxBanner = document.getElementById('parallax-banner');
-    if (!parallaxBanner) return;
-    
-    const parallaxImage = document.getElementById('parallax-image');
-    if (!parallaxImage) return;
-    
-    const scrollFactor = bannerConfig.parallax.scrollFactor;
-    let ticking = false;
-
-    function updateParallax() {
-      const scrollY = window.scrollY;
-      const offset = scrollY * scrollFactor;
-      
-      if (parallaxImage) {
-        parallaxImage.style.transform = `translate3d(0, ${offset}px, 0)`;
-      }
-      ticking = false;
-    }
-
-    window.addEventListener('scroll', () => {
-      if (!ticking) {
-        requestAnimationFrame(updateParallax);
-        ticking = true;
-      }
-    });
-
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        parallaxBanner.classList.add('loaded');
-      }, 100);
-    });
-  }
-
-  function initializeScrollListeners() {
-    window.addEventListener('scroll', () => {
-      const scrollY = window.scrollY;
-      const tocWrapper = document.querySelector('#toc-wrapper');
-      if (tocWrapper) {
-        if (scrollY > 300) {
-          tocWrapper.classList.remove('toc-hide');
-        } else {
-          tocWrapper.classList.add('toc-hide');
-        }
-      }
-    });
-
-    // Set transparency if configured
-    if ((window as any).siteConfig && (window as any).siteConfig.transparency) {
-      document.documentElement.style.setProperty('--bg-opacity', (window as any).siteConfig.transparency);
-    }
-  }
-
-  // ===================================================================
-  // MOBILE PROFILE OVERLAY FUNCTIONALITY
-  // ===================================================================
-  
-  function initializeMobileProfileOverlay() {
-    const overlay = document.getElementById('mobile-profile-overlay');
-    const closeBtn = document.getElementById('mobile-profile-close');
-    const profileBtn = document.getElementById('sidenav-profile-btn');
-    
-    if (!overlay || !closeBtn) {
-      console.warn('Profile overlay elements not found');
-      return;
-    }
-    
-    console.log('Mobile profile overlay initialized');
-    
-    function positionProfileOverlay() {
-      if (!profileBtn) return;
-      
-      const buttonRect = profileBtn.getBoundingClientRect();
-      const overlayWidth = overlay.offsetWidth;
-      const screenWidth = window.innerWidth;
-      const screenHeight = window.innerHeight;
-      
-      let left = buttonRect.left - overlayWidth - 8;
-      let top = buttonRect.top;
-      
-      if (left < 8) {
-        left = buttonRect.right + 8;
-      }
-      
-      if (left + overlayWidth > screenWidth - 8) {
-        left = screenWidth - overlayWidth - 8;
-      }
-      
-      if (top + overlay.offsetHeight > screenHeight - 8) {
-        top = screenHeight - overlay.offsetHeight - 8;
-      }
-      
-      if (top < 8) {
-        top = 8;
-      }
-      
-      overlay.style.position = 'fixed';
-      overlay.style.left = `${left}px`;
-      overlay.style.top = `${top}px`;
-    }
-    
-    function showProfileOverlay() {
-      console.log('Showing profile overlay');
-      positionProfileOverlay();
-      overlay.classList.remove('pointer-events-none', 'opacity-0', 'translate-y-4');
-      overlay.classList.add('opacity-100', 'translate-y-0');
-    }
-    
-    function hideProfileOverlay() {
-      console.log('Hiding profile overlay');
-      overlay.classList.add('pointer-events-none', 'opacity-0', 'translate-y-4');
-      overlay.classList.remove('opacity-100', 'translate-y-0');
-    }
-    
-    document.addEventListener('profile:toggle', (e) => {
-      console.log('Profile toggle event received');
-      const isVisible = overlay.classList.contains('opacity-100');
-      
-      if (isVisible) {
-        hideProfileOverlay();
-      } else {
-        showProfileOverlay();
-      }
-    });
-    
-    closeBtn.addEventListener('click', hideProfileOverlay);
-    
-    document.addEventListener('click', (e) => {
-      const target = e.target as Element;
-      const isVisible = overlay.classList.contains('opacity-100');
-      
-      if (isVisible && 
-          !overlay.contains(target) && 
-          !target.closest('#unified-sidenav')) {
-        hideProfileOverlay();
-      }
-    });
-    
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && overlay.classList.contains('opacity-100')) {
-        hideProfileOverlay();
-      }
-    });
-    
-    window.addEventListener('resize', () => {
-      const isVisible = overlay.classList.contains('opacity-100');
-      if (isVisible) {
-        positionProfileOverlay();
-      }
-    });
-  }
-
-  function initializeSidenavPanels() {
-    const menuToggleBtn = document.getElementById('sidenav-menu-toggle');
-    const menuPanel = document.getElementById('sidenav-menu-panel');
-    const settingsToggleBtn = document.getElementById('sidenav-settings-toggle');
-    const settingsPanel = document.getElementById('sidenav-settings-panel');
-    const searchBtn = document.getElementById('sidenav-search-btn');
-    const themeBtn = document.getElementById('sidenav-theme-btn');
-    const fsBtn = document.getElementById('sidenav-fullscreen-btn');
-    const displayBtn = document.getElementById('sidenav-display-btn');
-
-    function closeAllSidenavPanels(except = null) {
-      const allPanels = document.querySelectorAll('.sidenav-panel');
-      allPanels.forEach(panel => {
-        if (panel !== except && panel.classList.contains('panel-open')) {
-          panel.classList.remove('panel-open');
-        }
-      });
-    }
-
-    if (menuToggleBtn && menuPanel) {
-      menuToggleBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        closeAllSidenavPanels(menuPanel);
-        positionPanelRelativeToButton(menuPanel, menuToggleBtn);
-        menuPanel.classList.toggle('panel-open');
-      });
-    }
-
-    if (settingsToggleBtn && settingsPanel) {
-      settingsToggleBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        closeAllSidenavPanels(settingsPanel);
-        positionPanelRelativeToButton(settingsPanel, settingsToggleBtn);
-        settingsPanel.classList.toggle('panel-open');
-      });
-    }
-
-    searchBtn?.addEventListener('click', () => {
-      const searchPanel = document.getElementById('search-panel'); 
-      if (searchPanel) {
-        closeAllSidenavPanels();
-        searchPanel.classList.toggle('float-panel-closed');
-        
-        const searchInput = searchPanel.querySelector('input[type="search"]');
-        if (searchInput && !searchPanel.classList.contains('float-panel-closed')) {
-          setTimeout(() => (searchInput as HTMLInputElement).focus(), 100);
-        }
-      }
-    });
-
-    themeBtn?.addEventListener('click', () => {
-      const isDark = document.documentElement.classList.toggle('dark');
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    });
-
-    if (fsBtn) {
-      const expandIcon = fsBtn.querySelector('.fullscreen-icon');
-      const compressIcon = fsBtn.querySelector('.fullscreen-exit-icon');
-      
-      const updateIcon = () => {
-        const isFullscreen = !!document.fullscreenElement;
-        expandIcon?.classList.toggle('hidden', isFullscreen);
-        compressIcon?.classList.toggle('hidden', !isFullscreen);
-      };
-      
-      fsBtn.addEventListener('click', () => {
-        if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen();
-        } else {
-          document.exitFullscreen();
-        }
-      });
-      
-      document.addEventListener('fullscreenchange', updateIcon);
-      updateIcon();
-    }
-
-    // Hue slider functionality
-    const inlineSlider = document.getElementById('inline-hue-slider');
-    const hueInput = document.getElementById('inline-hue-input');
-    const hueDisplay = document.getElementById('hue-value-display');
-    const hueThumb = document.getElementById('hue-thumb');
-    const hueResetBtn = document.getElementById('hue-reset-btn');
-    
-    function getCurrentHue() {
-      return parseInt(localStorage.getItem('hue') || '230');
-    }
-    
-    function setHue(newHue) {
-      localStorage.setItem('hue', newHue.toString());
-      document.documentElement.style.setProperty('--hue', newHue);
-      
-      if (hueDisplay) hueDisplay.textContent = newHue;
-      if (hueInput) hueInput.value = newHue;
-      if (hueThumb) {
-        hueThumb.style.top = `calc((360 - ${newHue})/360 * 100% - 1px)`;
-      }
-    }
-    
-    const currentHue = getCurrentHue();
-    setHue(currentHue);
-    
-    displayBtn?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (inlineSlider) {
-        inlineSlider.classList.toggle('hidden');
-      }
-    });
-    
-    hueInput?.addEventListener('input', (e) => {
-      const newHue = parseInt(e.target.value);
-      setHue(newHue);
-    });
-    
-    hueResetBtn?.addEventListener('click', () => {
-      const defaultHue = 230;
-      setHue(defaultHue);
-    });
-
-    document.addEventListener('click', (e) => {
-      const target = e.target;
-      
-      if (target instanceof Element) {
-        const clickedPanel = target.closest('.sidenav-panel');
-        const clickedButton = target.closest('#sidenav-menu-toggle, #sidenav-settings-toggle, #sidenav-display-btn');
-        
-        if (inlineSlider && !inlineSlider.classList.contains('hidden')) {
-          if (!inlineSlider.contains(target) && !displayBtn?.contains(target)) {
-            inlineSlider.classList.add('hidden');
-          }
-        }
-        
-        if (!clickedPanel && !clickedButton) {
-          closeAllSidenavPanels();
-        }
-      }
-    });
-  }
-
-  function positionPanelRelativeToButton(panel, button) {
-    if (!panel || !button) return;
-    
-    const buttonRect = button.getBoundingClientRect();
-    const panelWidth = panel.offsetWidth;
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
-    
-    let left = buttonRect.left - panelWidth - 8;
-    let top = buttonRect.top;
-    
-    if (left < 8) {
-      left = buttonRect.right + 8;
-    }
-    
-    if (left + panelWidth > screenWidth - 8) {
-      left = screenWidth - panelWidth - 8;
-    }
-    
-    if (top + panel.offsetHeight > screenHeight - 8) {
-      top = screenHeight - panel.offsetHeight - 8;
-    }
-    
-    if (top < 8) {
-      top = 8;
-    }
-    
-    panel.style.left = `${left}px`;
-    panel.style.top = `${top}px`;
-  }
-
-  function initializeSpecialPageFeatures() {
-    const currentPath = window.location.pathname;
-    const isCookbookPage = currentPath.includes('cookbook');
-    const isFirstContactPage = currentPath.includes('first-contact');
-    const isSpecialPage = isCookbookPage || isFirstContactPage;
-    
-    if (!isSpecialPage) {
-      restoreNormalState();
-      return;
-    }
-    
-    const pageType = isCookbookPage ? 'cookbook' : 'first-contact';
-    console.log(`${pageType} page detected, enabling fullscreen features`);
-    
-    if (!localStorage.getItem('specialPageOriginalState')) {
-      const originalState = localStorage.getItem('fullscreenMode') === 'true';
-      localStorage.setItem('specialPageOriginalState', originalState.toString());
-      console.log('Saved original fullscreen state:', originalState);
-    }
-    
-    localStorage.setItem('fullscreenMode', 'true');
-    localStorage.setItem('fullscreenBannerOverride', 'true');
-    document.body.classList.add('force-mobile-view');
-    
-    if (isCookbookPage) {
-      initializeViewToggle();
-    }
-  }
-
-  function restoreNormalState() {
-    const originalState = localStorage.getItem('specialPageOriginalState');
-    
-    if (originalState !== null) {
-      const wasOriginallyFullscreen = originalState === 'true';
-      
-      if (!wasOriginallyFullscreen) {
-        localStorage.setItem('fullscreenMode', 'false');
-        localStorage.removeItem('fullscreenBannerOverride');
-        document.body.classList.remove('force-mobile-view');
-        console.log('Restored to non-fullscreen (original state)');
-      } else {
-        console.log('Keeping fullscreen (was original state)');
-      }
-    }
-  }
-
-  function initializeViewToggle() {
-    const galleryBtn = document.getElementById('gallery-view-btn');
-    const listBtn = document.getElementById('list-view-btn');
-    const galleryView = document.getElementById('gallery-view');
-    const listView = document.getElementById('list-view');
-    
-    if (!galleryBtn || !listBtn || !galleryView || !listView) return;
-    
-    const savedView = localStorage.getItem('cookbookView') || 'gallery';
-    
-    if (savedView === 'list') {
-      showListView();
-    } else {
-      showGalleryView();
-    }
-    
-    galleryBtn.addEventListener('click', () => {
-      showGalleryView();
-      localStorage.setItem('cookbookView', 'gallery');
-    });
-    
-    listBtn.addEventListener('click', () => {
-      showListView();
-      localStorage.setItem('cookbookView', 'list');
-    });
-    
-    function showGalleryView() {
-      galleryView.classList.remove('hidden');
-      listView.classList.add('hidden');
-      galleryBtn.className = "px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm";
-      listBtn.className = "px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white";
-    }
-    
-    function showListView() {
-      galleryView.classList.add('hidden');
-      listView.classList.remove('hidden');
-      listBtn.className = "px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm";
-      galleryBtn.className = "px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white";
-    }
-  }
-
-  // TypeScript interfaces for global types
-  interface BannerAnimationAPI {
-    start: () => void;
-    stop: () => void;
-    next: () => void;
-    pause: (reason?: string) => void;
-    resume: (reason?: string) => void;
-    navigateToIndex: (index: number) => void;
-    navigateToPrevious: () => void;
-    navigateToNext: () => void;
-    getCurrentIndex: () => number;
-    isPaused: () => boolean;
-    getTotalSlides: () => number;
-    isManuallyNavigating: () => boolean;
-    isVideoSlide: (index: number) => boolean;
-    getVideoLoadingState: (index: number) => VideoLoadingState;
-    getVideoStats: () => {
-      totalVideos: number;
-      loadedCount: number;
-      loadingCount: number;
-      errorCount: number;
-      unloadedCount: number;
-    };
-    showPreview: (index: number) => void;
-    hidePreview: (index: number) => void;
-    hideAllPreviews: () => void;
-    getStatus: () => {
-      isPaused: boolean;
-      pauseReason: string;
-      currentIndex: number;
-      isAnimating: boolean;
-      hasTimeout: boolean;
-    };
-  }
-
-  declare global {
-    interface Window {
-      siteConfig?: {
-        transparency?: string | number;
-      };
-      bannerAnimation?: BannerAnimationAPI;
-      debugBanner?: () => void;
-      resetSpecialPageState?: () => void;
-    }
-  }
-
-  // ⭐ DEBUG: Helper functions for the restored working system
-  window.debugBanner = function() {
-    console.log('Banner Debug Info (RESTORED SYSTEM):', {
-      bannerContainer: document.getElementById('banner-container')?.className || 'not found',
-      bannerSpacing: document.getElementById('banner-container')?.style.marginTop || 'not set',
-      mainPanelTop: document.getElementById('main-panel-wrapper')?.style.top || 'not set',
-      mainContentOffset: document.getElementById('main-grid')?.style.marginTop || 'not set'
-    });
-  };
-
-  window.resetSpecialPageState = function() {
-    localStorage.removeItem('specialPageOriginalState');
-    localStorage.removeItem('cookbookView');
-    console.log('Special page state reset. Refresh page to test.');
-  };
+  });
 </script>
