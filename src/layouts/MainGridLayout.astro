@@ -496,6 +496,7 @@ if (post && post.data) {
   'main-content-offset': mainContentOffset,
   'main-panel-top': mainPanelTop,
   'navbar-spacing': navbarSpacing,
+  'mobile-navbar-spacing': bannerConfig.navbar.mobilePortraitSpacing, /* ⭐ ADD THIS LINE */
 }}>
   /* ⭐ ESSENTIAL: Main grid margin */
   #main-grid {
@@ -512,6 +513,13 @@ if (post && post.data) {
   #banner-container {
     margin-top: var(--navbar-spacing);
     transition: margin-top 0.3s ease;
+  }
+  
+  /* ⭐ THE MISSING PIECE: Mobile spacing when navbar is hidden */
+  @media (max-width: 767px) {
+    #banner-container {
+      margin-top: var(--mobile-navbar-spacing);
+    }
   }
 </style>
 
