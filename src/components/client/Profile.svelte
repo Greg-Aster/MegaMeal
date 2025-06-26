@@ -143,7 +143,7 @@
   <a
     aria-label="Go to About Page"
     href="/about/"
-    class="group block relative mx-auto mt-1 lg:mx-0 lg:mt-0 mb-3 max-w-[12rem] lg:max-w-none overflow-hidden rounded-xl active:scale-95"
+    class="group block relative mx-auto mt-1 md:mx-0 md:mt-0 mb-3 max-w-[12rem] md:max-w-none overflow-hidden rounded-xl active:scale-95"
   >
     <div class="absolute transition pointer-events-none group-hover:bg-black/30 group-active:bg-black/50 w-full h-full z-50 flex items-center justify-center">
       <svg 

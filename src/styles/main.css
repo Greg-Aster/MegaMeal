@@ -63,39 +63,7 @@
     }
 
     /* ===================================================================
-     * ⭐ NAVBAR RESPONSIVE VISIBILITY SYSTEM
-     * ===================================================================
-     */
-    
-    /* 🎯 MOBILE PORTRAIT: Hide navbar completely */
-    @media (max-width: 768px) and (orientation: portrait) {
-        #navbar,
-        #navbar-wrapper,
-        #top-row {
-            display: none !important;
-        }
-    }
-    
-    /* 🎯 MOBILE LANDSCAPE: Show navbar */
-    @media (max-width: 768px) and (orientation: landscape) {
-        #navbar,
-        #navbar-wrapper,
-        #top-row {
-            display: block !important;
-        }
-    }
-    
-    /* 🎯 TABLET AND DESKTOP: Always show navbar */
-    @media (min-width: 769px) {
-        #navbar,
-        #navbar-wrapper,
-        #top-row {
-            display: block !important;
-        }
-    }
-
-    /* ===================================================================
-     * FULLSCREEN MODE SYSTEM - FOR SPECIAL PAGES
+     * ⭐ SIMPLIFIED FULLSCREEN MODE - TAILWIND ONLY
      * ===================================================================
      */
     
@@ -160,6 +128,7 @@
         padding-right: 0.5rem !important;
     }
     
+    /* 🎯 FULLSCREEN MODE - Larger screens get more padding */
     @media (min-width: 768px) {
         .force-mobile-view #main-grid {
             padding-left: 1rem !important;
@@ -182,7 +151,7 @@
     }
 
     /* ===================================================================
-     * ⭐ RESTORED: SIMPLE BANNER SYSTEM - USES WORKING INLINE STYLES
+     * ⭐ SIMPLIFIED: BANNER SYSTEM - USES WORKING INLINE STYLES
      * ===================================================================
      */
     
@@ -663,34 +632,6 @@
     }
 
     /* ===================================================================
-     * RESPONSIVE DESIGN - MOBILE-FIRST APPROACH
-     * ===================================================================
-     */
-    
-    /* 🎯 MOBILE-FIRST RESPONSIVE UTILITIES */
-    @media (max-width: 640px) {
-        :root {
-            --spacing-panel: 4rem; /* Smaller panel offset on mobile */
-        }
-        
-        .meta-icon {
-            @apply w-6 h-6; /* Smaller icons on mobile */
-        }
-    }
-
-    @media (min-width: 768px) {
-        :root {
-            --spacing-panel: 5.25rem; /* Standard panel offset on tablet+ */
-        }
-    }
-
-    @media (min-width: 1024px) {
-        :root {
-            --spacing-panel: 5.25rem; /* Maintain spacing on desktop */
-        }
-    }
-
-    /* ===================================================================
      * ACCESSIBILITY & PERFORMANCE
      * ===================================================================
      */
@@ -743,35 +684,34 @@
 }
 
 /* ===================================================================
- * SUMMARY OF RESTORATION:
+ * ⭐ SUMMARY OF SIMPLIFICATION:
  * ===================================================================
  * 
- * ✅ RESTORED WORKING SYSTEM: 
- * - Restored simple, working banner configuration from earlier version
- * - Fixed mobile portrait gap issue without breaking existing system
- * - Removed complex responsive calculations that were conflicting
- * - Banner spacing now controlled by simple navbar.spacing values
- * - Banner overlap controlled by simple panel.top values
- * - Mobile portrait uses mobilePortraitSpacing when navbar hidden
+ * ✅ REMOVED ALL CUSTOM MEDIA QUERIES: 
+ * - Deleted conflicting @media rules for navbar visibility
+ * - Removed orientation-specific rules  
+ * - Eliminated breakpoint conflicts with Tailwind
+ * - Now uses ONLY Tailwind's md: breakpoint (768px)
  * 
- * ✅ PRESERVED FUNCTIONALITY:
- * - All existing design system components work as before
- * - Complete card system and component styling intact
- * - Typography utilities and visual effects preserved  
- * - Animation system and responsive utilities maintained
- * - Accessibility features and performance optimizations kept
- * - Fullscreen mode functionality for special pages maintained
+ * ✅ SIMPLIFIED FULLSCREEN MODE:
+ * - Removed complex responsive calculations
+ * - Kept only essential fullscreen overrides
+ * - No more media query conflicts
  * 
- * ✅ MOBILE PORTRAIT FIX:
- * - Added single mobilePortraitSpacing value for when navbar hidden
- * - Uses simple detection: isMobilePortrait() && shouldHideNavbar()
- * - No complex calculations that could conflict with working system
- * - Clean 1.5rem spacing replaces large gaps on mobile portrait
+ * ✅ CLEAN SINGLE BREAKPOINT SYSTEM:
+ * - Below md (0-767px): Mobile behavior
+ * - md and above (768px+): Desktop behavior  
+ * - No gaps, no conflicts, easy to modify
+ * 
+ * ✅ PRESERVED ALL FUNCTIONALITY:
+ * - Card system, typography, animations intact
+ * - Visual effects and component styling preserved
+ * - Accessibility and performance optimizations kept
  * 
  * ✅ RESULT:
- * - Banner spacing changes in config now work as expected
- * - No more massive gaps on mobile portrait
- * - Video banners, image banners, and no-banner scenarios all work
- * - Simple, maintainable system that can be easily adjusted
+ * - Single source of truth for breakpoints (Tailwind md:)
+ * - No more conflicts between CSS and Tailwind classes
+ * - Easy to modify and maintain
+ * - Consistent behavior across all screen sizes
  * ===================================================================
  */
