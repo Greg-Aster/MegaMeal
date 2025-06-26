@@ -61,8 +61,7 @@
             --text-color-muted: oklch(0.6 0.01 var(--hue));
         }
     }
-
-    /* ===================================================================
+/* ===================================================================
      * ⭐ SIMPLIFIED FULLSCREEN MODE - TAILWIND ONLY
      * ===================================================================
      */
@@ -149,6 +148,35 @@
         padding-left: 0 !important;
         padding-right: 0 !important;
     }
+
+    /* ===================================================================
+     * ⭐ NEW: MOBILE NAVBAR SPACING FIX - ADDRESSES HIDDEN NAVBAR GAP
+     * ===================================================================
+     */
+    
+    /* 🎯 MOBILE NAVBAR HIDDEN - ADJUST SPACING */
+    /* When navbar is hidden (below md: 768px), reduce banner spacing to eliminate gap */
+    @media (max-width: 767px) {
+        #banner-container {
+            /* Use mobilePortraitSpacing from banner.config (1.0rem) when navbar is hidden */
+            /* This eliminates the gap caused by the missing navbar */
+            margin-top: 1.0rem !important;
+        }
+        
+        /* 🎯 MAIN PANEL ADJUSTMENT - Compensate for missing navbar */
+        .responsive-panel-wrapper {
+            /* Add extra spacing to compensate for missing navbar height */
+            top: calc(var(--main-panel-top) + 1.5rem);
+        }
+        
+        /* 🎯 MAIN GRID ADJUSTMENT - Fine-tune content positioning */
+        #main-grid {
+            /* Slightly reduce top margin on mobile when navbar is hidden */
+            margin-top: calc(var(--main-content-offset) - 0.5rem);
+        }
+    }
+
+
 
     /* ===================================================================
      * ⭐ SIMPLIFIED: BANNER SYSTEM - USES WORKING INLINE STYLES
