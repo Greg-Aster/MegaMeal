@@ -1,6 +1,6 @@
 /**
  * ===================================================================
- * BANNER CONFIGURATION - RESTORED WORKING VERSION + MOBILE PORTRAIT FIX
+ * BANNER CONFIGURATION - FIXED VERSION (REMOVED clamp() ISSUES)
  * ===================================================================
  */
 
@@ -149,7 +149,7 @@ export interface BannerConfig {
       assistant: string;
       none: string;
     };
-    // ⭐ MOBILE PORTRAIT FIX: Special spacing when navbar hidden
+    // ⭐ MOBILE PORTRAIT FIX: Special spacing when navbar hidden (now handled by CSS)
     mobilePortraitSpacing: string;
   };
 
@@ -190,7 +190,7 @@ export interface BannerConfig {
 
 /**
  * ===================================================================
- * MAIN CONFIGURATION - RESTORED WORKING VERSION
+ * MAIN CONFIGURATION - FIXED VERSION (NO MORE clamp() ISSUES)
  * ===================================================================
  */
 export const bannerConfig: BannerConfig = {
@@ -206,12 +206,12 @@ export const bannerConfig: BannerConfig = {
   assistantBannerConfig,
   noneBannerConfig,
   
-  // 🎯 WORKING: CSS dimensions system
+  // 🎯 FIXED: CSS dimensions system - NO MORE clamp() ISSUES
   dimensions: {
     aspectRatio: '56.25%',       // 16:9 ratio (critical for your content)
-    maxWidth: 'clamp(100vw, 90vw, 85vw)',    // Full width on mobile
-    padding: 'clamp(0.0vw, 0vw, 4vw)',    // Even less padding
-    borderRadius: '.5rem',      // Standard Tailwind radius
+    maxWidth: '100vw',           // ✅ FIXED: Simple full width (was clamp issue)
+    padding: '0',                // ✅ FIXED: No padding (was clamp issue) 
+    borderRadius: '.5rem',       // Standard Tailwind radius
   },
 
   // WORKING: Layout used by MainGridLayout.astro
@@ -237,30 +237,30 @@ export const bannerConfig: BannerConfig = {
     value: 'linear-gradient(135deg, oklch(0.6 0.2 var(--hue)), oklch(0.4 0.3 var(--hue)))'
   },
 
-  // WORKING: Navbar spacing - RESTORED WORKING VALUES
+  // 🎯 FIXED: Navbar spacing - NO MORE clamp() ISSUES
   navbar: {
     height: '5rem',
     spacing: {
-      standard: "clamp(3rem, 4vw, 3rem)",    // 🎯 WORKING VALUE
-      timeline: "5.5rem",                     // 🎯 WORKING VALUE
-      video: "clamp(0rem, 6.5vw, 5.5rem)",                        // 🎯 WORKING VALUE
-      image: "clamp(1.5rem, 4vw, 5rem)",     // 🎯 WORKING VALUE
-      assistant: "5.5rem",                    // 🎯 WORKING VALUE
-      none: "-8rem"                           // 🎯 WORKING VALUE
+      standard: "3rem",                      // ✅ FIXED: Simple rem value (was clamp issue)
+      timeline: "5.5rem",                    // ✅ WORKING VALUE
+      video: "5.5rem",                       // ✅ FIXED: Simple rem value (was clamp issue)
+      image: "4rem",                         // ✅ FIXED: Simple rem value (was clamp issue)
+      assistant: "5.5rem",                   // ✅ WORKING VALUE
+      none: "-8rem"                          // ✅ WORKING VALUE
     },
-    // ⭐ MOBILE PORTRAIT FIX: Only addition to working system
-    mobilePortraitSpacing: '1.5rem'
+    // ⭐ MOBILE PORTRAIT FIX: Now handled by CSS media queries in MainGridLayout.astro
+    mobilePortraitSpacing: '1.0rem'
   },
 
-  // 🎯 WORKING: THE REAL OVERLAP SYSTEM - RESTORED WORKING VALUES!
+  // 🎯 FIXED: THE REAL OVERLAP SYSTEM - NO MORE clamp() ISSUES
   panel: {
     top: {
-      video: "-0.5rem",                               // 🎯 WORKING VALUE
-      image: "-0.5rem",                               // 🎯 WORKING VALUE
-      timeline: "-0.5rem",                            // 🎯 WORKING VALUE
-      assistant: "-0.5rem",                           // 🎯 WORKING VALUE
-      standard: "clamp(-5rem, -4vw, -2.5rem)",      // 🎯 WORKING VALUE - THIS CONTROLS OVERLAP!
-      none: "12rem"                                   // 🎯 WORKING VALUE
+      video: "-0.5rem",                      // ✅ WORKING VALUE
+      image: "-0.5rem",                      // ✅ WORKING VALUE
+      timeline: "-0.5rem",                   // ✅ WORKING VALUE
+      assistant: "-0.5rem",                  // ✅ WORKING VALUE
+      standard: "-3rem",                     // ✅ FIXED: Simple rem value (was clamp issue)
+      none: "12rem"                          // ✅ WORKING VALUE
     }
   },
 
@@ -285,21 +285,6 @@ export const bannerConfig: BannerConfig = {
       animationDuration: '0.3s'
     }
   }
-}
-
-// =====================================================================
-// MOBILE PORTRAIT DETECTION - ONLY NEW ADDITION
-// =====================================================================
-
-function isMobilePortrait(): boolean {
-  if (typeof window === 'undefined') return false;
-  const windowWidth = window.innerWidth;
-  const windowHeight = window.innerHeight;
-  return windowWidth <= 768 && windowHeight > windowWidth;
-}
-
-function shouldHideNavbar(): boolean {
-  return isMobilePortrait();
 }
 
 // =====================================================================
@@ -417,7 +402,7 @@ export function getBannerDataSources(bannerType: BannerDeterminationResult, post
 }
 
 /**
- * 🎯 MAIN API: Banner configuration determination - RESTORED + MOBILE PORTRAIT FIX
+ * 🎯 MAIN API: Banner configuration determination - CLEANED VERSION
  */
 export function determineBannerConfiguration(post: any, pageType: string, defaultBannerLink: string = '') {
   if (isFullscreenModeActive()) {
@@ -459,10 +444,8 @@ export function determineBannerConfiguration(post: any, pageType: string, defaul
   // 🎯 THE REAL WORKING VALUES - RESTORED
   const mainPanelTop = getPanelTopPosition(bannerType.currentBannerType);
   
-  // ⭐ MOBILE PORTRAIT FIX: Only change the navbar spacing calculation
-  const navbarSpacing = shouldHideNavbar() 
-    ? bannerConfig.navbar.mobilePortraitSpacing
-    : bannerConfig.navbar.spacing[bannerType.currentBannerType];
+  // ⭐ SIMPLIFIED: Always use regular spacing - CSS handles mobile portrait now
+  const navbarSpacing = bannerConfig.navbar.spacing[bannerType.currentBannerType];
     
   const bannerHeight = bannerConfig.layout.height;
   const mainContentOffset = bannerConfig.layout.mainContentOffset;
@@ -475,7 +458,7 @@ export function determineBannerConfiguration(post: any, pageType: string, defaul
     bannerDataSources,
     layout: {
       mainPanelTop,                    // 🎯 THIS CONTROLS OVERLAP! (RESTORED)
-      navbarSpacing,                   // ⭐ MOBILE PORTRAIT AWARE
+      navbarSpacing,                   // ⭐ SIMPLIFIED - CSS handles mobile portrait
       bannerHeight,
       bannerOverlap: '0',              // Removed unused value
       dynamicOverlap: '0',             // Removed unused value
@@ -555,11 +538,6 @@ export function getIconSVG(iconName: string): string {
 /** @deprecated Use getPanelTopPosition instead */
 export function calculateBannerLayout() {
   console.warn('calculateBannerLayout is deprecated, using working system instead');
-}
-
-/** @deprecated Use shouldHideNavbar instead */
-export function getShouldShowNavbar() {
-  return !shouldHideNavbar();
 }
 
 // Re-export type guards and configurations
