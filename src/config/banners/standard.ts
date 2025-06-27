@@ -126,7 +126,7 @@ export const bannerList: BannerItem[] = [
   }, 
   {
     type: 'video',
-    src: '/videos/deep-time.webm',  // Place this file in /public/videos/
+    src: '/videos/deep-time3.webm',  // Place this file in /public/videos/
     fallbackImage: banner2Fallback,      // Fallback image for unsupported browsers
     alt: 'Animated banner',
     preload: 'none'  // Don't preload video until needed

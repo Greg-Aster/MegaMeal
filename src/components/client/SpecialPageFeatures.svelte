@@ -12,7 +12,7 @@
     const isSpecialPage = isCookbookPage || isFirstContactPage;
     
     if (!isSpecialPage) {
-      restoreNormalState();
+      restoreNormalLayout();
       return;
     }
     
@@ -26,17 +26,37 @@
       console.log('Saved original fullscreen state:', originalState);
     }
     
-    // Enable special page settings
-    localStorage.setItem('fullscreenMode', 'true');
-    localStorage.setItem('fullscreenBannerOverride', 'true');
-    document.body.classList.add('force-mobile-view');
+    // Apply fullscreen layout
+    applyFullscreenLayout();
     
     if (isCookbookPage) {
       initializeCookbookView();
     }
   });
 
-  function restoreNormalState() {
+  function applyFullscreenLayout() {
+    // Enable special page settings
+    localStorage.setItem('fullscreenMode', 'true');
+    localStorage.setItem('fullscreenBannerOverride', 'true');
+    document.body.classList.add('force-mobile-view');
+    
+    // Fix the grid layout - remove responsive classes, add single column
+    const mainGrid = document.getElementById('main-grid');
+    if (mainGrid) {
+      mainGrid.className = mainGrid.className
+        .replace('grid-cols-[5rem_1fr]', 'grid-cols-1')
+        .replace('md:grid-cols-[16.5rem_auto]', '')
+        .replace('gap-2', 'gap-1')
+        .replace('md:gap-4', '')
+        .replace('md:px-4', '');
+    }
+    
+    // Hide sidebar
+    const sidebar = document.querySelector('#main-grid > div:first-child');
+    if (sidebar) sidebar.style.display = 'none';
+  }
+
+  function restoreNormalLayout() {
     const originalState = localStorage.getItem('specialPageOriginalState');
     
     if (originalState !== null) {
@@ -46,6 +66,20 @@
         localStorage.setItem('fullscreenMode', 'false');
         localStorage.removeItem('fullscreenBannerOverride');
         document.body.classList.remove('force-mobile-view');
+        
+        // Restore normal grid layout
+        const mainGrid = document.getElementById('main-grid');
+        if (mainGrid) {
+          mainGrid.className = mainGrid.className
+            .replace('grid-cols-1', 'grid-cols-[5rem_1fr]')
+            .replace('gap-1', 'gap-2')
+            + ' md:grid-cols-[16.5rem_auto] md:gap-4 md:px-4';
+        }
+        
+        // Show sidebar
+        const sidebar = document.querySelector('#main-grid > div:first-child');
+        if (sidebar) sidebar.style.display = '';
+        
         console.log('Restored to non-fullscreen (original state)');
       } else {
         console.log('Keeping fullscreen (was original state)');

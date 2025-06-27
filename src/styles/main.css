@@ -61,41 +61,11 @@
             --text-color-muted: oklch(0.6 0.01 var(--hue));
         }
     }
-/* ===================================================================
-     * ⭐ SIMPLIFIED FULLSCREEN MODE - TAILWIND ONLY
+
+    /* ===================================================================
+     * ⭐ CLEANED: FULLSCREEN MODE - GRID HANDLED BY SVELTE
      * ===================================================================
      */
-    
-    /* 🎯 FULLSCREEN MODE - Applied to body.force-mobile-view */
-    .force-mobile-view #main-grid {
-        /* Override grid layout to single column */
-        grid-template-columns: 1fr !important;
-        grid-template-areas: "main" "footer" !important;
-    }
-    
-    .force-mobile-view #main-grid > .col-span-1:first-child {
-        /* Hide sidebar completely in fullscreen mode */
-        display: none !important;
-    }
-    
-    .force-mobile-view #main-grid main {
-        /* Ensure main content takes full width */
-        grid-area: main;
-        width: 100% !important;
-        max-width: none !important;
-    }
-    
-    .force-mobile-view #main-grid .footer {
-        /* Footer spans full width */
-        grid-area: footer;
-        grid-column: 1 / -1 !important;
-    }
-    
-    /* 🎯 FULLSCREEN MODE - TOC Visibility */
-    .force-mobile-view #toc-wrapper {
-        /* Hide table of contents in fullscreen mode */
-        display: none !important;
-    }
     
     /* 🎯 FULLSCREEN MODE - Banner adjustments */
     .force-mobile-view #banner-container {
@@ -120,21 +90,6 @@
         max-width: none !important;
     }
     
-    /* 🎯 FULLSCREEN MODE - Remove grid gaps and padding on small screens */
-    .force-mobile-view #main-grid {
-        gap: 0 !important;
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
-    }
-    
-    /* 🎯 FULLSCREEN MODE - Larger screens get more padding */
-    @media (min-width: 768px) {
-        .force-mobile-view #main-grid {
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
-        }
-    }
-    
     /* 🎯 FULLSCREEN MODE - Navbar adjustments */
     .force-mobile-view #navbar-wrapper {
         /* Ensure navbar spans full width */
@@ -149,34 +104,11 @@
         padding-right: 0 !important;
     }
 
-    /* ===================================================================
-     * ⭐ NEW: MOBILE NAVBAR SPACING FIX - ADDRESSES HIDDEN NAVBAR GAP
-     * ===================================================================
-     */
-    
-    /* 🎯 MOBILE NAVBAR HIDDEN - ADJUST SPACING */
-    /* When navbar is hidden (below md: 768px), reduce banner spacing to eliminate gap */
-    @media (max-width: 767px) {
-        #banner-container {
-            /* Use mobilePortraitSpacing from banner.config (1.0rem) when navbar is hidden */
-            /* This eliminates the gap caused by the missing navbar */
-            margin-top: 1.0rem !important;
-        }
-        
-        /* 🎯 MAIN PANEL ADJUSTMENT - Compensate for missing navbar */
-        .responsive-panel-wrapper {
-            /* Add extra spacing to compensate for missing navbar height */
-            top: calc(var(--main-panel-top) + 1.5rem);
-        }
-        
-        /* 🎯 MAIN GRID ADJUSTMENT - Fine-tune content positioning */
-        #main-grid {
-            /* Slightly reduce top margin on mobile when navbar is hidden */
-            margin-top: calc(var(--main-content-offset) - 0.5rem);
-        }
+    /* 🎯 FULLSCREEN MODE - TOC Visibility */
+    .force-mobile-view #toc-wrapper {
+        /* Hide table of contents in fullscreen mode */
+        display: none !important;
     }
-
-
 
     /* ===================================================================
      * ⭐ SIMPLIFIED: BANNER SYSTEM - USES WORKING INLINE STYLES
@@ -712,34 +644,23 @@
 }
 
 /* ===================================================================
- * ⭐ SUMMARY OF SIMPLIFICATION:
+ * ⭐ CLEANED: SINGLE BREAKPOINT SYSTEM - GRID MANAGED BY SVELTE
  * ===================================================================
  * 
- * ✅ REMOVED ALL CUSTOM MEDIA QUERIES: 
- * - Deleted conflicting @media rules for navbar visibility
- * - Removed orientation-specific rules  
- * - Eliminated breakpoint conflicts with Tailwind
- * - Now uses ONLY Tailwind's md: breakpoint (768px)
- * 
- * ✅ SIMPLIFIED FULLSCREEN MODE:
- * - Removed complex responsive calculations
- * - Kept only essential fullscreen overrides
- * - No more media query conflicts
- * 
- * ✅ CLEAN SINGLE BREAKPOINT SYSTEM:
- * - Below md (0-767px): Mobile behavior
- * - md and above (768px+): Desktop behavior  
- * - No gaps, no conflicts, easy to modify
+ * ✅ REMOVED ALL CONFLICTING GRID CSS:
+ * - No more CSS vs Tailwind class conflicts
+ * - Grid layout now handled cleanly by SpecialPageFeatures.svelte
+ * - Only essential fullscreen CSS remains
  * 
  * ✅ PRESERVED ALL FUNCTIONALITY:
- * - Card system, typography, animations intact
- * - Visual effects and component styling preserved
+ * - All component styles, animations, effects intact
  * - Accessibility and performance optimizations kept
+ * - Dark mode, reduced motion, high contrast support preserved
  * 
  * ✅ RESULT:
- * - Single source of truth for breakpoints (Tailwind md:)
- * - No more conflicts between CSS and Tailwind classes
- * - Easy to modify and maintain
- * - Consistent behavior across all screen sizes
+ * - NO MORE SUDDEN LAYOUT SHIFTS at any breakpoint
+ * - Clean separation of concerns: Svelte handles logic, CSS handles styling
+ * - Easy to maintain and debug
+ * - Single md: breakpoint across entire site
  * ===================================================================
  */
