@@ -288,6 +288,11 @@ export default defineConfig({
     ],
   },
   vite: {
+    // 🎯 SUPPRESS POSTCSS "from option" WARNING
+    // This suppresses the PostCSS warning about missing 'from' option
+    // which is a known issue with Tailwind CSS internal processing
+    logLevel: 'error', // Only show errors, suppress warnings
+    
     optimizeDeps: {
       exclude: ['mammoth'], // Only exclude mammoth from optimization
     },

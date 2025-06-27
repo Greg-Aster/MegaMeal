@@ -19,7 +19,7 @@ export const siteConfig: SiteConfig = {
   transparency: 0.5, // Single value from 0 to 1
   defaultTheme: DARK_MODE, // Dark mode fits the cosmic horror vibe
   banner: {
-    enable: true,
+    enable: false,
     src: "/posts/timeline/golden-era.png", // Using one of your timeline backgrounds
     position: "center",
     credit: {
