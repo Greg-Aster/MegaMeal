@@ -405,6 +405,17 @@ export function getBannerDataSources(bannerType: BannerDeterminationResult, post
  * 🎯 MAIN API: Banner configuration determination - CLEANED VERSION
  */
 export function determineBannerConfiguration(post: any, pageType: string, defaultBannerLink: string = '') {
+  // ⭐ NEW: Check user's saved banner type preference
+  console.log('🏗️ Banner config starting. Default type:', bannerConfig.defaultBannerType);
+  if (typeof window !== 'undefined' && localStorage.getItem('defaultBannerType')) {
+    const savedType = localStorage.getItem('defaultBannerType');
+    console.log('📱 Found saved banner type in localStorage:', savedType);
+    bannerConfig.defaultBannerType = savedType as BannerType;
+    console.log('✅ Banner config updated to:', bannerConfig.defaultBannerType);
+  } else {
+    console.log('❌ No saved banner type found or not in browser');
+  }
+
   if (isFullscreenModeActive()) {
     return {
       postData: getBannerDataFromPost(post),

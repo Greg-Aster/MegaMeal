@@ -1,5 +1,5 @@
 ---
-// src/components/timeline/StarNode.astro
+// src/components/timeline/StarNode.astro - Complete version maintaining TimelineView compatibility
 export interface Props {
   era?: string;
   isKeyEvent?: boolean;
@@ -22,18 +22,18 @@ const {
   triggerHighlightAnimation = false,
 } = Astro.props;
 
-// Era color mapping
-type EraKey = keyof typeof eraColorMap;
-
+// =====================================================
+// SHARED UTILITIES - Keep consistent with StarMapView
+// =====================================================
 const eraColorMap = {
-  'ancient-epoch': '#3b82f6',        // Blue
-  'awakening-era': '#8b5cf6',        // Purple
-  'golden-age': '#6366f1',           // Indigo (formerly Orange)
-  'conflict-epoch': '#ec4899',       // Pink
-  'singularity-conflict': '#ef4444', // Red
-  'transcendent-age': '#14b8a6',     // Teal
-  'final-epoch': '#22c55e',          // Green
-  'unknown': '#6366f1'               // Indigo
+  'ancient-epoch': '#3b82f6',
+  'awakening-era': '#8b5cf6',
+  'golden-age': '#6366f1',
+  'conflict-epoch': '#ec4899',
+  'singularity-conflict': '#ef4444',
+  'transcendent-age': '#14b8a6',
+  'final-epoch': '#22c55e',
+  'unknown': '#6366f1'
 };
 
 const colorSpectrum = [
@@ -42,9 +42,7 @@ const colorSpectrum = [
   '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
 ];
 
-const starTypes = [
-  'point', 'classic', 'sparkle', 'refraction', 'halo', 'subtle'
-];
+const starTypes = ['point', 'classic', 'sparkle', 'refraction', 'halo', 'subtle'];
 
 function hashCode(str: string): number {
   if (!str) return 0;
@@ -57,8 +55,8 @@ function hashCode(str: string): number {
 }
 
 function getStarColor(id: string, currentEra?: string, shouldUseEraColors?: boolean): string {
-  if (shouldUseEraColors && currentEra && eraColorMap[currentEra as EraKey]) {
-    return eraColorMap[currentEra as EraKey];
+  if (shouldUseEraColors && currentEra && eraColorMap[currentEra as keyof typeof eraColorMap]) {
+    return eraColorMap[currentEra as keyof typeof eraColorMap];
   }
   const hash = hashCode(id);
   return colorSpectrum[hash % colorSpectrum.length];
@@ -81,6 +79,9 @@ function getAnimationDuration(id: string): number {
   return 4 + (hash % 5);
 }
 
+// =====================================================
+// CALCULATE STAR PROPERTIES
+// =====================================================
 const uniqueId = `star-${identifier}-${isKeyEvent ? 'key' : 'normal'}`;
 const starType = getStarType(uniqueId, isKeyEvent);
 const sizeFactor = getSizeFactor(isKeyEvent);
@@ -94,36 +95,64 @@ const wrapperId = `star-wrapper-${uniqueId}`;
 <div
   id={wrapperId}
   class:list={[
-    "star-wrapper",
-    { "is-selected": isSelected },
-    { "is-hovered": isHovered },
+    "star-wrapper", // REQUIRED by TimelineView.astro
+    "relative flex items-center justify-center transition-all duration-300",
+    { "is-selected": isSelected }, // REQUIRED by TimelineView.astro
+    { "is-hovered": isHovered },   // REQUIRED by TimelineView.astro
     { "is-key-event": isKeyEvent },
-    // "is-initialized" will be added by client script
   ]}
   data-star-type={starType}
-  data-trigger-highlight={triggerHighlightAnimation}
+  data-trigger-highlight={triggerHighlightAnimation} // REQUIRED by TimelineView.astro
   style={`
     --animation-duration: ${animationDuration}s;
     --star-size: ${finalSize}px;
     --star-color: ${mainColor};
     --secondary-color: ${mainColor};
+    filter: drop-shadow(0 0 3px ${mainColor}) drop-shadow(0 0 8px ${mainColor}80);
   `}
 >
-  <!-- Backing plate for contrast -->
-  <div class="star-backing-plate"></div>
+  <!-- Backing plate for contrast - FIXED centering -->
+  <div class="star-backing-plate absolute rounded-full bg-black/40 backdrop-blur-sm transition-all duration-300 top-1/2 left-1/2"
+       style={`width: ${finalSize * 2.5}px; height: ${finalSize * 2.5}px; transform: translate(-50%, -50%);`}>
+  </div>
 
-  <!-- Glow effect -->
-  <div class="star-glow"></div>
-  
-  <!-- Light rays effect -->
-  <div class="star-rays"></div>
+  <!-- Enhanced glow effect - FIXED centering -->
+  <div class="star-glow absolute rounded-full pointer-events-none mix-blend-screen top-1/2 left-1/2"
+       style={`
+         width: ${finalSize * 2.5}px; 
+         height: ${finalSize * 2.5}px;
+         transform: translate(-50%, -50%);
+         background: radial-gradient(circle, ${mainColor} 0%, rgba(255, 255, 255, 0) 70%);
+         opacity: 0.5;
+         animation: colorShiftGlow ${animationDuration}s infinite alternate ease-in-out;
+       `}>
+  </div>
 
+  <!-- Light rays effect for important stars - FIXED centering -->
+  {(isKeyEvent || isHovered || isSelected) && (
+    <div class="star-rays absolute rounded-full pointer-events-none top-1/2 left-1/2"
+         style={`
+           width: ${finalSize * 6}px; 
+           height: ${finalSize * 6}px;
+           transform: translate(-50%, -50%);
+           background-image: repeating-conic-gradient(${mainColor} 0deg, transparent 1.5deg, transparent 18deg, ${mainColor} 20deg);
+           opacity: ${isSelected ? 0.3 : isHovered ? 0.18 : 0.15};
+           animation: rotateRays ${isSelected ? 8 : 12}s linear infinite;
+         `}>
+    </div>
+  )}
+
+  <!-- Main star shape with enhanced graphics -->
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
     width={finalSize * 2}
     height={finalSize * 2}
-    class="star-shape"
+    class="star-shape relative z-10"
+    style={`
+      filter: drop-shadow(0 0 1px ${mainColor});
+      animation: starShimmer ${animationDuration * 0.8}s infinite ease-in-out;
+    `}
   >
     {starType === 'point' && (
       <circle cx="12" cy="12" r="1.8" fill={mainColor} />
@@ -151,7 +180,7 @@ const wrapperId = `star-wrapper-${uniqueId}`;
         <circle cx="12" cy="12" r="3.5" fill={mainColor} opacity="0.15" />
       </>
     )}
-    {starType !== 'point' && starType !== 'classic' && starType !== 'sparkle' && starType !== 'refraction' && starType !== 'halo' && (
+    {starType === 'subtle' && (
       <>
         <circle cx="12" cy="12" r="1.2" fill={mainColor} />
         <path d="M10 9l4 6M9 12l6 0" stroke={mainColor} stroke-width="0.4" opacity="0.5" />
@@ -162,25 +191,68 @@ const wrapperId = `star-wrapper-${uniqueId}`;
     )}
   </svg>
 
-  <!-- Enhanced orbital effects -->
-  <div class="orbital-effect">
+  <!-- Enhanced orbital effects - FIXED positioning -->
+  <div class="orbital-effect absolute top-1/2 left-1/2 pointer-events-none z-[5]" style="transform: translate(-50%, -50%);">
     <!-- Base orbital for all stars -->
-    <div class="orbital-ring orbital-base orbital-ring-1"></div>
+    <div class="orbital-ring orbital-base absolute rounded-full border border-current transition-all duration-300"
+         style={`
+           width: ${finalSize * 1.5}px; 
+           height: ${finalSize * 1.5}px;
+           border-color: ${mainColor}40;
+           top: 50%; left: 50%; 
+           opacity: 0.1;
+         `}>
+    </div>
     
+    <!-- Enhanced orbitals for selected stars -->
     {isSelected && (
       <>
-        <div class="orbital-ring orbital-selected orbital-ring-1"></div>
-        <div class="orbital-ring orbital-selected orbital-ring-2"></div>
+        <div class="orbital-ring orbital-selected absolute rounded-full border border-current"
+             style={`
+               width: ${finalSize * 5}px; 
+               height: ${finalSize * 5}px;
+               border-color: ${mainColor}80;
+               top: 50%; left: 50%;
+             `}>
+        </div>
+        <div class="orbital-ring orbital-selected absolute rounded-full border border-current"
+             style={`
+               width: ${finalSize * 4.5}px; 
+               height: ${finalSize * 4.5}px;
+               border-color: ${mainColor}60;
+               top: 50%; left: 50%;
+               animation-delay: 2s;
+             `}>
+        </div>
       </>
     )}
     
-    <!-- Initialization and highlight orbitals will be managed by client script -->
-    <div class="orbital-ring orbital-init" style="display: none;"></div>
-    <div class="orbital-ring orbital-init random-highlight-animation" style="display: none;"></div>
+    <!-- Initialization and highlight orbitals -->
+    <div class="orbital-ring orbital-init absolute rounded-full border-2 border-current"
+         style={`
+           width: ${finalSize * 5}px; 
+           height: ${finalSize * 5}px;
+           border-color: ${mainColor};
+           top: 50%; left: 50%;
+           display: none;
+           box-shadow: 0 0 3px ${mainColor};
+         `}>
+    </div>
+    
+    <div class="orbital-ring orbital-init random-highlight-animation absolute rounded-full border-2 border-current"
+         style={`
+           width: ${finalSize * 5}px; 
+           height: ${finalSize * 5}px;
+           border-color: ${mainColor};
+           top: 50%; left: 50%;
+           display: none;
+           box-shadow: 0 0 3px ${mainColor};
+         `}>
+    </div>
   </div>
 </div>
 
-<script define:vars={{ wrapperId }}>
+<script define:vars={{ wrapperId, triggerHighlightAnimation }}>
   const starWrapper = document.getElementById(wrapperId);
 
   if (starWrapper) {
@@ -190,7 +262,7 @@ const wrapperId = `star-wrapper-${uniqueId}`;
     const initOrbital = starWrapper.querySelector('.orbital-init:not(.random-highlight-animation)');
     const highlightOrbital = starWrapper.querySelector('.orbital-init.random-highlight-animation');
 
-    // Initial animation
+    // Initial animation - REQUIRED by TimelineView.astro
     starWrapper.classList.add('is-initialized');
     if (initOrbital) initOrbital.style.display = 'block';
 
@@ -199,7 +271,7 @@ const wrapperId = `star-wrapper-${uniqueId}`;
       if (initOrbital && !playRandomHighlight) initOrbital.style.display = 'none';
     }, 3000);
 
-    // Function to handle highlight
+    // Function to handle highlight - REQUIRED by TimelineView.astro
     function handleHighlight(shouldHighlight) {
       if (shouldHighlight && !playRandomHighlight) {
         playRandomHighlight = true;
@@ -219,7 +291,7 @@ const wrapperId = `star-wrapper-${uniqueId}`;
     // Initial check for triggerHighlightAnimation
     handleHighlight(starWrapper.dataset.triggerHighlight === 'true');
 
-    // Observe changes to data-trigger-highlight attribute
+    // Observe changes to data-trigger-highlight attribute - REQUIRED by TimelineView.astro
     const observer = new MutationObserver(mutationsList => {
       for (const mutation of mutationsList) {
         if (mutation.type === 'attributes' && mutation.attributeName === 'data-trigger-highlight') {
@@ -233,37 +305,47 @@ const wrapperId = `star-wrapper-${uniqueId}`;
 </script>
 
 <style>
-  /* Base star styles */
+  /* Enhanced state management for TimelineView integration */
   .star-wrapper {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    --star-color: var(--primary, #3b82f6);
-    --star-size: 8px;
-    --animation-duration: 4s;
-    filter:
-      drop-shadow(0 0 3px var(--star-color))
-      drop-shadow(0 0 8px color-mix(in oklch, var(--star-color), transparent 50%));
     transition: transform 0.3s ease, filter 0.3s ease;
   }
 
-  /* Backing plate for contrast */
-  .star-backing-plate {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: calc(var(--star-size) * 2.5);
-    height: calc(var(--star-size) * 2.5);
-    background-color: rgba(0, 0, 0, 0.4);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 0;
-    transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease;
-    opacity: 0.85;
-    backdrop-filter: blur(3px);
+  /* Enhanced hover state */
+  .star-wrapper.is-hovered {
+    filter:
+      drop-shadow(0 0 4px var(--star-color))
+      drop-shadow(0 0 10px color-mix(in oklch, var(--star-color), transparent 40%));
+    z-index: 5;
   }
 
+  /* Enhanced key event state */
+  .star-wrapper.is-key-event {
+    filter:
+      drop-shadow(0 0 4px var(--star-color))
+      drop-shadow(0 0 12px color-mix(in oklch, var(--star-color), transparent 30%));
+  }
+
+  /* Enhanced selected state - CRITICAL for TimelineView */
+  .star-wrapper.is-selected {
+    filter:
+      drop-shadow(0 0 5px var(--star-color))
+      drop-shadow(0 0 10px var(--star-color))
+      drop-shadow(0 0 15px color-mix(in oklch, var(--star-color), white 30%)) !important;
+    z-index: 10;
+    transform: scale(1.25);
+  }
+
+  .star-wrapper.is-selected .star-glow {
+    opacity: 0.8;
+    width: calc(var(--star-size) * 2);
+    height: calc(var(--star-size) * 2);
+  }
+
+  /* Backing plate responsive behavior - FIXED centering */
   .star-wrapper.is-hovered .star-backing-plate,
   .star-wrapper.is-selected .star-backing-plate {
     opacity: 0.95;
@@ -271,24 +353,7 @@ const wrapperId = `star-wrapper-${uniqueId}`;
     transform: translate(-50%, -50%) scale(1.15);
   }
 
-  /* Enhanced glow effect */
-  .star-glow {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: calc(var(--star-size) * 2.5);
-    height: calc(var(--star-size) * 2.5);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    background: radial-gradient(circle, var(--star-color) 0%, rgba(255, 255, 255, 0) 70%);
-    opacity: 0.5;
-    animation: colorShiftGlow var(--animation-duration, 4s) infinite alternate ease-in-out;
-    pointer-events: none;
-    mix-blend-mode: screen;
-    z-index: 1;
-  }
-
-  /* Advanced color shifting glow animation */
+  /* Enhanced animations - FIXED centering */
   @keyframes colorShiftGlow {
     0% { 
       opacity: 0.4; 
@@ -317,53 +382,9 @@ const wrapperId = `star-wrapper-${uniqueId}`;
     }
   }
 
-  /* Light rays effect */
-  .star-rays {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: calc(var(--star-size) * 6);
-    height: calc(var(--star-size) * 6);
-    transform: translate(-50%, -50%);
-    background-image: repeating-conic-gradient(var(--star-color) 0deg, transparent 1.5deg, transparent 18deg, var(--star-color) 20deg);
-    opacity: 0.15;
-    border-radius: 50%;
-    pointer-events: none;
-    display: none;
-    animation: rotateRays 12s linear infinite;
-    z-index: 2;
-  }
-
-  /* Show rays for important stars */
-  .star-wrapper.is-key-event .star-rays {
-    display: block;
-    opacity: 0.2;
-  }
-
-  .star-wrapper.is-hovered .star-rays {
-    display: block;
-    opacity: 0.18;
-  }
-
-  .star-wrapper.is-selected .star-rays {
-    display: block;
-    opacity: 0.3;
-    animation-duration: 8s;
-  }
-
   @keyframes rotateRays {
     from { transform: translate(-50%, -50%) rotate(0deg); }
     to { transform: translate(-50%, -50%) rotate(360deg); }
-  }
-
-  /* Enhanced star shape with shimmer */
-  .star-shape {
-    position: relative;
-    z-index: 3;
-    width: calc(var(--star-size) * 1.5);
-    height: calc(var(--star-size) * 1.5);
-    filter: drop-shadow(0 0 1px var(--star-color));
-    animation: starShimmer calc(var(--animation-duration) * 0.8) infinite ease-in-out;
   }
 
   @keyframes starShimmer {
@@ -386,38 +407,91 @@ const wrapperId = `star-wrapper-${uniqueId}`;
     100% { opacity: 0.4; r: 2.5; }
   }
 
-  /* Enhanced hover state */
-  .star-wrapper.is-hovered {
-    filter:
-      drop-shadow(0 0 4px var(--star-color))
-      drop-shadow(0 0 10px color-mix(in oklch, var(--star-color), transparent 40%));
-    z-index: 5;
+  /* Refraction animation */
+  .refraction-lines {
+    animation: refractionTwinkle var(--animation-duration, 4s) infinite alternate ease-in-out;
   }
 
-  /* Enhanced key event state */
-  .star-wrapper.is-key-event {
-    filter:
-      drop-shadow(0 0 4px var(--star-color))
-      drop-shadow(0 0 12px color-mix(in oklch, var(--star-color), transparent 30%));
+  @keyframes refractionTwinkle {
+    0% { opacity: 0.2; }
+    25% { opacity: 0.5; }
+    50% { opacity: 0.3; }
+    75% { opacity: 0.6; }
+    100% { opacity: 0.2; }
   }
 
-  /* Enhanced selected state */
-  .star-wrapper.is-selected {
-    filter:
-      drop-shadow(0 0 5px var(--star-color))
-      drop-shadow(0 0 10px var(--star-color))
-      drop-shadow(0 0 15px color-mix(in oklch, var(--star-color), white 30%)) !important;
-    z-index: 10;
-    transform: scale(1.25);
+  /* Enhanced orbital animations - FIXED centering */
+  .orbital-ring {
+    transform: translate(-50%, -50%);
   }
 
-  .star-wrapper.is-selected .star-glow {
-    opacity: 0.8;
-    width: calc(var(--star-size) * 2);
-    height: calc(var(--star-size) * 2);
+  .orbital-base {
+    animation: orbital-pulse-enhanced 8s infinite ease-in-out;
   }
 
-  /* Star type-specific glow effects */
+  .orbital-selected {
+    animation: orbital-pulse 4s infinite ease-in-out;
+  }
+
+  @keyframes orbital-pulse-enhanced {
+    0% {
+      transform: translate(-50%, -50%) scale(0.9) rotate(0deg);
+      opacity: 0.1;
+    }
+    20% {
+      transform: translate(-50%, -50%) scale(1) rotate(22.5deg);
+      opacity: 0.3;
+    }
+    60% {
+      transform: translate(-50%, -50%) scale(1.1) rotate(67.5deg);
+      opacity: 0.2;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1.2) rotate(90deg);
+      opacity: 0.1;
+    }
+  }
+
+  @keyframes orbital-pulse {
+    0% {
+      transform: translate(-50%, -50%) scale(0.9) rotate(0deg);
+      opacity: 0.3;
+    }
+    20% {
+      transform: translate(-50%, -50%) scale(1) rotate(45deg);
+      opacity: 0.8;
+    }
+    60% {
+      transform: translate(-50%, -50%) scale(1.2) rotate(135deg);
+      opacity: 0.4;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1.5) rotate(180deg);
+      opacity: 0;
+    }
+  }
+
+  @keyframes orbital-init {
+    0% {
+      transform: translate(-50%, -50%) scale(0.2);
+      opacity: 0.9;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.5);
+      opacity: 0.7;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(3);
+      opacity: 0;
+    }
+  }
+
+  /* Orbital ring specific styles */
+  .orbital-init {
+    animation: orbital-init 3s ease-out forwards !important;
+  }
+
+  /* Star type-specific enhancements */
   .star-wrapper[data-star-type="refraction"] .star-glow {
     background: radial-gradient(
       circle,
@@ -454,6 +528,12 @@ const wrapperId = `star-wrapper-${uniqueId}`;
     animation: haloBreathing var(--animation-duration, 6s) infinite alternate ease-in-out;
   }
 
+  @keyframes haloBreathing {
+    0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.4; }
+    50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.6; }
+    100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.4; }
+  }
+
   .star-wrapper[data-star-type="sparkle"] .star-glow {
     background: 
       radial-gradient(
@@ -476,167 +556,5 @@ const wrapperId = `star-wrapper-${uniqueId}`;
     opacity: 0.4;
     width: calc(var(--star-size) * 6);
     height: calc(var(--star-size) * 6);
-  }
-
-  .star-wrapper[data-star-type="classic"] .star-glow {
-    background: radial-gradient(
-      circle,
-      var(--star-color) 0%,
-      rgba(255,255,255,0) 70%
-    );
-    opacity: 0.5;
-    transform: translate(-50%, -50%) scale(1.2);
-  }
-
-  .star-wrapper[data-star-type="point"] .star-glow {
-    background: radial-gradient(
-      circle,
-      var(--star-color) 0%,
-      rgba(255,255,255,0) 50%
-    );
-    opacity: 0.4;
-    width: calc(var(--star-size) * 2.5);
-    height: calc(var(--star-size) * 2.5);
-  }
-
-  @keyframes haloBreathing {
-    0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.4; }
-    50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.6; }
-    100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.4; }
-  }
-
-  /* Refraction animation */
-  .refraction-lines {
-    animation: refractionTwinkle var(--animation-duration, 4s) infinite alternate ease-in-out;
-  }
-
-  @keyframes refractionTwinkle {
-    0% { opacity: 0.2; }
-    25% { opacity: 0.5; }
-    50% { opacity: 0.3; }
-    75% { opacity: 0.6; }
-    100% { opacity: 0.2; }
-  }
-
-  /* Enhanced orbital effects */
-  .orbital-effect {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 5;
-  }
-
-  .orbital-ring {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    border-radius: 50%;
-    border: 1px solid var(--star-color);
-    transform: translate(-50%, -50%);
-    opacity: 0;
-    box-shadow: 0 0 2px var(--star-color);
-  }
-
-  /* Base orbital for all stars */
-  .orbital-base {
-    width: calc(var(--star-size) * 1.5);
-    height: calc(var(--star-size) * 1.5);
-    animation: orbital-pulse-enhanced 8s infinite ease-in-out;
-    opacity: 0.1;
-    border-color: var(--star-color);
-  }
-
-  /* Enhanced orbitals only for selected stars */
-  .orbital-selected.orbital-ring-1 {
-    width: calc(var(--star-size) * 5);
-    height: calc(var(--star-size) * 5);
-    animation: orbital-pulse 4s infinite ease-in-out;
-  }
-
-  .orbital-selected.orbital-ring-2 {
-    width: calc(var(--star-size) * 4.5);
-    height: calc(var(--star-size) * 4.5);
-    animation: orbital-pulse 4s infinite ease-in-out;
-    animation-delay: 2s;
-  }
-
-  /* Initialization orbital effect */
-  .orbital-init {
-    width: calc(var(--star-size) * 5);
-    height: calc(var(--star-size) * 5);
-    animation: orbital-init 3s ease-out forwards;
-    border-color: var(--star-color);
-    border-width: 2px;
-    box-shadow: 0 0 3px var(--star-color);
-  }
-
-  /* Enhanced orbital animations */
-  @keyframes orbital-pulse-enhanced {
-    0% {
-      transform: translate(-50%, -50%) scale(0.9) rotate(0deg);
-      opacity: 0.1;
-      border-width: 1px;
-    }
-    20% {
-      transform: translate(-50%, -50%) scale(1) rotate(22.5deg);
-      opacity: 0.3;
-      border-width: 1.5px;
-      box-shadow: 0 0 3px var(--star-color);
-    }
-    60% {
-      transform: translate(-50%, -50%) scale(1.1) rotate(67.5deg);
-      opacity: 0.2;
-      border-width: 1px;
-    }
-    100% {
-      transform: translate(-50%, -50%) scale(1.2) rotate(90deg);
-      opacity: 0.1;
-      border-width: 0.5px;
-    }
-  }
-
-  @keyframes orbital-pulse {
-    0% {
-      transform: translate(-50%, -50%) scale(0.9) rotate(0deg);
-      opacity: 0.3;
-      border-width: 1.5px;
-      box-shadow: 0 0 3px color-mix(in oklch, var(--star-color), white 20%);
-    }
-    20% {
-      transform: translate(-50%, -50%) scale(1) rotate(45deg);
-      opacity: 0.8;
-      border-width: 1.5px;
-    }
-    60% {
-      transform: translate(-50%, -50%) scale(1.2) rotate(135deg);
-      opacity: 0.4;
-      border-width: 1px;
-    }
-    100% {
-      transform: translate(-50%, -50%) scale(1.5) rotate(180deg);
-      opacity: 0;
-      border-width: 0.5px;
-    }
-  }
-
-  @keyframes orbital-init {
-    0% {
-      transform: translate(-50%, -50%) scale(0.2);
-      opacity: 0.9;
-      box-shadow: 0 0 4px var(--star-color);
-    }
-    50% {
-      transform: translate(-50%, -50%) scale(1.5);
-      opacity: 0.7;
-      box-shadow: 0 0 2px var(--star-color);
-    }
-    100% {
-      transform: translate(-50%, -50%) scale(3);
-      opacity: 0;
-      box-shadow: 0 0 1px var(--star-color);
-    }
   }
 </style>
