@@ -133,10 +133,18 @@
     }
   }
 
+  // Timeline toggle function
+  function toggleTimelineBanner() {
+    const current = localStorage.getItem('defaultBannerType') || 'standard';
+    localStorage.setItem('defaultBannerType', current === 'timeline' ? 'standard' : 'timeline');
+    window.location.reload();
+  }
+
   // Connect to the actual SideNavbar buttons
   function connectToSideNavbarButtons() {
     const menuToggleBtn = document.getElementById('sidenav-menu-toggle');
     const settingsToggleBtn = document.getElementById('sidenav-settings-toggle');
+    const timelineBtn = document.getElementById('sidenav-timeline-btn');
 
     if (menuToggleBtn) {
       menuToggleBtn.addEventListener('click', (e) => {
@@ -151,6 +159,13 @@
         e.stopPropagation();
         showMenuPanel = false;
         showSettingsPanel = !showSettingsPanel;
+      });
+    }
+
+    if (timelineBtn) {
+      timelineBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleTimelineBanner();
       });
     }
   }
