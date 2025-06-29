@@ -25,6 +25,39 @@
 &lt;p&gt;MEGAMEAL began in October 2024 and continues to evolve. What started as an experimental video has expanded into an ever-growing universe with new episodes, articles, and recipes constantly in development.&lt;/p&gt;
 &lt;p&gt;Join us as we explore the ultimate question that transcends all eras of cosmic history:
 &lt;em&gt;What&apos;s for dinner at the end of the universe?&lt;/em&gt;&lt;/p&gt;
+&lt;h2&gt;EXPLORE THE UNIVERSE&lt;/h2&gt;
+&lt;p&gt;&amp;lt;div className=&quot;grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 mb-6&quot;&amp;gt;
+&amp;lt;a
+href=&quot;/posts/timeline/&quot;
+className=&quot;card-base2 p-4 text-center hover:scale-105 transition-all duration-200 cursor-pointer group bg-gradient-to-br from-[oklch(0.95_0.025_240)] to-[oklch(0.90_0.05_240)] dark:from-[oklch(0.25_0.025_240)] dark:to-[oklch(0.20_0.05_240)] border-2 border-transparent hover:border-[oklch(0.6_0.2_240)]&quot;&lt;/p&gt;
+&lt;blockquote&gt;&lt;/blockquote&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;div className=&quot;text-5xl mb-2&quot;&amp;gt;🌌&amp;lt;/div&amp;gt;
+&amp;lt;h3 className=&quot;font-bold text-base mb-1 text-gray-800 dark:text-neutral-200 group-hover:text-[oklch(0.4_0.2_240)]&quot;&amp;gt;Cosmic Timeline&amp;lt;/h3&amp;gt;
+&amp;lt;p className=&quot;text-xs text-gray-600 dark:text-neutral-400&quot;&amp;gt;Universe from Big Bang to heat death&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;lt;/a&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;a
+href=&quot;/posts/mega-meal-explained/&quot;
+className=&quot;card-base2 p-4 text-center hover:scale-105 transition-all duration-200 cursor-pointer group bg-gradient-to-br from-[oklch(0.95_0.025_360)] to-[oklch(0.90_0.05_360)] dark:from-[oklch(0.25_0.025_360)] dark:to-[oklch(0.20_0.05_360)] border-2 border-transparent hover:border-[oklch(0.6_0.2_360)]&quot;&lt;/p&gt;
+&lt;blockquote&gt;&lt;/blockquote&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;div className=&quot;text-5xl mb-2&quot;&amp;gt;🎬&amp;lt;/div&amp;gt;
+&amp;lt;h3 className=&quot;font-bold text-base mb-1 text-gray-800 dark:text-neutral-200 group-hover:text-[oklch(0.4_0.2_360)]&quot;&amp;gt;Video Explained&amp;lt;/h3&amp;gt;
+&amp;lt;p className=&quot;text-xs text-gray-600 dark:text-neutral-400&quot;&amp;gt;Behind-the-scenes movie trailer&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;lt;/a&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;a
+href=&quot;/posts/cookbook/cookbook-index/&quot;
+className=&quot;card-base2 p-4 text-center hover:scale-105 transition-all duration-200 cursor-pointer group bg-gradient-to-br from-[oklch(0.95_0.025_120)] to-[oklch(0.90_0.05_120)] dark:from-[oklch(0.25_0.025_120)] dark:to-[oklch(0.20_0.05_120)] border-2 border-transparent hover:border-[oklch(0.6_0.2_120)]&quot;&lt;/p&gt;
+&lt;blockquote&gt;&lt;/blockquote&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;div className=&quot;text-5xl mb-2&quot;&amp;gt;📚&amp;lt;/div&amp;gt;
+&amp;lt;h3 className=&quot;font-bold text-base mb-1 text-gray-800 dark:text-neutral-200 group-hover:text-[oklch(0.4_0.2_120)]&quot;&amp;gt;Recipe Archive&amp;lt;/h3&amp;gt;
+&amp;lt;p className=&quot;text-xs text-gray-600 dark:text-neutral-400&quot;&amp;gt;Galactic cookbook spanning millennia&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;lt;/a&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div className=&quot;text-center text-xs text-gray-500 dark:text-neutral-400 italic mt-4&quot;&amp;gt;
+Choose your adventure—the universe is vast, and there&apos;s always room for dessert.
+&amp;lt;/div&amp;gt;&lt;/p&gt;
 </content:encoded><frontmatter><published>2225-05-10T00:00:00.000Z</published><tags>Science Fiction,Food Parody,Cosmic Horror,Mixed Media,Dystopian Future</tags><category>MEGA MEAL</category><timelineYear>1000</timelineYear><timelineEra>ancient-epoch</timelineEra><isKeyEvent>true</isKeyEvent><image>/posts/timeline/universe-avatar.png</image></frontmatter></item><item><title>The Galactic Cookbook: A Culinary Compendium</title><link>https://megameal.org/posts/cookbook/cookbook-index/</link><guid isPermaLink="true">https://megameal.org/posts/cookbook/cookbook-index/</guid><description>A comprehensive collection of recipes, beverages, and culinary traditions spanning millennia - from the golden age of corporate excess to the chromatic innovations of the neo-sensoria era.</description><pubDate>Tue, 10 Jun 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;import ImageWrapper from &apos;../../../components/misc/ImageWrapper.astro&apos;;&lt;/p&gt;
 &lt;p&gt;&amp;lt;div className=&quot;text-xl text-gray-700 dark:text-neutral-300 italic mb-8 text-center max-w-4xl mx-auto&quot;&amp;gt;
 &quot;In every recipe lies a story. In every meal, a moment in time. This compendium preserves the culinary echoes of civilizations past, present, and yet to come.&quot; — Archivist Zara Chen
@@ -950,7 +983,7 @@ Bi-Smart Survival Equipment Recommendations
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;&amp;lt;/div&amp;gt;
 &amp;lt;/div&amp;gt;&lt;/p&gt;
-</content:encoded><frontmatter><published>2025-05-29T00:00:00.000Z</published><tags>First Contact,Xenobiology,Interstellar Travel,Existential Threats,Cosmic Horror</tags><category>MEGA MEAL</category><timelineYear>7652</timelineYear><timelineEra>age-of-grim-realizations</timelineEra><isKeyEvent>true</isKeyEvent><image>/posts/timeline/dont.png</image></frontmatter></item><item><title>Introducing Cuppy Cake: Our...Umm...New Assistant?</title><link>https://megameal.org/posts/cuppy-assistant-showcase/</link><guid isPermaLink="true">https://megameal.org/posts/cuppy-assistant-showcase/</guid><description>Demonstrating the new sentient desert, Cuppy Cake.</description><pubDate>Thu, 22 May 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;import BleepyPostWidget from &apos;@components/bleepy/BleepyPostWidget.astro&apos;;&lt;/p&gt;
+</content:encoded><frontmatter><published>2025-05-29T00:00:00.000Z</published><tags>First Contact,Xenobiology,Interstellar Travel,Existential Threats,Cosmic Horror</tags><category>MEGA MEAL</category><timelineYear>7652</timelineYear><timelineEra>awakening-era</timelineEra><isKeyEvent>true</isKeyEvent><image>/posts/timeline/dont.png</image></frontmatter></item><item><title>Introducing Cuppy Cake: Our...Umm...New Assistant?</title><link>https://megameal.org/posts/cuppy-assistant-showcase/</link><guid isPermaLink="true">https://megameal.org/posts/cuppy-assistant-showcase/</guid><description>Demonstrating the new sentient desert, Cuppy Cake.</description><pubDate>Thu, 22 May 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;import BleepyPostWidget from &apos;@components/bleepy/BleepyPostWidget.astro&apos;;&lt;/p&gt;
 &lt;p&gt;&amp;lt;BleepyPostWidget mascotContext={frontmatter.mascotContext} /&amp;gt;&lt;/p&gt;
 &lt;h2&gt;Showcasing the New Assistant Cuppy Cake&lt;/h2&gt;
 &lt;p&gt;Welcome to our new &apos;err...assistant?&apos; feature. Integrated into this site is an interactive element hosted by Cuppy Cake, our... unique personality.&lt;/p&gt;
