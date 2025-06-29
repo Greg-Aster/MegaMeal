@@ -7,6 +7,7 @@
   export let customAvatar = '';
   export let customName = '';
   export let customBio = '';
+  export let customLink = ''; // NEW PROP for dynamic linking
   export let isHomePage = false;
   export let profileConfig: any;
   export let avatarConfig: any;
@@ -20,6 +21,7 @@
   $: useDefaultAvatars = !customAvatar;
   $: displayName = customName || profileConfig?.name || 'Author';
   $: displayBio = customBio || profileConfig?.bio || '';
+  $: displayLink = customLink || '/about/'; // Use custom link or default to /about/
   $: socialLinks = profileConfig?.links || [];
 
   // Avatar selection logic
@@ -110,7 +112,8 @@
         selectedAvatar: selectedAvatar || 'none',
         activeAvatarIndex,
         currentAvatarIndex,
-        profileName: displayName
+        profileName: displayName,
+        customLink: displayLink // Added for debugging
       });
     }
 
@@ -142,7 +145,7 @@
 <div class="card-base p-3">
   <a
     aria-label="Go to About Page"
-    href="/about/"
+    href={displayLink}
     class="group block relative mx-auto mt-1 md:mx-0 md:mt-0 mb-3 max-w-[12rem] md:max-w-none overflow-hidden rounded-xl active:scale-95"
   >
     <div class="absolute transition pointer-events-none group-hover:bg-black/30 group-active:bg-black/50 w-full h-full z-50 flex items-center justify-center">

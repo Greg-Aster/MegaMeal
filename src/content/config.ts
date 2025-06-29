@@ -13,6 +13,7 @@ const postsCollection = defineCollection({
     avatarImage: z.string().optional(), // Custom path to avatar image
     authorName: z.string().optional(),  // Custom author name 
     authorBio: z.string().optional(),   // Custom author bio
+    authorLink: z.string().optional(),  // Custom author link - NEW FIELD
     tags: z.array(z.string()).optional().default([]),
     category: z.string().optional().default(''),
     lang: z.string().optional().default(''),
@@ -84,6 +85,39 @@ const friendsCollection = defineCollection({
   }),
 });
 
+// Define the 'about' collection for dynamic author pages
+const aboutCollection = defineCollection({
+  schema: z.object({
+    title: z.string(),
+    description: z.string().optional(),
+    name: z.string(), // Author's name
+    role: z.string().optional(), // Author's role/title
+    avatar: z.string().optional(), // Author's avatar image
+    bio: z.string().optional(), // Short bio for previews
+    published: z.date().optional(), // When this about page was created
+    updated: z.date().optional(), // When last updated
+    tags: z.array(z.string()).optional().default([]),
+    category: z.string().optional().default(''),
+    // Social links for this author
+    socialLinks: z.array(z.object({
+      name: z.string(),
+      url: z.string(),
+      icon: z.string(),
+    })).optional().default([]),
+    // Optional banner/background for this author page
+    backgroundImage: z.string().optional(),
+    bannerType: z.enum(['image', 'video', 'timeline', 'assistant']).optional(),
+    bannerData: z.object({
+      videoId: z.string().optional(),
+      imageUrl: z.string().optional(),
+      category: z.string().optional(),
+      startYear: z.number().optional(),
+      endYear: z.number().optional(),
+      background: z.string().optional(),
+    }).optional(),
+  }),
+});
+
 // Define the 'products' collection
 const productsCollection = defineCollection({
   schema: z.object({
@@ -116,5 +150,6 @@ export const collections = {
   spec: specCollection,
   team: teamCollection,
   friends: friendsCollection,
+  about: aboutCollection, // NEW: About collection for dynamic author pages
   products: productsCollection,
 };

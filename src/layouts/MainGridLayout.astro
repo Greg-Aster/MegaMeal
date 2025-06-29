@@ -59,7 +59,14 @@ interface Props {
   bannerLink?: string;          
   isPostPage?: boolean;         
   pageMascotContext?: string;  
-  backgroundImage?: string | null; 
+  backgroundImage?: string | null;
+  // ⭐ NEW: Custom author data prop
+  customAuthorData?: {
+    avatarImage?: string;
+    authorName?: string;
+    authorBio?: string;
+    authorLink?: string;
+  };
 }
 
 // =====================================================================
@@ -76,7 +83,8 @@ const {
   post,
   bannerLink = '',
   isPostPage = false,
-  backgroundImage 
+  backgroundImage,
+  customAuthorData  // ⭐ NEW: Extract custom author data
 } = Astro.props;
 
 // =====================================================================
@@ -98,6 +106,17 @@ const {
   finalBannerLink,
   currentBannerType
 } = bannerConfiguration;
+
+// ⭐ NEW: Process custom author data - merge with existing postData
+const processedAuthorData = {
+  slug: postData?.slug || '',
+  customAvatar: customAuthorData?.avatarImage || postData?.customAvatar || '',
+  customName: customAuthorData?.authorName || postData?.customName || '',
+  customBio: customAuthorData?.authorBio || postData?.customBio || '',
+  customLink: customAuthorData?.authorLink || '', // ⭐ NEW: Custom link support
+};
+
+console.log('MainGridLayout - Processed author data:', processedAuthorData);
 
 // Destructure banner type flags
 const {
@@ -386,28 +405,29 @@ if (post && post.data) {
          
         <!-- SIDEBAR SECTION - NARROW ON MOBILE, WIDE ON DESKTOP -->
         <div class="mb-4 col-span-1 md:max-w-[17.5rem] onload-animation">
-          <!-- Svelte Profile Component - Desktop Only (hidden on narrow sidebar) -->
+          <!-- ⭐ UPDATED: Svelte Profile Component with custom author data -->
           <div class="hidden md:block mb-4">
             <Profile
               client:load
-              slug={postData?.slug || ''}
-              customAvatar={postData?.customAvatar || ''}
-              customName={postData?.customName || ''}
-              customBio={postData?.customBio || ''}
+              slug={processedAuthorData.slug}
+              customAvatar={processedAuthorData.customAvatar}
+              customName={processedAuthorData.customName}
+              customBio={processedAuthorData.customBio}
+              customLink={processedAuthorData.customLink}
               isHomePage={currentPath === '/'}
               profileConfig={profileConfig}
               avatarConfig={avatarConfig}
             />
           </div>
           
-          <!-- Sidebar with other widgets -->
+          <!-- ⭐ UPDATED: Sidebar with custom author data -->
           <SideBar 
             class="flex-1" 
             headings={headings}
-            postSlug={postData?.slug || ''}
-            customAvatar={postData?.customAvatar || ''}
-            customName={postData?.customName || ''}
-            customBio={postData?.customBio || ''}
+            postSlug={processedAuthorData.slug}
+            customAvatar={processedAuthorData.customAvatar}
+            customName={processedAuthorData.customName}
+            customBio={processedAuthorData.customBio}
             pageMascotContext={Astro.props.pageMascotContext}
             hideProfile={true}
           ></SideBar>
@@ -467,13 +487,14 @@ if (post && post.data) {
   <!-- Sidenav panels with settings and navigation -->
   <SidenavPanels client:load siteConfig={siteConfig} />
   
-  <!-- Mobile profile overlay -->
+  <!-- ⭐ UPDATED: Mobile profile overlay with custom author data -->
   <MobileProfileOverlay 
     client:load 
-    postSlug={postData?.slug || ''}
-    customAvatar={postData?.customAvatar || ''}
-    customName={postData?.customName || ''}
-    customBio={postData?.customBio || ''}
+    postSlug={processedAuthorData.slug}
+    customAvatar={processedAuthorData.customAvatar}
+    customName={processedAuthorData.customName}
+    customBio={processedAuthorData.customBio}
+    customLink={processedAuthorData.customLink}
     profileConfig={profileConfig}
     avatarConfig={avatarConfig}
   />

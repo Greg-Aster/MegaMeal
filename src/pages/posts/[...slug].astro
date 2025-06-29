@@ -40,6 +40,15 @@ console.log('SLUG PAGE - hasMascotContext:', hasMascotContext);
 const backgroundImage = post.data.backgroundImage;
 console.log('SLUG PAGE - backgroundImage from frontmatter:', backgroundImage);
 
+// Extract custom author data from frontmatter
+const customAuthorData = {
+  avatarImage: post.data.avatarImage,
+  authorName: post.data.authorName,
+  authorBio: post.data.authorBio,
+  authorLink: post.data.authorLink, // NEW - Extract custom author link
+};
+console.log('SLUG PAGE - Custom author data:', customAuthorData);
+
 const { Content, headings } = await post.render()
 
 const { remarkPluginFrontmatter } = await post.render()
@@ -72,6 +81,7 @@ const jsonLd = {
   isPostPage={true}
   pageMascotContext={mascotCtx}
   backgroundImage={backgroundImage}
+  customAuthorData={customAuthorData}
 >
 
 <!-- Add these meta tags for better date extraction -->
