@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>MEGA MEAL SAGA</title><description>Consuming Time Itself Since 3042</description><link>https://megameal.org/</link><language>en</language><item><title>Introduction to MEGAMEAL Saga</title><link>https://megameal.org/posts/explainer/</link><guid isPermaLink="true">https://megameal.org/posts/explainer/</guid><description>Explore the hyper-capitalist dystopian future of MEGAMEAL, a science fiction food parody series where cosmic horror and culinary culture collide across multiple media formats and timelines.</description><pubDate>Tue, 10 May 2225 00:00:00 GMT</pubDate><content:encoded>&lt;h1&gt;MEGAMEAL: A MULTIDIMENSIONAL FOOD ODYSSEY&lt;/h1&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Interactive Layout&lt;/strong&gt;: Notice the layout toggle button in the top-right corner? It&apos;s now &lt;strong&gt;automatically available on every post&lt;/strong&gt;! This post starts in single-column mode (as specified by &lt;code&gt;oneColumn: true&lt;/code&gt; in the frontmatter), but readers can toggle to two-column layout anytime.&lt;/p&gt;
+&lt;/blockquote&gt;
 &lt;p&gt;Welcome to MEGAMEAL, a science fiction food parody universe where cosmic horror and hyper-capitalism collide on your plate.&lt;/p&gt;
 &lt;h2&gt;WHAT IS MEGAMEAL?&lt;/h2&gt;
 &lt;p&gt;MEGAMEAL is an experimental mixed-media science fiction series that explores a dystopian future through the lens of food and culinary culture. Part cosmic horror, part satirical commentary, the story unfolds across multiple formats and timelines, creating a fragmented narrative puzzle for audiences to piece together.&lt;/p&gt;
@@ -25,6 +28,33 @@
 &lt;p&gt;MEGAMEAL began in October 2024 and continues to evolve. What started as an experimental video has expanded into an ever-growing universe with new episodes, articles, and recipes constantly in development.&lt;/p&gt;
 &lt;p&gt;Join us as we explore the ultimate question that transcends all eras of cosmic history:
 &lt;em&gt;What&apos;s for dinner at the end of the universe?&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;{/* ## BUILT-IN LAYOUT TOGGLE SYSTEM&lt;/p&gt;
+&lt;p&gt;The layout toggle is now a &lt;strong&gt;built-in site feature&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;✅ &lt;strong&gt;Automatic&lt;/strong&gt;: Every post gets the toggle button (top-right corner)&lt;/li&gt;
+&lt;li&gt;✅ &lt;strong&gt;Smart Defaults&lt;/strong&gt;: Frontmatter &lt;code&gt;oneColumn: true/false&lt;/code&gt; sets initial state&lt;/li&gt;
+&lt;li&gt;✅ &lt;strong&gt;User Choice&lt;/strong&gt;: Readers can switch layouts on any post&lt;/li&gt;
+&lt;li&gt;✅ &lt;strong&gt;No Manual Work&lt;/strong&gt;: Authors don&apos;t need to add anything to markdown&lt;/li&gt;
+&lt;li&gt;✅ &lt;strong&gt;Consistent UX&lt;/strong&gt;: Same experience across all content&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;How It Works&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;---
+title: &quot;My Post&quot;
+oneColumn: true   # Starts in single column
+---
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;---
+title: &quot;My Post&quot;  
+oneColumn: false  # Starts in two column (default)
+---
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;---
+title: &quot;My Post&quot;
+# oneColumn not specified = defaults to false (two column)
+---
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The toggle button automatically respects your frontmatter setting as the &lt;strong&gt;initial state&lt;/strong&gt;, then lets users choose their preferred layout for that session.
+*/}&lt;/p&gt;
 &lt;h2&gt;EXPLORE THE UNIVERSE&lt;/h2&gt;
 &lt;p&gt;&amp;lt;div className=&quot;grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 mb-6&quot;&amp;gt;
 &amp;lt;a
