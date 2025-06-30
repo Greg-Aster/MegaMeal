@@ -3,7 +3,7 @@ title: "About Gregory Aster"
 description: "Learn about Gregory Aster, the creator and primary architect of the MEGAMEAL Saga Universe."
 name: "Gregory Aster"
 role: "Creator & Director"
-avatar: "/images/gregory-aster.jpg"  # You would add this image
+avatar: "/about/avatar.png"  # You would add this image
 bio: "Experimental videographer and cosmic storyteller"
 published: 2024-10-15
 updated: 2024-12-20

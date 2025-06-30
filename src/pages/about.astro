@@ -16,6 +16,45 @@ if (!aboutPost) {
 }
 const { Content, headings: aboutHeadings } = await aboutPost.render();
 
+// ⭐ NEW: Fetch all about pages dynamically
+const allAboutPages = await getCollection('about');
+const aboutAuthors = allAboutPages.sort((a, b) => {
+  // Sort by published date (newest first) or alphabetically by name
+  if (a.data.published && b.data.published) {
+    return b.data.published.getTime() - a.data.published.getTime();
+  }
+  return a.data.name.localeCompare(b.data.name);
+});
+
+// Helper function to get color scheme for each author
+function getAuthorColorScheme(index: number) {
+  const schemes = [
+    'from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-purple-200 dark:border-purple-700 hover:border-purple-300 dark:hover:border-purple-600 text-purple-900 dark:text-purple-100 group-hover:text-purple-700 dark:group-hover:text-purple-200',
+    'from-blue-50 to-teal-50 dark:from-blue-900/20 dark:to-teal-900/20 border-blue-200 dark:border-blue-700 hover:border-blue-300 dark:hover:border-blue-600 text-blue-900 dark:text-blue-100 group-hover:text-blue-700 dark:group-hover:text-blue-200',
+    'from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-700 hover:border-green-300 dark:hover:border-green-600 text-green-900 dark:text-green-100 group-hover:text-green-700 dark:group-hover:text-green-200',
+    'from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border-red-200 dark:border-red-700 hover:border-red-300 dark:hover:border-red-600 text-red-900 dark:text-red-100 group-hover:text-red-700 dark:group-hover:text-red-200',
+    'from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-yellow-200 dark:border-yellow-700 hover:border-yellow-300 dark:hover:border-yellow-600 text-yellow-900 dark:text-yellow-100 group-hover:text-yellow-700 dark:group-hover:text-yellow-200',
+  ];
+  return schemes[index % schemes.length];
+}
+
+// Helper function to get appropriate icon for author
+function getAuthorIcon(author: any) {
+  const name = author.data.name.toLowerCase();
+  const role = author.data.role?.toLowerCase() || '';
+  
+  if (name.includes('universe') || name.includes('garfunkel')) {
+    return 'material-symbols:public';
+  }
+  if (name.includes('merkin') || role.includes('love')) {
+    return 'material-symbols:favorite';
+  }
+  if (role.includes('creator') || role.includes('director')) {
+    return 'material-symbols:movie';
+  }
+  return 'material-symbols:person';
+}
+
 // Fetch team members
 const allTeamMembers = await getCollection('team');
 const teamMembers = allTeamMembers.sort((a, b) => a.data.order - b.data.order);
@@ -51,7 +90,7 @@ function getAvatarShapeClass(shape: 'circle' | 'rounded' | 'square' | string) {
   headings={aboutConfig.content.showTableOfContents ? aboutHeadings : undefined}
 >
   
-  <!-- Individual Authors Section - NEW -->
+  <!-- Individual Authors Section - NOW DYNAMIC -->
   <div id="authors-section" class="card-base flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32 mb-4">
     <div class="pl-6 md:pl-9 pr-6 md:pr-9 pt-6 md:pt-7 pb-6 w-full">
       <h2 class="text-2xl font-bold text-90 mb-4 text-[var(--primary)] dark:text-[var(--primary)]">Featured Authors</h2>
@@ -60,37 +99,42 @@ function getAvatarShapeClass(shape: 'circle' | 'rounded' | 'square' | string) {
       </p>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Merkin Author Card -->
-        <a href="/about/merkin/" class="author-card group rounded-lg overflow-hidden transition-all hover:shadow-lg bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border border-purple-200 dark:border-purple-700 hover:border-purple-300 dark:hover:border-purple-600">
-          <div class="p-6 flex items-center gap-4">
-            <img src="/posts/timeline/merkin.png" alt="Merkin Lord of Love and Light" class="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
-            <div class="flex-1">
-              <h3 class="text-lg font-bold text-purple-900 dark:text-purple-100 group-hover:text-purple-700 dark:group-hover:text-purple-200 transition">
-                Merkin Lord of Love and Light
-              </h3>
-              <p class="text-sm text-purple-700 dark:text-purple-300 mb-1">Curator of the MEGAMEAL Universe</p>
-              <p class="text-xs text-purple-600 dark:text-purple-400">Timeline chronicler and cosmic guide</p>
+        {aboutAuthors.map((author, index) => (
+          <a 
+            href={`/about/${author.slug}/`} 
+            class={`author-card group rounded-lg overflow-hidden transition-all hover:shadow-lg bg-gradient-to-br border ${getAuthorColorScheme(index)}`}
+          >
+            <div class="p-6 flex items-center gap-4">
+              {author.data.avatar ? (
+                <img 
+                  src={author.data.avatar} 
+                  alt={author.data.name} 
+                  class="w-16 h-16 object-cover rounded-lg flex-shrink-0" 
+                />
+              ) : (
+                <div class="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-600 rounded-lg flex-shrink-0 flex items-center justify-center">
+                  <Icon name={getAuthorIcon(author)} class="text-white text-2xl" />
+                </div>
+              )}
+              <div class="flex-1">
+                <h3 class="text-lg font-bold transition">
+                  {author.data.name}
+                </h3>
+                {author.data.role && (
+                  <p class="text-sm mb-1 opacity-80">
+                    {author.data.role}
+                  </p>
+                )}
+                {author.data.bio && (
+                  <p class="text-xs opacity-70">
+                    {author.data.bio}
+                  </p>
+                )}
+              </div>
+              <Icon name="material-symbols:arrow-forward" class="opacity-60 group-hover:translate-x-1 transition-transform" />
             </div>
-            <Icon name="material-symbols:arrow-forward-rounded" class="text-purple-600 dark:text-purple-400 group-hover:translate-x-1 transition-transform" />
-          </div>
-        </a>
-
-        <!-- Gregory Aster Author Card -->
-        <a href="/about/gregory-aster/" class="author-card group rounded-lg overflow-hidden transition-all hover:shadow-lg bg-gradient-to-br from-blue-50 to-teal-50 dark:from-blue-900/20 dark:to-teal-900/20 border border-blue-200 dark:border-blue-700 hover:border-blue-300 dark:hover:border-blue-600">
-          <div class="p-6 flex items-center gap-4">
-            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-teal-500 rounded-lg flex-shrink-0 flex items-center justify-center">
-              <Icon name="material-symbols:movie-rounded" class="text-white text-2xl" />
-            </div>
-            <div class="flex-1">
-              <h3 class="text-lg font-bold text-blue-900 dark:text-blue-100 group-hover:text-blue-700 dark:group-hover:text-blue-200 transition">
-                Gregory Aster
-              </h3>
-              <p class="text-sm text-blue-700 dark:text-blue-300 mb-1">Creator & Director</p>
-              <p class="text-xs text-blue-600 dark:text-blue-400">Experimental videographer and storyteller</p>
-            </div>
-            <Icon name="material-symbols:arrow-forward-rounded" class="text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform" />
-          </div>
-        </a>
+          </a>
+        ))}
       </div>
     </div>
   </div>
