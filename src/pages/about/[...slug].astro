@@ -13,6 +13,9 @@ import ImageWrapper from '../../components/misc/ImageWrapper.astro'
 import { profileConfig, siteConfig } from '../../config/config'
 import { formatDateToYYYYMMDD } from '../../utils/date-utils'
 
+// ⭐ NEW: Import the layout toggle component
+import LayoutToggleMinimal from '../../components/client/LayoutToggleMinimal.svelte'
+
 export async function getStaticPaths() {
   const aboutPages = await getCollection('about');
   return aboutPages.map(aboutPage => ({
@@ -23,6 +26,10 @@ export async function getStaticPaths() {
 
 const { aboutPage } = Astro.props;
 console.log('ABOUT PAGE - Processing about page:', aboutPage.slug);
+
+// ⭐ NEW: Extract oneColumn setting from frontmatter
+const oneColumnMode = aboutPage.data.oneColumn || false;
+console.log('ABOUT PAGE - oneColumn from frontmatter:', oneColumnMode);
 
 // Extract custom author data for the layout
 const customAuthorData = {
@@ -58,13 +65,24 @@ const jsonLd = {
   description={aboutPage.data.description} 
   setOGTypeArticle={false}
   headings={headings}
-  post={null}
+  post={aboutPage}
   isPostPage={false}
   backgroundImage={backgroundImage}
   customAuthorData={customAuthorData}
+  oneColumn={oneColumnMode}
 >
 
 <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+
+<!-- =============================================================== -->
+<!-- ⭐ NEW: BUILT-IN LAYOUT TOGGLE - AVAILABLE ON EVERY ABOUT PAGE -->
+<!-- =============================================================== -->
+<LayoutToggleMinimal 
+  client:load 
+  defaultToOneColumn={oneColumnMode}
+  position="top-right"
+  size="md"
+/>
 
 <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative mb-4">
   <div id="about-container" 

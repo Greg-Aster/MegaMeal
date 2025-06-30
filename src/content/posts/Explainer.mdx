@@ -7,7 +7,11 @@ image: "/posts/timeline/universe-avatar.png"
 avatarImage: "/posts/timeline/merkin.png"
 authorName: "Merkin Lord of Love and Light"
 authorBio: "Curator of the MEGAMEAL Universe"
-authorLink: "/about/merkin/"  # NEW FIELD - Custom about page for this author
+authorLink: "/about/merkin/"
+
+# ⭐ NEW: Just set your preferred default - the toggle is automatically available!
+oneColumn: true
+
 # Use the timeline as a banner
 bannerType: "timeline"
 bannerData:
@@ -30,6 +34,8 @@ mascotContext: "Welcome to the MEGAMEAL Universe—where hyper-capitalist dystop
 ---
 
 # MEGAMEAL: A MULTIDIMENSIONAL FOOD ODYSSEY
+
+> **Interactive Layout**: Notice the layout toggle button in the top-right corner? It's now **automatically available on every post**! This post starts in single-column mode (as specified by `oneColumn: true` in the frontmatter), but readers can toggle to two-column layout anytime.
 
 Welcome to MEGAMEAL, a science fiction food parody universe where cosmic horror and hyper-capitalism collide on your plate.
 
@@ -74,6 +80,41 @@ MEGAMEAL began in October 2024 and continues to evolve. What started as an exper
 Join us as we explore the ultimate question that transcends all eras of cosmic history: 
 *What's for dinner at the end of the universe?*
 
+{/* ## BUILT-IN LAYOUT TOGGLE SYSTEM
+
+The layout toggle is now a **built-in site feature**:
+
+- ✅ **Automatic**: Every post gets the toggle button (top-right corner)
+- ✅ **Smart Defaults**: Frontmatter `oneColumn: true/false` sets initial state
+- ✅ **User Choice**: Readers can switch layouts on any post
+- ✅ **No Manual Work**: Authors don't need to add anything to markdown
+- ✅ **Consistent UX**: Same experience across all content
+
+### How It Works
+
+```yaml
+---
+title: "My Post"
+oneColumn: true   # Starts in single column
+---
+```
+
+```yaml
+---
+title: "My Post"  
+oneColumn: false  # Starts in two column (default)
+---
+```
+
+```yaml
+---
+title: "My Post"
+# oneColumn not specified = defaults to false (two column)
+---
+```
+
+The toggle button automatically respects your frontmatter setting as the **initial state**, then lets users choose their preferred layout for that session.
+ */}
 ## EXPLORE THE UNIVERSE
 
 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 mb-6">

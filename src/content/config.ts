@@ -20,6 +20,9 @@ const postsCollection = defineCollection({
     showImageOnPost: z.boolean().optional(),
     mascotContext: z.string().optional(),
 
+    // ⭐ NEW: One column layout feature
+    oneColumn: z.boolean().optional().default(false),
+
     // DYNAMIC BACKGROUND IMAGE SUPPORT - Add this field
     backgroundImage: z.string().optional(),
 
@@ -55,7 +58,7 @@ const postsCollection = defineCollection({
   }),
 });
 
-// Rest of collections
+// Rest of collections remain unchanged
 const specCollection = defineCollection({
   schema: z.object({
     title: z.string(),
@@ -98,6 +101,10 @@ const aboutCollection = defineCollection({
     updated: z.date().optional(), // When last updated
     tags: z.array(z.string()).optional().default([]),
     category: z.string().optional().default(''),
+    // ⭐ NEW: Control avatar display in content area
+    showImageOnPost: z.boolean().optional(),
+    // ⭐ NEW: One column support for about pages too
+    oneColumn: z.boolean().optional().default(false),
     // Social links for this author
     socialLinks: z.array(z.object({
       name: z.string(),
@@ -128,6 +135,8 @@ const productsCollection = defineCollection({
     image: z.string().optional(), // Path to the product image, optional
     sku: z.string().optional(), // A unique stock keeping unit, optional
     draft: z.boolean().optional().default(false), // To mark if the product is a draft
+    // ⭐ NEW: One column support for products too
+    oneColumn: z.boolean().optional().default(false),
     // New fields for product frontmatter
     rating: z.number().optional(),
     additionalImages: z.array(z.string()).optional(),

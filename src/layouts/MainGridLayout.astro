@@ -60,6 +60,8 @@ interface Props {
   isPostPage?: boolean;         
   pageMascotContext?: string;  
   backgroundImage?: string | null;
+  // ⭐ NEW: OneColumn layout prop
+  oneColumn?: boolean;
   // ⭐ NEW: Custom author data prop
   customAuthorData?: {
     avatarImage?: string;
@@ -84,8 +86,15 @@ const {
   bannerLink = '',
   isPostPage = false,
   backgroundImage,
+  oneColumn = false,        // ⭐ NEW: Accept oneColumn prop
   customAuthorData  // ⭐ NEW: Extract custom author data
 } = Astro.props;
+
+// =====================================================================
+// ⭐ NEW: Determine oneColumn mode from props or post data
+// =====================================================================
+const oneColumnMode = oneColumn || post?.data?.oneColumn || false;
+console.log('MainGridLayout - oneColumn mode:', oneColumnMode);
 
 // =====================================================================
 // ⭐ RESTORED: Use working banner configuration system
@@ -499,8 +508,12 @@ if (post && post.data) {
     avatarConfig={avatarConfig}
   />
   
-  <!-- Special page features (cookbook, first-contact) -->
-  <SpecialPageFeatures client:load currentPath={currentPath} />
+  <!-- ⭐ UPDATED: Special page features with oneColumn support -->
+  <SpecialPageFeatures 
+    client:load 
+    currentPath={currentPath} 
+    oneColumn={oneColumnMode}
+  />
   
   <!-- Scroll effects and parallax -->
   <ScrollEffects client:load bannerConfig={bannerConfig} siteConfig={siteConfig} />
