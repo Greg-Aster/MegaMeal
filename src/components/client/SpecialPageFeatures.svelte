@@ -55,12 +55,16 @@
     }, 100); // ⭐ FIXED: Small delay to ensure DOM is ready
   });
 
-  // ⭐ NEW: Apply one column layout (different from fullscreen)
+  // ⭐ ENHANCED: More robust oneColumn layout with sidebar force-hide
   function applyOneColumnLayout() {
     console.log('Applying one column layout');
     
     // Store that we're in oneColumn mode
     localStorage.setItem('oneColumnMode', 'true');
+    
+    // ⭐ ENHANCED: Force disable fullscreen mode when entering oneColumn
+    localStorage.setItem('fullscreenMode', 'false');
+    document.body.classList.remove('force-mobile-view');
     
     // ⭐ FIXED: Wait for elements to be available
     const mainGrid = document.getElementById('main-grid');
@@ -88,10 +92,14 @@
     
     console.log('OneColumn - Grid classes updated to:', mainGrid.className);
     
-    // Hide sidebar (first child of main-grid)
+    // ⭐ ENHANCED: Force hide sidebar with multiple methods
     if (sidebar) {
       sidebar.style.display = 'none';
-      console.log('OneColumn - Sidebar hidden');
+      sidebar.style.visibility = 'hidden';
+      sidebar.style.opacity = '0';
+      sidebar.style.pointerEvents = 'none';
+      sidebar.classList.add('force-hidden');
+      console.log('OneColumn - Sidebar force hidden with multiple methods');
     }
     
     // Hide TOC in one column mode
@@ -100,12 +108,27 @@
       console.log('OneColumn - TOC hidden');
     }
     
-    // ⭐ NEW: Add visual indicator for debugging
+    // ⭐ NEW: Add visual indicator for debugging and CSS targeting
     document.body.setAttribute('data-layout-mode', 'oneColumn');
+    document.body.classList.add('one-column-mode');
+    
+    // ⭐ NEW: Disable fullscreen button when in oneColumn mode
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    if (fullscreenBtn) {
+      fullscreenBtn.style.display = 'none';
+      console.log('OneColumn - Fullscreen button hidden');
+    }
+    
     console.log('OneColumn - Layout applied successfully');
   }
 
   function applyFullscreenLayout() {
+    // ⭐ NEW: Check if we're already in oneColumn mode - if so, skip fullscreen
+    if (localStorage.getItem('oneColumnMode') === 'true') {
+      console.log('Already in oneColumn mode, skipping fullscreen layout');
+      return;
+    }
+    
     // Enable special page settings
     localStorage.setItem('fullscreenMode', 'true');
     localStorage.setItem('fullscreenBannerOverride', 'true');
@@ -137,8 +160,16 @@
     // Clear oneColumn mode flag
     localStorage.removeItem('oneColumnMode');
     
-    // Remove visual indicator
+    // Remove visual indicators
     document.body.removeAttribute('data-layout-mode');
+    document.body.classList.remove('one-column-mode');
+    
+    // ⭐ NEW: Restore fullscreen button
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    if (fullscreenBtn) {
+      fullscreenBtn.style.display = '';
+      console.log('Fullscreen button restored');
+    }
     
     // Handle special page restoration
     const originalState = localStorage.getItem('specialPageOriginalState');
@@ -171,11 +202,15 @@
       }
     }
     
-    // ⭐ NEW: Always show sidebar when restoring normal layout
+    // ⭐ ENHANCED: Always restore sidebar with multiple methods
     const sidebar = document.querySelector('#main-grid > div:first-child');
     if (sidebar) {
       sidebar.style.display = '';
-      console.log('Sidebar restored');
+      sidebar.style.visibility = '';
+      sidebar.style.opacity = '';
+      sidebar.style.pointerEvents = '';
+      sidebar.classList.remove('force-hidden');
+      console.log('Sidebar fully restored');
     }
     
     // ⭐ NEW: Restore TOC
@@ -264,6 +299,7 @@
     localStorage.removeItem('fullscreenMode');
     localStorage.removeItem('fullscreenBannerOverride');
     document.body.removeAttribute('data-layout-mode'); // ⭐ NEW
+    document.body.classList.remove('one-column-mode'); // ⭐ NEW
     console.log('All special page states reset. Refresh page to test.');
   }
 </script>
@@ -272,5 +308,15 @@
 <div style="display: none;"></div>
 
 <style>
-  /* No styles needed for this component */
+  /* ⭐ NEW: CSS backup for forcing sidebar hidden in oneColumn mode */
+  :global(body.one-column-mode #main-grid > div:first-child) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+  
+  /* ⭐ NEW: Ensure main content takes full width in oneColumn mode */
+  :global(body.one-column-mode #main-grid) {
+    grid-template-columns: 1fr !important;
+  }
 </style>

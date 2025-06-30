@@ -8,33 +8,79 @@
 
   let isOneColumn = true;
   let isTransitioning = false;
+  let isFullscreenActive = false; // ⭐ NEW: Track fullscreen state
+  let isSpecialPage = false; // ⭐ NEW: Track special pages (cookbook, first-contact)
+  let isVisible = true; // ⭐ NEW: Control button visibility
 
   onMount(() => {
     // Initialize state
     isOneColumn = defaultToOneColumn;
+    isFullscreenActive = localStorage.getItem('fullscreenMode') === 'true'; // ⭐ NEW: Check fullscreen state
+    
+    // ⭐ NEW: Check if we're on a special page
+    const currentPath = window.location.pathname;
+    isSpecialPage = currentPath.includes('cookbook') || currentPath.includes('first-contact');
+    
+    // ⭐ NEW: Update visibility based on fullscreen and special page state
+    updateVisibility();
     
     // Apply initial layout if defaulting to one column
-    if (defaultToOneColumn) {
+    if (defaultToOneColumn && !isFullscreenActive && !isSpecialPage) { // ⭐ NEW: Don't apply if fullscreen or special page is active
       applyOneColumnLayout();
     }
     
     // Listen for external layout changes (from navigation, etc.)
     const handleStorageChange = () => {
       const oneColumnMode = localStorage.getItem('oneColumnMode') === 'true';
+      const fullscreenMode = localStorage.getItem('fullscreenMode') === 'true'; // ⭐ NEW
+      
       if (oneColumnMode !== isOneColumn) {
         isOneColumn = oneColumnMode;
       }
+      
+      // ⭐ NEW: Handle fullscreen state changes
+      if (fullscreenMode !== isFullscreenActive) {
+        isFullscreenActive = fullscreenMode;
+        updateVisibility();
+        
+        // If fullscreen becomes active and we're in oneColumn, disable oneColumn
+        if (fullscreenMode && isOneColumn) {
+          isOneColumn = false;
+          applyTwoColumnLayout();
+        }
+      }
     };
+    
+    // ⭐ NEW: Listen for DOM changes that might indicate state changes
+    const observer = new MutationObserver(() => {
+      const currentFullscreen = localStorage.getItem('fullscreenMode') === 'true';
+      if (currentFullscreen !== isFullscreenActive) {
+        isFullscreenActive = currentFullscreen;
+        updateVisibility();
+      }
+    });
+    
+    observer.observe(document.body, { 
+      attributes: true, 
+      attributeFilter: ['class'] 
+    });
     
     window.addEventListener('storage', handleStorageChange);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      observer.disconnect();
     };
   });
 
+  // ⭐ NEW: Update button visibility based on fullscreen state and special pages
+  function updateVisibility() {
+    isVisible = !isFullscreenActive && !isSpecialPage;
+    console.log('LayoutToggle visibility updated:', isVisible, 'Fullscreen active:', isFullscreenActive, 'Special page:', isSpecialPage);
+  }
+
   function toggleLayout() {
-    if (isTransitioning) return;
+    if (isTransitioning || isFullscreenActive || isSpecialPage) return; // ⭐ NEW: Prevent toggle if fullscreen is active or on special pages
     
     isTransitioning = true;
     isOneColumn = !isOneColumn;
@@ -125,57 +171,60 @@
   }[position];
 </script>
 
-<!-- Layout Toggle Button -->
-<div class="fixed {positionClasses} z-50 flex flex-col items-end gap-2">
-  <button
-    on:click={toggleLayout}
-    disabled={isTransitioning}
-    class="group relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-    aria-label={isOneColumn ? 'Switch to two column layout' : 'Switch to single column layout'}
-    title={isOneColumn ? 'Show sidebar' : 'Hide sidebar'}
-  >
-    <!-- Icon container -->
-    <div class="flex items-center gap-2">
-      <!-- Column icon -->
-      <div class="relative w-5 h-5 flex items-center justify-center">
-        {#if isOneColumn}
-          <!-- Single column icon -->
-          <svg class="w-4 h-4 text-gray-700 dark:text-gray-300" fill="currentColor" viewBox="0 0 24 24">
-            <rect x="6" y="4" width="12" height="16" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
-          </svg>
-        {:else}
-          <!-- Two column icon -->
-          <svg class="w-4 h-4 text-gray-700 dark:text-gray-300" fill="currentColor" viewBox="0 0 24 24">
-            <rect x="3" y="4" width="7" height="16" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
-            <rect x="14" y="4" width="7" height="16" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
-          </svg>
+<!-- ⭐ NEW: Only render button when visible (not in fullscreen mode) -->
+{#if isVisible}
+  <!-- Layout Toggle Button -->
+  <div class="fixed {positionClasses} z-50 flex flex-col items-end gap-2">
+    <button
+      on:click={toggleLayout}
+      disabled={isTransitioning || isFullscreenActive || isSpecialPage}
+      class="group relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+      aria-label={isOneColumn ? 'Switch to two column layout' : 'Switch to single column layout'}
+      title={isOneColumn ? 'Show sidebar' : 'Hide sidebar'}
+    >
+      <!-- Icon container -->
+      <div class="flex items-center gap-2">
+        <!-- Column icon -->
+        <div class="relative w-5 h-5 flex items-center justify-center">
+          {#if isOneColumn}
+            <!-- Single column icon -->
+            <svg class="w-4 h-4 text-gray-700 dark:text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+              <rect x="6" y="4" width="12" height="16" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
+            </svg>
+          {:else}
+            <!-- Two column icon -->
+            <svg class="w-4 h-4 text-gray-700 dark:text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+              <rect x="3" y="4" width="7" height="16" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
+              <rect x="14" y="4" width="7" height="16" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
+            </svg>
+          {/if}
+        </div>
+        
+        <!-- Labels (optional) -->
+        {#if showLabels}
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {isOneColumn ? 'Show Sidebar' : 'Hide Sidebar'}
+          </span>
         {/if}
       </div>
       
-      <!-- Labels (optional) -->
-      {#if showLabels}
-        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-          {isOneColumn ? 'Show Sidebar' : 'Hide Sidebar'}
-        </span>
+      <!-- Loading indicator -->
+      {#if isTransitioning}
+        <div class="absolute inset-0 bg-white/50 dark:bg-gray-800/50 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 animate-spin text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
       {/if}
-    </div>
+    </button>
     
-    <!-- Loading indicator -->
-    {#if isTransitioning}
-      <div class="absolute inset-0 bg-white/50 dark:bg-gray-800/50 rounded-lg flex items-center justify-center">
-        <svg class="w-4 h-4 animate-spin text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-      </div>
-    {/if}
-  </button>
-  
-  <!-- Keyboard shortcut hint (optional) -->
-  <div class="text-xs text-gray-500 dark:text-gray-400 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-    Click to toggle layout
+    <!-- Keyboard shortcut hint (optional) -->
+    <div class="text-xs text-gray-500 dark:text-gray-400 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+      Click to toggle layout
+    </div>
   </div>
-</div>
+{/if}
 
 <style>
   /* Ensure button stays above other content */
