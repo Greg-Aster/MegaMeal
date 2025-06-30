@@ -15,6 +15,9 @@ import Bleepy from '../../components/bleepy/Bleepy.astro';
 import { profileConfig, siteConfig } from '../../config/config'
 import { formatDateToYYYYMMDD } from '../../utils/date-utils'
 
+// ⭐ NEW: Import the layout toggle component
+import LayoutToggleMinimal from '../../components/client/LayoutToggleMinimal.svelte'
+
 export async function getStaticPaths() {
   const posts = await getCollection('posts'); // Include all posts, including drafts
   return posts.map(post => ({
@@ -39,6 +42,10 @@ console.log('SLUG PAGE - hasMascotContext:', hasMascotContext);
 // Extract backgroundImage from frontmatter for dynamic background support
 const backgroundImage = post.data.backgroundImage;
 console.log('SLUG PAGE - backgroundImage from frontmatter:', backgroundImage);
+
+// ⭐ NEW: Extract oneColumn setting from frontmatter
+const oneColumnMode = post.data.oneColumn || false;
+console.log('SLUG PAGE - oneColumn from frontmatter:', oneColumnMode);
 
 // Extract custom author data from frontmatter
 const customAuthorData = {
@@ -82,6 +89,7 @@ const jsonLd = {
   pageMascotContext={mascotCtx}
   backgroundImage={backgroundImage}
   customAuthorData={customAuthorData}
+  oneColumn={oneColumnMode}
 >
 
 <!-- Add these meta tags for better date extraction -->
@@ -89,6 +97,17 @@ const jsonLd = {
 <meta property="article:published_time" content={post.data.published.toISOString()} slot="head" />
 
 <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+
+<!-- =============================================================== -->
+<!-- ⭐ NEW: BUILT-IN LAYOUT TOGGLE - AVAILABLE ON EVERY POST      -->
+<!-- =============================================================== -->
+<LayoutToggleMinimal 
+  client:load 
+  defaultToOneColumn={oneColumnMode}
+  position="top-right"
+  size="md"
+/>
+
     <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative mb-4">
             <div id="post-container" 
                  class:list={["card-base z-10 px-6 md:px-9 pt-6 pb-4 relative w-full ",
