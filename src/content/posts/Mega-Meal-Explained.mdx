@@ -3,9 +3,12 @@ title: "MEGA MEAL Movie Trailer Explained"
 published: 2025-02-19
 description: "A deep dive into the MEGA MEAL trailer, exploring its themes, characters, and the chaotic world of fast-food mascots."
 image: "/posts/Mega-Meal-Explained/mme-title.jpg"
+# Custom author profile fields
 avatarImage: "/posts/timeline/redacted.png"
 authorName: "Corporate Media Division"
 authorBio: "Entertainment Analysis Bureau, Cultural Archives"
+authorLink: "/about/corporate-media-division/"
+oneColumn: true
 bannerType: "video"
 bannerData:
   videoId: "4tR6VLaYJFA"
@@ -21,6 +24,7 @@ lang: ""
 mascotContext: "This post explains a parody movie trailer featuring a fedora-clad protagonist, a cyberpunk heist for a screaming hamburger, and the chaotic W Corporation. Expect fast-food mascot mayhem, sentient mayo, interdimensional portals, and a meta-commentary on the trials of indie production."
 # alternateVersionUrl: "./megameal-movie-trailer-explained-cosmic/"
 ---
+
 import CollapsibleScript from '../../components/CollapsibleScript.astro';
 import ImageWrapper from '../../components/misc/ImageWrapper.astro';
 
@@ -440,19 +444,19 @@ import ImageWrapper from '../../components/misc/ImageWrapper.astro';
             </div>
           </div>
           <div className="text-center bg-[var(--surface-1)] p-6 rounded-lg border-t-2 border-b-2 border-dashed border-[var(--border-color)]">
+            <div className="text-center bg-[var(--surface-1)] p-6 rounded-lg border-t-2 border-b-2 border-dashed border-[var(--border-color)]">
             <div className="font-sriracha text-xl md:text-2xl font-bold text-[var(--text-color)] dark:text-[var(--text-color)] mb-4">
                Would you like <span className="font-sriracha text-yellow-500 dark:text-yellow-300 neon-text">Fries</span> or <span className="font-sriracha text-orange-600 dark:text-orange-400 neon-text">Onion Rings</span>?
             </div>
             <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
-              <div className="cursor-pointer group transform hover:scale-105 transition-transform duration-200" onClick={() => console.log('Fries chosen!')}>
-                <ImageWrapper src="content/posts/Mega-Meal-Explained/gif/fries1.gif" alt="Fries" className="w-32 h-32 md:w-40 md:h-40 rounded-lg shadow-md object-contain transition border-2 border-transparent group-hover:border-yellow-500"/>
-                <p className="font-sriracha text-yellow-700 dark:text-yellow-400 text-xl md:text-2xl font-bold text-center mt-2">Fries</p>
-              </div>
-              <div className="cursor-pointer group transform hover:scale-105 transition-transform duration-200" onClick={() => console.log('Onion Rings chosen!')}>
-                <ImageWrapper src="content/posts/Mega-Meal-Explained/gif/orings1.gif" alt="Onion Rings" className="w-32 h-32 md:w-40 md:h-40 rounded-lg shadow-md object-contain transition border-2 border-transparent group-hover:border-orange-500"/>
-                <p className="font-sriracha text-orange-600 dark:text-orange-400 text-xl md:text-2xl font-bold text-center mt-2">Onion Rings</p>
-              </div>
+              <a href="/posts/mega-meal-3/" className="group transform hover:scale-105 transition-transform duration-200 text-center">
+                <ImageWrapper src="content/posts/Mega-Meal-Explained/gif/fries1.gif" alt="Fries" className="w-64 h-64 md:w-80 md:h-80 rounded-lg shadow-md object-contain transition border-2 border-transparent group-hover:border-yellow-500"/>
+              </a>
+              <a href="/posts/timelines/corporate-empire/" className="group transform hover:scale-105 transition-transform duration-200 text-center">
+                <ImageWrapper src="content/posts/Mega-Meal-Explained/gif/orings1.gif" alt="Onion Rings" className="w-64 h-64 md:w-80 md:h-80 rounded-lg shadow-md object-contain transition border-2 border-transparent group-hover:border-orange-500"/>
+              </a>
             </div>
+          </div>
           </div>
         </div>
       </div>
