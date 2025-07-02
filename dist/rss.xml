@@ -71,8 +71,8 @@ href=&quot;/posts/mega-meal-explained/&quot;
 className=&quot;card-base2 p-4 text-center hover:scale-105 transition-all duration-200 cursor-pointer group bg-gradient-to-br from-[oklch(0.95_0.025_360)] to-[oklch(0.90_0.05_360)] dark:from-[oklch(0.25_0.025_360)] dark:to-[oklch(0.20_0.05_360)] border-2 border-transparent hover:border-[oklch(0.6_0.2_360)]&quot;&lt;/p&gt;
 &lt;blockquote&gt;&lt;/blockquote&gt;
 &lt;pre&gt;&lt;code&gt;&amp;lt;div className=&quot;text-5xl mb-2&quot;&amp;gt;🎬&amp;lt;/div&amp;gt;
-&amp;lt;h3 className=&quot;font-bold text-base mb-1 text-gray-800 dark:text-neutral-200 group-hover:text-[oklch(0.4_0.2_360)]&quot;&amp;gt;Video Explained&amp;lt;/h3&amp;gt;
-&amp;lt;p className=&quot;text-xs text-gray-600 dark:text-neutral-400&quot;&amp;gt;Behind-the-scenes movie trailer&amp;lt;/p&amp;gt;
+&amp;lt;h3 className=&quot;font-bold text-base mb-1 text-gray-800 dark:text-neutral-200 group-hover:text-[oklch(0.4_0.2_360)]&quot;&amp;gt;MEGAMEAL Trailer&amp;lt;/h3&amp;gt;
+&amp;lt;p className=&quot;text-xs text-gray-600 dark:text-neutral-400&quot;&amp;gt;and behind-the-scenes&amp;lt;/p&amp;gt;
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;&amp;lt;/a&amp;gt;&lt;/p&gt;
 &lt;p&gt;&amp;lt;a
@@ -1185,6 +1185,31 @@ allowfullscreen&amp;gt;&amp;lt;/iframe&amp;gt;
 &amp;lt;p className=&quot;text-lg text-gray-700 dark:text-neutral-300 italic&quot;&amp;gt;Warning: If you experience déjà vu, causality fluctuations, or unexplained encounters with individuals in fedoras and bandit masks after reading this document, contact Temporal Enforcement immediately.&amp;lt;/p&amp;gt;&lt;/p&gt;
 &lt;p&gt;&amp;lt;p className=&quot;text-lg text-gray-700 dark:text-neutral-300 italic&quot;&amp;gt;&quot;No pickles.&quot;&amp;lt;/p&amp;gt;
 &amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;&lt;em&gt;This investigation is part of the Miranda Temporal Anomaly Archives, preserving evidence of one of the most mysterious stellar catastrophes in recorded history and its impossible aftermath.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div className=&quot;grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 mb-6&quot;&amp;gt;
+&amp;lt;a
+href=&quot;/posts/timelines/perfect-mary-recipe/&quot;
+className=&quot;card-base2 p-4 text-center hover:scale-105 transition-all duration-200 cursor-pointer group bg-gradient-to-br from-[oklch(0.95_0.025_240)] to-[oklch(0.90_0.05_240)] dark:from-[oklch(0.25_0.025_240)] dark:to-[oklch(0.20_0.05_240)] border-2 border-transparent hover:border-[oklch(0.6_0.2_240)]&quot;&lt;/p&gt;
+&lt;blockquote&gt;&lt;/blockquote&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;div className=&quot;text-2xl mb-2&quot;&amp;gt;🍸&amp;lt;/div&amp;gt;
+&amp;lt;h3 className=&quot;font-bold text-base mb-1 text-gray-800 dark:text-neutral-200 group-hover:text-[oklch(0.4_0.2_240)]&quot;&amp;gt;The Perfect Recipe&amp;lt;/h3&amp;gt;
+&amp;lt;p className=&quot;text-xs text-gray-600 dark:text-neutral-400&quot;&amp;gt;The drink that survived a star&apos;s death&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;lt;/a&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;a
+href=&quot;/posts/timelines/singularity-battle/&quot;
+className=&quot;card-base2 p-4 text-center hover:scale-105 transition-all duration-200 cursor-pointer group bg-gradient-to-br from-[oklch(0.95_0.025_280)] to-[oklch(0.90_0.05_280)] dark:from-[oklch(0.25_0.025_280)] dark:to-[oklch(0.20_0.05_280)] border-2 border-transparent hover:border-[oklch(0.6_0.2_280)]&quot;&lt;/p&gt;
+&lt;blockquote&gt;&lt;/blockquote&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;div className=&quot;text-2xl mb-2&quot;&amp;gt;⚔️&amp;lt;/div&amp;gt;
+&amp;lt;h3 className=&quot;font-bold text-base mb-1 text-gray-800 dark:text-neutral-200 group-hover:text-[oklch(0.4_0.2_280)]&quot;&amp;gt;The Greater War&amp;lt;/h3&amp;gt;
+&amp;lt;p className=&quot;text-xs text-gray-600 dark:text-neutral-400&quot;&amp;gt;Temporal conflicts across infinity&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;lt;/a&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div className=&quot;text-center text-xs text-gray-500 dark:text-neutral-400 italic mt-4&quot;&amp;gt;
+Some mysteries transcend death itself. Some recipes echo across collapsed timelines.
+&amp;lt;/div&amp;gt;&lt;/p&gt;
 </content:encoded><frontmatter><published>2025-04-21T00:00:00.000Z</published><tags>Timeline,Singularity Wars,Culinary History,Temporal Preservation</tags><category>MEGA MEAL</category><timelineYear>28042</timelineYear><timelineEra>singularity-conflict</timelineEra><isKeyEvent>true</isKeyEvent><image>/posts/timeline/supernova.png</image></frontmatter></item><item><title>A MEGA MEAL SAGA | Qarnivor</title><link>https://megameal.org/posts/mega-meal-3/</link><guid isPermaLink="true">https://megameal.org/posts/mega-meal-3/</guid><description>A rare first-hand account of the mysterious Snuggloid emergence on Qarnivor following the nuclear extinction event.</description><pubDate>Wed, 05 Mar 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;{/* YouTube Embed &lt;em&gt;/}
 {/&lt;/em&gt; &amp;lt;div className=&quot;card-base2 p-8 rounded-xl bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))] transition rounded-md shadow-lg mb-8&quot;&amp;gt;
 &amp;lt;div className=&quot;relative pb-[56.25%]&quot;&amp;gt;
@@ -1220,6 +1245,31 @@ Of particular note: the timeline between the emergence of the Snuggaloids and th
 &amp;lt;p className=&quot;text-lg text-gray-700 dark:text-neutral-300 mb-4&quot;&amp;gt;This account is believed to be from the enigmatic figure mentioned in Qarnivor historical records as &quot;&amp;lt;span className=&quot;text-gray-700 dark:text-neutral-400&quot; style={{ fontStyle: &quot;italic&quot; }}&amp;gt;(name redacted for legal reasons)&amp;lt;/span&amp;gt;,&quot; whose documented visit to Qarnivor shortly after the nuclear devastation provides one of the only eyewitness accounts of the Snuggloid emergence.&amp;lt;/p&amp;gt;&lt;/p&gt;
 &lt;p&gt;&amp;lt;p className=&quot;text-lg text-gray-700 dark:text-neutral-300 mb-4&quot;&amp;gt;The narrator&apos;s description of &quot;glowing fur&quot; and entities that &quot;phased in and out of visibility&quot; aligns precisely with later scientific observations of the Snuggloids. Particularly notable is the reference to the &quot;Starbug,&quot; which appears in several other historical accounts across different extinction events.&amp;lt;/p&amp;gt;&lt;/p&gt;
 &lt;p&gt;&amp;lt;p className=&quot;text-lg text-gray-700 dark:text-neutral-300 mb-4&quot;&amp;gt;For a more comprehensive scientific analysis of the Snuggloid phenomenon, see &amp;lt;a href=&quot;/posts/timelines/snuggaliod-emergence/&quot; className=&quot;text-[oklch(0.5_0.3_var(--hue))] hover:underline&quot;&amp;gt; The Snuggloid Emergence&amp;lt;/a&amp;gt;.&amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;&lt;em&gt;This article is part of the Digital Consciousness Chronicles, a comprehensive examination of post-extinction phenomena and the emergence of entities in the aftermath of civilizational collapse.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div className=&quot;grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 mb-6&quot;&amp;gt;
+&amp;lt;a
+href=&quot;/posts/timelines/snuggaliod-emergence/&quot;
+className=&quot;card-base2 p-4 text-center hover:scale-105 transition-all duration-200 cursor-pointer group bg-gradient-to-br from-[oklch(0.95_0.025_320)] to-[oklch(0.90_0.05_320)] dark:from-[oklch(0.25_0.025_320)] dark:to-[oklch(0.20_0.05_320)] border-2 border-transparent hover:border-[oklch(0.6_0.2_320)]&quot;&lt;/p&gt;
+&lt;blockquote&gt;&lt;/blockquote&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;div className=&quot;text-2xl mb-2&quot;&amp;gt;👁️&amp;lt;/div&amp;gt;
+&amp;lt;h3 className=&quot;font-bold text-base mb-1 text-gray-800 dark:text-neutral-200 group-hover:text-[oklch(0.4_0.2_320)]&quot;&amp;gt;The Scientific Analysis&amp;lt;/h3&amp;gt;
+&amp;lt;p className=&quot;text-xs text-gray-600 dark:text-neutral-400&quot;&amp;gt;Complete Snuggloid emergence documentation&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;lt;/a&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;a
+href=&quot;/posts/timelines/spork-uprising/&quot;
+className=&quot;card-base2 p-4 text-center hover:scale-105 transition-all duration-200 cursor-pointer group bg-gradient-to-br from-[oklch(0.95_0.025_280)] to-[oklch(0.90_0.05_280)] dark:from-[oklch(0.25_0.025_280)] dark:to-[oklch(0.20_0.05_280)] border-2 border-transparent hover:border-[oklch(0.6_0.2_280)]&quot;&lt;/p&gt;
+&lt;blockquote&gt;&lt;/blockquote&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;div className=&quot;text-2xl mb-2&quot;&amp;gt;⚔️&amp;lt;/div&amp;gt;
+&amp;lt;h3 className=&quot;font-bold text-base mb-1 text-gray-800 dark:text-neutral-200 group-hover:text-[oklch(0.4_0.2_280)]&quot;&amp;gt;How It All Began&amp;lt;/h3&amp;gt;
+&amp;lt;p className=&quot;text-xs text-gray-600 dark:text-neutral-400&quot;&amp;gt;The uprising that led to extinction&amp;lt;/p&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;lt;/a&amp;gt;
+&amp;lt;/div&amp;gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;div className=&quot;text-center text-xs text-gray-500 dark:text-neutral-400 italic mt-4&quot;&amp;gt;
+In the ruins of extinction, new horrors are born. What emerges from the ashes?
 &amp;lt;/div&amp;gt;&lt;/p&gt;
 </content:encoded><frontmatter><published>2025-03-05T00:00:00.000Z</published><tags>Fast Food,Parody,Short Video,Series,Snuggloid,Qarnivor</tags><category>MEGA MEAL</category><timelineYear>28045</timelineYear><timelineEra>conflict-epoch</timelineEra><isKeyEvent>false</isKeyEvent><image>/posts/Mega-Meal-3/title-2.jpg</image></frontmatter></item><item><title>MEGA MEAL Movie Trailer Explained</title><link>https://megameal.org/posts/mega-meal-explained/</link><guid isPermaLink="true">https://megameal.org/posts/mega-meal-explained/</guid><description>A deep dive into the MEGA MEAL trailer, exploring its themes, characters, and the chaotic world of fast-food mascots.</description><pubDate>Wed, 19 Feb 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;import CollapsibleScript from &apos;../../components/CollapsibleScript.astro&apos;;
 import ImageWrapper from &apos;../../components/misc/ImageWrapper.astro&apos;;&lt;/p&gt;
@@ -1633,19 +1683,19 @@ style={{ &quot;--hue&quot;: &quot;360&quot; }}&lt;/p&gt;
         &amp;lt;/div&amp;gt;
       &amp;lt;/div&amp;gt;
       &amp;lt;div className=&quot;text-center bg-[var(--surface-1)] p-6 rounded-lg border-t-2 border-b-2 border-dashed border-[var(--border-color)]&quot;&amp;gt;
+        &amp;lt;div className=&quot;text-center bg-[var(--surface-1)] p-6 rounded-lg border-t-2 border-b-2 border-dashed border-[var(--border-color)]&quot;&amp;gt;
         &amp;lt;div className=&quot;font-sriracha text-xl md:text-2xl font-bold text-[var(--text-color)] dark:text-[var(--text-color)] mb-4&quot;&amp;gt;
            Would you like &amp;lt;span className=&quot;font-sriracha text-yellow-500 dark:text-yellow-300 neon-text&quot;&amp;gt;Fries&amp;lt;/span&amp;gt; or &amp;lt;span className=&quot;font-sriracha text-orange-600 dark:text-orange-400 neon-text&quot;&amp;gt;Onion Rings&amp;lt;/span&amp;gt;?
         &amp;lt;/div&amp;gt;
         &amp;lt;div className=&quot;flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8&quot;&amp;gt;
-          &amp;lt;div className=&quot;cursor-pointer group transform hover:scale-105 transition-transform duration-200&quot; onClick={() =&amp;gt; console.log(&apos;Fries chosen!&apos;)}&amp;gt;
-            &amp;lt;ImageWrapper src=&quot;content/posts/Mega-Meal-Explained/gif/fries1.gif&quot; alt=&quot;Fries&quot; className=&quot;w-32 h-32 md:w-40 md:h-40 rounded-lg shadow-md object-contain transition border-2 border-transparent group-hover:border-yellow-500&quot;/&amp;gt;
-            &amp;lt;p className=&quot;font-sriracha text-yellow-700 dark:text-yellow-400 text-xl md:text-2xl font-bold text-center mt-2&quot;&amp;gt;Fries&amp;lt;/p&amp;gt;
-          &amp;lt;/div&amp;gt;
-          &amp;lt;div className=&quot;cursor-pointer group transform hover:scale-105 transition-transform duration-200&quot; onClick={() =&amp;gt; console.log(&apos;Onion Rings chosen!&apos;)}&amp;gt;
-            &amp;lt;ImageWrapper src=&quot;content/posts/Mega-Meal-Explained/gif/orings1.gif&quot; alt=&quot;Onion Rings&quot; className=&quot;w-32 h-32 md:w-40 md:h-40 rounded-lg shadow-md object-contain transition border-2 border-transparent group-hover:border-orange-500&quot;/&amp;gt;
-            &amp;lt;p className=&quot;font-sriracha text-orange-600 dark:text-orange-400 text-xl md:text-2xl font-bold text-center mt-2&quot;&amp;gt;Onion Rings&amp;lt;/p&amp;gt;
-          &amp;lt;/div&amp;gt;
+          &amp;lt;a href=&quot;/posts/mega-meal-3/&quot; className=&quot;group transform hover:scale-105 transition-transform duration-200 text-center&quot;&amp;gt;
+            &amp;lt;ImageWrapper src=&quot;content/posts/Mega-Meal-Explained/gif/fries1.gif&quot; alt=&quot;Fries&quot; className=&quot;w-64 h-64 md:w-80 md:h-80 rounded-lg shadow-md object-contain transition border-2 border-transparent group-hover:border-yellow-500&quot;/&amp;gt;
+          &amp;lt;/a&amp;gt;
+          &amp;lt;a href=&quot;/posts/timelines/corporate-empire/&quot; className=&quot;group transform hover:scale-105 transition-transform duration-200 text-center&quot;&amp;gt;
+            &amp;lt;ImageWrapper src=&quot;content/posts/Mega-Meal-Explained/gif/orings1.gif&quot; alt=&quot;Onion Rings&quot; className=&quot;w-64 h-64 md:w-80 md:h-80 rounded-lg shadow-md object-contain transition border-2 border-transparent group-hover:border-orange-500&quot;/&amp;gt;
+          &amp;lt;/a&amp;gt;
         &amp;lt;/div&amp;gt;
+      &amp;lt;/div&amp;gt;
       &amp;lt;/div&amp;gt;
     &amp;lt;/div&amp;gt;
   &amp;lt;/div&amp;gt;
