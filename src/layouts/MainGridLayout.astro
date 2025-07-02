@@ -91,6 +91,27 @@ const {
 } = Astro.props;
 
 // =====================================================================
+// ⭐ FIXED: Convert ImageMetadata objects to URLs for Svelte components
+// =====================================================================
+
+// Convert avatarConfig ImageMetadata objects to serializable URLs
+const serializedAvatarConfig = {
+  ...avatarConfig,
+  avatarList: avatarConfig.avatarList.map(avatar => avatar.src),
+  homeAvatar: avatarConfig.homeAvatar.src,
+  homePageProfileSequence: avatarConfig.homePageProfileSequence?.map(item => ({
+    ...item,
+    avatar: item.avatar.src
+  })) || []
+};
+
+console.log('MainGridLayout - Serialized avatar config:', {
+  avatarListLength: serializedAvatarConfig.avatarList.length,
+  homeAvatar: serializedAvatarConfig.homeAvatar,
+  homePageSequenceLength: serializedAvatarConfig.homePageProfileSequence.length
+});
+
+// =====================================================================
 // ⭐ NEW: Determine oneColumn mode from props or post data
 // =====================================================================
 const oneColumnMode = oneColumn || post?.data?.oneColumn || false;
@@ -414,7 +435,7 @@ if (post && post.data) {
          
         <!-- SIDEBAR SECTION - NARROW ON MOBILE, WIDE ON DESKTOP -->
         <div class="mb-4 col-span-1 md:max-w-[17.5rem] onload-animation">
-          <!-- ⭐ UPDATED: Svelte Profile Component with custom author data -->
+          <!-- ⭐ FIXED: Pass serialized avatar config to Svelte Profile Component -->
           <div class="hidden md:block mb-4">
             <Profile
               client:load
@@ -425,7 +446,7 @@ if (post && post.data) {
               customLink={processedAuthorData.customLink}
               isHomePage={currentPath === '/'}
               profileConfig={profileConfig}
-              avatarConfig={avatarConfig}
+              avatarConfig={serializedAvatarConfig}
             />
           </div>
           
@@ -496,7 +517,7 @@ if (post && post.data) {
   <!-- Sidenav panels with settings and navigation -->
   <SidenavPanels client:load siteConfig={siteConfig} />
   
-  <!-- ⭐ UPDATED: Mobile profile overlay with custom author data -->
+  <!-- ⭐ FIXED: Mobile profile overlay with serialized avatar config -->
   <MobileProfileOverlay 
     client:load 
     postSlug={processedAuthorData.slug}
@@ -505,7 +526,7 @@ if (post && post.data) {
     customBio={processedAuthorData.customBio}
     customLink={processedAuthorData.customLink}
     profileConfig={profileConfig}
-    avatarConfig={avatarConfig}
+    avatarConfig={serializedAvatarConfig}
   />
   
   <!-- ⭐ UPDATED: Special page features with oneColumn support -->

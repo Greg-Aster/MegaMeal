@@ -23,7 +23,7 @@ bannerData:
   category: "MEGA MEAL"
   startYear: 30000
   endYear: 45000
-  background: "/posts/timeline/collective-consciousness.png"
+  background: "/posts/timeline/singularity-conflict.png"
 ---
 
 <div className="flex flex-col md:flex-row gap-6 mb-8">
