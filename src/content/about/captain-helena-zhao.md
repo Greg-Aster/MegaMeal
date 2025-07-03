@@ -3,7 +3,7 @@ title: "About Captain Helena Zhao"
 description: "The salvage vessel commander whose investigation of the Miranda system's destruction led to disturbing discoveries about temporal anomalies and causality breaches."
 name: "Captain Helena Zhao"
 role: "Commander, Salvage Vessel 'Second Breakfast' (Missing in Action)"
-avatar: "/posts/timeline/captain.png"
+avatar: "/about/video/helena-zhao.webm"
 bio: "Documented the Miranda debris field and its impossible temporal echoes before vanishing during her final mission"
 published: 2024-12-20
 updated: 2024-12-20

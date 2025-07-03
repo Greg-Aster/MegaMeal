@@ -3,7 +3,7 @@ title: "About A Registered Snuggloid Owner"
 description: "A Qarnivor resident who owned commercial Snuggloid pets and disappeared before the planet's nuclear destruction."
 name: "A Registered Snuggloid Owner"
 role: "Missing Person (Case #QN-7749)"
-avatar: "/posts/timeline/snuggloid1.png"
+avatar: "/about/video/snuggloid-owner.webm"
 bio: "Whereabouts unknown. Currently on missing persons database."
 published: 2024-12-20
 updated: 2024-12-20

@@ -3,7 +3,7 @@ title: "About Kaelen Vance"
 description: "Meet the xenohistorian who maps the scattered fragments of post-human civilization with the soul of a poet."
 name: "Kaelen Vance"
 role: "Xenohistorian, Deep Time Studies"
-avatar: "/posts/timeline/xenohistorian.png"
+avatar: "/about/video/kaelen-vance.webm"
 bio: "Chronicling the poetry of forgotten civilizations"
 published: 2024-12-20
 updated: 2024-12-20

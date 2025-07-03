@@ -3,7 +3,7 @@ title: "About Dr. Elara Voss"
 description: "Historical archivist and one of the few surviving indigenous inhabitants of Qarnivor, whose academic work on extinction events may hide deeper personal connections to the tragedies she studied."
 name: "Dr. Elara Voss"
 role: "Historical Archivist, Extinction Events Division"
-avatar: "/posts/timeline/elera-voss.png"
+avatar: "/about/video/elera-voss.webm"
 bio: "Indigenous Qarnivor survivor turned extinction events scholar"
 published: 2024-12-20
 updated: 2024-12-20
