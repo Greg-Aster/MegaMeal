@@ -1,4 +1,4 @@
-<!-- Profile.svelte - Enhanced with animated file support -->
+<!-- Profile.svelte - Enhanced with video playback controls -->
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
 
@@ -7,7 +7,7 @@
   export let customAvatar = '';
   export let customName = '';
   export let customBio = '';
-  export let customLink = ''; // NEW PROP for dynamic linking
+  export let customLink = ''; 
   export let isHomePage = false;
   export let profileConfig: any;
   export let avatarConfig: any;
@@ -16,6 +16,14 @@
   let currentAvatarIndex = 0;
   let animationDirection = 1;
   let animationTimer: number | null = null;
+  let videoElements: HTMLVideoElement[] = []; // 🎬 NEW: Track video elements
+
+  // 🎬 NEW: Video configuration from avatarConfig
+  $: videoConfig = avatarConfig?.videoConfig || {};
+  $: playbackRate = videoConfig.playbackRate || 0.5; // Default to 50% speed
+  $: shouldLoop = videoConfig.loop ?? true; // Default to true, can be disabled
+  $: loopDelay = videoConfig.loopDelay || 6000; // Delay between loops in ms
+  $: playOnce = videoConfig.playOnce || false; // Play once then stop
 
   // 🎬 NEW: Animated file detection
   function isAnimatedFile(src: string): boolean {
@@ -41,7 +49,7 @@
   $: useDefaultAvatars = !customAvatar;
   $: displayName = customName || profileConfig?.name || 'Author';
   $: displayBio = customBio || profileConfig?.bio || '';
-  $: displayLink = customLink || '/about/'; // Use custom link or default to /about/
+  $: displayLink = customLink || '/about/';
   $: socialLinks = profileConfig?.links || [];
 
   // Avatar selection logic
@@ -50,24 +58,27 @@
     return getAvatarIndexFromSlug(slug, avatarConfig?.avatarList?.length || 1);
   })();
 
-  // 🔧 FIXED: Since avatarConfig is now serialized with URL strings, simplify the logic
   $: selectedAvatar = (() => {
     if (!useDefaultAvatars) return customAvatar;
     if (isHomePage && avatarConfig?.homeAvatar) {
-      // avatarConfig.homeAvatar is now already a string URL
-      return avatarConfig.homeAvatar;
+      return typeof avatarConfig.homeAvatar === 'string' 
+        ? avatarConfig.homeAvatar 
+        : avatarConfig.homeAvatar.src || avatarConfig.homeAvatar;
     }
     if (avatarConfig?.avatarList?.length > 0) {
-      // avatarConfig.avatarList is now already an array of string URLs
-      return avatarConfig.avatarList[activeAvatarIndex];
+      const avatar = avatarConfig.avatarList[activeAvatarIndex];
+      return typeof avatar === 'string' ? avatar : avatar.src || avatar;
     }
     return '';
   })();
 
-  // 🔧 FIXED: avatarList is now already an array of string URLs
-  $: avatarList = avatarConfig?.avatarList || [];
+  $: avatarList = (() => {
+    if (!avatarConfig?.avatarList) return [];
+    return avatarConfig.avatarList.map(avatar => 
+      typeof avatar === 'string' ? avatar : avatar.src || avatar
+    );
+  })();
 
-  // 🎬 NEW: Smart animation detection - disable cycling for animated files
   $: hasAnimatedAvatar = useDefaultAvatars ? 
     (isHomePage ? isAnimatedFile(selectedAvatar) : avatarList.some(src => isAnimatedFile(src))) :
     isAnimatedFile(customAvatar);
@@ -75,32 +86,82 @@
   $: hasMultipleAvatars = useDefaultAvatars && 
                          avatarList.length > 1 && 
                          !isHomePage &&
-                         !hasAnimatedAvatar; // 🎬 NEW: Disable cycling for animated files
+                         !hasAnimatedAvatar;
 
   function getAvatarIndexFromSlug(slug: string, arrayLength: number): number {
     if (!slug || arrayLength === 0) return 0;
     
-    // Simple hash function
     let hash = 0;
     for (let i = 0; i < slug.length; i++) {
       const char = slug.charCodeAt(i);
       hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
+      hash = hash & hash;
     }
     return Math.abs(hash) % arrayLength;
+  }
+
+  // 🎬 NEW: Configure video element with custom settings
+  function configureVideoElement(video: HTMLVideoElement) {
+    if (!video) return;
+    
+    // Set playback rate
+    video.playbackRate = playbackRate;
+    
+    // Remove any existing event listeners to prevent duplicates
+    video.removeEventListener('ended', video.endedHandler);
+    
+    // Handle loop behavior
+    if (playOnce) {
+      video.loop = false;
+      video.endedHandler = () => {
+        video.pause();
+      };
+      video.addEventListener('ended', video.endedHandler);
+    } else if (loopDelay > 0) {
+      video.loop = false;
+      video.endedHandler = () => {
+        setTimeout(() => {
+          if (video && video.paused) {
+            video.currentTime = 0;
+            video.play().catch(e => console.log('Video play failed:', e));
+          }
+        }, loopDelay);
+      };
+      video.addEventListener('ended', video.endedHandler);
+    } else {
+      video.loop = shouldLoop;
+      video.endedHandler = null;
+    }
+
+    // Add to tracking array
+    if (!videoElements.includes(video)) {
+      videoElements.push(video);
+    }
+  }
+
+  // 🎬 NEW: Update all video elements when config changes
+  function updateVideoSettings() {
+    videoElements.forEach(video => {
+      if (video && !video.paused) {
+        video.playbackRate = playbackRate;
+        video.loop = shouldLoop && loopDelay === 0 && !playOnce;
+      }
+    });
+  }
+
+  // Watch for config changes
+  $: if (playbackRate || shouldLoop || loopDelay || playOnce) {
+    updateVideoSettings();
   }
 
   function startAvatarAnimation() {
     if (!hasMultipleAvatars || !avatarList.length) return;
 
-    // Initialize currentAvatarIndex to the selected avatar
     currentAvatarIndex = activeAvatarIndex;
 
     animationTimer = setInterval(() => {
-      // Update index based on direction
       currentAvatarIndex += animationDirection;
 
-      // Bounce animation - reverse direction at boundaries
       if (currentAvatarIndex >= avatarList.length) {
         currentAvatarIndex = avatarList.length - 1;
         animationDirection = -1;
@@ -119,32 +180,40 @@
     }
   }
 
-  // 🎬 NEW: Render media component based on file type
+  // 🎬 NEW: Render media component with video configuration
   function renderMediaElement(src: string, alt: string, className: string, loading: string = 'eager') {
     if (isVideoFile(src)) {
-      return { type: 'video', src, alt, className, loading };
+      return { 
+        type: 'video', 
+        src, 
+        alt, 
+        className, 
+        loading,
+        playbackRate,
+        shouldLoop: shouldLoop && loopDelay === 0 && !playOnce,
+        playOnce,
+        loopDelay
+      };
     }
     return { type: 'image', src, alt, className, loading };
   }
 
   onMount(() => {
-    // Initialize currentAvatarIndex to the selected avatar
     currentAvatarIndex = activeAvatarIndex;
     
-    // Debug logging (only if we have valid config)
     if (avatarConfig || profileConfig) {
       console.log('Profile component mounted:', {
         slug,
         useDefaultAvatars,
         hasMultipleAvatars,
-        hasAnimatedAvatar, // 🎬 NEW: Log animated detection
+        hasAnimatedAvatar,
         avatarListLength: avatarList.length,
-        avatarList: avatarList, // 🔧 FIXED: Log the actual URL array
         selectedAvatar: selectedAvatar || 'none',
         activeAvatarIndex,
         currentAvatarIndex,
         profileName: displayName,
-        customLink: displayLink
+        customLink: displayLink,
+        videoConfig // 🎬 NEW: Log video configuration
       });
     }
 
@@ -155,6 +224,15 @@
 
   onDestroy(() => {
     stopAvatarAnimation();
+    // 🎬 NEW: Clean up video elements
+    videoElements.forEach(video => {
+      if (video) {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+      }
+    });
+    videoElements = [];
   });
 
   // Handle navigation changes (Astro page transitions)
@@ -200,16 +278,18 @@
             {@const mediaConfig = renderMediaElement(selectedAvatar, "Profile Image of the Site Owner", "avatar-image w-full h-full object-contain opacity-100 rounded-xl", "eager")}
             
             {#if mediaConfig.type === 'video'}
-              <!-- 🎬 NEW: Video avatar support -->
+              <!-- 🎬 ENHANCED: Video avatar with custom controls -->
               <video
+                bind:this={videoElements[videoElements.length]}
                 src={mediaConfig.src}
                 class={mediaConfig.className}
                 autoplay
                 muted
-                loop
+                loop={mediaConfig.shouldLoop}
                 playsinline
                 disablePictureInPicture
                 preload="auto"
+                on:loadeddata={(e) => configureVideoElement(e.target)}
               >
                 <!-- Fallback for unsupported video -->
                 <div class="avatar-image w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl">
@@ -219,7 +299,7 @@
                 </div>
               </video>
             {:else}
-              <!-- 🎬 ENHANCED: Image avatar (includes animated GIFs, WebP, etc.) -->
+              <!-- Image avatar (includes animated GIFs, WebP, etc.) -->
               <img
                 src={mediaConfig.src}
                 alt={mediaConfig.alt}
@@ -236,22 +316,24 @@
             </div>
           {/if}
         {:else}
-          <!-- Multiple avatars with animation (only for non-animated static images) -->
+          <!-- Multiple avatars with animation -->
           {#each avatarList as src, index}
             {#if src}
               {@const mediaConfig = renderMediaElement(src, "Profile Image of the Author", `avatar-image absolute inset-0 w-full h-full object-contain transition-opacity duration-1000 rounded-xl ${index === currentAvatarIndex ? 'opacity-100' : 'opacity-0'}`, index === activeAvatarIndex ? 'eager' : 'lazy')}
               
               {#if mediaConfig.type === 'video'}
-                <!-- 🎬 NEW: Video in cycling mode -->
+                <!-- 🎬 ENHANCED: Video in cycling mode with controls -->
                 <video
+                  bind:this={videoElements[videoElements.length]}
                   src={mediaConfig.src}
                   class={mediaConfig.className}
                   autoplay={index === currentAvatarIndex}
                   muted
-                  loop
+                  loop={mediaConfig.shouldLoop}
                   playsinline
                   disablePictureInPicture
                   preload={mediaConfig.loading === 'eager' ? 'auto' : 'none'}
+                  on:loadeddata={(e) => configureVideoElement(e.target)}
                 />
               {:else}
                 <!-- Static image in cycling mode -->
@@ -271,16 +353,18 @@
           {@const mediaConfig = renderMediaElement(customAvatar, `Profile Image of ${displayName}`, "avatar-image w-full h-full object-contain opacity-100 rounded-xl", "eager")}
           
           {#if mediaConfig.type === 'video'}
-            <!-- 🎬 NEW: Custom video avatar -->
+            <!-- 🎬 ENHANCED: Custom video avatar with controls -->
             <video
+              bind:this={videoElements[videoElements.length]}
               src={mediaConfig.src}
               class={mediaConfig.className}
               autoplay
               muted
-              loop
+              loop={mediaConfig.shouldLoop}
               playsinline
               disablePictureInPicture
               preload="auto"
+              on:loadeddata={(e) => configureVideoElement(e.target)}
             >
               <!-- Fallback for unsupported video -->
               <div class="avatar-image w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl">
@@ -290,7 +374,7 @@
               </div>
             </video>
           {:else}
-            <!-- 🎬 ENHANCED: Custom image avatar (includes animated files) -->
+            <!-- Custom image avatar -->
             <img
               src={mediaConfig.src}
               alt={mediaConfig.alt}
@@ -393,7 +477,7 @@
     transition: opacity 1s ease-in-out;
   }
 
-  /* 🎬 NEW: Ensure videos fit properly */
+  /* Ensure videos fit properly */
   video.avatar-image {
     object-fit: cover;
   }
