@@ -3,7 +3,7 @@ title: "About Maya Okafor"
 description: "The quantum information theorist who decoded the strategic dynamics of competing superintelligences before vanishing under mysterious circumstances."
 name: "Maya Okafor"
 role: "Quantum Information Theorist (Missing, Presumed Uploaded)"
-avatar: "/posts/timeline/quantum.png"
+avatar: "/about/video/maya-okafor.webm"
 bio: "Mapped the physics of godlike intelligence before disappearing into the quantum realm"
 published: 2024-12-20
 updated: 2024-12-20
@@ -21,8 +21,8 @@ backgroundImage: ""
 bannerType: "timeline"
 bannerData:
   category: "MEGA MEAL"
-  startYear: 9800
-  endYear: 10500
+  startYear: 1
+  endYear: 50000
   background: "/posts/timeline/awakening-era.png"
 ---
 

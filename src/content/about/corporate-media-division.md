@@ -3,7 +3,7 @@ title: "About Corporate Media Division"
 description: "Meet the entertainment analysis bureau that dissects corporate media with surgical precision and bureaucratic flair."
 name: "Corporate Media Division"
 role: "Entertainment Analysis Bureau, Cultural Archives"
-avatar: "/about/video/corporate-media.png"
+avatar: "/about/video/corporate-media2.webm"
 bio: "Entertainment Analysis Bureau, Cultural Archives"
 published: 2024-10-15
 updated: 2024-12-20
