@@ -15,8 +15,8 @@ import Bleepy from '../../components/bleepy/Bleepy.astro';
 import { profileConfig, siteConfig } from '../../config/config'
 import { formatDateToYYYYMMDD } from '../../utils/date-utils'
 
-// ⭐ NEW: Import the layout toggle component
-import LayoutToggleMinimal from '../../components/client/LayoutToggleMinimal.svelte'
+// ⭐ FIXED: Import the correct layout toggle component
+import LayoutToggle from '../../components/client/LayoutToggle.svelte'
 
 export async function getStaticPaths() {
   const posts = await getCollection('posts'); // Include all posts, including drafts
@@ -99,11 +99,11 @@ const jsonLd = {
 <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
 
 <!-- =============================================================== -->
-<!-- ⭐ NEW: BUILT-IN LAYOUT TOGGLE - AVAILABLE ON EVERY POST      -->
+<!-- ⭐ FIXED: BUILT-IN LAYOUT TOGGLE - USING CORRECT COMPONENT     -->
 <!-- =============================================================== -->
-<LayoutToggleMinimal 
+<LayoutToggle 
   client:load 
-  defaultToOneColumn={oneColumnMode}
+  variant="minimal"
   position="top-right"
   size="md"
 />

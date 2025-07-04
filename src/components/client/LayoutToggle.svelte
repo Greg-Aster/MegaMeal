@@ -1,4 +1,4 @@
-<!-- LayoutToggle.svelte - Unified layout toggle component -->
+<!-- LayoutToggle.svelte - Fixed navigation bug - unified layout toggle component -->
 <script lang="ts">
   import { onMount } from 'svelte';
 
@@ -14,35 +14,51 @@
   let isFullscreenMode = false; // ⭐ NEW: Track fullscreen state
 
   onMount(() => {
-    // ⭐ Wait for SpecialPageFeatures to expose the global toggle function
+    let retryCount = 0;
+    const maxRetries = 20; // Try for up to 2 seconds (20 * 100ms)
+    
+    // ⭐ ROBUST: Wait for SpecialPageFeatures to expose the global toggle function
     const checkForToggleFunction = () => {
+      console.log(`LayoutToggle - Checking for global functions (attempt ${retryCount + 1}/${maxRetries})`);
+      
       if ((window as any).toggleLayoutState && (window as any).getLayoutState) {
         isReady = true;
         
         // Get initial state
         updateStateFromGlobal();
         
-        // ⭐ Poll for state changes and fullscreen mode
+        // ⭐ Poll for state changes (mainly for fullscreen mode)
         const pollInterval = setInterval(() => {
           updateStateFromGlobal();
         }, 100);
 
-        console.log('LayoutToggle - Connected to SpecialPageFeatures toggle system');
+        console.log('LayoutToggle - Successfully connected to SpecialPageFeatures toggle system');
         
         return () => {
           clearInterval(pollInterval);
         };
       } else {
-        // Retry if not ready yet
-        setTimeout(checkForToggleFunction, 100);
+        retryCount++;
+        if (retryCount < maxRetries) {
+          // Retry with exponential backoff
+          const delay = Math.min(100 * Math.pow(1.2, retryCount), 500);
+          console.log(`LayoutToggle - Functions not ready, retrying in ${delay}ms...`);
+          setTimeout(checkForToggleFunction, delay);
+        } else {
+          console.error('LayoutToggle - Failed to connect to SpecialPageFeatures after maximum retries');
+          console.error('LayoutToggle - Available window functions:', Object.keys(window).filter(k => k.includes('Layout') || k.includes('toggle')));
+          
+          // ⭐ FALLBACK: Set as ready anyway to prevent permanent disabled state
+          isReady = true;
+        }
       }
     };
 
     checkForToggleFunction();
 
-    // Listen for layout changes from localStorage (other tabs/windows)
+    // Listen for fullscreen changes only (oneColumnMode no longer persists)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'oneColumnMode' || e.key === 'fullscreenMode') {
+      if (e.key === 'fullscreenMode') {
         updateStateFromGlobal();
       }
     };
@@ -68,13 +84,49 @@
 
   function toggleLayout() {
     // ⭐ Prevent toggle when in fullscreen mode
-    if (!isReady || isTransitioning || isFullscreenMode || !(window as any).toggleLayoutState) return;
+    if (isTransitioning || isFullscreenMode) return;
     
-    console.log('LayoutToggle - Calling centralized toggle function');
-    const success = (window as any).toggleLayoutState();
-    
-    if (!success) {
-      console.warn('LayoutToggle - Toggle failed');
+    // ⭐ IMPROVED: Check if global functions are available
+    if ((window as any).toggleLayoutState) {
+      console.log('LayoutToggle - Calling centralized toggle function');
+      const success = (window as any).toggleLayoutState();
+      
+      if (!success) {
+        console.warn('LayoutToggle - Toggle failed');
+      }
+    } else {
+      // ⭐ FALLBACK: Direct DOM manipulation if SpecialPageFeatures not available
+      console.warn('LayoutToggle - Global functions not available, attempting direct toggle');
+      
+      const mainGrid = document.getElementById('main-grid');
+      const sidebar = document.querySelector('#main-grid > div:first-child');
+      
+      if (mainGrid && sidebar) {
+        isOneColumn = !isOneColumn;
+        isTransitioning = true;
+        
+        if (isOneColumn) {
+          // Hide sidebar and switch to single column
+          mainGrid.className = mainGrid.className
+            .replace('md:grid-cols-[16.5rem_auto]', '')
+            .replace('grid-cols-[4.5rem_1fr]', 'grid-cols-1');
+          sidebar.style.display = 'none';
+        } else {
+          // Show sidebar and restore two column
+          if (!mainGrid.className.includes('md:grid-cols-[16.5rem_auto]')) {
+            mainGrid.className = mainGrid.className.replace('grid-cols-1', 'grid-cols-[4.5rem_1fr] md:grid-cols-[16.5rem_auto]');
+          }
+          sidebar.style.display = '';
+        }
+        
+        setTimeout(() => {
+          isTransitioning = false;
+        }, 300);
+        
+        console.log('LayoutToggle - Direct toggle completed:', isOneColumn ? 'One Column' : 'Two Column');
+      } else {
+        console.error('LayoutToggle - Could not find required DOM elements for direct toggle');
+      }
     }
   }
 
@@ -109,7 +161,7 @@
     <!-- MINIMAL VARIANT -->
     <button
       on:click={toggleLayout}
-      disabled={isTransitioning || !isReady || isFullscreenMode}
+      disabled={isTransitioning || isFullscreenMode}
       class="fixed {positionClasses} z-50 {sizeClasses} bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-600/50 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 active:scale-95 disabled:opacity-50 group"
       aria-label={isOneColumn ? 'Switch to two column layout' : 'Switch to single column layout'}
       title={isOneColumn ? 'Show sidebar' : 'Hide sidebar'}
@@ -119,11 +171,6 @@
         <svg class="{iconSize} animate-spin text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-      {:else if !isReady}
-        <!-- System loading indicator -->
-        <svg class="{iconSize} animate-pulse text-orange-500 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       {:else if isOneColumn}
         <!-- Single column icon -->
@@ -143,7 +190,7 @@
     <div class="fixed {positionClasses} z-50 flex flex-col items-end gap-2">
       <button
         on:click={toggleLayout}
-        disabled={isTransitioning || !isReady || isFullscreenMode}
+        disabled={isTransitioning || isFullscreenMode}
         class="group relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label={isOneColumn ? 'Switch to two column layout' : 'Switch to single column layout'}
         title={isOneColumn ? 'Show sidebar' : 'Hide sidebar'}
@@ -161,7 +208,7 @@
               <!-- Two column icon -->
               <svg class="w-4 h-4 text-gray-700 dark:text-gray-300" fill="currentColor" viewBox="0 0 24 24">
                 <rect x="3" y="4" width="7" height="16" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
-                <rect x="14" y="4" width="7" height="16" rx="1" stroke-width="2" fill="none"/>
+                <rect x="14" y="4" width="7" height="16" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
               </svg>
             {/if}
           </div>
@@ -186,14 +233,15 @@
       </button>
       
       <!-- Status indicator -->
-      {#if !isReady}
-        <div class="text-xs text-orange-500 dark:text-orange-400 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-2 py-1 rounded">
-          Layout system loading...
-        </div>
-      {:else}
+      {#if isReady}
         <!-- Keyboard shortcut hint -->
         <div class="text-xs text-gray-500 dark:text-gray-400 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
           Click to toggle layout
+        </div>
+      {:else}
+        <!-- Connection status -->
+        <div class="text-xs text-blue-500 dark:text-blue-400 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-2 py-1 rounded">
+          Connecting to layout system...
         </div>
       {/if}
     </div>

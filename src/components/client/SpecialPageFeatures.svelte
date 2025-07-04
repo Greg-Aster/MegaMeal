@@ -1,4 +1,4 @@
-<!-- SpecialPageFeatures.svelte - Centralized layout toggle logic -->
+<!-- SpecialPageFeatures.svelte - Fixed navigation bug -->
 <script lang="ts">
   import { onMount } from 'svelte';
 
@@ -20,6 +20,8 @@
     
     // ⭐ FIXED: Wait for DOM and determine initial layout state
     setTimeout(() => {
+      console.log('SpecialPageFeatures - Starting initialization...');
+      
       // ⭐ NEW: Check fullscreen mode first (highest priority)
       const isFullscreen = localStorage.getItem('fullscreenMode') === 'true';
       
@@ -29,27 +31,26 @@
         isOneColumn = true;
         applyLayoutState(true, true); // true for isFullscreen parameter
       } else {
-        // ⭐ Normal mode: Smart state priority system
-        const savedUserPreference = localStorage.getItem('oneColumnMode');
+        // ⭐ FIXED: Page-first priority system - frontmatter overrides saved preferences
         let targetState: boolean;
         
-        if (savedUserPreference !== null) {
-          // User has made a choice before - respect it (highest priority)
-          targetState = savedUserPreference === 'true';
-          console.log('Using saved user preference:', targetState);
-        } else if (oneColumn !== undefined) {
-          // Use frontmatter as initial state (not forced)
+        if (oneColumn !== undefined) {
+          // Frontmatter has highest priority - each page defines its intended layout
           targetState = oneColumn;
-          console.log('Using frontmatter initial state:', targetState);
+          console.log('Using frontmatter layout (highest priority):', targetState);
         } else if (isSpecialPage) {
-          // Special pages default to one column
+          // Special pages default to one column when no frontmatter specified
           targetState = true;
           console.log('Special page detected, defaulting to one column');
         } else {
-          // Default to two column
+          // Default to two column for regular pages
           targetState = false;
           console.log('Using default two column layout');
         }
+        
+        // ⭐ Clear any saved user preference that might conflict with page intent
+        // The toggle should only affect the current page session, not persist across navigation
+        localStorage.removeItem('oneColumnMode');
 
         // Set initial state
         isOneColumn = targetState;
@@ -61,27 +62,33 @@
         initializeCookbookView();
       }
       
-      // ⭐ NEW: Expose toggle function globally for toggle components
-      (window as any).toggleLayoutState = toggleLayout;
-      (window as any).getLayoutState = () => ({ 
-        isOneColumn, 
-        isTransitioning,
-        isFullscreen: localStorage.getItem('fullscreenMode') === 'true' 
-      });
+      // ⭐ IMPROVED: Expose toggle function globally with better error handling
+      try {
+        (window as any).toggleLayoutState = toggleLayout;
+        (window as any).getLayoutState = () => ({ 
+          isOneColumn, 
+          isTransitioning,
+          isFullscreen: localStorage.getItem('fullscreenMode') === 'true' 
+        });
+        
+        console.log('SpecialPageFeatures - Global functions exposed successfully');
+        console.log('SpecialPageFeatures - Initialization complete, toggle available globally');
+        
+        // ⭐ DEBUG: Log available functions
+        console.log('Available toggle functions:', {
+          toggleLayoutState: typeof (window as any).toggleLayoutState,
+          getLayoutState: typeof (window as any).getLayoutState
+        });
+        
+      } catch (error) {
+        console.error('SpecialPageFeatures - Error exposing global functions:', error);
+      }
       
-      console.log('SpecialPageFeatures - Initialization complete, toggle available globally');
-    }, 100);
+    }, 50); // ⭐ REDUCED: Faster initialization to reduce race condition
 
-    // Listen for external layout changes (from other tabs) and fullscreen changes
+    // Listen for external layout changes (only fullscreen changes matter now)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'oneColumnMode' && localStorage.getItem('fullscreenMode') !== 'true') {
-        // Only respond to oneColumnMode changes when not in fullscreen
-        const newState = e.newValue === 'true';
-        if (newState !== isOneColumn) {
-          isOneColumn = newState;
-          applyLayoutState(newState, false);
-        }
-      } else if (e.key === 'fullscreenMode') {
+      if (e.key === 'fullscreenMode') {
         // ⭐ Handle fullscreen mode changes
         const isFullscreen = e.newValue === 'true';
         console.log('Fullscreen mode changed:', isFullscreen);
@@ -91,13 +98,14 @@
           isOneColumn = true;
           applyLayoutState(true, true);
         } else {
-          // Exiting fullscreen - restore previous state
-          const savedUserPreference = localStorage.getItem('oneColumnMode');
-          const targetState = savedUserPreference === 'true';
-          isOneColumn = targetState;
-          applyLayoutState(targetState, false);
+          // Exiting fullscreen - restore page's intended state
+          const pageIntendedState = oneColumn !== undefined ? oneColumn : 
+                                   (currentPath.includes('cookbook') || currentPath.includes('first-contact'));
+          isOneColumn = pageIntendedState;
+          applyLayoutState(pageIntendedState, false);
         }
       }
+      // ⭐ REMOVED: No longer respond to oneColumnMode changes - each page manages its own state
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -134,19 +142,14 @@
     return true;
   }
 
-  // ⭐ ENHANCED: Centralized layout application with fullscreen awareness
+  // ⭐ UPDATED: Layout application that doesn't persist across navigation
   function applyLayoutState(oneColumnMode: boolean, isFullscreenMode: boolean = false) {
     console.log('Applying layout state:', oneColumnMode ? 'One Column' : 'Two Column', isFullscreenMode ? '(Fullscreen)' : '(Normal)');
     
-    // ⭐ Only save user preference when not in fullscreen mode
-    if (!isFullscreenMode) {
-      if (oneColumnMode) {
-        localStorage.setItem('oneColumnMode', 'true');
-      } else {
-        localStorage.removeItem('oneColumnMode');
-      }
-    }
-
+    // ⭐ REMOVED: Don't save oneColumnMode to localStorage - each page manages its own state
+    // The toggle should only affect the current page session, not persist across navigation
+    // Only fullscreen mode persists since it's a global app state
+    
     if (oneColumnMode) {
       applyOneColumnLayout(isFullscreenMode);
     } else {
@@ -350,16 +353,16 @@
     };
   });
 
-  // ⭐ ENHANCED: Reset function for debugging
+  // ⭐ UPDATED: Reset function for debugging
   export function resetSpecialPageState() {
-    localStorage.removeItem('oneColumnMode'); // ⭐ Also reset layout state
+    // ⭐ oneColumnMode no longer persists, so no need to clear it
     localStorage.removeItem('cookbookView');
     localStorage.removeItem('specialPageOriginalState');
     localStorage.removeItem('fullscreenMode');
     localStorage.removeItem('fullscreenBannerOverride');
     document.body.removeAttribute('data-layout-mode');
-    document.body.classList.remove('one-column-mode');
-    console.log('All special page states reset. Refresh page to test.');
+    document.body.classList.remove('one-column-mode', 'fullscreen-mode');
+    console.log('All persistent special page states reset. Layout will reset on next navigation.');
   }
 </script>
 
