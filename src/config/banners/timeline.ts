@@ -1,12 +1,14 @@
 /**
  * ===================================================================
- * TIMELINE BANNER CONFIGURATION - INTERACTIVE TIMELINE DISPLAYS
+ * TIMELINE BANNER CONFIGURATION - ENHANCED WITH MOBILE SUPPORT
  * ===================================================================
  * 
  * This file manages interactive timeline banner functionality for displaying
  * dynamic timeline content as engaging banner presentations. It integrates
  * with the main timeline system and provides configuration for timeline
  * visualization, era navigation, and interactive timeline controls.
+ * 
+ * ⭐ NEW: Mobile-first approach with touch-friendly interactions
  * 
  * FEATURES:
  * - Interactive timeline navigation and zoom controls
@@ -15,18 +17,21 @@
  * - Responsive timeline display for different screen sizes
  * - Customizable timeline categories and date ranges
  * - Integration with main timeline configuration system
+ * - ⭐ NEW: Mobile touch optimization and fullscreen mode
  * 
  * USAGE:
  * - Set timelineBannerData.category to filter timeline events
  * - Configure startYear and endYear to focus on specific time periods
  * - Use isTimelineBannerData() type guard for safe type checking
  * - Customize timeline appearance with background images and styling
+ * - ⭐ NEW: Mobile users tap banner for fullscreen interactions
  * 
  * MAINTENANCE NOTES:
  * - Update timeline categories to match your content structure
  * - Modify era configurations to align with your timeline periods
  * - Adjust visualization settings for optimal user experience
  * - Configure background images for different eras and categories
+ * - ⭐ NEW: Test mobile interactions on various device sizes
  * ===================================================================
  */
 
@@ -108,10 +113,10 @@ export const timelineBannerLayout = {
   titlePosition: 'top' as const,       // Position of timeline title
   compactMode: false,            // Use compact display for smaller banners
   
-  // Banner-specific styling
+  // Banner-specific styling using existing CSS variables
   backgroundOpacity: 0.8,        // Background image opacity
   overlayGradient: 'linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.1))', // Overlay for text readability
-  borderRadius: '0.5rem',        // Banner border radius
+  borderRadius: 'var(--radius-large)', // Use existing radius variable
   
   // Responsive settings
   mobile: {
@@ -122,8 +127,8 @@ export const timelineBannerLayout = {
 };
 
 /**
- * Timeline banner interaction configuration
- * Controls user interaction within banner timeline
+ * ⭐ ENHANCED: Timeline banner interaction configuration with mobile-first approach
+ * Controls user interaction within banner timeline with mobile optimization
  */
 export const timelineBannerInteraction = {
   enableZoom: true,              // Allow zoom in/out
@@ -132,14 +137,56 @@ export const timelineBannerInteraction = {
   enableEraNavigation: true,     // Allow clicking on eras to navigate
   enableKeyboardControls: false, // Disable keyboard controls in banner
   
-  // Touch/gesture settings
+  // ⭐ NEW: Mobile-specific interaction controls
+  mobile: {
+    disableByDefault: true,      // Disable interactions by default on mobile
+    requireFullscreen: true,     // Require fullscreen mode for interactions
+    enableOverlay: true,         // Show interactive overlay on mobile
+    overlayMessage: "Tap to explore timeline",
+    gestureThreshold: 20,        // Minimum pixels for gesture recognition
+    doubleTapToFullscreen: true, // Enable double-tap to fullscreen
+    
+    // Touch controls when in fullscreen mode
+    fullscreenControls: {
+      enableZoom: true,
+      enablePan: true,
+      enableEventClick: true,
+      enableEraNavigation: true,
+      pinchToZoom: true,
+      swipeToNavigate: true,
+      
+      // Exit conditions
+      exitOnPostSelect: true,    // Exit fullscreen when post is selected
+      exitOnOutsideClick: false, // Don't exit on outside clicks (dedicated button instead)
+      exitOnEscape: true,        // Exit on escape key
+    }
+  },
+  
+  // Touch/gesture settings - ENHANCED
   enableTouch: true,             // Enable touch controls on mobile
   pinchToZoom: true,            // Enable pinch-to-zoom gesture
   swipeToNavigate: true,        // Enable swipe navigation
   
-  // Animation settings
+  // ⭐ NEW: Gesture recognition settings
+  gestures: {
+    tapThreshold: 10,            // Max pixels for tap recognition
+    doubleTapDelay: 300,        // Max ms between taps for double-tap
+    longPressDelay: 500,        // Ms for long press recognition
+    swipeThreshold: 50,         // Min pixels for swipe recognition
+    pinchThreshold: 0.1,        // Min scale change for pinch recognition
+  },
+  
+  // Animation settings using existing CSS variables
   animationDuration: 300,        // Transition duration in milliseconds
-  easing: 'ease-in-out'         // CSS easing function
+  easing: 'ease-in-out',        // CSS easing function
+  
+  // ⭐ NEW: Mobile performance settings
+  performance: {
+    reducedMotionSupport: true,  // Respect prefers-reduced-motion
+    throttleGestures: true,      // Throttle gesture events for performance
+    throttleDelay: 16,          // ~60fps throttling
+    usePassiveListeners: true,   // Use passive event listeners where possible
+  }
 };
 
 // =====================================================================
@@ -212,32 +259,261 @@ export const timelineBannerCategories = {
   "MEGA MEAL": {
     displayName: "Mega Meal Timeline",
     description: "The complete chronicle of events",
-    color: "var(--color-primary)",
+    color: "var(--primary)",
     icon: "timeline",
     defaultBackground: "/posts/timeline/universe.png"
   },
   "TECH": {
     displayName: "Technology Timeline",
     description: "Technological advancement milestones",
-    color: "var(--color-secondary)",
+    color: "var(--primary)",
     icon: "microchip",
     defaultBackground: "/posts/timeline/tech.png"
   },
   "HISTORY": {
     displayName: "Historical Timeline",
     description: "Major historical events and periods",
-    color: "var(--color-accent)",
+    color: "var(--primary)",
     icon: "scroll",
     defaultBackground: "/posts/timeline/history.png"
   },
   "ALL": {
     displayName: "Complete Timeline",
     description: "All events across all categories",
-    color: "var(--color-neutral)",
+    color: "var(--primary)",
     icon: "globe",
     defaultBackground: "/posts/timeline/universe.png"
   }
 };
+
+// =====================================================================
+// ⭐ NEW: MOBILE DEVICE DETECTION AND STATE MANAGEMENT
+// =====================================================================
+
+/**
+ * Mobile device and capability detection
+ * Determines if timeline should use mobile-optimized interactions
+ */
+export function detectMobileTimelineCapabilities(): {
+  isMobile: boolean;
+  hasTouch: boolean;
+  screenSize: 'small' | 'medium' | 'large';
+  orientation: 'portrait' | 'landscape';
+  shouldUseMobileMode: boolean;
+} {
+  if (typeof window === 'undefined') {
+    return {
+      isMobile: false,
+      hasTouch: false,
+      screenSize: 'large',
+      orientation: 'landscape',
+      shouldUseMobileMode: false
+    };
+  }
+  
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  
+  const isMobile = width < 768; // md breakpoint (matches Tailwind)
+  const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  
+  const screenSize = width < 640 ? 'small' : width < 1024 ? 'medium' : 'large';
+  const orientation = width < height ? 'portrait' : 'landscape';
+  
+  // Use mobile mode if on mobile device with touch
+  const shouldUseMobileMode = isMobile && hasTouch;
+  
+  return {
+    isMobile,
+    hasTouch,
+    screenSize,
+    orientation,
+    shouldUseMobileMode
+  };
+}
+
+/**
+ * ⭐ NEW: Timeline banner state management for mobile interactions
+ * Handles fullscreen state, interaction modes, and navigation
+ */
+export class TimelineBannerState {
+  private isFullscreen: boolean = false;
+  private isInteractive: boolean = false;
+  private capabilities: ReturnType<typeof detectMobileTimelineCapabilities>;
+  private listeners: Map<string, Function[]> = new Map();
+  
+  constructor() {
+    this.capabilities = detectMobileTimelineCapabilities();
+    this.setupEventListeners();
+    this.restoreState();
+  }
+  
+  /**
+   * Get current timeline state
+   */
+  getState() {
+    return {
+      isFullscreen: this.isFullscreen,
+      isInteractive: this.isInteractive,
+      capabilities: this.capabilities,
+      shouldShowOverlay: this.shouldShowOverlay(),
+      canInteract: this.canInteract()
+    };
+  }
+  
+  /**
+   * Check if timeline should show mobile overlay
+   */
+  shouldShowOverlay(): boolean {
+    return this.capabilities.shouldUseMobileMode && 
+           !this.isFullscreen && 
+           !this.isInteractive;
+  }
+  
+  /**
+   * Check if timeline can accept interactions
+   */
+  canInteract(): boolean {
+    if (!this.capabilities.shouldUseMobileMode) {
+      return true; // Desktop/tablet can always interact
+    }
+    
+    return this.isFullscreen && this.isInteractive;
+  }
+  
+  /**
+   * Enter fullscreen mode
+   */
+  enterFullscreen(): void {
+    this.isFullscreen = true;
+    this.isInteractive = true;
+    
+    localStorage.setItem('timelineFullscreenActive', 'true');
+    document.documentElement.classList.add('timeline-fullscreen-active');
+    document.body.classList.add('timeline-fullscreen-active');
+    
+    this.emit('fullscreen-enter');
+    this.emit('state-change', this.getState());
+  }
+  
+  /**
+   * Exit fullscreen mode
+   */
+  exitFullscreen(): void {
+    this.isFullscreen = false;
+    this.isInteractive = false;
+    
+    localStorage.removeItem('timelineFullscreenActive');
+    document.documentElement.classList.remove('timeline-fullscreen-active');
+    document.body.classList.remove('timeline-fullscreen-active');
+    
+    this.emit('fullscreen-exit');
+    this.emit('state-change', this.getState());
+  }
+  
+  /**
+   * Handle post navigation (auto-exit fullscreen)
+   */
+  handlePostNavigation(): void {
+    if (this.isFullscreen) {
+      this.exitFullscreen();
+    }
+    
+    this.emit('post-navigation');
+  }
+  
+  /**
+   * Setup event listeners using existing patterns
+   */
+  private setupEventListeners(): void {
+    if (typeof window === 'undefined') return;
+    
+    // Listen for Astro page navigation (existing pattern)
+    document.addEventListener('astro:before-navigation', () => {
+      this.handlePostNavigation();
+    });
+    
+    // Listen for storage changes (cross-tab communication)
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'timelineFullscreenActive') {
+        const isActive = event.newValue === 'true';
+        
+        if (isActive && !this.isFullscreen) {
+          this.isFullscreen = true;
+          this.isInteractive = true;
+          this.emit('state-change', this.getState());
+        } else if (!isActive && this.isFullscreen) {
+          this.isFullscreen = false;
+          this.isInteractive = false;
+          this.emit('state-change', this.getState());
+        }
+      }
+    });
+    
+    // Listen for escape key
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && this.isFullscreen) {
+        this.exitFullscreen();
+      }
+    });
+    
+    // Listen for resize (orientation change)
+    window.addEventListener('resize', () => {
+      this.capabilities = detectMobileTimelineCapabilities();
+      this.emit('capabilities-change', this.capabilities);
+    });
+  }
+  
+  /**
+   * Restore state from localStorage
+   */
+  private restoreState(): void {
+    const isActive = localStorage.getItem('timelineFullscreenActive') === 'true';
+    
+    if (isActive) {
+      this.isFullscreen = true;
+      this.isInteractive = true;
+    }
+  }
+  
+  /**
+   * Event emitter functionality
+   */
+  on(event: string, callback: Function): void {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, []);
+    }
+    this.listeners.get(event)!.push(callback);
+  }
+  
+  off(event: string, callback: Function): void {
+    const eventListeners = this.listeners.get(event);
+    if (eventListeners) {
+      const index = eventListeners.indexOf(callback);
+      if (index > -1) {
+        eventListeners.splice(index, 1);
+      }
+    }
+  }
+  
+  private emit(event: string, data?: any): void {
+    const eventListeners = this.listeners.get(event);
+    if (eventListeners) {
+      eventListeners.forEach(callback => callback(data));
+    }
+  }
+  
+  /**
+   * Cleanup
+   */
+  destroy(): void {
+    this.listeners.clear();
+    
+    if (this.isFullscreen) {
+      this.exitFullscreen();
+    }
+  }
+}
 
 // =====================================================================
 // HELPER FUNCTIONS
@@ -302,7 +578,7 @@ export function getTimelineBannerConfig(
 }
 
 /**
- * Validate timeline banner configuration
+ * ⭐ ENHANCED: Validate timeline banner configuration with mobile support
  * Ensures timeline settings are properly configured
  * 
  * @param config - Timeline banner configuration to validate
@@ -312,9 +588,11 @@ export function validateTimelineBannerConfig(config: TimelineBannerData): {
   isValid: boolean;
   warnings: string[];
   errors: string[];
+  mobileOptimizations: string[];
 } {
   const warnings: string[] = [];
   const errors: string[] = [];
+  const mobileOptimizations: string[] = [];
   
   // Check if category is provided
   if (!config.category || config.category.trim() === '') {
@@ -357,10 +635,32 @@ export function validateTimelineBannerConfig(config: TimelineBannerData): {
     }
   }
   
+  // ⭐ NEW: Add mobile-specific validations
+  const capabilities = detectMobileTimelineCapabilities();
+  
+  if (capabilities.shouldUseMobileMode) {
+    mobileOptimizations.push('Mobile device detected - timeline will use touch-friendly interactions');
+    
+    if (capabilities.orientation === 'portrait') {
+      mobileOptimizations.push('Portrait orientation - timeline will use vertical-optimized layout');
+    }
+    
+    if (capabilities.screenSize === 'small') {
+      mobileOptimizations.push('Small screen detected - timeline will use compact display mode');
+    }
+  }
+  
+  // Check if timeline category is mobile-friendly
+  if (config.category && timelineBannerCategories[config.category]) {
+    const categoryConfig = timelineBannerCategories[config.category];
+    mobileOptimizations.push(`Timeline category "${categoryConfig.displayName}" is mobile-optimized`);
+  }
+  
   return {
     isValid: errors.length === 0,
     warnings,
-    errors
+    errors,
+    mobileOptimizations
   };
 }
 
@@ -389,7 +689,7 @@ export function getEraForTimelineRange(
 }
 
 /**
- * Generate timeline banner background styles
+ * Generate timeline banner background styles using existing CSS variables
  * Creates CSS styles for timeline banner background
  * 
  * @param bannerData - Timeline banner configuration
@@ -481,6 +781,10 @@ export const timelineBannerConfig = {
   getTimelineBannerStyles,
   getTimelineBannerCategory,
   isTimelineBannerData,
+  
+  // ⭐ NEW: Mobile functionality
+  detectMobileTimelineCapabilities,
+  TimelineBannerState,
   
   // Re-export timeline utilities for convenience
   getEraFromYear,

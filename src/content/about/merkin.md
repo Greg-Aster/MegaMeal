@@ -3,7 +3,7 @@ title: "About Merkin Lord of Love and Light"
 description: "Learn about Merkin, the ancient god of love and acceptance who serves as curator of the MEGAMEAL Universe after eons of cosmic conflict."
 name: "Merkin Lord of Love and Light"
 role: "God of Love & Acceptance, Curator of the MEGAMEAL Universe"
-avatar: "/posts/timeline/merkin.png"
+avatar: "/about/video/merkin.webm"
 bio: "Ancient deity of love who found purpose in chronicling the cosmos"
 published: 2024-10-15
 updated: 2024-12-20
@@ -72,8 +72,8 @@ Despite his casual demeanor and surprising sense of humor, Merkin carries the we
 
 *"I've seen empires rise and fall, but nothing beats watching a human try to pronounce 'quinoa' for the first time."*
 
-*"Love isn't just about the big moments—it's also about making sure everyone gets fed, even if it's with interdimensional pizza."*
+*"Love isn't just about the big moments—it's also about making sure everyone gets fed."*
 
 ---
 
-*To witness Merkin's cosmic curation in action, explore the [Timeline of All Things](/posts/timeline/) or discover his favorite [Universal Recipes](/posts/cookbook/cookbook-index/).*
+*To witness Merkin's cosmic curation in action, explore the [Timeline of All Things](/posts/explainer/) or discover his favorite [Universal Recipes](/posts/cookbook/cookbook-index/).*
