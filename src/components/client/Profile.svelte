@@ -12,17 +12,23 @@
   export let profileConfig: any;
   export let avatarConfig: any;
 
+  // 🎬 NEW: Extended HTMLVideoElement type to support custom properties
+  interface ExtendedHTMLVideoElement extends HTMLVideoElement {
+    endedHandler?: () => void;
+  }
+
   // State
   let currentAvatarIndex = 0;
   let animationDirection = 1;
   let animationTimer: number | null = null;
-  let videoElements: HTMLVideoElement[] = []; // 🎬 NEW: Track video elements
+  let videoElements: ExtendedHTMLVideoElement[] = []; // 🎬 NEW: Track video elements
+  let videoElement: ExtendedHTMLVideoElement; // 🎬 NEW: Single video element binding
 
   // 🎬 NEW: Video configuration from avatarConfig
   $: videoConfig = avatarConfig?.videoConfig || {};
   $: playbackRate = videoConfig.playbackRate || 0.5; // Default to 50% speed
   $: shouldLoop = videoConfig.loop ?? true; // Default to true, can be disabled
-  $: loopDelay = videoConfig.loopDelay || 6000; // Delay between loops in ms
+  $: loopDelay = videoConfig.loopDelay || 5000; // Delay between loops in ms
   $: playOnce = videoConfig.playOnce || false; // Play once then stop
 
   // 🎬 NEW: Animated file detection
@@ -104,11 +110,22 @@
   function configureVideoElement(video: HTMLVideoElement) {
     if (!video) return;
     
+    console.log('🎬 Configuring video element:', {
+      playbackRate,
+      shouldLoop,
+      loopDelay,
+      playOnce,
+      videoSrc: video.src
+    });
+    
     // Set playback rate
     video.playbackRate = playbackRate;
+    console.log('🎬 Video playback rate set to:', video.playbackRate);
     
     // Remove any existing event listeners to prevent duplicates
-    video.removeEventListener('ended', video.endedHandler);
+    if (video.endedHandler) {
+      video.removeEventListener('ended', video.endedHandler);
+    }
     
     // Handle loop behavior
     if (playOnce) {
@@ -133,25 +150,37 @@
       video.endedHandler = null;
     }
 
-    // Add to tracking array
+    // Add to tracking array if not already present
     if (!videoElements.includes(video)) {
       videoElements.push(video);
+      console.log('🎬 Added video to tracking array. Total videos:', videoElements.length);
     }
   }
 
   // 🎬 NEW: Update all video elements when config changes
   function updateVideoSettings() {
-    videoElements.forEach(video => {
+    console.log('🎬 Updating video settings for', videoElements.length, 'videos');
+    videoElements.forEach((video: ExtendedHTMLVideoElement) => {
       if (video && !video.paused) {
+        console.log('🎬 Updating video:', video.src, 'to rate:', playbackRate);
         video.playbackRate = playbackRate;
         video.loop = shouldLoop && loopDelay === 0 && !playOnce;
       }
     });
   }
 
-  // Watch for config changes
-  $: if (playbackRate || shouldLoop || loopDelay || playOnce) {
-    updateVideoSettings();
+  // Watch for config changes and update videos
+  $: {
+    if (playbackRate || shouldLoop || loopDelay || playOnce) {
+      console.log('🎬 Video config changed:', {
+        playbackRate,
+        shouldLoop,
+        loopDelay,
+        playOnce,
+        videoElementsCount: videoElements.length
+      });
+      updateVideoSettings();
+    }
   }
 
   function startAvatarAnimation() {
@@ -199,8 +228,10 @@
   }
 
   onMount(() => {
+    // Initialize currentAvatarIndex to the selected avatar
     currentAvatarIndex = activeAvatarIndex;
     
+    // Debug logging (only if we have valid config)
     if (avatarConfig || profileConfig) {
       console.log('Profile component mounted:', {
         slug,
@@ -213,7 +244,12 @@
         currentAvatarIndex,
         profileName: displayName,
         customLink: displayLink,
-        videoConfig // 🎬 NEW: Log video configuration
+        videoConfig: { // 🎬 NEW: Log video configuration
+          playbackRate,
+          shouldLoop,
+          loopDelay,
+          playOnce
+        }
       });
     }
 
@@ -224,10 +260,14 @@
 
   onDestroy(() => {
     stopAvatarAnimation();
-    // 🎬 NEW: Clean up video elements
-    videoElements.forEach(video => {
+    // 🎬 NEW: Clean up video elements properly
+    videoElements.forEach((video: ExtendedHTMLVideoElement) => {
       if (video) {
         video.pause();
+        // Remove custom event listeners
+        if (video.endedHandler) {
+          video.removeEventListener('ended', video.endedHandler);
+        }
         video.removeAttribute('src');
         video.load();
       }
@@ -280,7 +320,7 @@
             {#if mediaConfig.type === 'video'}
               <!-- 🎬 ENHANCED: Video avatar with custom controls -->
               <video
-                bind:this={videoElements[videoElements.length]}
+                bind:this={videoElement}
                 src={mediaConfig.src}
                 class={mediaConfig.className}
                 autoplay
@@ -289,7 +329,10 @@
                 playsinline
                 disablePictureInPicture
                 preload="auto"
-                on:loadeddata={(e) => configureVideoElement(e.target)}
+                on:loadeddata={(e) => configureVideoElement(e.currentTarget as ExtendedHTMLVideoElement)}
+                on:loadedmetadata={(e) => configureVideoElement(e.currentTarget as ExtendedHTMLVideoElement)}
+                on:canplay={(e) => configureVideoElement(e.currentTarget as ExtendedHTMLVideoElement)}
+                on:play={(e) => configureVideoElement(e.currentTarget as ExtendedHTMLVideoElement)}
               >
                 <!-- Fallback for unsupported video -->
                 <div class="avatar-image w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl">
@@ -324,7 +367,6 @@
               {#if mediaConfig.type === 'video'}
                 <!-- 🎬 ENHANCED: Video in cycling mode with controls -->
                 <video
-                  bind:this={videoElements[videoElements.length]}
                   src={mediaConfig.src}
                   class={mediaConfig.className}
                   autoplay={index === currentAvatarIndex}
@@ -333,7 +375,10 @@
                   playsinline
                   disablePictureInPicture
                   preload={mediaConfig.loading === 'eager' ? 'auto' : 'none'}
-                  on:loadeddata={(e) => configureVideoElement(e.target)}
+                  on:loadeddata={(e) => configureVideoElement(e.currentTarget as ExtendedHTMLVideoElement)}
+                  on:loadedmetadata={(e) => configureVideoElement(e.currentTarget as ExtendedHTMLVideoElement)}
+                  on:canplay={(e) => configureVideoElement(e.currentTarget as ExtendedHTMLVideoElement)}
+                  on:play={(e) => configureVideoElement(e.currentTarget as ExtendedHTMLVideoElement)}
                 />
               {:else}
                 <!-- Static image in cycling mode -->
@@ -355,7 +400,7 @@
           {#if mediaConfig.type === 'video'}
             <!-- 🎬 ENHANCED: Custom video avatar with controls -->
             <video
-              bind:this={videoElements[videoElements.length]}
+              bind:this={videoElement}
               src={mediaConfig.src}
               class={mediaConfig.className}
               autoplay
@@ -364,7 +409,10 @@
               playsinline
               disablePictureInPicture
               preload="auto"
-              on:loadeddata={(e) => configureVideoElement(e.target)}
+              on:loadeddata={(e) => configureVideoElement(e.currentTarget as ExtendedHTMLVideoElement)}
+              on:loadedmetadata={(e) => configureVideoElement(e.currentTarget as ExtendedHTMLVideoElement)}
+              on:canplay={(e) => configureVideoElement(e.currentTarget as ExtendedHTMLVideoElement)}
+              on:play={(e) => configureVideoElement(e.currentTarget as ExtendedHTMLVideoElement)}
             >
               <!-- Fallback for unsupported video -->
               <div class="avatar-image w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl">
