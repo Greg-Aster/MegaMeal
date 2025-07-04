@@ -1,4 +1,4 @@
-<!-- LayoutToggle.svelte - Fixed navigation bug - unified layout toggle component -->
+<!-- LayoutToggle.svelte - Cleaned and simplified -->
 <script lang="ts">
   import { onMount } from 'svelte';
 
@@ -11,13 +11,13 @@
   let isOneColumn = false;
   let isTransitioning = false;
   let isReady = false;
-  let isFullscreenMode = false; // ⭐ NEW: Track fullscreen state
+  let isFullscreenMode = false;
 
   onMount(() => {
     let retryCount = 0;
-    const maxRetries = 20; // Try for up to 2 seconds (20 * 100ms)
+    const maxRetries = 20; // Try for up to 2 seconds
     
-    // ⭐ ROBUST: Wait for SpecialPageFeatures to expose the global toggle function
+    // Wait for SpecialPageFeatures to expose the global toggle function
     const checkForToggleFunction = () => {
       console.log(`LayoutToggle - Checking for global functions (attempt ${retryCount + 1}/${maxRetries})`);
       
@@ -27,7 +27,7 @@
         // Get initial state
         updateStateFromGlobal();
         
-        // ⭐ Poll for state changes (mainly for fullscreen mode)
+        // Poll for state changes (mainly for fullscreen mode)
         const pollInterval = setInterval(() => {
           updateStateFromGlobal();
         }, 100);
@@ -48,7 +48,7 @@
           console.error('LayoutToggle - Failed to connect to SpecialPageFeatures after maximum retries');
           console.error('LayoutToggle - Available window functions:', Object.keys(window).filter(k => k.includes('Layout') || k.includes('toggle')));
           
-          // ⭐ FALLBACK: Set as ready anyway to prevent permanent disabled state
+          // Set as ready anyway to prevent permanent disabled state
           isReady = true;
         }
       }
@@ -56,7 +56,7 @@
 
     checkForToggleFunction();
 
-    // Listen for fullscreen changes only (oneColumnMode no longer persists)
+    // Listen for fullscreen changes only
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'fullscreenMode') {
         updateStateFromGlobal();
@@ -70,23 +70,23 @@
     };
   });
 
-  // ⭐ NEW: Update state from global functions and check fullscreen
+  // Update state from global functions and check fullscreen
   function updateStateFromGlobal() {
     if ((window as any).getLayoutState) {
       const state = (window as any).getLayoutState();
       isOneColumn = state.isOneColumn;
       isTransitioning = state.isTransitioning;
       
-      // ⭐ Check fullscreen mode
+      // Check fullscreen mode
       isFullscreenMode = localStorage.getItem('fullscreenMode') === 'true';
     }
   }
 
   function toggleLayout() {
-    // ⭐ Prevent toggle when in fullscreen mode
+    // Prevent toggle when in fullscreen mode or transitioning
     if (isTransitioning || isFullscreenMode) return;
     
-    // ⭐ IMPROVED: Check if global functions are available
+    // Use centralized toggle function only
     if ((window as any).toggleLayoutState) {
       console.log('LayoutToggle - Calling centralized toggle function');
       const success = (window as any).toggleLayoutState();
@@ -95,38 +95,8 @@
         console.warn('LayoutToggle - Toggle failed');
       }
     } else {
-      // ⭐ FALLBACK: Direct DOM manipulation if SpecialPageFeatures not available
-      console.warn('LayoutToggle - Global functions not available, attempting direct toggle');
-      
-      const mainGrid = document.getElementById('main-grid');
-      const sidebar = document.querySelector('#main-grid > div:first-child');
-      
-      if (mainGrid && sidebar) {
-        isOneColumn = !isOneColumn;
-        isTransitioning = true;
-        
-        if (isOneColumn) {
-          // Hide sidebar and switch to single column
-          mainGrid.className = mainGrid.className
-            .replace('md:grid-cols-[16.5rem_auto]', '')
-            .replace('grid-cols-[4.5rem_1fr]', 'grid-cols-1');
-          sidebar.style.display = 'none';
-        } else {
-          // Show sidebar and restore two column
-          if (!mainGrid.className.includes('md:grid-cols-[16.5rem_auto]')) {
-            mainGrid.className = mainGrid.className.replace('grid-cols-1', 'grid-cols-[4.5rem_1fr] md:grid-cols-[16.5rem_auto]');
-          }
-          sidebar.style.display = '';
-        }
-        
-        setTimeout(() => {
-          isTransitioning = false;
-        }, 300);
-        
-        console.log('LayoutToggle - Direct toggle completed:', isOneColumn ? 'One Column' : 'Two Column');
-      } else {
-        console.error('LayoutToggle - Could not find required DOM elements for direct toggle');
-      }
+      console.error('LayoutToggle - Global toggle function not available');
+      // No fallback DOM manipulation - it was causing the issues
     }
   }
 
@@ -151,7 +121,7 @@
     'lg': 'w-5 h-5'
   }[size];
 
-  // ⭐ Hide toggle when in fullscreen mode
+  // Hide toggle when in fullscreen mode
   $: shouldHideToggle = isFullscreenMode;
 </script>
 
@@ -161,7 +131,7 @@
     <!-- MINIMAL VARIANT -->
     <button
       on:click={toggleLayout}
-      disabled={isTransitioning || isFullscreenMode}
+      disabled={isTransitioning || isFullscreenMode || !isReady}
       class="fixed {positionClasses} z-50 {sizeClasses} bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-600/50 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 active:scale-95 disabled:opacity-50 group"
       aria-label={isOneColumn ? 'Switch to two column layout' : 'Switch to single column layout'}
       title={isOneColumn ? 'Show sidebar' : 'Hide sidebar'}
@@ -190,7 +160,7 @@
     <div class="fixed {positionClasses} z-50 flex flex-col items-end gap-2">
       <button
         on:click={toggleLayout}
-        disabled={isTransitioning || isFullscreenMode}
+        disabled={isTransitioning || isFullscreenMode || !isReady}
         class="group relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label={isOneColumn ? 'Switch to two column layout' : 'Switch to single column layout'}
         title={isOneColumn ? 'Show sidebar' : 'Hide sidebar'}

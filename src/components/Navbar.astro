@@ -102,10 +102,10 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
             <LightDarkSwitch client:load></LightDarkSwitch>
 
             <!-- Fullscreen Mode Toggle -->
-            <button aria-label="Toggle Fullscreen Mode" title="Toggle Fullscreen Mode" class="btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90" id="fullscreen-btn">
+            <!-- <button aria-label="Toggle Fullscreen Mode" title="Toggle Fullscreen Mode" class="btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90" id="fullscreen-btn">
                 <Icon name="fa6-solid:expand" class="fullscreen-icon text-[1.25rem]"></Icon>
                 <Icon name="fa6-solid:compress" class="fullscreen-exit-icon text-[1.25rem] hidden"></Icon>
-            </button>
+            </button> -->
         </div>
         
         <NavMenuPanel links={links} isAuthenticated={isAuthenticated}></NavMenuPanel>

@@ -1,9 +1,9 @@
-<!-- SpecialPageFeatures.svelte - Fixed navigation bug -->
+<!-- SpecialPageFeatures.svelte - Cleaned and simplified -->
 <script lang="ts">
   import { onMount } from 'svelte';
 
   export let currentPath: string = '';
-  export let oneColumn: boolean = false; // ⭐ From frontmatter - now treated as INITIAL state
+  export let oneColumn: boolean = false; // From frontmatter - treated as INITIAL state
 
   let cookbookView = 'gallery'; // 'gallery' or 'list'
   let isOneColumn = false;
@@ -18,20 +18,20 @@
     console.log('SpecialPageFeatures - frontmatter oneColumn:', oneColumn);
     console.log('SpecialPageFeatures - Is special page:', isSpecialPage);
     
-    // ⭐ FIXED: Wait for DOM and determine initial layout state
+    // Wait for DOM and determine initial layout state
     setTimeout(() => {
       console.log('SpecialPageFeatures - Starting initialization...');
       
-      // ⭐ NEW: Check fullscreen mode first (highest priority)
+      // Check fullscreen mode first (highest priority)
       const isFullscreen = localStorage.getItem('fullscreenMode') === 'true';
       
       if (isFullscreen) {
-        // ⭐ Fullscreen mode always forces one column, no toggle allowed
+        // Fullscreen mode always forces one column, no toggle allowed
         console.log('Fullscreen mode detected - forcing one column layout');
         isOneColumn = true;
         applyLayoutState(true, true); // true for isFullscreen parameter
       } else {
-        // ⭐ FIXED: Page-first priority system - frontmatter overrides saved preferences
+        // Page-first priority system - frontmatter overrides saved preferences
         let targetState: boolean;
         
         if (oneColumn !== undefined) {
@@ -48,8 +48,7 @@
           console.log('Using default two column layout');
         }
         
-        // ⭐ Clear any saved user preference that might conflict with page intent
-        // The toggle should only affect the current page session, not persist across navigation
+        // Clear any saved user preference that might conflict with page intent
         localStorage.removeItem('oneColumnMode');
 
         // Set initial state
@@ -62,7 +61,7 @@
         initializeCookbookView();
       }
       
-      // ⭐ IMPROVED: Expose toggle function globally with better error handling
+      // Expose toggle function globally
       try {
         (window as any).toggleLayoutState = toggleLayout;
         (window as any).getLayoutState = () => ({ 
@@ -72,24 +71,17 @@
         });
         
         console.log('SpecialPageFeatures - Global functions exposed successfully');
-        console.log('SpecialPageFeatures - Initialization complete, toggle available globally');
-        
-        // ⭐ DEBUG: Log available functions
-        console.log('Available toggle functions:', {
-          toggleLayoutState: typeof (window as any).toggleLayoutState,
-          getLayoutState: typeof (window as any).getLayoutState
-        });
         
       } catch (error) {
         console.error('SpecialPageFeatures - Error exposing global functions:', error);
       }
       
-    }, 50); // ⭐ REDUCED: Faster initialization to reduce race condition
+    }, 50);
 
     // Listen for external layout changes (only fullscreen changes matter now)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'fullscreenMode') {
-        // ⭐ Handle fullscreen mode changes
+        // Handle fullscreen mode changes
         const isFullscreen = e.newValue === 'true';
         console.log('Fullscreen mode changed:', isFullscreen);
         
@@ -105,22 +97,21 @@
           applyLayoutState(pageIntendedState, false);
         }
       }
-      // ⭐ REMOVED: No longer respond to oneColumnMode changes - each page manages its own state
     };
 
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      // ⭐ Clean up global functions
+      // Clean up global functions
       delete (window as any).toggleLayoutState;
       delete (window as any).getLayoutState;
     };
   });
 
-  // ⭐ UPDATED: Centralized toggle function that respects fullscreen mode
+  // Centralized toggle function that respects fullscreen mode
   function toggleLayout() {
-    // ⭐ NEW: Prevent toggle when in fullscreen mode
+    // Prevent toggle when in fullscreen mode
     const isFullscreen = localStorage.getItem('fullscreenMode') === 'true';
     if (isTransitioning || isFullscreen) {
       console.log('SpecialPageFeatures - Toggle blocked:', isFullscreen ? 'fullscreen mode active' : 'transitioning');
@@ -142,159 +133,26 @@
     return true;
   }
 
-  // ⭐ UPDATED: Layout application that doesn't persist across navigation
+  // Simplified layout application using CSS classes only
   function applyLayoutState(oneColumnMode: boolean, isFullscreenMode: boolean = false) {
     console.log('Applying layout state:', oneColumnMode ? 'One Column' : 'Two Column', isFullscreenMode ? '(Fullscreen)' : '(Normal)');
     
-    // ⭐ REMOVED: Don't save oneColumnMode to localStorage - each page manages its own state
-    // The toggle should only affect the current page session, not persist across navigation
-    // Only fullscreen mode persists since it's a global app state
-    
-    if (oneColumnMode) {
-      applyOneColumnLayout(isFullscreenMode);
-    } else {
-      applyTwoColumnLayout(isFullscreenMode);
-    }
-    
-    // ⭐ Update body classes for CSS targeting
+    // Update body classes for CSS targeting - let CSS handle the layout
     document.body.setAttribute('data-layout-mode', oneColumnMode ? 'oneColumn' : 'twoColumn');
     document.body.classList.toggle('one-column-mode', oneColumnMode);
     
-    // ⭐ Add fullscreen class for additional CSS targeting
+    // Add fullscreen class for additional CSS targeting
     if (isFullscreenMode) {
       document.body.classList.add('fullscreen-mode');
     } else {
       document.body.classList.remove('fullscreen-mode');
     }
+
+    // Let the CSS handle the actual layout changes
+    console.log('SpecialPageFeatures - Layout classes applied, CSS will handle the rest');
   }
 
-  // ⭐ ENHANCED: Robust one column layout application with fullscreen support
-  function applyOneColumnLayout(isFullscreenMode: boolean = false) {
-    console.log('SpecialPageFeatures - Applying one column layout', isFullscreenMode ? '(Fullscreen)' : '(Normal)');
-    
-    const mainGrid = document.getElementById('main-grid');
-    const sidebar = document.querySelector('#main-grid > div:first-child');
-    const tocWrapper = document.getElementById('toc-wrapper');
-    
-    if (!mainGrid) {
-      console.warn('OneColumn - main-grid not found, retrying...');
-      setTimeout(() => applyOneColumnLayout(isFullscreenMode), 200);
-      return;
-    }
-    
-    // Save original classes before modifying
-    if (!mainGrid.dataset.originalClasses) {
-      mainGrid.dataset.originalClasses = mainGrid.className;
-      console.log('OneColumn - Saved original classes:', mainGrid.className);
-    }
-    
-    // Apply single column: grid-cols-1 and hide sidebar
-    mainGrid.className = mainGrid.className
-      .replace('grid-cols-[4.5rem_1fr]', 'grid-cols-1')
-      .replace('md:grid-cols-[16.5rem_auto]', '')
-      .replace('gap-4', 'gap-2')
-      .replace('md:gap-4', '');
-    
-    console.log('OneColumn - Grid classes updated to:', mainGrid.className);
-    
-    // ⭐ Force hide sidebar with multiple methods for reliability
-    if (sidebar) {
-      sidebar.style.display = 'none';
-      sidebar.style.visibility = 'hidden';
-      sidebar.style.opacity = '0';
-      sidebar.style.pointerEvents = 'none';
-      sidebar.classList.add('force-hidden');
-      
-      // ⭐ Add additional fullscreen hiding if in fullscreen mode
-      if (isFullscreenMode) {
-        sidebar.classList.add('fullscreen-hidden');
-      }
-      
-      console.log('OneColumn - Sidebar force hidden', isFullscreenMode ? '(Fullscreen)' : '(Normal)');
-    }
-    
-    // Hide TOC in one column mode
-    if (tocWrapper) {
-      tocWrapper.style.display = 'none';
-      if (isFullscreenMode) {
-        tocWrapper.classList.add('fullscreen-hidden');
-      }
-      console.log('OneColumn - TOC hidden');
-    }
-    
-    // ⭐ Hide banner when in fullscreen mode
-    if (isFullscreenMode) {
-      const bannerContainer = document.getElementById('banner-container');
-      if (bannerContainer) {
-        bannerContainer.style.display = 'none';
-        bannerContainer.classList.add('fullscreen-hidden');
-        console.log('OneColumn - Banner hidden for fullscreen');
-      }
-    }
-    
-    console.log('OneColumn - Layout applied successfully');
-  }
-
-  // ⭐ ENHANCED: Robust two column layout restoration with fullscreen support
-  function applyTwoColumnLayout(isFullscreenMode: boolean = false) {
-    console.log('SpecialPageFeatures - Applying two column layout', isFullscreenMode ? '(Fullscreen)' : '(Normal)');
-    
-    const mainGrid = document.getElementById('main-grid');
-    const sidebar = document.querySelector('#main-grid > div:first-child');
-    const tocWrapper = document.getElementById('toc-wrapper');
-    
-    if (!mainGrid) {
-      console.warn('TwoColumn - main-grid not found, retrying...');
-      setTimeout(() => applyTwoColumnLayout(isFullscreenMode), 200);
-      return;
-    }
-    
-    // ⭐ In fullscreen mode, force one column even if two column is requested
-    if (isFullscreenMode) {
-      console.log('TwoColumn - Overriding to one column due to fullscreen mode');
-      applyOneColumnLayout(true);
-      return;
-    }
-    
-    // Restore original grid classes
-    if (mainGrid.dataset.originalClasses) {
-      mainGrid.className = mainGrid.dataset.originalClasses;
-      console.log('TwoColumn - Restored from saved classes:', mainGrid.className);
-    } else {
-      // Fallback restoration
-      mainGrid.className = 'transition duration-700 w-full left-0 right-0 grid grid-cols-[4.5rem_1fr] md:grid-cols-[16.5rem_auto] grid-rows-[auto_1fr_auto] md:grid-rows-[auto] mx-auto gap-4 md:gap-4 px-2 md:px-4 relative';
-      console.log('TwoColumn - Restored with fallback classes');
-    }
-    
-    // ⭐ Show sidebar with multiple methods for reliability
-    if (sidebar) {
-      sidebar.style.display = '';
-      sidebar.style.visibility = '';
-      sidebar.style.opacity = '';
-      sidebar.style.pointerEvents = '';
-      sidebar.classList.remove('force-hidden', 'fullscreen-hidden');
-      console.log('TwoColumn - Sidebar fully restored');
-    }
-    
-    // Show TOC
-    if (tocWrapper) {
-      tocWrapper.style.display = '';
-      tocWrapper.classList.remove('fullscreen-hidden');
-      console.log('TwoColumn - TOC restored');
-    }
-    
-    // ⭐ Show banner
-    const bannerContainer = document.getElementById('banner-container');
-    if (bannerContainer) {
-      bannerContainer.style.display = '';
-      bannerContainer.classList.remove('fullscreen-hidden');
-      console.log('TwoColumn - Banner restored');
-    }
-    
-    console.log('TwoColumn - Layout applied successfully');
-  }
-
-  // ⭐ EXISTING: Cookbook functionality (unchanged)
+  // Cookbook functionality (unchanged)
   function initializeCookbookView() {
     cookbookView = localStorage.getItem('cookbookView') || 'gallery';
     updateCookbookView();
@@ -353,9 +211,8 @@
     };
   });
 
-  // ⭐ UPDATED: Reset function for debugging
+  // Reset function for debugging
   export function resetSpecialPageState() {
-    // ⭐ oneColumnMode no longer persists, so no need to clear it
     localStorage.removeItem('cookbookView');
     localStorage.removeItem('specialPageOriginalState');
     localStorage.removeItem('fullscreenMode');
@@ -370,51 +227,37 @@
 <div style="display: none;"></div>
 
 <style>
-  /* ⭐ CSS backup for forcing sidebar hidden in oneColumn mode */
+  /* CSS handles layout changes - no more DOM manipulation */
+  
+  /* Hide sidebar in one column mode */
   :global(body.one-column-mode #main-grid > div:first-child) {
     display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
   }
   
-  /* ⭐ Ensure main content takes full width in oneColumn mode */
+  /* Force single column grid in one column mode */
   :global(body.one-column-mode #main-grid) {
     grid-template-columns: 1fr !important;
   }
 
-  /* ⭐ Reliable force-hidden class */
-  :global(.force-hidden) {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-  }
-
-  /* ⭐ NEW: Fullscreen mode overrides - highest priority */
+  /* Fullscreen mode overrides - highest priority */
   :global(body.fullscreen-mode #main-grid > div:first-child,
           body.fullscreen-mode #toc-wrapper,
           body.fullscreen-mode #banner-container) {
     display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
   }
 
   :global(body.fullscreen-mode #main-grid) {
     grid-template-columns: 1fr !important;
   }
 
-  /* ⭐ Fullscreen hidden class for reliable hiding */
-  :global(.fullscreen-hidden) {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-  }
-
-  /* ⭐ Ensure fullscreen mode takes precedence over all other layout modes */
-  :global(body.fullscreen-mode.one-column-mode #main-grid),
-  :global(body.fullscreen-mode #main-grid) {
-    grid-template-columns: 1fr !important;
-    gap: 0.5rem !important;
+  /* Mobile-first safety - ensure mobile is always single column */
+  @media (max-width: 767px) {
+    :global(#main-grid) {
+      grid-template-columns: 1fr !important;
+    }
+    
+    :global(#main-grid > div:first-child) {
+      display: none !important;
+    }
   }
 </style>
