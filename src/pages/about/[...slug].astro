@@ -10,7 +10,7 @@ import { getDir } from '@utils/url-utils'
 import { Icon } from 'astro-icon/components'
 import { licenseConfig } from '../../config/config'
 import ImageWrapper from '../../components/misc/ImageWrapper.astro'
-import { profileConfig, siteConfig } from '../../config/config'
+import { profileConfig, siteConfig, avatarConfig } from '../../config/config' // 🎬 NEW: Import avatarConfig
 import { formatDateToYYYYMMDD } from '../../utils/date-utils'
 
 // ⭐ NEW: Import the layout toggle component
@@ -43,6 +43,20 @@ console.log('ABOUT PAGE - Custom author data:', customAuthorData);
 
 // Extract backgroundImage from frontmatter for dynamic background support
 const backgroundImage = aboutPage.data.backgroundImage;
+
+// 🎬 NEW: Video configuration from avatarConfig (same as Profile.svelte)
+const videoConfig = avatarConfig?.videoConfig || {};
+const playbackRate = videoConfig.playbackRate || 0.5; // Default to 50% speed
+const shouldLoop = videoConfig.loop ?? true; // Default to true, can be disabled
+const loopDelay = videoConfig.loopDelay || 5000; // Delay between loops in ms
+const playOnce = videoConfig.playOnce || false; // Play once then stop
+
+console.log('ABOUT PAGE - Video config:', {
+  playbackRate,
+  shouldLoop,
+  loopDelay,
+  playOnce
+});
 
 // 🎬 NEW: Video detection helper functions (same as Profile.svelte)
 function isVideoFile(src: string): boolean {
@@ -112,22 +126,27 @@ const jsonLd = {
     
     <!-- Author Header Section -->
     <div class="relative onload-animation mb-6">
-      <!-- 🎬 FIXED: Author Avatar with Video Support -->
+      <!-- 🎬 ENHANCED: Author Avatar with Video Support and Configuration -->
       {aboutPage.data.avatar && (
         <div class="flex flex-col md:flex-row items-center md:items-start gap-6 mb-6">
           <div class="flex-shrink-0">
             {isVideoFile(aboutPage.data.avatar) ? (
-              <!-- 🎬 NEW: Video avatar support -->
+              <!-- 🎬 ENHANCED: Video avatar support with configuration from avatarConfig -->
               <video
+                id="about-avatar-video"
                 src={aboutPage.data.avatar}
                 alt={`Profile video of ${aboutPage.data.name}`}
                 class="w-32 h-32 md:w-40 md:h-40 object-cover rounded-xl shadow-lg"
                 autoplay
                 muted
-                loop
+                loop={shouldLoop && loopDelay === 0 && !playOnce}
                 playsinline
                 disablePictureInPicture
                 preload="auto"
+                data-playback-rate={playbackRate}
+                data-should-loop={shouldLoop}
+                data-loop-delay={loopDelay}
+                data-play-once={playOnce}
               >
                 <!-- Fallback for unsupported video -->
                 <div class="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl shadow-lg">
@@ -250,6 +269,66 @@ const jsonLd = {
 </div>
 
 </MainGridLayout>
+
+<!-- 🎬 NEW: Client-side script to configure video elements with avatarConfig settings -->
+<script>
+  // 🎬 NEW: Configure video elements with settings from avatarConfig
+  function configureVideoElements() {
+    const videoElements = document.querySelectorAll('video[data-playback-rate]');
+    
+    videoElements.forEach((video) => {
+      const playbackRate = parseFloat(video.getAttribute('data-playback-rate')) || 0.5;
+      const shouldLoop = video.getAttribute('data-should-loop') === 'true';
+      const loopDelay = parseInt(video.getAttribute('data-loop-delay')) || 5000;
+      const playOnce = video.getAttribute('data-play-once') === 'true';
+      
+      console.log('🎬 Configuring about page video:', {
+        playbackRate,
+        shouldLoop,
+        loopDelay,
+        playOnce,
+        videoSrc: video.src
+      });
+      
+      // Set playback rate
+      video.playbackRate = playbackRate;
+      
+      // Remove any existing event listeners to prevent duplicates
+      if (video.endedHandler) {
+        video.removeEventListener('ended', video.endedHandler);
+      }
+      
+      // Handle loop behavior
+      if (playOnce) {
+        video.loop = false;
+        video.endedHandler = () => {
+          video.pause();
+        };
+        video.addEventListener('ended', video.endedHandler);
+      } else if (loopDelay > 0) {
+        video.loop = false;
+        video.endedHandler = () => {
+          setTimeout(() => {
+            if (video && video.paused) {
+              video.currentTime = 0;
+              video.play().catch(e => console.log('Video play failed:', e));
+            }
+          }, loopDelay);
+        };
+        video.addEventListener('ended', video.endedHandler);
+      } else {
+        video.loop = shouldLoop;
+        video.endedHandler = null;
+      }
+    });
+  }
+
+  // Configure videos when DOM is ready
+  document.addEventListener('DOMContentLoaded', configureVideoElements);
+  
+  // Re-configure on Astro page transitions
+  document.addEventListener('astro:page-load', configureVideoElements);
+</script>
 
 <style>
   /* Add scroll margin for hash navigation */

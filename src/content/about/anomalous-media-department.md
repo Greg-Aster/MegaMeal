@@ -3,7 +3,7 @@ title: "About Department of Anomalous Media"
 description: "Meet the containment specialists who analyze reality-breaking transmissions and cosmic horror media that threaten dimensional stability."
 name: "Department of Anomalous Media"
 role: "Containment Archives, Section VII"
-avatar: "/about/anomolus.png"
+avatar: "/about/video/corporate-media.webm"
 bio: "Containment Archives, Section VII"
 published: 2024-10-15
 updated: 2024-12-20
