@@ -29,6 +29,9 @@ import ScrollEffects from '@components/client/ScrollEffects.svelte';
 import PageAnimations from '@components/client/PageAnimations.svelte';
 import Profile from '@components/client/Profile.svelte';
 
+// ⭐ NEW: Mobile timeline overlay for touch-friendly interactions
+import MobileTimelineOverlay from '@components/client/MobileTimelineOverlay.svelte';
+
 // Profile and avatar configs for Svelte components
 import { profileConfig } from '../config/config';
 import { avatarConfig } from '../config/avatar.config';
@@ -256,7 +259,7 @@ if (post && post.data) {
       </div>
     )}
 
-    <!-- TIMELINE BANNER -->
+    <!-- ⭐ ENHANCED: TIMELINE BANNER WITH MOBILE OVERLAY -->
     {hasTimelineBanner && (
       <div class="banner-container-timeline">
         <div class="banner-aspect-container">
@@ -270,6 +273,13 @@ if (post && post.data) {
               class="w-full h-full"
               asBanner={true}
               bannerHeight="100%"
+            />
+            
+            <!-- ⭐ NEW: Mobile Timeline Overlay for touch-friendly interactions -->
+            <MobileTimelineOverlay 
+              client:load
+              timelineBannerConfig={bannerDataSources.timelineBannerData}
+              isTimelineBanner={hasTimelineBanner}
             />
           </div>
         </div>
@@ -554,13 +564,13 @@ if (post && post.data) {
   /* ⭐ ESSENTIAL: Main panel positioning */
   .responsive-panel-wrapper {
     top: var(--main-panel-top);
-    transition: top 0.3s ease;
+    transition: top var(--transition-normal);
   }
   
   /* ⭐ ESSENTIAL: Banner spacing from navbar */
   #banner-container {
     margin-top: var(--navbar-spacing);
-    transition: margin-top 0.3s ease;
+    transition: margin-top var(--transition-normal);
   }
   
   /* ⭐ SIMPLIFIED: Mobile spacing (navbar always visible now) */
@@ -572,14 +582,15 @@ if (post && post.data) {
 </style>
 
 <!-- =============================================================== -->
-<!-- ⭐ MINIMAL: Only essential banner animation script remains      -->
+<!-- ⭐ ENHANCED: Banner animation + mobile timeline setup          -->
 <!-- =============================================================== -->
 <script>
   import { createBannerAnimation } from '@/utils/bannerAnimation';
   import { getBannerAnimationSettings, bannerConfig } from '../config/banner.config';
 
-  // Only initialize banner animation - everything else is handled by Svelte components
+  // Initialize banner animation and mobile timeline enhancements
   document.addEventListener('DOMContentLoaded', () => {
+    // Standard banner animation
     const bannerController = createBannerAnimation({
       containerId: 'standard-banner-container',
       animationConfig: getBannerAnimationSettings(),
@@ -593,5 +604,40 @@ if (post && post.data) {
     if (initialized) {
       console.log('Banner animation system initialized successfully');
     }
+    
+    // ⭐ NEW: Timeline mobile enhancement setup
+    setupTimelineMobileEnhancements();
   });
+  
+  /**
+   * Setup mobile-specific timeline enhancements
+   */
+  function setupTimelineMobileEnhancements() {
+    const timelineContainer = document.querySelector('.banner-container-timeline');
+    
+    if (!timelineContainer) return;
+    
+    // Listen for timeline fullscreen events
+    window.addEventListener('timeline-fullscreen-enter', () => {
+      console.log('📱 Timeline entered fullscreen mode');
+      // Additional setup can be added here
+    });
+    
+    window.addEventListener('timeline-fullscreen-exit', () => {
+      console.log('📱 Timeline exited fullscreen mode');
+      // Additional cleanup can be added here
+    });
+    
+    // Handle page transitions for timeline
+    document.addEventListener('astro:before-navigation', () => {
+      // Ensure fullscreen mode is exited before navigation
+      if (localStorage.getItem('timelineFullscreenActive') === 'true') {
+        localStorage.removeItem('timelineFullscreenActive');
+        document.documentElement.classList.remove('timeline-fullscreen-active');
+        document.body.classList.remove('timeline-fullscreen-active');
+      }
+    });
+    
+    console.log('📱 Timeline mobile enhancements initialized');
+  }
 </script>

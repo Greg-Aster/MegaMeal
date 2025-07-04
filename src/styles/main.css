@@ -111,6 +111,113 @@
     }
 
     /* ===================================================================
+     * ⭐ NEW: TIMELINE FULLSCREEN MODE - MOBILE ENHANCEMENT
+     * ===================================================================
+     */
+    
+    /* Timeline fullscreen active state using existing transition timing */
+    .timeline-fullscreen-active {
+        overflow: hidden !important;
+    }
+
+    /* Timeline fullscreen banner container using existing variables */
+    .timeline-fullscreen {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 9999 !important;
+        
+        margin: 0 !important;
+        padding: 0 !important;
+        
+        background: oklch(0.05 0.01 var(--hue));
+        
+        transition: all var(--transition-normal) cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+
+    /* Timeline fullscreen banner content using existing spacing */
+    .timeline-fullscreen .banner-aspect-container {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .timeline-fullscreen .banner-aspect-container::before {
+        display: none !important;
+    }
+
+    .timeline-fullscreen .banner-content-wrapper {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        
+        border-radius: 0 !important;
+        overflow: visible !important;
+    }
+
+    /* Hide other page elements when timeline is fullscreen */
+    .timeline-fullscreen-active #navbar-wrapper,
+    .timeline-fullscreen-active #main-panel-wrapper,
+    .timeline-fullscreen-active #toc-wrapper,
+    .timeline-fullscreen-active #parallax-banner {
+        display: none !important;
+    }
+
+    /* Timeline interactions disabled state using existing pattern */
+    .timeline-interactions-disabled {
+        pointer-events: none !important;
+        touch-action: none !important;
+    }
+
+    .timeline-interactions-disabled * {
+        pointer-events: none !important;
+        touch-action: none !important;
+    }
+
+    /* Mobile timeline overlay positioning using existing radius */
+    .banner-container-timeline {
+        position: relative;
+    }
+
+    /* Smooth transitions for fullscreen mode using existing timing */
+    .timeline-fullscreen,
+    .timeline-fullscreen .banner-aspect-container,
+    .timeline-fullscreen .banner-content-wrapper {
+        transition: all var(--transition-normal) cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+
+    /* Ensure timeline content is properly sized in fullscreen */
+    .timeline-fullscreen .banner-content-wrapper > * {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    /* Safe area support for devices with notches */
+    @supports (padding: max(0px)) {
+        .timeline-fullscreen {
+            padding-top: max(env(safe-area-inset-top), 0px);
+            padding-bottom: max(env(safe-area-inset-bottom), 0px);
+            padding-left: max(env(safe-area-inset-left), 0px);
+            padding-right: max(env(safe-area-inset-right), 0px);
+        }
+    }
+
+    /* ===================================================================
      * ⭐ SIMPLIFIED: BANNER SYSTEM - USES WORKING INLINE STYLES
      * ===================================================================
      */
@@ -613,6 +720,13 @@
         .parallax-bg {
             transform: none !important;
         }
+        
+        /* Timeline fullscreen transitions */
+        .timeline-fullscreen,
+        .timeline-fullscreen .banner-aspect-container,
+        .timeline-fullscreen .banner-content-wrapper {
+            transition: none !important;
+        }
     }
 
     /* 🎯 HIGH CONTRAST SUPPORT */
@@ -625,6 +739,10 @@
         .btn-plain:hover,
         .btn-regular:hover {
             outline: 2px solid currentColor !important;
+        }
+        
+        .timeline-fullscreen {
+            border: 3px solid white;
         }
     }
 }
