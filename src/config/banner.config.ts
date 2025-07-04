@@ -1,6 +1,6 @@
 /**
  * ===================================================================
- * BANNER CONFIGURATION - FIXED VERSION (REMOVED clamp() ISSUES)
+ * BANNER CONFIGURATION - FIXED MOBILE NAVBAR SPACING
  * ===================================================================
  */
 
@@ -149,7 +149,7 @@ export interface BannerConfig {
       assistant: string;
       none: string;
     };
-    // ⭐ MOBILE PORTRAIT FIX: Special spacing when navbar hidden (now handled by CSS)
+    // ⭐ FIXED: Mobile portrait spacing now accounts for always-visible navbar
     mobilePortraitSpacing: string;
   };
 
@@ -190,7 +190,7 @@ export interface BannerConfig {
 
 /**
  * ===================================================================
- * MAIN CONFIGURATION - FIXED VERSION (NO MORE clamp() ISSUES)
+ * MAIN CONFIGURATION - FIXED MOBILE NAVBAR SPACING
  * ===================================================================
  */
 export const bannerConfig: BannerConfig = {
@@ -237,19 +237,21 @@ export const bannerConfig: BannerConfig = {
     value: 'linear-gradient(135deg, oklch(0.6 0.2 var(--hue)), oklch(0.4 0.3 var(--hue)))'
   },
 
-  // 🎯 FIXED: Navbar spacing - NO MORE clamp() ISSUES
+  // 🎯 FIXED: Navbar spacing - Mobile portrait now accounts for always-visible navbar
   navbar: {
     height: '5rem',
     spacing: {
-      standard: "3rem",                      // ✅ FIXED: Simple rem value (was clamp issue)
-      timeline: "5.5rem",                    // ✅ WORKING VALUE
-      video: "5.5rem",                       // ✅ FIXED: Simple rem value (was clamp issue)
-      image: "4rem",                         // ✅ FIXED: Simple rem value (was clamp issue)
-      assistant: "5.5rem",                   // ✅ WORKING VALUE
-      none: "-8rem"                          // ✅ WORKING VALUE
+      standard: "3rem",                      // ✅ Desktop spacing
+      timeline: "5.5rem",                    // ✅ Desktop spacing
+      video: "5.5rem",                       // ✅ Desktop spacing
+      image: "4rem",                         // ✅ Desktop spacing
+      assistant: "5.5rem",                   // ✅ Desktop spacing
+      none: "-8rem"                          // ✅ Desktop spacing
     },
-    // ⭐ MOBILE PORTRAIT FIX: Now handled by CSS media queries in MainGridLayout.astro
-    mobilePortraitSpacing: '1.0rem'
+    // ⭐ FIXED: Mobile portrait spacing now accounts for always-visible navbar
+    // Before: navbar was hidden, so 1.0rem was enough
+    // Now: navbar is visible, so we need proper spacing from navbar to banner
+    mobilePortraitSpacing: '6rem'  // navbar height (5rem) + gap (1rem) = 6rem
   },
 
   // 🎯 FIXED: THE REAL OVERLAP SYSTEM - NO MORE clamp() ISSUES

@@ -13,8 +13,8 @@ import ImageWrapper from '../../components/misc/ImageWrapper.astro'
 import { profileConfig, siteConfig, avatarConfig } from '../../config/config' // 🎬 NEW: Import avatarConfig
 import { formatDateToYYYYMMDD } from '../../utils/date-utils'
 
-// ⭐ NEW: Import the layout toggle component
-import LayoutToggleMinimal from '../../components/client/LayoutToggleMinimal.svelte'
+// ⭐ FIXED: Import the correct layout toggle component
+import LayoutToggle from '../../components/client/LayoutToggle.svelte'
 
 export async function getStaticPaths() {
   const aboutPages = await getCollection('about');
@@ -108,11 +108,11 @@ const jsonLd = {
 <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
 
 <!-- =============================================================== -->
-<!-- ⭐ NEW: BUILT-IN LAYOUT TOGGLE - AVAILABLE ON EVERY ABOUT PAGE -->
+<!-- ⭐ FIXED: BUILT-IN LAYOUT TOGGLE - USING CORRECT COMPONENT     -->
 <!-- =============================================================== -->
-<LayoutToggleMinimal 
+<LayoutToggle 
   client:load 
-  defaultToOneColumn={oneColumnMode}
+  variant="minimal"
   position="top-right"
   size="md"
 />

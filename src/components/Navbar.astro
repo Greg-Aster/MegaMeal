@@ -84,17 +84,22 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
                         <Icon name="material-symbols:palette-outline" class="text-[1.25rem]"></Icon>
                     </button>
             )}
-            <!-- Mascot Controls -->
-            <LightDarkSwitch client:load></LightDarkSwitch>
-<!--             <button aria-label="Menu" name="Nav Menu" class="btn-plain scale-animation rounded-lg w-11 h-11 active:scale-90 md:!hidden" id="nav-menu-switch">
+            
+            <!-- ⭐ RESTORED: Mobile Hamburger Menu Button -->
+            <button aria-label="Menu" name="Nav Menu" class="btn-plain scale-animation rounded-lg w-11 h-11 active:scale-90 md:!hidden" id="nav-menu-switch">
                 <Icon name="material-symbols:menu-rounded" class="text-[1.25rem]"></Icon>
             </button>
-            <button aria-label="Dismiss Mascot" title="Dismiss Mascot" id="navbar-dismiss-mascot-button" class="btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90">
+            
+            <!-- ⭐ RESTORED: Mascot Controls (Mobile Portrait Only) -->
+            <button aria-label="Dismiss Mascot" title="Dismiss Mascot" id="navbar-dismiss-mascot-button" class="btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90 md:!hidden">
                 🍴
             </button>
-            <button aria-label="Bring back mascot" title="Bring back mascot" id="navbar-bring-back-mascot-button" class="btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90" style="display: none;">
+            <button aria-label="Bring back mascot" title="Bring back mascot" id="navbar-bring-back-mascot-button" class="btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90 md:!hidden" style="display: none;">
                 🥄
-            </button> -->
+            </button>
+            
+            <!-- Light/Dark Switch -->
+            <LightDarkSwitch client:load></LightDarkSwitch>
 
             <!-- Fullscreen Mode Toggle -->
             <button aria-label="Toggle Fullscreen Mode" title="Toggle Fullscreen Mode" class="btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90" id="fullscreen-btn">
@@ -142,7 +147,7 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
             });
         }
     
-        // Nav menu button
+        // ⭐ RESTORED: Nav menu button functionality
         let menuBtn = document.getElementById("nav-menu-switch");
         if (menuBtn) {
             menuBtn.addEventListener("click", function () {
@@ -286,8 +291,59 @@ const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
         }
     }); 
     
+    // ⭐ NEW: Auto-dismiss mascot on layout changes
+    function initializeMascotLayoutHandler() {
+        let previousWidth = window.innerWidth;
+        let previousIsMobile = window.innerWidth < 768; // md breakpoint
+        
+        window.addEventListener('resize', () => {
+            const currentWidth = window.innerWidth;
+            const currentIsMobile = currentWidth < 768;
+            
+            // Check if we've crossed the mobile/desktop boundary
+            const layoutChanged = previousIsMobile !== currentIsMobile;
+            
+            if (layoutChanged) {
+                console.log(`Layout changed: ${previousIsMobile ? 'mobile' : 'desktop'} → ${currentIsMobile ? 'mobile' : 'desktop'}`);
+                
+                // Auto-dismiss mascot on any layout change
+                document.dispatchEvent(new CustomEvent('bleepy:hide'));
+                sessionStorage.setItem('cuppyDismissed', 'true');
+                
+                // Update button states immediately
+                if (dismissMascotBtn && bringBackMascotBtn) {
+                    dismissMascotBtn.style.display = 'none';
+                    bringBackMascotBtn.style.display = currentIsMobile ? 'flex' : 'none';
+                }
+                
+                console.log('Mascot auto-dismissed due to layout change');
+            }
+            
+            previousWidth = currentWidth;
+            previousIsMobile = currentIsMobile;
+        });
+        
+        // Also handle orientation change events (mobile specific)
+        window.addEventListener('orientationchange', () => {
+            // Small delay to allow orientation change to complete
+            setTimeout(() => {
+                console.log('Orientation changed - auto-dismissing mascot');
+                document.dispatchEvent(new CustomEvent('bleepy:hide'));
+                sessionStorage.setItem('cuppyDismissed', 'true');
+                
+                // Update button states
+                if (dismissMascotBtn && bringBackMascotBtn) {
+                    dismissMascotBtn.style.display = 'none';
+                    const isMobile = window.innerWidth < 768;
+                    bringBackMascotBtn.style.display = isMobile ? 'flex' : 'none';
+                }
+            }, 100);
+        });
+    }
+    
     // Initialize everything
     loadButtonScript();
+    initializeMascotLayoutHandler();
 
     // SIMPLE TEST: Hide mascot by default - this is a bandaid fix as the mascot features has moves and im too lazy to fix it right now
     setTimeout(() => {

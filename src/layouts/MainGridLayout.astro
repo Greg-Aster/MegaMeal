@@ -206,11 +206,11 @@ if (post && post.data) {
   }
 
   <!-- =============================================================== -->
-  <!-- ⭐ SIMPLIFIED: NAVBAR - TAILWIND ONLY                         -->
+  <!-- ⭐ SIMPLIFIED: NAVBAR - NOW ALWAYS VISIBLE                     -->
   <!-- =============================================================== -->
   <slot slot="head" name="head"></slot>
   <div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-2 md:px-4 mx-auto">
-    <div id="navbar-wrapper" class="pointer-events-auto sticky top-0 transition-all duration-300 hidden md:block">
+    <div id="navbar-wrapper" class="pointer-events-auto sticky top-0 transition-all duration-300">
       <Navbar></Navbar>
     </div>
   </div>
@@ -406,16 +406,16 @@ if (post && post.data) {
   </div>
 
   <!-- =============================================================== -->
-  <!-- ⭐ FIXED: Main content with clean single breakpoint           -->
+  <!-- ⭐ SIMPLIFIED: One column mobile, two column desktop           -->
   <!-- =============================================================== -->
   <div class={`w-full z-30 pointer-events-none relative`}>
     <div id="main-panel-wrapper" class="responsive-panel-wrapper relative max-w-[var(--page-width)] mx-auto pointer-events-auto">
-      <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-[4.5rem_1fr] md:grid-cols-[16.5rem_auto] grid-rows-[auto_1fr_auto] md:grid-rows-[auto] mx-auto gap-4 md:gap-4 px-2 md:px-4 relative" style={`margin-top: ${mainContentOffset};`}>
+      <div id="main-grid" class="transition duration-700 w-full left-0 right-0 grid grid-cols-1 md:grid-cols-[16.5rem_auto] grid-rows-[1fr_auto] md:grid-rows-[auto] mx-auto gap-4 md:gap-4 px-2 md:px-4 relative" style={`margin-top: ${mainContentOffset};`}>
          
-        <!-- SIDEBAR SECTION - NARROW ON MOBILE, WIDE ON DESKTOP -->
-        <div class="mb-4 col-span-1 md:max-w-[17.5rem] onload-animation">
+        <!-- SIDEBAR SECTION - HIDDEN ON MOBILE, VISIBLE ON DESKTOP -->
+        <div class="hidden md:block mb-4 col-span-1 md:max-w-[17.5rem] onload-animation">
           <!-- ⭐ UPDATED: Svelte Profile Component with custom author data -->
-          <div class="hidden md:block mb-4">
+          <div class="mb-4">
             <Profile
               client:load
               slug={processedAuthorData.slug}
@@ -442,7 +442,7 @@ if (post && post.data) {
           ></SideBar>
         </div>
         
-        <!-- MAIN CONTENT SECTION -->
+        <!-- MAIN CONTENT SECTION - SPANS FULL WIDTH ON MOBILE -->
         <main id="main" class="transition-swup-fade col-span-1 overflow-hidden">
           <div id="main-content-wrapper" class="onload-animation">
             <slot></slot>
@@ -452,8 +452,22 @@ if (post && post.data) {
           </div>
         </main>
         
-        <!-- Footer for mobile screens - spans both columns -->
-        <div class="footer col-span-2 onload-animation block md:hidden">
+        <!-- Footer for mobile screens - single column -->
+        <div class="footer col-span-1 onload-animation block md:hidden">
+          <!-- ⭐ NEW: Mobile Profile at bottom of page -->
+          <div class="mb-6">
+            <Profile
+              client:load
+              slug={processedAuthorData.slug}
+              customAvatar={processedAuthorData.customAvatar}
+              customName={processedAuthorData.customName}
+              customBio={processedAuthorData.customBio}
+              customLink={processedAuthorData.customLink}
+              isHomePage={currentPath === '/'}
+              profileConfig={profileConfig}
+              avatarConfig={avatarConfig}
+            />
+          </div>
           <Footer></Footer>
         </div>
       </div>
@@ -530,7 +544,7 @@ if (post && post.data) {
   'main-content-offset': mainContentOffset,
   'main-panel-top': mainPanelTop,
   'navbar-spacing': navbarSpacing,
-  'mobile-navbar-spacing': bannerConfig.navbar.mobilePortraitSpacing, /* ⭐ ADD THIS LINE */
+  'mobile-navbar-spacing': bannerConfig.navbar.mobilePortraitSpacing,
 }}>
   /* ⭐ ESSENTIAL: Main grid margin */
   #main-grid {
@@ -549,7 +563,7 @@ if (post && post.data) {
     transition: margin-top 0.3s ease;
   }
   
-  /* ⭐ THE MISSING PIECE: Mobile spacing when navbar is hidden */
+  /* ⭐ SIMPLIFIED: Mobile spacing (navbar always visible now) */
   @media (max-width: 767px) {
     #banner-container {
       margin-top: var(--mobile-navbar-spacing);
