@@ -29,9 +29,6 @@ import ScrollEffects from '@components/client/ScrollEffects.svelte';
 import PageAnimations from '@components/client/PageAnimations.svelte';
 import Profile from '@components/client/Profile.svelte';
 
-// ⭐ NEW: Mobile timeline overlay for touch-friendly interactions
-import MobileTimelineOverlay from '@components/client/MobileTimelineOverlay.svelte';
-
 // Profile and avatar configs for Svelte components
 import { profileConfig } from '../config/config';
 import { avatarConfig } from '../config/avatar.config';
@@ -259,28 +256,32 @@ if (post && post.data) {
       </div>
     )}
 
-    <!-- ⭐ ENHANCED: TIMELINE BANNER WITH MOBILE OVERLAY -->
+    <!-- ⭐ NEW: TIMELINE BANNER WITH MOBILE INTERACTION WRAPPER -->
     {hasTimelineBanner && (
       <div class="banner-container-timeline">
         <div class="banner-aspect-container">
           <div class="banner-content-wrapper">
-            <TimelineController
-              category={hasPostBanner && post?.data?.bannerType === "timeline" ? post.data.bannerData.category : (bannerDataSources.timelineBannerData?.category || "MEGA MEAL")}
-              startYear={hasPostBanner && post?.data?.bannerType === "timeline" ? post.data.bannerData.startYear : bannerDataSources.timelineBannerData?.startYear}
-              endYear={hasPostBanner && post?.data?.bannerType === "timeline" ? post.data.bannerData.endYear : bannerDataSources.timelineBannerData?.endYear}
-              background={hasPostBanner && post?.data?.bannerType === "timeline" ? (post.data.bannerData.background || "/posts/timeline/universe.png") : (bannerDataSources.timelineBannerData?.background || "/posts/timeline/universe.png")}
-              compact={hasPostBanner && post?.data?.bannerType === "timeline" ? (post.data.bannerData.compact || false) : (bannerDataSources.timelineBannerData?.compact || false)}
-              class="w-full h-full"
-              asBanner={true}
-              bannerHeight="100%"
-            />
-            
-            <!-- ⭐ NEW: Mobile Timeline Overlay for touch-friendly interactions -->
-            <MobileTimelineOverlay 
-              client:load
-              timelineBannerConfig={bannerDataSources.timelineBannerData}
-              isTimelineBanner={hasTimelineBanner}
-            />
+            <!-- ⭐ NEW: Mobile interaction wrapper -->
+            <div id="timeline-mobile-wrapper" class="timeline-mobile-inactive">
+              <!-- ⭐ NEW: Mobile tap indicator -->
+              <div class="timeline-mobile-indicator md:hidden">
+                <div class="timeline-tap-hint">
+                  <Icon name="fa6-solid:hand-pointer" class="w-6 h-6 text-white/80" />
+                  <span class="text-white/80 text-sm font-medium">Tap to interact with timeline</span>
+                </div>
+              </div>
+              
+              <TimelineController
+                category={hasPostBanner && post?.data?.bannerType === "timeline" ? post.data.bannerData.category : (bannerDataSources.timelineBannerData?.category || "MEGA MEAL")}
+                startYear={hasPostBanner && post?.data?.bannerType === "timeline" ? post.data.bannerData.startYear : bannerDataSources.timelineBannerData?.startYear}
+                endYear={hasPostBanner && post?.data?.bannerType === "timeline" ? post.data.bannerData.endYear : bannerDataSources.timelineBannerData?.endYear}
+                background={hasPostBanner && post?.data?.bannerType === "timeline" ? (post.data.bannerData.background || "/posts/timeline/universe.png") : (bannerDataSources.timelineBannerData?.background || "/posts/timeline/universe.png")}
+                compact={hasPostBanner && post?.data?.bannerType === "timeline" ? (post.data.bannerData.compact || false) : (bannerDataSources.timelineBannerData?.compact || false)}
+                class="w-full h-full"
+                asBanner={true}
+                bannerHeight="100%"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -564,13 +565,13 @@ if (post && post.data) {
   /* ⭐ ESSENTIAL: Main panel positioning */
   .responsive-panel-wrapper {
     top: var(--main-panel-top);
-    transition: top var(--transition-normal);
+    transition: top 0.3s ease;
   }
   
   /* ⭐ ESSENTIAL: Banner spacing from navbar */
   #banner-container {
     margin-top: var(--navbar-spacing);
-    transition: margin-top var(--transition-normal);
+    transition: margin-top 0.3s ease;
   }
   
   /* ⭐ SIMPLIFIED: Mobile spacing (navbar always visible now) */
@@ -582,15 +583,14 @@ if (post && post.data) {
 </style>
 
 <!-- =============================================================== -->
-<!-- ⭐ ENHANCED: Banner animation + mobile timeline setup          -->
+<!-- ⭐ NEW: TIMELINE MOBILE INTERACTION SCRIPT                     -->
 <!-- =============================================================== -->
 <script>
   import { createBannerAnimation } from '@/utils/bannerAnimation';
   import { getBannerAnimationSettings, bannerConfig } from '../config/banner.config';
 
-  // Initialize banner animation and mobile timeline enhancements
+  // Initialize banner animation system
   document.addEventListener('DOMContentLoaded', () => {
-    // Standard banner animation
     const bannerController = createBannerAnimation({
       containerId: 'standard-banner-container',
       animationConfig: getBannerAnimationSettings(),
@@ -604,40 +604,52 @@ if (post && post.data) {
     if (initialized) {
       console.log('Banner animation system initialized successfully');
     }
-    
-    // ⭐ NEW: Timeline mobile enhancement setup
-    setupTimelineMobileEnhancements();
+
+    // ⭐ NEW: Timeline mobile interaction system
+    const timelineWrapper = document.getElementById('timeline-mobile-wrapper');
+    if (timelineWrapper && window.innerWidth < 768) {
+      let isTimelineActive = false;
+
+      // Handle timeline wrapper click/tap
+      timelineWrapper.addEventListener('click', (e) => {
+        if (!isTimelineActive) {
+          // First tap - activate timeline
+          e.preventDefault();
+          e.stopPropagation();
+          isTimelineActive = true;
+          timelineWrapper.classList.remove('timeline-mobile-inactive');
+          timelineWrapper.classList.add('timeline-mobile-active');
+          console.log('Timeline activated for mobile interaction');
+        }
+        // If already active, let the click through to timeline controls
+      });
+
+      // Reset timeline interaction when clicking outside
+      document.addEventListener('click', (e) => {
+        if (isTimelineActive && !timelineWrapper.contains(e.target)) {
+          isTimelineActive = false;
+          timelineWrapper.classList.remove('timeline-mobile-active');
+          timelineWrapper.classList.add('timeline-mobile-inactive');
+          console.log('Timeline deactivated - clicked outside');
+        }
+      });
+
+      // Reset timeline when navigating (blog post selection)
+      window.addEventListener('beforeunload', () => {
+        isTimelineActive = false;
+        timelineWrapper.classList.remove('timeline-mobile-active');
+        timelineWrapper.classList.add('timeline-mobile-inactive');
+      });
+
+      // Reset on page transitions (for SPA behavior)
+      document.addEventListener('astro:page-load', () => {
+        isTimelineActive = false;
+        const wrapper = document.getElementById('timeline-mobile-wrapper');
+        if (wrapper) {
+          wrapper.classList.remove('timeline-mobile-active');
+          wrapper.classList.add('timeline-mobile-inactive');
+        }
+      });
+    }
   });
-  
-  /**
-   * Setup mobile-specific timeline enhancements
-   */
-  function setupTimelineMobileEnhancements() {
-    const timelineContainer = document.querySelector('.banner-container-timeline');
-    
-    if (!timelineContainer) return;
-    
-    // Listen for timeline fullscreen events
-    window.addEventListener('timeline-fullscreen-enter', () => {
-      console.log('📱 Timeline entered fullscreen mode');
-      // Additional setup can be added here
-    });
-    
-    window.addEventListener('timeline-fullscreen-exit', () => {
-      console.log('📱 Timeline exited fullscreen mode');
-      // Additional cleanup can be added here
-    });
-    
-    // Handle page transitions for timeline
-    document.addEventListener('astro:before-navigation', () => {
-      // Ensure fullscreen mode is exited before navigation
-      if (localStorage.getItem('timelineFullscreenActive') === 'true') {
-        localStorage.removeItem('timelineFullscreenActive');
-        document.documentElement.classList.remove('timeline-fullscreen-active');
-        document.body.classList.remove('timeline-fullscreen-active');
-      }
-    });
-    
-    console.log('📱 Timeline mobile enhancements initialized');
-  }
 </script>
