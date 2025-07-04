@@ -3,7 +3,7 @@ title: "About the Mysterious Witness"
 description: "The enigmatic figure whose rare first-hand account of the Qarnivor extinction provides our only glimpse into the Snuggloid emergence."
 name: "Mysterious Witness"
 role: "Field Observer (Identity Classified)"
-avatar: "/posts/timeline/witness.png"
+avatar: "/about/video/witness.webm"
 bio: "The sole documented survivor of direct Snuggloid contact on post-extinction Qarnivor"
 published: 2024-12-20
 updated: 2024-12-20

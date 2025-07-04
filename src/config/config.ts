@@ -7,7 +7,6 @@ import type {
 import { LinkPreset } from '../types/config'
 import { AUTO_MODE, DARK_MODE, LIGHT_MODE } from '@constants/constants.ts'
 
-
 export const siteConfig: SiteConfig = {
   title: "MEGA MEAL SAGA",
   subtitle: "Consuming Time Itself Since 3042",
@@ -39,16 +38,16 @@ export const navBarConfig: NavBarConfig = {
   links: [
     0,
     {
-      name: "Gastronomy",
-      url: "#",
-      dropdown: [
-        { name:  "Map ", url: "/posts/explainer/" },
-        { name:  "Cookbook ", url: "/posts/cookbook/cookbook-index/" },
-      ]
+      name: "Timeline Map",
+      url: "/posts/explainer/",
+      // dropdown: [
+      //   { name:  "Map ", url: "/posts/explainer/" },
+      //   { name:  "Cookbook ", url: "/posts/cookbook/cookbook-index/" },
+      // ]
     },
     3,
     1,
-    2
+    2 
   ]
 }
 
@@ -79,4 +78,14 @@ export const licenseConfig: LicenseConfig = {
   enable: true,
   name: "Corporate Holdings Act 3042-B",
   url: "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+}
+
+// 🎬 NEW: Avatar configuration for video playback settings
+export const avatarConfig = {
+  videoConfig: {
+    playbackRate: 0.5,    // Default to 50% speed
+    loop: true,           // Default to true, can be disabled
+    loopDelay: 5000,      // Delay between loops in ms
+    playOnce: false       // Play once then stop
+  }
 }
