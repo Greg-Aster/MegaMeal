@@ -12,7 +12,10 @@
     "new-post": "node scripts/new-post.js",
     "format": "biome format --write ./src",
     "lint": "biome check --apply ./src",
-    "preinstall": "npx only-allow pnpm"
+    "preinstall": "npx only-allow pnpm",
+    "game:dev": "astro dev --port 3001",
+    "game:build": "astro build",
+    "game:preview": "astro preview"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",

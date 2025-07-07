@@ -294,7 +294,7 @@ export default defineConfig({
     logLevel: 'error', // Only show errors, suppress warnings
     
     optimizeDeps: {
-      exclude: ['mammoth'], // Only exclude mammoth from optimization
+      exclude: ['mammoth', 'three'], // Exclude three.js and mammoth from optimization
     },
     server: {
       // Add CORS headers to the dev server
@@ -306,7 +306,7 @@ export default defineConfig({
     },
     build: {
       rollupOptions: {
-        external: ['mammoth'], // Only externalize mammoth
+        external: ['mammoth'], // Only externalize mammoth for now
         onwarn(warning, warn) {
           // temporarily suppress this warning
           if (
@@ -319,5 +319,21 @@ export default defineConfig({
         },
       },
     },
+    // 🎮 GAME-SPECIFIC CONFIGURATION
+    resolve: {
+      alias: {
+        // Create aliases for game modules to ensure proper resolution
+        '@game': '/src/game',
+        '@game-core': '/src/game/core',
+        '@game-ui': '/src/game/ui',
+        '@game-graphics': '/src/game/graphics',
+        '@game-locations': '/src/game/locations'
+      }
+    },
+    define: {
+      // Define global constants for the game
+      __GAME_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
+      __DEV_MODE__: !process.env.NODE_ENV || process.env.NODE_ENV === 'development'
+    }
   },
 });
