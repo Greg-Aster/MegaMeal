@@ -1,35 +1,33 @@
 <!-- 
-  /src/game/Game.svelte 
-  MegaMeal Navigator - Clean 3D Star Observatory Game
-  Based on StarMapView.astro - using Tailwind CSS and Three.js
+  Refactored Game.svelte using the new engine architecture
+  Preserves original StarVisuals functionality with modern FPS controls
 -->
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { StarControls } from './StarControls';
-  import { StarVisuals } from './StarVisuals';
-  import { StarObservatory } from './StarObservatory';
-  import TimelineCard from './TimelineCard.svelte';
+  import { StarVisuals, type StarData } from './systems/StarVisuals';
+  import { StarObservatory } from './levels/StarObservatory';
+  import { Engine } from '../engine/core/Engine';
+  import { HybridControls } from '../engine/input/HybridControls';
+  import TimelineCard from './ui/components/TimelineCard.svelte';
+  import GameUI from './ui/GameUI.svelte';
+  import DebugPanel from './ui/DebugPanel.svelte';
 
   // Props
   export let timelineEvents: string = '[]';
 
-  // Game state
+  // State
   let gameContainer: HTMLElement;
   let isLoading = true;
   let loadingMessage = 'Initializing Star Observatory...';
   let isInitialized = false;
   let error: string | null = null;
 
-  // Game systems
-  let starControls: StarControls;
+  // Engine and game systems
+  let engine: Engine;
   let starVisuals: StarVisuals;
   let starObservatory: StarObservatory;
-
-  // Three.js core (loaded dynamically)
-  let THREE: any;
-  let scene: any;
-  let camera: any;
-  let renderer: any;
+  let hybridControls: HybridControls;
+  let THREE: any; // Store THREE reference for use in click handlers
 
   // Game data
   let selectedStar: any = null;
@@ -39,99 +37,92 @@
     currentLocation: 'Star Observatory Alpha'
   };
 
-  // Mobile detection (client-side only)
+  // Mobile detection
   let isMobile = false;
 
-  // Load Three.js dynamically
-  async function loadThreeJS(): Promise<any> {
-    if ((window as any).THREE) {
-      return (window as any).THREE;
-    }
-
-    loadingMessage = 'Loading 3D Engine...';
-    
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-      script.onload = () => {
-        loadingMessage = 'Loading Controls...';
-        const controlsScript = document.createElement('script');
-        controlsScript.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
-        controlsScript.onload = () => resolve((window as any).THREE);
-        controlsScript.onerror = reject;
-        document.head.appendChild(controlsScript);
-      };
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-  }
-
-  // Initialize the game
+  // Initialize the game with new engine architecture
   async function initializeGame() {
     try {
       if (!gameContainer) {
         throw new Error('Game container not found');
       }
 
-      // Load Three.js
-      THREE = await loadThreeJS();
-      if (!THREE) {
-        throw new Error('Failed to load Three.js');
-      }
+      loadingMessage = 'Setting up game engine...';
 
-      loadingMessage = 'Creating 3D Scene...';
+      // Initialize the new engine
+      engine = Engine.getInstance({
+        container: gameContainer,
+        enablePhysics: true,
+        enableAudio: false,
+        enableDebug: false, // DISABLED for clean gameplay
+        enablePerformanceMonitoring: false // DISABLED for clean gameplay
+      });
 
-      // Create Three.js scene
-      scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(60, gameContainer.clientWidth / gameContainer.clientHeight, 0.1, 2000);
-      renderer = new THREE.WebGLRenderer({ antialias: true });
+      await engine.initialize();
+
+      loadingMessage = 'Creating star field...';
+
+      // Get engine systems
+      const scene = engine.getScene();
+      const camera = engine.getCamera();
+
+      // Store THREE reference for later use
+      THREE = await import('three');
       
-      renderer.setSize(gameContainer.clientWidth, gameContainer.clientHeight);
-      renderer.setPixelRatio(window.devicePixelRatio);
-      gameContainer.appendChild(renderer.domElement);
-
-      loadingMessage = 'Initializing Star Observatory...';
-
-      // Initialize game systems
-      starObservatory = new StarObservatory(THREE, scene);
+      // Initialize game systems using the new engine
+      const physicsWorld = engine.getPhysicsWorld();
+      const engineCamera = engine.getCamera();
+      starObservatory = new StarObservatory(THREE, scene, physicsWorld, engineCamera, gameContainer);
       await starObservatory.initialize();
 
-      loadingMessage = 'Setting up Controls...';
-      
-      starControls = new StarControls(THREE, camera, renderer.domElement);
-      starControls.initialize();
-
-      loadingMessage = 'Generating Stars...';
-      
       starVisuals = new StarVisuals(THREE, scene);
       
-      // Parse and pass timeline events
+      // Parse and pass timeline events (same as before)
       try {
         const events = JSON.parse(timelineEvents);
-        console.log(`Game.svelte: Parsed ${events.length} timeline events from props`);
-        console.log('Game.svelte: First few events:', events.slice(0, 3));
+        console.log(`Game: Parsed ${events.length} timeline events`);
         starVisuals.setTimelineEvents(events);
       } catch (error) {
         console.warn('Failed to parse timeline events, using defaults:', error);
       }
       
       await starVisuals.initialize();
+
+      loadingMessage = 'Setting up interactions...';
+
+      // Connect star visuals to observatory
+      starObservatory.setStarVisuals(starVisuals);
       
+      // Set up star selection callback from observatory
+      starObservatory.onStarSelected((star) => {
+        selectedStar = star;
+        if (star) {
+          gameStats.starsDiscovered++;
+        }
+      });
 
-      loadingMessage = 'Finalizing...';
+      // Initialize hybrid controls (OrbitControls + WASD)
+      await setupHybridControls();
 
-      // Set up event listeners
-      setupEventListeners();
+      // Set up event listeners for star interactions (now handled by observatory)
+      setupStarInteractions();
 
-      // Mark as initialized before starting animation
+      // Set up engine update loop
+      engine.getEventBus().on('engine.update', (data) => {
+        // Update game systems
+        starVisuals?.update();
+        starObservatory?.update();
+        gameStats.timeExplored = data.totalTime;
+      });
+
+      // Start the engine
+      engine.start();
+
       isLoading = false;
       isInitialized = true;
       loadingMessage = 'Welcome to the Star Observatory!';
 
-
-      // Start animation loop
-      animate();
-
+      console.log('✅ Star Observatory initialized with new engine');
 
     } catch (err) {
       console.error('❌ Failed to initialize game:', err);
@@ -140,189 +131,168 @@
     }
   }
 
-  // Set up event listeners
-  function setupEventListeners() {
-    // Window resize
-    window.addEventListener('resize', handleResize);
-
-    // Star selection events
-    starVisuals.onStarSelected((starData) => {
-      if (starData) {
-        // Get the sprite for screen position calculation
-        const starSprite = starVisuals.getStarSprites().get(starData.uniqueId);
-        if (starSprite) {
-          const screenPosition = starControls.getScreenPosition(starSprite);
-          selectedStar = {
-            ...starData,
-            screenPosition: calculateOptimalCardPosition(screenPosition, gameContainer)
-          };
-        } else {
-          selectedStar = starData;
+  async function setupHybridControls() {
+    try {
+      const camera = engine.getCamera();
+      const renderer = engine.getRenderer();
+      const inputManager = engine.getInputManager();
+      const eventBus = engine.getEventBus();
+      const physicsWorld = engine.getPhysicsWorld(); // Get physics world from engine
+      
+      // Initialize hybrid controls with contemplative stargazing feel + WASD movement
+      hybridControls = new HybridControls(
+        THREE,
+        camera,
+        renderer.getDomElement(),
+        eventBus,
+        inputManager,
+        physicsWorld, // Add physics world for gravity and collision
+        {
+          moveSpeed: 50, // Units per second
+          orbitControls: {
+            enableDamping: true,
+            dampingFactor: 0.2,
+            rotateSpeed: 0.1,
+            zoomSpeed: 1.0, // Increased from 0.3 for faster zoom
+            enablePan: false,
+            minDistance: 50,
+            maxDistance: 300,
+            autoRotate: false,
+            autoRotateSpeed: 0.05,
+            // Mobile/touch optimizations
+            enableTouch: true,
+            touchRotateSpeed: 0.15,
+            touchZoomSpeed: 1.2 // Faster zoom on mobile
+          }
         }
-        gameStats.starsDiscovered++;
-      } else {
-        selectedStar = null;
+      );
+      
+      await hybridControls.initialize();
+      
+      // Set initial camera position on the ground, slightly away from center
+      camera.position.set(0, -3.4, 50); // Ground level (-3.4), back from hill center
+      
+      // Look straight ahead with slight upward angle for stargazing
+      const lookUpAngle = THREE.MathUtils.degToRad(15); // Much less dramatic - just 15 degrees up
+      camera.rotation.x = -lookUpAngle;
+      
+      console.log('✅ Hybrid controls initialized');
+    } catch (error) {
+      console.warn('Failed to initialize hybrid controls:', error);
+    }
+  }
+
+  function setupStarInteractions() {
+    // Star interactions are now handled by StarObservatory
+    // Set up mouse interaction for star selection
+    const renderer = engine.getRenderer();
+    const canvas = renderer.getDomElement();
+    
+    // Use mouseup instead of click to avoid conflicts with orbit controls
+    canvas.addEventListener('mouseup', (event) => {
+      // Only handle left mouse button and short clicks (not drags)
+      if (event.button === 0) {
+        // Check if this was a quick click (not a drag)
+        const mouseDownTime = event.timeStamp - (window as any).lastMouseDownTime || 0;
+        if (mouseDownTime < 200) { // Less than 200ms = click, not drag
+          event.stopPropagation();
+          handleStarClick(event);
+        }
       }
     });
-
-    // Controls events
-    starControls.onViewChange(() => {
-      // Update any UI elements that depend on camera position
+    
+    // Track mouse down time to distinguish clicks from drags
+    canvas.addEventListener('mousedown', (event) => {
+      (window as any).lastMouseDownTime = event.timeStamp;
     });
-
-    // Set up mouse/touch interaction between controls and visuals
-    renderer.domElement.addEventListener('mousemove', handleMouseMove);
-    renderer.domElement.addEventListener('click', handleMouseClick);
-    if (isMobile) {
-      renderer.domElement.addEventListener('touchend', handleTouchEnd);
-    }
   }
 
-  // Mouse interaction handlers
-  function handleMouseMove(event: MouseEvent) {
-    if (!starControls || !starVisuals) return;
-    
-    const intersections = starControls.checkIntersections(Array.from(starVisuals.getStarSprites().values()));
-    
-    if (intersections.length > 0 && intersections[0].object.userData?.uniqueId) {
-      starVisuals.handleStarHover(intersections[0].object, true);
-      starControls.updateCursor(true);
-    } else {
-      starVisuals.handleStarHover(null, false);
-      starControls.updateCursor(false);
+  function handleStarClick(event: MouseEvent) {
+    if (!starVisuals || !engine) {
+      console.log('❌ Missing starVisuals or engine');
+      return;
     }
-  }
-
-  function handleMouseClick(event: MouseEvent) {
-    if (!starControls || !starVisuals) return;
     
-    const intersections = starControls.checkIntersections(Array.from(starVisuals.getStarSprites().values()));
+    console.log('🖱️ Star click detected');
+    
+    // Use the stored THREE reference
+    if (!THREE) {
+      console.log('❌ THREE not loaded yet');
+      return;
+    }
+    
+    // Get intersections using the interaction system
+    const camera = engine.getCamera();
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    
+    const rect = gameContainer.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    
+    console.log('🎯 Mouse coordinates:', mouse.x.toFixed(3), mouse.y.toFixed(3));
+    
+    raycaster.setFromCamera(mouse, camera);
+    const starSprites = Array.from(starVisuals.getStarSprites().values());
+    console.log(`🌟 Checking ${starSprites.length} stars for intersection`);
+    
+    if (starSprites.length === 0) {
+      console.log('❌ No star sprites found!');
+      return;
+    }
+    
+    // Add more debugging info
+    console.log('📷 Camera position:', camera.position);
+    console.log('📷 Camera rotation:', camera.rotation);
+    console.log('🔫 Ray origin:', raycaster.ray.origin);
+    console.log('🔫 Ray direction:', raycaster.ray.direction);
+    
+    const intersections = raycaster.intersectObjects(starSprites);
+    console.log(`✨ Found ${intersections.length} intersections`);
     
     if (intersections.length > 0 && intersections[0].object.userData?.uniqueId) {
+      console.log('⭐ Star selected:', intersections[0].object.userData.title);
       starVisuals.handleStarClick(intersections[0].object);
     } else {
-      // Clicked empty space - deselect
+      console.log('🌌 No star selected');
       starVisuals.handleStarClick(null);
     }
   }
 
-  function handleTouchEnd(event: TouchEvent) {
-    if (!starControls || !starVisuals) return;
-    
-    const intersections = starControls.checkIntersections(Array.from(starVisuals.getStarSprites().values()));
-    
-    if (intersections.length > 0 && intersections[0].object.userData?.uniqueId) {
-      starVisuals.handleStarClick(intersections[0].object);
-    } else {
-      starVisuals.handleStarClick(null);
+  // Screen position calculation moved to StarObservatory.ts
+
+  function resetView() {
+    // Reset camera to default position using hybrid controls
+    if (hybridControls) {
+      hybridControls.resetView();
     }
+    selectedStar = null;
   }
 
   // Handle window resize
   function handleResize() {
-    if (!camera || !renderer || !gameContainer) return;
+    if (!engine) return;
     
     const width = gameContainer.clientWidth;
     const height = gameContainer.clientHeight;
+    
+    const camera = engine.getCamera();
+    const renderer = engine.getRenderer();
     
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     renderer.setSize(width, height);
   }
 
-  // Main animation loop
-  function animate() {
-    if (!isInitialized) return;
-    
-    requestAnimationFrame(animate);
-    
-    try {
-      // Update game systems
-      starControls?.update();
-      starVisuals?.update();
-      starObservatory?.update();
-      
-      // Render the scene
-      renderer.render(scene, camera);
-      
-      // Update game stats
-      gameStats.timeExplored = Date.now();
-      
-    } catch (err) {
-      console.error('Error in animation loop:', err);
-    }
-  }
-
-  // Calculate optimal card position based on star screen position
-  function calculateOptimalCardPosition(screenPosition: {x: number, y: number, isInFront: boolean}, container: HTMLElement) {
-    if (!screenPosition.isInFront || !container) {
-      return { x: 100, y: 100, cardClass: 'timeline-card-bottom' };
-    }
-
-    const rect = container.getBoundingClientRect();
-    const cardWidth = 200;
-    const cardHeight = 100;
-    const margin = 20;
-    
-    let cardX = screenPosition.x;
-    let cardY = screenPosition.y;
-    let cardClass = 'timeline-card-bottom'; // Default
-    
-    // Determine optimal position and pointer direction
-    const spaceRight = rect.width - screenPosition.x;
-    const spaceLeft = screenPosition.x;
-    const spaceBelow = rect.height - screenPosition.y;
-    const spaceAbove = screenPosition.y;
-    
-    // Choose position with most available space
-    if (spaceBelow >= cardHeight + margin && spaceBelow >= spaceAbove) {
-      // Position below star
-      cardX = screenPosition.x - cardWidth / 2;
-      cardY = screenPosition.y + margin;
-      cardClass = 'timeline-card-top';
-    } else if (spaceAbove >= cardHeight + margin) {
-      // Position above star
-      cardX = screenPosition.x - cardWidth / 2;
-      cardY = screenPosition.y - cardHeight - margin;
-      cardClass = 'timeline-card-bottom';
-    } else if (spaceRight >= cardWidth + margin) {
-      // Position to the right of star
-      cardX = screenPosition.x + margin;
-      cardY = screenPosition.y - cardHeight / 2;
-      cardClass = 'timeline-card-left';
-    } else if (spaceLeft >= cardWidth + margin) {
-      // Position to the left of star
-      cardX = screenPosition.x - cardWidth - margin;
-      cardY = screenPosition.y - cardHeight / 2;
-      cardClass = 'timeline-card-right';
-    }
-    
-    // Clamp to viewport boundaries
-    cardX = Math.max(margin, Math.min(cardX, rect.width - cardWidth - margin));
-    cardY = Math.max(margin, Math.min(cardY, rect.height - cardHeight - margin));
-    
-    return { x: cardX, y: cardY, cardClass };
-  }
-
-  // Handle star interaction
-  function handleStarClick(event: CustomEvent) {
-    const starData = event.detail;
-    selectedStar = starData;
-    gameStats.starsDiscovered++;
-  }
-
-  // Reset view
-  function resetView() {
-    starControls?.resetView();
-    selectedStar = null;
-  }
-
   // Lifecycle
   onMount(async () => {
-    console.log('🎮 Starting Star Observatory Game...');
+    console.log('🎮 Starting Star Observatory Game with new engine...');
     
-    // Detect mobile device (client-side only)
+    // Detect mobile device
     isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // Set up resize listener
+    window.addEventListener('resize', handleResize);
     
     await initializeGame();
   });
@@ -336,9 +306,9 @@
     // Dispose of game systems
     try {
       starVisuals?.dispose();
-      starControls?.dispose();
       starObservatory?.dispose();
-      renderer?.dispose();
+      hybridControls?.dispose();
+      engine?.dispose();
     } catch (err) {
       console.warn('Warning during cleanup:', err);
     }
@@ -386,60 +356,27 @@
     </div>
   {/if}
 
-  <!-- Game UI Overlay -->
+  <!-- Game UI -->
   {#if isInitialized && !isLoading && !error}
-    <!-- Top HUD -->
-    <div class="absolute top-4 left-4 z-30 font-mono">
-      <div class="card-base p-4 backdrop-blur-sm">
-        <div class="text-[color:var(--primary)] font-bold mb-2">STAR OBSERVATORY</div>
-        <div class="text-sm text-[color:var(--text-75)] space-y-1">
-          <div class="text-[color:var(--text-main)]">Location: {gameStats.currentLocation}</div>
-          <div class="text-[color:var(--text-main)]">Stars Discovered: {gameStats.starsDiscovered}</div>
-        </div>
-      </div>
-    </div>
+    <GameUI {gameStats} {selectedStar} {isMobile} {resetView} />
+    
+    <!-- Debug Panel - DISABLED for clean gameplay -->
+    <!-- <DebugPanel {engine} /> -->
 
-    <!-- Controls Info -->
-    <div class="absolute top-4 right-4 z-30 font-mono">
-      <div class="card-base p-3 backdrop-blur-sm text-sm text-[color:var(--text-75)]">
-        {#if isMobile}
-          <div class="text-[color:var(--text-main)]">Touch & drag to explore</div>
-          <div class="text-[color:var(--text-main)]">Pinch to zoom</div>
-          <div class="text-[color:var(--text-main)]">Tap stars to select</div>
-        {:else}
-          <div class="text-[color:var(--text-main)]">Mouse to look around</div>
-          <div class="text-[color:var(--text-main)]">Scroll to zoom</div>
-          <div class="text-[color:var(--text-main)]">Click stars to select</div>
-        {/if}
-      </div>
-    </div>
-
-    <!-- Floating Star Info Card -->
+    <!-- Floating Star Info Card - CLEAN VERSION with positioning -->
     {#if selectedStar}
       <div 
-        id="floating-star-card" 
-        class="absolute z-40 pointer-events-auto transition-opacity duration-300"
+        class="absolute z-40 pointer-events-auto"
         style="left: {selectedStar.screenPosition?.x || 100}px; top: {selectedStar.screenPosition?.y || 100}px;"
       >
         <TimelineCard 
           event={selectedStar}
           position={selectedStar.screenPosition?.cardClass?.replace('timeline-card-', '') || 'bottom'}
-          isMobile={isMobile}
+          {isMobile}
           isVisible={true}
         />
       </div>
     {/if}
-
-    <!-- Reset View Button -->
-    <div class="absolute bottom-4 right-4 z-30">
-      <button 
-        class="btn-regular p-3 rounded-full font-bold text-lg hover:scale-110 transition-transform"
-        on:click={resetView}
-        title="Reset View"
-      >
-        🎯
-      </button>
-    </div>
   {/if}
 </div>
 
@@ -471,9 +408,6 @@
     100% { transform: translateX(100%); }
   }
   
-  /* Timeline card styles are now imported via TimelineCard.svelte component */
-  
-  /* Reduce animations for accessibility */
   @media (prefers-reduced-motion: reduce) {
     .neon-text,
     .animate-pulse,
@@ -481,8 +415,7 @@
       animation: none !important;
     }
     
-    .hover\:scale-105:hover,
-    .hover\:scale-110:hover {
+    .hover\:scale-105:hover {
       transform: none !important;
     }
   }
