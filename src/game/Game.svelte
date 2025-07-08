@@ -6,11 +6,13 @@
   import { onMount, onDestroy } from 'svelte';
   import { StarVisuals, type StarData } from './systems/StarVisuals';
   import { StarObservatory } from './levels/StarObservatory';
+  import { MirandaShip } from './levels/MirandaShip';
   import { Engine } from '../engine/core/Engine';
   import { HybridControls } from '../engine/input/HybridControls';
   import TimelineCard from './ui/components/TimelineCard.svelte';
   import GameUI from './ui/GameUI.svelte';
   import DebugPanel from './ui/DebugPanel.svelte';
+  import MobileControls from './ui/MobileControls.svelte';
 
   // Props
   export let timelineEvents: string = '[]';
@@ -26,8 +28,12 @@
   let engine: Engine;
   let starVisuals: StarVisuals;
   let starObservatory: StarObservatory;
+  let mirandaShip: MirandaShip;
   let hybridControls: HybridControls;
   let THREE: any; // Store THREE reference for use in click handlers
+  
+  // Level management
+  let currentLevel: 'observatory' | 'miranda' = 'observatory';
 
   // Game data
   let selectedStar: any = null;
@@ -39,6 +45,144 @@
 
   // Mobile detection
   let isMobile = false;
+
+  // Function to handle level transitions
+  async function transitionToLevel(levelType: string) {
+    if (levelType === 'miranda-ship-level' && currentLevel === 'observatory') {
+      console.log('🌟 Transitioning to Miranda Ship level...');
+      
+      try {
+        // Clear the selected star
+        selectedStar = null;
+        
+        // Dispose current level
+        if (starObservatory) {
+          starObservatory.dispose();
+        }
+        
+        // Initialize Miranda Ship level
+        const scene = engine.getScene();
+        const physicsWorld = engine.getPhysicsWorld();
+        const camera = engine.getCamera();
+        
+        mirandaShip = new MirandaShip(THREE, scene, physicsWorld, camera, gameContainer);
+        await mirandaShip.initialize();
+        
+        // Set up interaction callbacks for the story elements
+        mirandaShip.onNoteFound((noteId: string, content: string) => {
+          console.log(`📝 Found captain's log ${noteId}: ${content}`);
+          // Could show a UI notification here
+        });
+        
+        mirandaShip.onSafeOpened((recipe: any) => {
+          console.log('🔓 Safe opened! Found the Perfect Mary recipe:', recipe);
+          // Could show the recipe in a modal here
+        });
+        
+        // Update camera position for ship exploration
+        camera.position.set(60, 5, 0); // Start outside the ship
+        camera.lookAt(0, 0, 0);
+        
+        // Update controls for ship environment
+        if (hybridControls) {
+          hybridControls.setMoveSpeed(25); // Slower movement for ship interior
+        }
+        
+        // Update game state
+        currentLevel = 'miranda';
+        gameStats.currentLocation = 'Miranda Ship Debris Field';
+        
+        console.log('✅ Successfully transitioned to Miranda Ship level');
+        
+      } catch (error) {
+        console.error('❌ Failed to transition to Miranda Ship level:', error);
+      }
+    }
+  }
+
+  // Function to return to observatory
+  async function returnToObservatory() {
+    if (currentLevel === 'miranda') {
+      console.log('🌟 Returning to Star Observatory...');
+      
+      try {
+        // Clear selected star
+        selectedStar = null;
+        
+        // Dispose Miranda Ship level
+        if (mirandaShip) {
+          mirandaShip.dispose();
+        }
+        
+        // Reinitialize Star Observatory
+        const scene = engine.getScene();
+        const physicsWorld = engine.getPhysicsWorld();
+        const camera = engine.getCamera();
+        
+        starObservatory = new StarObservatory(THREE, scene, physicsWorld, camera, gameContainer);
+        await starObservatory.initialize();
+        starObservatory.setStarVisuals(starVisuals);
+        
+        // Reconnect star selection callback
+        starObservatory.onStarSelected((star) => {
+          selectedStar = star;
+          if (star) {
+            gameStats.starsDiscovered++;
+            
+            if (star.isLevel && star.slug === 'miranda-ship-level') {
+              console.log('🚀 Level transition star selected:', star.title);
+            }
+          }
+        });
+        
+        // Reset camera position
+        camera.position.set(0, -3.4, 50);
+        const lookUpAngle = THREE.MathUtils.degToRad(15);
+        camera.rotation.set(-lookUpAngle, 0, 0);
+        
+        // Reset controls
+        if (hybridControls) {
+          hybridControls.setMoveSpeed(50); // Restore original speed
+        }
+        
+        // Update game state
+        currentLevel = 'observatory';
+        gameStats.currentLocation = 'Star Observatory Alpha';
+        
+        console.log('✅ Successfully returned to Star Observatory');
+        
+      } catch (error) {
+        console.error('❌ Failed to return to Star Observatory:', error);
+      }
+    }
+  }
+
+  // Mobile control handlers
+  function handleMobileMovement(event: CustomEvent) {
+    if (engine && engine.getInputManager()) {
+      const { x, z } = event.detail;
+      engine.getInputManager().setVirtualMovement(x, 0, z);
+    }
+  }
+  
+  function handleMobileAction(event: CustomEvent) {
+    const action = event.detail;
+    if (action === 'interact' && currentLevel === 'miranda') {
+      // Trigger interaction check for Miranda level
+      if (mirandaShip && hybridControls) {
+        const cameraPos = engine.getCamera().position;
+        const interaction = mirandaShip.checkInteraction({
+          x: cameraPos.x,
+          y: cameraPos.y,
+          z: cameraPos.z
+        });
+        
+        if (interaction) {
+          console.log('🔍 Mobile interaction detected:', interaction);
+        }
+      }
+    }
+  }
 
   // Initialize the game with new engine architecture
   async function initializeGame() {
@@ -81,6 +225,26 @@
       try {
         const events = JSON.parse(timelineEvents);
         console.log(`Game: Parsed ${events.length} timeline events`);
+        
+        // Add Miranda Ship level as a special star
+        const mirandaEvent = {
+          title: "The Miranda Incident",
+          description: "Investigate the mysterious debris field and uncover the secrets of the Perfect Mary recipe.",
+          slug: "miranda-ship-level",
+          uniqueId: "miranda-incident-level",
+          timelineYear: 28042,
+          timelineEra: "singularity-conflict",
+          timelineLocation: "Miranda Star System Debris Field",
+          isKeyEvent: true,
+          isLevel: true, // Special flag to indicate this is a level transition
+          tags: ["Level", "Investigation", "Mystery"],
+          category: "GAME_LEVEL"
+        };
+        
+        // Add Miranda event to the timeline
+        events.push(mirandaEvent);
+        console.log(`Game: Added Miranda level star to timeline`);
+        
         starVisuals.setTimelineEvents(events);
       } catch (error) {
         console.warn('Failed to parse timeline events, using defaults:', error);
@@ -98,6 +262,11 @@
         selectedStar = star;
         if (star) {
           gameStats.starsDiscovered++;
+          
+          // Check if this is a level transition star
+          if (star.isLevel && star.slug === 'miranda-ship-level') {
+            console.log('🚀 Level transition star selected:', star.title);
+          }
         }
       });
 
@@ -109,9 +278,28 @@
 
       // Set up engine update loop
       engine.getEventBus().on('engine.update', (data) => {
-        // Update game systems
-        starVisuals?.update();
-        starObservatory?.update();
+        // Update game systems based on current level
+        if (currentLevel === 'observatory') {
+          starVisuals?.update();
+          starObservatory?.update();
+        } else if (currentLevel === 'miranda') {
+          mirandaShip?.update();
+          
+          // Check for interactions with story elements
+          if (mirandaShip && hybridControls) {
+            const cameraPos = engine.getCamera().position;
+            const interaction = mirandaShip.checkInteraction({
+              x: cameraPos.x,
+              y: cameraPos.y,
+              z: cameraPos.z
+            });
+            
+            if (interaction) {
+              console.log('🔍 Player interaction detected:', interaction);
+            }
+          }
+        }
+        
         gameStats.timeExplored = data.totalTime;
       });
 
@@ -161,8 +349,8 @@
             autoRotateSpeed: 0.05,
             // Mobile/touch optimizations
             enableTouch: true,
-            touchRotateSpeed: 0.15,
-            touchZoomSpeed: 1.2 // Faster zoom on mobile
+            touchRotateSpeed: 0.3, // Increased for better mobile responsiveness
+            touchZoomSpeed: 1.5 // Faster zoom on mobile
           }
         }
       );
@@ -262,9 +450,20 @@
   // Screen position calculation moved to StarObservatory.ts
 
   function resetView() {
-    // Reset camera to default position using hybrid controls
-    if (hybridControls) {
-      hybridControls.resetView();
+    // Reset camera to default position manually (since OrbitControls is disabled)
+    if (hybridControls && engine) {
+      try {
+        const camera = engine.getCamera();
+        if (camera) {
+          // Reset to initial position and rotation
+          camera.position.set(0, -3.4, 50); // Ground level, back from hill center
+          const lookUpAngle = THREE.MathUtils.degToRad(15); // 15 degrees up
+          camera.rotation.set(-lookUpAngle, 0, 0);
+          console.log('📍 Camera reset to default position');
+        }
+      } catch (error) {
+        console.warn('Reset view failed:', error);
+      }
     }
     selectedStar = null;
   }
@@ -358,7 +557,7 @@
 
   <!-- Game UI -->
   {#if isInitialized && !isLoading && !error}
-    <GameUI {gameStats} {selectedStar} {isMobile} {resetView} />
+    <GameUI {gameStats} {selectedStar} {isMobile} {currentLevel} {resetView} on:returnToObservatory={returnToObservatory} />
     
     <!-- Debug Panel - DISABLED for clean gameplay -->
     <!-- <DebugPanel {engine} /> -->
@@ -374,9 +573,17 @@
           position={selectedStar.screenPosition?.cardClass?.replace('timeline-card-', '') || 'bottom'}
           {isMobile}
           isVisible={true}
+          on:levelTransition={(e) => transitionToLevel(e.detail.levelType)}
         />
       </div>
     {/if}
+    
+    <!-- Mobile Controls -->
+    <MobileControls 
+      visible={isMobile && isInitialized && !isLoading && !error}
+      on:movement={handleMobileMovement}
+      on:action={handleMobileAction}
+    />
   {/if}
 </div>
 

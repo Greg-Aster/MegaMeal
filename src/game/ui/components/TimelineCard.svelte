@@ -15,30 +15,56 @@
   @import '../../../styles/timeline-styles.css';
 
   /*
-    WORKAROUND: The styles below are a targeted fix for the black text issue.
-    If the global CSS import fails to apply Tailwind's text opacity classes
-    (e.g., .text-75), these local definitions will serve as a fallback,
-    ensuring the text is always readable against the card background.
+    Adaptive card styling for both light and dark modes
+    Ensures readability on any background
   */
+  .timeline-card {
+    /* Strong background with good contrast */
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: rgba(0, 0, 0, 0.9);
+  }
+  
   :global(.timeline-card .text-75) {
     color: rgba(0, 0, 0, 0.75);
   }
   :global(.timeline-card .text-50) {
-    color: rgba(0, 0, 0, 0.50);
+    color: rgba(0, 0, 0, 0.5);
   }
 
   @media (prefers-color-scheme: dark) {
+    .timeline-card {
+      background: rgba(0, 0, 0, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.9);
+    }
+    
     :global(.timeline-card .text-75) {
       color: rgba(255, 255, 255, 0.75);
     }
     :global(.timeline-card .text-50) {
-      color: rgba(255, 255, 255, 0.50);
+      color: rgba(255, 255, 255, 0.5);
     }
+  }
+  
+  /* Force high contrast for the game overlay - always use dark theme for better visibility */
+  .timeline-card {
+    background: rgba(0, 0, 0, 0.9) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+  
+  :global(.timeline-card .text-75) {
+    color: rgba(255, 255, 255, 0.75) !important;
+  }
+  :global(.timeline-card .text-50) {
+    color: rgba(255, 255, 255, 0.5) !important;
   }
 </style>
 
 <script lang="ts">
   import type { TimelineEvent } from '../../../services/TimelineService.client';
+  import { createEventDispatcher } from 'svelte';
 
   export let event: TimelineEvent;
   export let isSelected: boolean = false;
@@ -46,6 +72,8 @@
   export let position: 'top' | 'bottom' | 'left' | 'right' = 'bottom';
   export let isMobile: boolean = false;
   export let isVisible: boolean = true;
+
+  const dispatch = createEventDispatcher();
 
   // This helper function is defined but not used in the template below.
   // The link style is hardcoded in the <a> tag.
@@ -96,6 +124,12 @@
   $: if (cardElement && isVisible) {
     triggerAnimation();
   }
+
+  function handleViewEvent(clickEvent: Event) {
+    // This is only called for level transitions now
+    clickEvent.preventDefault();
+    dispatch('levelTransition', { levelType: event.slug });
+  }
 </script>
 
 {#if isVisible}
@@ -129,9 +163,15 @@
       </div>
     {/if}
 
-    <a href="/posts/{event.slug}/#post-container" class="timeline-link text-[0.65rem] mt-1 inline-block py-0.5 px-1.5 rounded-full bg-[oklch(0.9_0.05_var(--hue))/0.1] dark:bg-[oklch(0.3_0.05_var(--hue))/0.2] text-[oklch(0.4_0.05_var(--hue))] dark:text-[oklch(0.9_0.05_var(--hue))]">
-      View Event &rarr;
-    </a>
+    {#if event.isLevel}
+      <button class="timeline-link text-[0.65rem] mt-1 inline-block py-0.5 px-1.5 rounded-full bg-white/20 text-white border border-white/30 hover:bg-white/30 transition-colors" on:click={handleViewEvent}>
+        Enter Level &rarr;
+      </button>
+    {:else}
+      <a href="/posts/{event.slug}/#post-container" class="timeline-link text-[0.65rem] mt-1 inline-block py-0.5 px-1.5 rounded-full bg-white/20 text-white border border-white/30 hover:bg-white/30 transition-colors">
+        View Event &rarr;
+      </a>
+    {/if}
 
     {#if !isMobile}
       <div class="card-pointer absolute bg-inherit"></div>

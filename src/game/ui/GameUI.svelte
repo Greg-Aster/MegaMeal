@@ -1,11 +1,17 @@
 <!-- Main game UI component -->
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
+  
   export let gameStats: any = {};
   export let selectedStar: any = null;
   export let isMobile = false;
+  export let currentLevel: string = 'observatory';
+  export let resetView: () => void;
   
-  function resetView() {
-    // Emit reset event
+  const dispatch = createEventDispatcher();
+  
+  function handleReturnToObservatory() {
+    dispatch('returnToObservatory');
   }
 </script>
 
@@ -23,25 +29,52 @@
 <!-- Controls Info -->
 <div class="absolute top-4 right-4 z-30 font-mono">
   <div class="card-base p-3 backdrop-blur-sm text-sm text-[color:var(--text-75)]">
-    {#if isMobile}
-      <div class="text-[color:var(--text-main)]">Touch & drag to explore</div>
-      <div class="text-[color:var(--text-main)]">Pinch to zoom</div>
-      <div class="text-[color:var(--text-main)]">Tap stars to select</div>
-    {:else}
-      <div class="text-[color:var(--text-main)]">Drag to rotate view</div>
-      <div class="text-[color:var(--text-main)]">Scroll to zoom</div>
-      <div class="text-[color:var(--text-main)]">Click stars to select</div>
+    {#if currentLevel === 'observatory'}
+      {#if isMobile}
+        <div class="text-[color:var(--text-main)]">Touch & drag to explore</div>
+        <div class="text-[color:var(--text-main)]">Pinch to zoom</div>
+        <div class="text-[color:var(--text-main)]">Tap stars to select</div>
+      {:else}
+        <div class="text-[color:var(--text-main)]">Drag to rotate view</div>
+        <div class="text-[color:var(--text-main)]">Scroll to zoom</div>
+        <div class="text-[color:var(--text-main)]">Click stars to select</div>
+      {/if}
+    {:else if currentLevel === 'miranda'}
+      {#if isMobile}
+        <div class="text-[color:var(--text-main)]">Touch & drag to look</div>
+        <div class="text-[color:var(--text-main)]">Pinch to zoom</div>
+        <div class="text-[color:var(--text-main)]">Walk near objects to interact</div>
+      {:else}
+        <div class="text-[color:var(--text-main)]">Mouse to look around</div>
+        <div class="text-[color:var(--text-main)]">WASD to move</div>
+        <div class="text-[color:var(--text-main)]">Walk near objects to interact</div>
+      {/if}
     {/if}
   </div>
 </div>
 
-<!-- Reset View Button -->
-<div class="absolute bottom-4 right-4 z-30">
-  <button 
-    class="btn-regular p-3 rounded-full font-bold text-lg hover:scale-110 transition-transform"
-    on:click={resetView}
-    title="Reset View"
-  >
-    🎯
-  </button>
-</div>
+<!-- Level Navigation -->
+{#if currentLevel === 'miranda'}
+  <div class="absolute bottom-4 left-4 z-30">
+    <button 
+      class="btn-regular p-3 rounded-lg font-bold text-sm hover:scale-105 transition-transform flex items-center gap-2"
+      on:click={handleReturnToObservatory}
+      title="Return to Star Observatory"
+    >
+      ← Return to Observatory
+    </button>
+  </div>
+{/if}
+
+<!-- Reset View Button - Available in observatory -->
+{#if currentLevel === 'observatory'}
+  <div class="absolute bottom-4 right-4 z-30">
+    <button 
+      class="btn-regular p-3 rounded-full font-bold text-lg hover:scale-110 transition-transform"
+      on:click={resetView}
+      title="Reset View"
+    >
+      🎯
+    </button>
+  </div>
+{/if}

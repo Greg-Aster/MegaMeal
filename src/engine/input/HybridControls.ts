@@ -171,10 +171,13 @@ export class HybridControls {
   }
   
   private handleMovement(deltaTime: number): void {
-    // EMERGENCY: Completely disable movement until we figure out what's wrong
-    console.log('🚨 MOVEMENT DISABLED - all movement temporarily disabled for debugging');
-    return;
+    const movementVector = this.inputManager.getMovementVector();
     
+    if (this.physicsWorld && this.playerBodyId) {
+      this.handlePhysicsMovement(movementVector, deltaTime);
+    } else {
+      this.handleDirectMovement(movementVector, deltaTime);
+    }
   }
   
   private handlePhysicsMovement(movementVector: { x: number; y: number; z: number }, deltaTime: number): void {
