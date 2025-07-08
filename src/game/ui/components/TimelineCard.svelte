@@ -1,14 +1,22 @@
-<!-- 
-  TimelineCard.svelte - Svelte version that uses the exact same CSS and structure as TimelineCard.astro
-  This maintains DRY principles by importing existing styles rather than duplicating them
+<!--
+  TimelineCard.svelte - Refactored to be DRY and rely on global CSS.
+  This version removes the duplicated, hardcoded styles from the previous fix
+  and uses the classes and variables from your imported stylesheets as intended.
 -->
 
 <style>
-  @import '../styles/main.css';
-  @import '../styles/timeline-styles.css';
+  /*
+    This component now relies entirely on your globally defined styles.
+    The @import statements will pull in main.css and timeline-styles.css.
+    All variables (--hue, --card-bg) and classes (.card-base, .text-75)
+    are expected to be available from these files.
+  */
+  @import '../../../styles/main.css';
+  @import '../../../styles/timeline-styles.css';
 </style>
+
 <script lang="ts">
-  import type { TimelineEvent } from '../services/TimelineService.client';
+  import type { TimelineEvent } from '../../../services/TimelineService.client';
 
   export let event: TimelineEvent;
   export let isSelected: boolean = false;
@@ -17,7 +25,8 @@
   export let isMobile: boolean = false;
   export let isVisible: boolean = true;
 
-  // Helper function to get CSS classes for era badges (from TimelineCard.astro)
+  // This helper function is defined but not used in the template below.
+  // The link style is hardcoded in the <a> tag.
   function getEraBadgeClass(era?: string): string {
     if (!era) return "bg-[oklch(0.9_0.05_var(--hue))/0.1] dark:bg-[oklch(0.3_0.05_var(--hue))/0.2] text-[oklch(0.4_0.05_var(--hue))] dark:text-[oklch(0.9_0.05_var(--hue))]";
     switch(era) {
@@ -50,7 +59,7 @@
 
   let cardElement: HTMLElement;
 
-  // Fly-in animation (from TimelineCard.astro)
+  // Fly-in animation
   function triggerAnimation() {
     if (cardElement && isVisible) {
       requestAnimationFrame(() => {
@@ -71,7 +80,21 @@
   <div
     bind:this={cardElement}
     id={cardId}
-    class="timeline-card card-base {isMobile ? 'fixed-position mobile-card' : 'absolute z-30'} bg-[var(--card-bg)] backdrop-blur-sm shadow-lg {isMobile ? 'w-[280px] h-auto' : 'w-[200px]'} {compact ? 'p-2 text-sm' : 'p-3'} {position === 'top' && !isMobile ? 'timeline-card-top' : ''} {position === 'bottom' && !isMobile ? 'timeline-card-bottom' : ''} {position === 'left' && !isMobile ? 'timeline-card-left' : ''} {position === 'right' && !isMobile ? 'timeline-card-right' : ''}"
+    class="timeline-card card-base bg-[var(--card-bg)] backdrop-blur-sm shadow-lg"
+    class:fixed-position={isMobile}
+    class:mobile-card={isMobile}
+    class:w-[280px]={isMobile}
+    class:h-auto={isMobile}
+    class:absolute={!isMobile}
+    class:z-30={!isMobile}
+    class:w-[200px]={!isMobile}
+    class:p-2={compact}
+    class:text-sm={compact}
+    class:p-3={!compact}
+    class:timeline-card-top={!isMobile && position === 'top'}
+    class:timeline-card-bottom={!isMobile && position === 'bottom'}
+    class:timeline-card-left={!isMobile && position === 'left'}
+    class:timeline-card-right={!isMobile && position === 'right'}
     style="opacity: 0; transform: translate({initialX}px, {initialY}px);"
   >
     <div class="font-bold text-75 text-sm mb-1 card-title">
@@ -79,7 +102,7 @@
     </div>
 
     {#if (!compact || isMobile)}
-      <div class="text-50 text-xs card-description {isMobile ? 'line-clamp-3' : 'line-clamp-2'}">
+      <div class="text-50 text-xs card-description" class:line-clamp-3={isMobile} class:line-clamp-2={!isMobile}>
         {event.description}
       </div>
     {/if}

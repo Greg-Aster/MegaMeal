@@ -26,6 +26,9 @@ importers:
       '@astrojs/tailwind':
         specifier: ^5.1.4
         version: 5.1.5(astro@5.1.6(@types/node@22.13.1)(jiti@1.21.7)(lightningcss@1.28.2)(rollup@2.79.2)(stylus@0.63.0)(terser@5.37.0)(typescript@5.7.3)(yaml@2.7.0))(tailwindcss@3.4.17)
+      '@dimforge/rapier3d-compat':
+        specifier: ^0.17.3
+        version: 0.17.3
       '@fontsource-variable/jetbrains-mono':
         specifier: ^5.1.1
         version: 5.1.2
@@ -74,9 +77,15 @@ importers:
       hastscript:
         specifier: ^9.0.0
         version: 9.0.0
+      howler:
+        specifier: ^2.2.4
+        version: 2.2.4
       katex:
         specifier: ^0.16.19
         version: 0.16.21
+      lil-gui:
+        specifier: ^0.20.0
+        version: 0.20.0
       markdown-it:
         specifier: ^14.1.0
         version: 14.1.0
@@ -95,6 +104,9 @@ importers:
       photoswipe:
         specifier: ^5.4.4
         version: 5.4.4
+      postprocessing:
+        specifier: ^6.37.6
+        version: 6.37.6(three@0.178.0)
       reading-time:
         specifier: ^1.5.0
         version: 1.5.0
@@ -131,6 +143,9 @@ importers:
       sharp:
         specifier: ^0.33.5
         version: 0.33.5
+      stats.js:
+        specifier: ^0.17.0
+        version: 0.17.0
       stylus:
         specifier: ^0.63.0
         version: 0.63.0
@@ -140,6 +155,9 @@ importers:
       tailwindcss:
         specifier: ^3.4.16
         version: 3.4.17
+      three:
+        specifier: ^0.178.0
+        version: 0.178.0
       typescript:
         specifier: ^5.7.2
         version: 5.7.3
@@ -902,6 +920,9 @@ packages:
 
   '@dimforge/rapier3d-compat@0.12.0':
     resolution: {integrity: sha512-uekIGetywIgopfD97oDL5PfeezkFpNhwlzlaEYNOA0N6ghdsOvh/HYjSMek5Q2O1PYvRSDFcqFVJl4r4ZBwOow==}
+
+  '@dimforge/rapier3d-compat@0.17.3':
+    resolution: {integrity: sha512-hxtaaqtfUWQvYbA/vstSEMZupObTMdM1u+5vTQlXNdWueRRhJ+toxREhaplok5W1/4ErxO6qdezbRM2eqEQsqw==}
 
   '@emmetio/abbreviation@2.3.3':
     resolution: {integrity: sha512-mgv58UrU3rh4YgbE/TzgLQwJ3pFsHHhCLqY20aJq+9comytTXUDNGG/SMtSeMJdkpxgXSXunBGLD8Boka3JyVA==}
@@ -3008,6 +3029,9 @@ packages:
     resolution: {integrity: sha512-eSmmWE5bZTK2Nou4g0AI3zZ9rswp7GRKoKXS1BLUkvPviOqs4YTN1djQIqrXy9k5gEtdLPy86JjRwsNM9tnDcA==}
     engines: {node: '>=0.10.0'}
 
+  howler@2.2.4:
+    resolution: {integrity: sha512-iARIBPgcQrwtEr+tALF+rapJ8qSc+Set2GJQl7xT1MQzWaVkFebdJhR3alVlSiUf5U7nAANKuj3aWpwerocD5w==}
+
   html-escaper@3.0.3:
     resolution: {integrity: sha512-RuMffC89BOWQoY0WKGpIhn5gX3iI54O6nRA0yC124NYVtzjmFWBIiFd8M0x+ZdX0P9R4lADg1mgP8C7PxGOWuQ==}
 
@@ -3395,6 +3419,9 @@ packages:
   lightningcss@1.28.2:
     resolution: {integrity: sha512-ePLRrbt3fgjXI5VFZOLbvkLD5ZRuxGKm+wJ3ujCqBtL3NanDHPo/5zicR5uEKAPiIjBYF99BM4K4okvMznjkVA==}
     engines: {node: '>= 12.0.0'}
+
+  lil-gui@0.20.0:
+    resolution: {integrity: sha512-k7Ipr0ztqslMA2XvM5z5ZaWhxQtnEOwJBfI/hmSuRh6q4iMG9L0boqqrnZSzBR1jzyJ28OMl47l65ILzRe1TdA==}
 
   lilconfig@2.1.0:
     resolution: {integrity: sha512-utWOt/GHzuUxnLKxB6dk81RoOeoNeHgbrXiuGk4yyF5qlRz+iIVWu56E2fqGHFrXz0QNUhLB/8nKqvRH66JKGQ==}
@@ -4302,6 +4329,11 @@ packages:
     resolution: {integrity: sha512-6oz2beyjc5VMn/KV1pPw8fliQkhBXrVn1Z3TVyqZxU8kZpzEKhBdmCFqI6ZbmGtamQvQGuU1sgPTk8ZrXDD7jQ==}
     engines: {node: ^10 || ^12 || >=14}
 
+  postprocessing@6.37.6:
+    resolution: {integrity: sha512-KrdKLf1257RkoIk3z3nhRS0aToKrX2xJgtR0lbnOQUjd+1I4GVNv1gQYsQlfRglvEXjpzrwqOA5fXfoDBimadg==}
+    peerDependencies:
+      three: '>= 0.157.0 < 0.179.0'
+
   preferred-pm@4.1.1:
     resolution: {integrity: sha512-rU+ZAv1Ur9jAUZtGPebQVQPzdGhNzaEiQ7VL9+cjsAWPHFYOccNXPNiev1CCDSOg/2j7UujM7ojNhpkuILEVNQ==}
     engines: {node: '>=18.12'}
@@ -4766,6 +4798,9 @@ packages:
     resolution: {integrity: sha512-ji9qxRnOVfcuLDySj9qzhGSEFVobyt1kIOSkj1qZzYLzq7Tos/oUUWvotUPQLlrsidqsK6tBH89Bc9kL5zHA6w==}
     deprecated: 'Modern JS already guarantees Array#sort() is a stable sort, so this library is deprecated. See the compatibility table on MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#browser_compatibility'
 
+  stats.js@0.17.0:
+    resolution: {integrity: sha512-hNKz8phvYLPEcRkeG1rsGmV5ChMjKDAWU7/OJJdDErPBNChQXxCo3WZurGpnWc6gZhAzEPFad1aVgyOANH1sMw==}
+
   stream-replace-string@2.0.0:
     resolution: {integrity: sha512-TlnjJ1C0QrmxRNrON00JvaFFlNh5TTG00APw23j74ET7gkQpTASi6/L2fuiav8pzK715HXtUeClpBTw2NPSn6w==}
 
@@ -4903,6 +4938,9 @@ packages:
 
   thenify@3.3.1:
     resolution: {integrity: sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==}
+
+  three@0.178.0:
+    resolution: {integrity: sha512-ybFIB0+x8mz0wnZgSGy2MO/WCO6xZhQSZnmfytSPyNpM0sBafGRVhdaj+erYh5U+RhQOAg/eXqw5uVDiM2BjhQ==}
 
   tiny-glob@0.2.9:
     resolution: {integrity: sha512-g/55ssRPUjShh+xkfx9UPDXqhckHEsHr4Vd9zX55oSdGZc/MD0m3sferOkwWtp98bv+kcVfEHtRJgBVJzelrzg==}
@@ -6428,6 +6466,8 @@ snapshots:
       postcss-selector-parser: 7.0.0
 
   '@dimforge/rapier3d-compat@0.12.0': {}
+
+  '@dimforge/rapier3d-compat@0.17.3': {}
 
   '@emmetio/abbreviation@2.3.3':
     dependencies:
@@ -8951,6 +8991,8 @@ snapshots:
     dependencies:
       parse-passwd: 1.0.0
 
+  howler@2.2.4: {}
+
   html-escaper@3.0.3: {}
 
   html-minifier-terser@7.2.0:
@@ -9299,6 +9341,8 @@ snapshots:
       lightningcss-linux-x64-musl: 1.28.2
       lightningcss-win32-arm64-msvc: 1.28.2
       lightningcss-win32-x64-msvc: 1.28.2
+
+  lil-gui@0.20.0: {}
 
   lilconfig@2.1.0: {}
 
@@ -10513,6 +10557,10 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
+  postprocessing@6.37.6(three@0.178.0):
+    dependencies:
+      three: 0.178.0
+
   preferred-pm@4.1.1:
     dependencies:
       find-up-simple: 1.0.0
@@ -11162,6 +11210,8 @@ snapshots:
 
   stable@0.1.8: {}
 
+  stats.js@0.17.0: {}
+
   stream-replace-string@2.0.0: {}
 
   string-hash@1.1.3: {}
@@ -11390,6 +11440,8 @@ snapshots:
   thenify@3.3.1:
     dependencies:
       any-promise: 1.3.0
+
+  three@0.178.0: {}
 
   tiny-glob@0.2.9:
     dependencies:

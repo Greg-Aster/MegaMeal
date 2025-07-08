@@ -2,7 +2,7 @@
 // Star generation and visual effects system for Star Observatory
 // Based on the advanced star rendering from StarMapView.astro
 
-import type { TimelineEvent } from '../services/TimelineService.client';
+import type { TimelineEvent } from '../../services/TimelineService.client';
 
 // Extended interface for game-specific star data
 export interface StarData extends TimelineEvent {
@@ -56,6 +56,10 @@ export class StarVisuals {
     'singularity-conflict': { centerAzimuth: 240, centerElevation: 45, spread: 35, pattern: 'supernova' },
     'transcendent-age': { centerAzimuth: 300, centerElevation: 60, spread: 40, pattern: 'ascension' },
     'final-epoch': { centerAzimuth: 340, centerElevation: 65, spread: 30, pattern: 'omega' },
+    'wip': { centerAzimuth: 90, centerElevation: 30, spread: 20, pattern: 'scattered' },
+    'neo-sensoria': { centerAzimuth: 150, centerElevation: 70, spread: 35, pattern: 'crown' },
+    'the-dark-between': { centerAzimuth: 270, centerElevation: 25, spread: 30, pattern: 'scattered' },
+    'preservation-era': { centerAzimuth: 210, centerElevation: 50, spread: 40, pattern: 'ascension' },
     'unknown': { centerAzimuth: 30, centerElevation: 35, spread: 25, pattern: 'scattered' }
   };
 
@@ -215,12 +219,12 @@ export class StarVisuals {
           
           const sprite = new this.THREE.Sprite(spriteMaterial);
           
-          // Position on the same sphere as skybox (but slightly closer to avoid z-fighting)
-          const radius = 995; // Slightly inside the skybox
+          // Position very close to skybox for realistic night sky parallax
+          const radius = 990; // Just slightly inside skybox (1000) for perfect sync
           sprite.position.setFromSphericalCoords(radius, polarAngleRad, azimuthRad);
           
-          // Scale based on importance and add slight variation
-          const baseScale = event.isKeyEvent ? 44 : 32; // Base scale for key events vs regular stars
+          // Scale based on importance and add slight variation (larger for interaction at distance)
+          const baseScale = event.isKeyEvent ? 35 : 20; // Larger scale for better interaction at skybox distance
           const scaleVariation = 0.8 + (Math.random() * 0.4); // 0.8 to 1.2 multiplier
           sprite.scale.setScalar(baseScale * scaleVariation);
           
@@ -312,13 +316,12 @@ export class StarVisuals {
     
     const sprite = new this.THREE.Sprite(spriteMaterial);
     
-    // Position on sphere (well inside skybox)
-    const radius = 800; // Well inside skybox for better visibility
+    // Position very close to skybox for realistic night sky parallax
+    const radius = 990; // Just slightly inside skybox (1000) for perfect sync
     sprite.position.setFromSphericalCoords(radius, polarAngleRad, azimuthRad);
     
-    
-    // Scale based on importance
-    const baseScale = event.isKeyEvent ? 44 : 32;
+    // Scale based on importance (larger for interaction at distance)
+    const baseScale = event.isKeyEvent ? 35 : 20;
     const scaleVariation = 0.8 + (Math.random() * 0.4);
     sprite.scale.setScalar(baseScale * scaleVariation);
     
