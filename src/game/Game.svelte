@@ -161,13 +161,27 @@
   function handleMobileMovement(event: CustomEvent) {
     if (engine && engine.getInputManager()) {
       const { x, z } = event.detail;
+      console.log('📱 Mobile movement input:', { x, z });
       engine.getInputManager().setVirtualMovement(x, 0, z);
     }
   }
   
   function handleMobileAction(event: CustomEvent) {
     const action = event.detail;
-    if (action === 'interact' && currentLevel === 'miranda') {
+    
+    if (action === 'jump') {
+      // Trigger virtual jump action
+      if (engine && engine.getInputManager()) {
+        console.log('📱 Mobile jump pressed');
+        engine.getInputManager().setVirtualAction('jump', true);
+        // Reset after a short time
+        setTimeout(() => {
+          if (engine && engine.getInputManager()) {
+            engine.getInputManager().setVirtualAction('jump', false);
+          }
+        }, 100);
+      }
+    } else if (action === 'interact' && currentLevel === 'miranda') {
       // Trigger interaction check for Miranda level
       if (mirandaShip && hybridControls) {
         const cameraPos = engine.getCamera().position;
@@ -372,11 +386,11 @@
 
   function setupStarInteractions() {
     // Star interactions are now handled by StarObservatory
-    // Set up mouse interaction for star selection
+    // Set up mouse and touch interaction for star selection
     const renderer = engine.getRenderer();
     const canvas = renderer.getDomElement();
     
-    // Use mouseup instead of click to avoid conflicts with orbit controls
+    // Mouse interaction for desktop
     canvas.addEventListener('mouseup', (event) => {
       // Only handle left mouse button and short clicks (not drags)
       if (event.button === 0) {
@@ -393,6 +407,33 @@
     canvas.addEventListener('mousedown', (event) => {
       (window as any).lastMouseDownTime = event.timeStamp;
     });
+    
+    // Touch interaction for mobile
+    canvas.addEventListener('touchend', (event) => {
+      // Check if this was a quick tap (handled by HybridControls touch logic)
+      const touchDownTime = event.timeStamp - (window as any).lastTouchDownTime || 0;
+      if (touchDownTime < 200 && event.changedTouches.length === 1) {
+        const touch = event.changedTouches[0];
+        console.log('📱 Touch star selection triggered');
+        
+        // Convert touch to a mouse-like event for handleStarClick
+        const touchEvent = {
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+          preventDefault: () => event.preventDefault(),
+          stopPropagation: () => event.stopPropagation()
+        };
+        
+        handleStarClick(touchEvent as any);
+      }
+    });
+    
+    // Track touch down time
+    canvas.addEventListener('touchstart', (event) => {
+      if (event.touches.length === 1) {
+        (window as any).lastTouchDownTime = event.timeStamp;
+      }
+    });
   }
 
   function handleStarClick(event: MouseEvent) {
@@ -401,7 +442,7 @@
       return;
     }
     
-    console.log('🖱️ Star click detected');
+    console.log('🖱️ Star click/tap detected at:', event.clientX, event.clientY);
     
     // Use the stored THREE reference
     if (!THREE) {
@@ -489,6 +530,20 @@
     
     // Detect mobile device
     isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // Debug mobile detection
+    console.log('📱 Mobile detection:', {
+      userAgent: navigator.userAgent,
+      isMobile: isMobile,
+      touchEnabled: 'ontouchstart' in window,
+      screenWidth: window.screen.width
+    });
+    
+    // Force mobile mode for testing in desktop browsers (you can remove this later)
+    if (window.screen.width <= 768 || window.innerWidth <= 768) {
+      isMobile = true;
+      console.log('📱 Forcing mobile mode due to screen size');
+    }
     
     // Set up resize listener
     window.addEventListener('resize', handleResize);

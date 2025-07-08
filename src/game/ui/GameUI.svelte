@@ -31,22 +31,22 @@
   <div class="card-base p-3 backdrop-blur-sm text-sm text-[color:var(--text-75)]">
     {#if currentLevel === 'observatory'}
       {#if isMobile}
-        <div class="text-[color:var(--text-main)]">Touch & drag to explore</div>
-        <div class="text-[color:var(--text-main)]">Pinch to zoom</div>
+        <div class="text-[color:var(--text-main)]">Touch & drag to look around</div>
+        <div class="text-[color:var(--text-main)]">Joystick to move, ↑ to jump</div>
         <div class="text-[color:var(--text-main)]">Tap stars to select</div>
       {:else}
         <div class="text-[color:var(--text-main)]">Drag to rotate view</div>
-        <div class="text-[color:var(--text-main)]">Scroll to zoom</div>
+        <div class="text-[color:var(--text-main)]">WASD/Arrow keys to move</div>
         <div class="text-[color:var(--text-main)]">Click stars to select</div>
       {/if}
     {:else if currentLevel === 'miranda'}
       {#if isMobile}
         <div class="text-[color:var(--text-main)]">Touch & drag to look</div>
-        <div class="text-[color:var(--text-main)]">Pinch to zoom</div>
-        <div class="text-[color:var(--text-main)]">Walk near objects to interact</div>
+        <div class="text-[color:var(--text-main)]">Joystick to move</div>
+        <div class="text-[color:var(--text-main)]">↑ to jump, E to interact</div>
       {:else}
         <div class="text-[color:var(--text-main)]">Mouse to look around</div>
-        <div class="text-[color:var(--text-main)]">WASD to move</div>
+        <div class="text-[color:var(--text-main)]">WASD/Arrow keys, Space to jump</div>
         <div class="text-[color:var(--text-main)]">Walk near objects to interact</div>
       {/if}
     {/if}

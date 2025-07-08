@@ -21,7 +21,7 @@ export interface InputState {
 export interface InputConfig {
   mouseSensitivity: number;
   touchSensitivity: number;
-  keyMap: { [action: string]: string };
+  keyMap: { [action: string]: string | string[] };
   enablePointerLock: boolean;
   invertY: boolean;
 }
@@ -36,19 +36,20 @@ export class InputManager {
   private isMobile = false;
   private movementVector = { x: 0, y: 0, z: 0 };
   private virtualMovement = { x: 0, y: 0, z: 0 };
+  private virtualActions: { [action: string]: boolean } = {};
   
-  // Default key mappings
+  // Default key mappings - now supports multiple keys per action
   private readonly defaultKeyMap = {
-    forward: 'KeyW',
-    backward: 'KeyS',
-    left: 'KeyA',
-    right: 'KeyD',
-    up: 'Space',
-    down: 'ShiftLeft',
-    interact: 'KeyE',
-    menu: 'Escape',
-    sprint: 'ShiftLeft',
-    jump: 'Space'
+    forward: ['KeyW', 'ArrowUp'],
+    backward: ['KeyS', 'ArrowDown'],
+    left: ['KeyA', 'ArrowLeft'],
+    right: ['KeyD', 'ArrowRight'],
+    up: ['Space'],
+    down: ['ShiftLeft'],
+    interact: ['KeyE'],
+    menu: ['Escape'],
+    sprint: ['ShiftLeft'],
+    jump: ['Space']
   };
   
   constructor(container: HTMLElement, eventBus?: EventBus, config?: Partial<InputConfig>) {
@@ -267,8 +268,9 @@ export class InputManager {
   }
   
   private getActionForKey(keyCode: string): string | null {
-    for (const [action, code] of Object.entries(this.config.keyMap)) {
-      if (code === keyCode) {
+    for (const [action, codes] of Object.entries(this.config.keyMap)) {
+      const keyCodes = Array.isArray(codes) ? codes : [codes];
+      if (keyCodes.includes(keyCode)) {
         return action;
       }
     }
@@ -346,8 +348,19 @@ export class InputManager {
   }
   
   public isActionPressed(action: string): boolean {
-    const keyCode = this.config.keyMap[action];
-    return keyCode ? this.isKeyPressed(keyCode) : false;
+    // Check virtual actions first (mobile)
+    if (this.virtualActions[action]) {
+      return true;
+    }
+    
+    // Then check keyboard - support multiple keys per action
+    const keyCodes = this.config.keyMap[action];
+    if (keyCodes) {
+      const keyArray = Array.isArray(keyCodes) ? keyCodes : [keyCodes];
+      return keyArray.some(keyCode => this.isKeyPressed(keyCode));
+    }
+    
+    return false;
   }
   
   public isMouseButtonPressed(button: number): boolean {
@@ -424,6 +437,14 @@ export class InputManager {
     this.virtualMovement.x = 0;
     this.virtualMovement.y = 0;
     this.virtualMovement.z = 0;
+  }
+  
+  public setVirtualAction(action: string, pressed: boolean): void {
+    this.virtualActions[action] = pressed;
+  }
+  
+  public clearVirtualActions(): void {
+    this.virtualActions = {};
   }
   
   public dispose(): void {
