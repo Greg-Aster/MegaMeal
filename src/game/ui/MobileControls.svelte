@@ -1,8 +1,16 @@
 <!-- Mobile Virtual Controls -->
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   
   export let visible = false;
+  
+  onMount(() => {
+    console.log('📱 MobileControls mounted, visible:', visible);
+  });
+  
+  $: {
+    console.log('📱 MobileControls visibility changed:', visible);
+  }
   
   const dispatch = createEventDispatcher();
   
@@ -93,6 +101,13 @@
     <!-- Action Buttons -->
     <div class="action-buttons">
       <button 
+        class="action-btn jump-btn"
+        on:touchstart={() => handleActionPress('jump')}
+        on:touchend={() => handleActionPress('jump')}
+      >
+        ↑
+      </button>
+      <button 
         class="action-btn interact-btn"
         on:touchstart={() => handleActionPress('interact')}
         on:touchend={() => handleActionPress('interact')}
@@ -132,10 +147,11 @@
     width: 100px;
     height: 100px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.2);
+    border: 3px solid rgba(0, 255, 136, 0.6);
     transform: translate(-50%, -50%);
     backdrop-filter: blur(10px);
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
   }
   
   .joystick-knob {
@@ -145,11 +161,12 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.6);
-    border: 2px solid rgba(255, 255, 255, 0.8);
+    background: rgba(0, 255, 136, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.9);
     transform: translate(-50%, -50%);
     transition: none;
     backdrop-filter: blur(5px);
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
   }
   
   .action-buttons {
@@ -191,5 +208,15 @@
   
   .interact-btn:active {
     background: rgba(0, 255, 136, 0.4);
+  }
+  
+  .jump-btn {
+    border-color: rgba(255, 255, 0, 0.6);
+    background: rgba(255, 255, 0, 0.2);
+    font-size: 24px;
+  }
+  
+  .jump-btn:active {
+    background: rgba(255, 255, 0, 0.4);
   }
 </style>

@@ -120,6 +120,9 @@ export class HybridControls {
     
     // Set up first-person mouse look
     this.setupFirstPersonMouseLook();
+    
+    // Set up mobile touch look
+    this.setupMobileTouchLook();
   }
   
   private setupFirstPersonMouseLook(): void {
@@ -149,6 +152,83 @@ export class HybridControls {
     });
     
     console.log('👁️ First-person mouse look enabled (click and drag to look around)');
+  }
+  
+  private setupMobileTouchLook(): void {
+    // Mobile touch look sensitivity
+    const touchSensitivity = 0.003;
+    let lastTouch: Touch | null = null;
+    let isTouchDragging = false;
+    let touchStartTime = 0;
+    let touchMoved = false;
+    
+    // Track touch start
+    this.domElement.addEventListener('touchstart', (event) => {
+      if (event.touches.length === 1) {
+        lastTouch = event.touches[0];
+        isTouchDragging = true;
+        touchStartTime = Date.now();
+        touchMoved = false;
+        // Don't prevent default here - allow tap events through
+        console.log('📱 HybridControls: Touch start detected');
+      }
+    });
+    
+    // Track touch movement for camera look
+    this.domElement.addEventListener('touchmove', (event) => {
+      if (isTouchDragging && event.touches.length === 1 && lastTouch) {
+        const touch = event.touches[0];
+        const deltaX = (touch.clientX - lastTouch.clientX) * touchSensitivity;
+        const deltaY = (touch.clientY - lastTouch.clientY) * touchSensitivity;
+        
+        // Mark as moved if significant movement
+        if (Math.abs(deltaX) > 0.01 || Math.abs(deltaY) > 0.01) {
+          touchMoved = true;
+          
+          // Get current camera rotation
+          const euler = new this.THREE.Euler().setFromQuaternion(this.camera.quaternion, 'YXZ');
+          
+          // Apply horizontal rotation (Y axis)
+          euler.y -= deltaX;
+          
+          // Apply vertical rotation (X axis) with limits
+          euler.x -= deltaY;
+          euler.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, euler.x)); // Limit vertical look
+          
+          // Apply rotation to camera
+          this.camera.quaternion.setFromEuler(euler);
+          
+          // Prevent default only when actually dragging
+          event.preventDefault();
+        }
+        
+        // Update last touch
+        lastTouch = touch;
+      }
+    });
+    
+    // Track touch end
+    this.domElement.addEventListener('touchend', (event) => {
+      const touchDuration = Date.now() - touchStartTime;
+      
+      console.log('📱 HybridControls: Touch end - duration:', touchDuration, 'moved:', touchMoved);
+      
+      // If it was a quick tap (< 200ms) and no significant movement, allow click events
+      if (touchDuration < 200 && !touchMoved) {
+        console.log('📱 HybridControls: Quick tap detected - allowing star selection');
+        // Don't prevent default - let tap events through for star selection
+      } else {
+        console.log('📱 HybridControls: Drag detected - preventing default');
+        // It was a drag - prevent default
+        event.preventDefault();
+      }
+      
+      isTouchDragging = false;
+      lastTouch = null;
+      touchMoved = false;
+    });
+    
+    console.log('📱 Mobile touch look enabled (drag to look, tap to select)');
   }
   
   private setupPlayerPhysics(): void {
@@ -251,20 +331,16 @@ export class HybridControls {
   }
   
   private handleDirectMovement(movementVector: { x: number; y: number; z: number }, deltaTime: number): void {
-    // TEMPORARY: Bypass buggy movement vector, use direct key checks
-    let moveX = 0, moveZ = 0;
-    
-    if (this.inputManager.isActionPressed('forward')) moveZ = -1;
-    if (this.inputManager.isActionPressed('backward')) moveZ = 1;
-    if (this.inputManager.isActionPressed('left')) moveX = -1;
-    if (this.inputManager.isActionPressed('right')) moveX = 1;
+    // Use the movement vector passed in (which includes mobile virtual movement)
+    let moveX = movementVector.x;
+    let moveZ = movementVector.z;
     
     // Skip if no movement
     if (moveX === 0 && moveZ === 0) {
       return;
     }
     
-    console.log('🐛 Direct key check - moveX:', moveX, 'moveZ:', moveZ);
+    console.log('🎮 Movement - moveX:', moveX, 'moveZ:', moveZ);
     
     // EMERGENCY FIX: Use simple movement without camera matrix complexity
     const moveDistance = this.moveSpeed * deltaTime * 0.1; // Very slow for testing
@@ -317,12 +393,16 @@ export class HybridControls {
   }
   
   private handleSimpleMovement(deltaTime: number): void {
-    // Check for movement keys directly
+    // Check for movement keys directly (desktop)
     const isForwardPressed = this.inputManager.isActionPressed('forward');
     const isBackwardPressed = this.inputManager.isActionPressed('backward');
     const isLeftPressed = this.inputManager.isActionPressed('left');
     const isRightPressed = this.inputManager.isActionPressed('right');
     const isJumpPressed = this.inputManager.isActionPressed('jump');
+    
+    // Get mobile virtual movement
+    const movementVector = this.inputManager.getMovementVector();
+    const hasVirtualMovement = movementVector.x !== 0 || movementVector.z !== 0;
     
     // Debug jump input - DISABLED for clean gameplay
     // if (isJumpPressed) {
@@ -379,8 +459,7 @@ export class HybridControls {
     let deltaX = 0;
     let deltaZ = 0;
     
-    if (isForwardPressed || isBackwardPressed || isLeftPressed || isRightPressed) {
-      console.log('🎮 Movement - F:', isForwardPressed, 'B:', isBackwardPressed, 'L:', isLeftPressed, 'R:', isRightPressed);
+    if (isForwardPressed || isBackwardPressed || isLeftPressed || isRightPressed || hasVirtualMovement) {
       
       // Get camera's forward and right vectors for relative movement
       const cameraMatrix = this.camera.matrixWorld;
@@ -400,10 +479,19 @@ export class HybridControls {
       // Calculate movement direction
       const moveDirection = new this.THREE.Vector3();
       
-      if (isForwardPressed) moveDirection.add(forward.clone().multiplyScalar(moveSpeed * deltaTime));
-      if (isBackwardPressed) moveDirection.add(forward.clone().multiplyScalar(-moveSpeed * deltaTime));
-      if (isLeftPressed) moveDirection.add(right.clone().multiplyScalar(-moveSpeed * deltaTime));
-      if (isRightPressed) moveDirection.add(right.clone().multiplyScalar(moveSpeed * deltaTime));
+      if (hasVirtualMovement) {
+        // Mobile virtual movement - use joystick input
+        console.log('📱 Virtual movement - X:', movementVector.x, 'Z:', movementVector.z);
+        moveDirection.add(right.clone().multiplyScalar(movementVector.x * moveSpeed * deltaTime));
+        moveDirection.add(forward.clone().multiplyScalar(-movementVector.z * moveSpeed * deltaTime)); // Negative Z for forward
+      } else {
+        // Desktop keyboard movement
+        console.log('🎮 Keyboard movement - F:', isForwardPressed, 'B:', isBackwardPressed, 'L:', isLeftPressed, 'R:', isRightPressed);
+        if (isForwardPressed) moveDirection.add(forward.clone().multiplyScalar(moveSpeed * deltaTime));
+        if (isBackwardPressed) moveDirection.add(forward.clone().multiplyScalar(-moveSpeed * deltaTime));
+        if (isLeftPressed) moveDirection.add(right.clone().multiplyScalar(-moveSpeed * deltaTime));
+        if (isRightPressed) moveDirection.add(right.clone().multiplyScalar(moveSpeed * deltaTime));
+      }
       
       deltaX = moveDirection.x;
       deltaZ = moveDirection.z;
