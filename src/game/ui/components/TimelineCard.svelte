@@ -13,6 +13,28 @@
   */
   @import '../../../styles/main.css';
   @import '../../../styles/timeline-styles.css';
+
+  /*
+    WORKAROUND: The styles below are a targeted fix for the black text issue.
+    If the global CSS import fails to apply Tailwind's text opacity classes
+    (e.g., .text-75), these local definitions will serve as a fallback,
+    ensuring the text is always readable against the card background.
+  */
+  :global(.timeline-card .text-75) {
+    color: rgba(0, 0, 0, 0.75);
+  }
+  :global(.timeline-card .text-50) {
+    color: rgba(0, 0, 0, 0.50);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(.timeline-card .text-75) {
+      color: rgba(255, 255, 255, 0.75);
+    }
+    :global(.timeline-card .text-50) {
+      color: rgba(255, 255, 255, 0.50);
+    }
+  }
 </style>
 
 <script lang="ts">
