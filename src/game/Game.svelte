@@ -213,7 +213,7 @@
         enablePhysics: true,
         enableAudio: false,
         enableDebug: false, // DISABLED for clean gameplay
-        enablePerformanceMonitoring: false // DISABLED for clean gameplay
+        enablePerformanceMonitoring: true // ENABLED for performance testing
       });
 
       await engine.initialize();
