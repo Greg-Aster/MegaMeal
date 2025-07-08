@@ -35,6 +35,7 @@ export class InputManager {
   private isPointerLocked = false;
   private isMobile = false;
   private movementVector = { x: 0, y: 0, z: 0 };
+  private virtualMovement = { x: 0, y: 0, z: 0 };
   
   // Default key mappings
   private readonly defaultKeyMap = {
@@ -289,45 +290,54 @@ export class InputManager {
   }
   
   private updateMovementVector(): void {
-    this.movementVector.x = 0;
-    this.movementVector.y = 0;
-    this.movementVector.z = 0;
-    
-    // Forward/backward
-    if (this.isActionPressed('forward')) {
-      this.movementVector.z -= 1;
-    }
-    if (this.isActionPressed('backward')) {
-      this.movementVector.z += 1;
-    }
-    
-    // Left/right
-    if (this.isActionPressed('left')) {
-      this.movementVector.x -= 1;
-    }
-    if (this.isActionPressed('right')) {
-      this.movementVector.x += 1;
-    }
-    
-    // Up/down
-    if (this.isActionPressed('up')) {
-      this.movementVector.y += 1;
-    }
-    if (this.isActionPressed('down')) {
-      this.movementVector.y -= 1;
-    }
-    
-    // Normalize movement vector
-    const length = Math.sqrt(
-      this.movementVector.x * this.movementVector.x +
-      this.movementVector.y * this.movementVector.y +
-      this.movementVector.z * this.movementVector.z
-    );
-    
-    if (length > 0) {
-      this.movementVector.x /= length;
-      this.movementVector.y /= length;
-      this.movementVector.z /= length;
+    // Start with virtual movement (mobile) or keyboard movement
+    if (this.isMobile && (this.virtualMovement.x !== 0 || this.virtualMovement.z !== 0)) {
+      // Use virtual movement from mobile joystick
+      this.movementVector.x = this.virtualMovement.x;
+      this.movementVector.y = this.virtualMovement.y;
+      this.movementVector.z = this.virtualMovement.z;
+    } else {
+      // Use keyboard movement
+      this.movementVector.x = 0;
+      this.movementVector.y = 0;
+      this.movementVector.z = 0;
+      
+      // Forward/backward
+      if (this.isActionPressed('forward')) {
+        this.movementVector.z -= 1;
+      }
+      if (this.isActionPressed('backward')) {
+        this.movementVector.z += 1;
+      }
+      
+      // Left/right
+      if (this.isActionPressed('left')) {
+        this.movementVector.x -= 1;
+      }
+      if (this.isActionPressed('right')) {
+        this.movementVector.x += 1;
+      }
+      
+      // Up/down
+      if (this.isActionPressed('up')) {
+        this.movementVector.y += 1;
+      }
+      if (this.isActionPressed('down')) {
+        this.movementVector.y -= 1;
+      }
+      
+      // Normalize movement vector
+      const length = Math.sqrt(
+        this.movementVector.x * this.movementVector.x +
+        this.movementVector.y * this.movementVector.y +
+        this.movementVector.z * this.movementVector.z
+      );
+      
+      if (length > 0) {
+        this.movementVector.x /= length;
+        this.movementVector.y /= length;
+        this.movementVector.z /= length;
+      }
     }
   }
   
@@ -402,6 +412,18 @@ export class InputManager {
   
   public getState(): InputState {
     return JSON.parse(JSON.stringify(this.state));
+  }
+  
+  public setVirtualMovement(x: number, y: number, z: number): void {
+    this.virtualMovement.x = x;
+    this.virtualMovement.y = y;
+    this.virtualMovement.z = z;
+  }
+  
+  public clearVirtualMovement(): void {
+    this.virtualMovement.x = 0;
+    this.virtualMovement.y = 0;
+    this.virtualMovement.z = 0;
   }
   
   public dispose(): void {
