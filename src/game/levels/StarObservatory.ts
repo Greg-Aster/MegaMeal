@@ -18,6 +18,10 @@ export class StarObservatory {
   private selectedStar: any = null;
   private onStarSelectedCallback?: (star: any) => void;
   
+  // New visual effects
+  private fireflies: any = null;
+  private sciFiObjects: any[] = [];
+  
   // Configuration
   private readonly skyboxImageUrl = '/assets/hdri/skywip4.webp';
   private readonly gridRadius = 940;
@@ -41,6 +45,7 @@ export class StarObservatory {
     this.createWaterfalls();
     this.createGrid();
     this.setupLighting();
+    this.createFireflies();
     
     this.isInitialized = true;
   }
@@ -149,8 +154,8 @@ export class StarObservatory {
   private createGround(): void {
     console.log('Creating floating island with rocky edges and waterfalls...');
     
-    // Create a large terrain with more subdivisions for complex geometry
-    const groundGeometry = new this.THREE.PlaneGeometry(500, 500, 128, 128);
+    // Create a large terrain with high subdivisions for very detailed geometry
+    const groundGeometry = new this.THREE.PlaneGeometry(500, 500, 512, 512);
     
     // Island parameters
     const positions = groundGeometry.attributes.position.array;
@@ -203,11 +208,24 @@ export class StarObservatory {
       positions[i + 2] = height; // Set the height (Z coordinate in PlaneGeometry)
     }
     
+    // Add small bumps and variations to the hill for more natural look
+    for (let i = 0; i < positions.length; i += 3) {
+      const x = positions[i];
+      const z = positions[i + 1];
+      
+      // Add small random variations for grass texture
+      const noise1 = Math.sin(x * 0.2) * Math.cos(z * 0.2) * 0.3;
+      const noise2 = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.1;
+      const noise3 = Math.sin(x * 1.0) * Math.cos(z * 1.0) * 0.05;
+      
+      positions[i + 2] += noise1 + noise2 + noise3;
+    }
+    
     // Update the geometry
     groundGeometry.attributes.position.needsUpdate = true;
     groundGeometry.computeVertexNormals(); // Recalculate normals for proper lighting
     
-    // Create island texture with grass center and rocky edges
+    // Create realistic grass texture with multiple layers
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 512;
@@ -216,7 +234,7 @@ export class StarObservatory {
     // Create base gradient from center (grass) to edges (rock)
     const gradient = ctx.createRadialGradient(256, 256, 0, 256, 256, 280);
     gradient.addColorStop(0, '#3d6017'); // Bright green center (grass)
-    gradient.addColorStop(0.4, '#2d5016'); // Medium green
+    gradient.addColorStop(0.4, '#2d5016'); // Medium green  
     gradient.addColorStop(0.7, '#4a3c28'); // Brown transition (dirt)
     gradient.addColorStop(0.85, '#5a5a5a'); // Gray rock
     gradient.addColorStop(1, '#2a2a2a'); // Dark rock edges
@@ -224,7 +242,7 @@ export class StarObservatory {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Add grass texture in center
+    // Add grass texture in center (keeping it simple and working)
     for (let i = 0; i < 800; i++) {
       const x = Math.random() * canvas.width;
       const y = Math.random() * canvas.height;
@@ -267,7 +285,7 @@ export class StarObservatory {
     const groundTexture = new this.THREE.CanvasTexture(canvas);
     groundTexture.wrapS = this.THREE.RepeatWrapping;
     groundTexture.wrapT = this.THREE.RepeatWrapping;
-    groundTexture.repeat.set(4, 4);
+    groundTexture.repeat.set(3, 3);
     
     // Create ground material - use MeshBasicMaterial for consistent lighting
     const groundMaterial = new this.THREE.MeshBasicMaterial({ 
@@ -509,6 +527,106 @@ export class StarObservatory {
     console.log('Water pool created below island');
   }
 
+  private createFireflies(): void {
+    console.log('Creating magical fireflies...');
+    
+    const fireflyCount = 80;
+    const positions = new Float32Array(fireflyCount * 3);
+    const colors = new Float32Array(fireflyCount * 3);
+    const sizes = new Float32Array(fireflyCount);
+    
+    // Create firefly positions around the island
+    for (let i = 0; i < fireflyCount; i++) {
+      const i3 = i * 3;
+      
+      // Position fireflies randomly around the island, mostly in grass areas
+      const angle = Math.random() * Math.PI * 2;
+      const radius = Math.random() * 180 + 20; // Keep them on the island
+      const height = Math.random() * 30 + 5; // Floating height
+      
+      positions[i3] = Math.cos(angle) * radius;
+      positions[i3 + 1] = height;
+      positions[i3 + 2] = Math.sin(angle) * radius;
+      
+      // Magical firefly colors - soft yellows, greens, and blues
+      const colorChoice = Math.random();
+      if (colorChoice < 0.6) {
+        // Warm firefly glow
+        colors[i3] = 1.0; // R
+        colors[i3 + 1] = 0.8 + Math.random() * 0.2; // G
+        colors[i3 + 2] = 0.3 + Math.random() * 0.2; // B
+      } else if (colorChoice < 0.8) {
+        // Cool magical glow
+        colors[i3] = 0.4 + Math.random() * 0.3; // R
+        colors[i3 + 1] = 0.8 + Math.random() * 0.2; // G
+        colors[i3 + 2] = 1.0; // B
+      } else {
+        // Mystical purple/pink
+        colors[i3] = 0.8 + Math.random() * 0.2; // R
+        colors[i3 + 1] = 0.4 + Math.random() * 0.2; // G
+        colors[i3 + 2] = 1.0; // B
+      }
+      
+      // Varying sizes for depth - tiny fireflies!
+      sizes[i] = Math.random() * 0.3 + 0.1;
+    }
+    
+    const geometry = new this.THREE.BufferGeometry();
+    geometry.setAttribute('position', new this.THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new this.THREE.BufferAttribute(colors, 3));
+    geometry.setAttribute('size', new this.THREE.BufferAttribute(sizes, 1));
+    
+    const material = new this.THREE.PointsMaterial({
+      size: 0.8,
+      sizeAttenuation: true,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.9,
+      blending: this.THREE.AdditiveBlending,
+      map: this.createFireflyTexture()
+    });
+    
+    this.fireflies = new this.THREE.Points(geometry, material);
+    this.scene.add(this.fireflies);
+    
+    // Store original positions for animation
+    this.fireflies.userData = {
+      originalPositions: positions.slice(),
+      time: 0
+    };
+    
+    console.log(`Created ${fireflyCount} magical fireflies`);
+  }
+  
+  private createFireflyTexture(): any {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d')!;
+    
+    // Create soft glowing circle with enhanced glow
+    const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.9)');
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
+    gradient.addColorStop(0.8, 'rgba(255, 255, 255, 0.2)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 64, 64);
+    
+    // Add outer glow ring for enhanced effect
+    const outerGlow = ctx.createRadialGradient(32, 32, 20, 32, 32, 45);
+    outerGlow.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+    outerGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    
+    ctx.fillStyle = outerGlow;
+    ctx.fillRect(0, 0, 64, 64);
+    
+    return new this.THREE.CanvasTexture(canvas);
+  }
+  
+
   private createGrid(): void {
     
     this.gridGroup = new this.THREE.Group();
@@ -682,7 +800,39 @@ export class StarObservatory {
       const opacity = 0.03 + Math.sin(time) * 0.02;
       this.setGridOpacity(opacity);
     }
+    
+    // Animate fireflies
+    if (this.fireflies) {
+      this.animateFireflies();
+    }
+    
   }
+  
+  private animateFireflies(): void {
+    const time = Date.now() * 0.0003; // Much slower movement
+    this.fireflies.userData.time = time;
+    
+    const positions = this.fireflies.geometry.attributes.position.array;
+    const originalPositions = this.fireflies.userData.originalPositions;
+    
+    for (let i = 0; i < positions.length; i += 3) {
+      const originalX = originalPositions[i];
+      const originalY = originalPositions[i + 1];
+      const originalZ = originalPositions[i + 2];
+      
+      // Very gentle, slow floating motion
+      positions[i] = originalX + Math.sin(time + i * 0.05) * 3;
+      positions[i + 1] = originalY + Math.sin(time * 0.3 + i * 0.1) * 2;
+      positions[i + 2] = originalZ + Math.cos(time * 0.2 + i * 0.08) * 2.5;
+    }
+    
+    this.fireflies.geometry.attributes.position.needsUpdate = true;
+    
+    // Gentle glow pulsing - slower and more subtle
+    const glowIntensity = 0.7 + Math.sin(time * 8) * 0.3;
+    this.fireflies.material.opacity = glowIntensity;
+  }
+  
 
   // Star interaction methods
   public setStarVisuals(starVisuals: any): void {
@@ -840,7 +990,16 @@ export class StarObservatory {
       this.gridGroup = null;
     }
     
+    // Dispose fireflies
+    if (this.fireflies) {
+      this.fireflies.material.dispose();
+      this.fireflies.geometry.dispose();
+      this.scene.remove(this.fireflies);
+      this.fireflies = null;
+    }
+    
+    
     this.isInitialized = false;
-    console.log('✅ StarObservatory disposed');
+    console.log('✅ StarObservatory disposed with all visual enhancements');
   }
 }
