@@ -108,14 +108,10 @@ export class GameManager {
    * Register the new migrated levels
    */
   private registerMigratedLevels(): void {
-    console.log('📝 Registering migrated levels...');
-    
     // Register levels using the new BaseLevel pattern
     this.levelManager.registerLevel('observatory', StarObservatory);
     this.levelManager.registerLevel('miranda', MirandaShip);
     this.levelManager.registerLevel('restaurant', RestaurantBackroom);
-    
-    console.log('✅ Migrated levels registered');
   }
   
   /**
@@ -157,8 +153,6 @@ export class GameManager {
     
     const lookUpAngle = THREE.MathUtils.degToRad(15);
     camera.rotation.x = -lookUpAngle;
-    
-    console.log('✅ Controls initialized');
   }
   
   /**
@@ -166,11 +160,7 @@ export class GameManager {
    */
   private loadTimelineEvents(timelineEvents: string): void {
     try {
-      console.log('📊 Loading timeline events:', timelineEvents);
       const events = JSON.parse(timelineEvents);
-      console.log('📊 Parsed events:', events);
-      
-      // Normalize events to ensure they have both old and new property names
       const normalizedEvents = events.map((event: any) => ({
         ...event,
         id: event.id || event.uniqueId || event.slug,
@@ -183,8 +173,6 @@ export class GameManager {
         timelineLocation: event.timelineLocation || event.location || '',
         unlocked: event.unlocked !== undefined ? event.unlocked : true
       }));
-      
-      console.log('📊 Normalized events:', normalizedEvents);
       
       // Add level events
       const levelEvents = [
@@ -226,19 +214,15 @@ export class GameManager {
         }
       ];
       
-      const allEvents = [...normalizedEvents, ...levelEvents];
-      console.log('📊 Final events array:', allEvents);
+      events.push(...levelEvents);
       
       // Store in game state
-      this.gameStateManager.getState().timelineEvents = allEvents;
-      console.log('📊 Events stored in game state');
+      this.gameStateManager.getState().timelineEvents = events;
       
       // Pass to current level if it's the observatory
       const currentLevel = this.levelManager.getCurrentLevel();
-      console.log('📊 Current level:', currentLevel?.getLevelId());
       if (currentLevel && currentLevel.getLevelId() === 'observatory') {
-        console.log('📊 Setting timeline events on observatory level');
-        (currentLevel as StarObservatory).setTimelineEvents(allEvents);
+        (currentLevel as StarObservatory).setTimelineEvents(events);
       }
       
     } catch (error) {
@@ -361,14 +345,9 @@ export class GameManager {
       case 'observatory':
         const observatory = currentLevel as StarObservatory;
         
-        // Set timeline events
         const events = this.gameStateManager.getState().timelineEvents;
-        console.log('🏗️ Observatory setup - events from game state:', events);
         if (events && events.length > 0) {
-          console.log('🏗️ Setting timeline events on observatory level');
           observatory.setTimelineEvents(events);
-        } else {
-          console.log('🏗️ No timeline events found in game state');
         }
         
         // Set up star selection callback
@@ -396,9 +375,6 @@ export class GameManager {
         
       case 'restaurant':
         const restaurant = currentLevel as RestaurantBackroom;
-        
-        // Set up horror-specific features
-        console.log('🍴 Restaurant backroom setup complete');
         
         break;
     }

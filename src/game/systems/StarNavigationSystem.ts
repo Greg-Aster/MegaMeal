@@ -495,7 +495,21 @@ export class StarNavigationSystem extends GameObject {
     const star = this.starSprites.get(this.selectedStar.uniqueId);
     if (star) {
       const screenPosition = this.getScreenPosition(star);
-      this.selectedStar.screenPosition = this.calculateOptimalCardPosition(screenPosition);
+      const newCardPosition = this.calculateOptimalCardPosition(screenPosition);
+      const oldCardPosition = this.selectedStar.screenPosition || { x: -1, y: -1 };
+
+      // Only update and emit if the position has changed to avoid event spam
+      if (
+        oldCardPosition.x !== newCardPosition.x ||
+        oldCardPosition.y !== newCardPosition.y
+      ) {
+        // Create a new object to ensure reactivity in UI frameworks like Svelte
+        this.selectedStar = {
+          ...this.selectedStar,
+          screenPosition: newCardPosition,
+        };
+        this.eventBus.emit('star.selected', { star: this.selectedStar });
+      }
     }
   }
   
@@ -562,21 +576,13 @@ export class StarNavigationSystem extends GameObject {
    * Set timeline events and recreate stars
    */
   public setTimelineEvents(events: any[]): void {
-    console.log('⭐ StarNavigationSystem.setTimelineEvents called with:', events);
     this.timelineEvents = events;
     
     if (this.isInitialized) {
-      console.log('⭐ System is initialized, recreating stars');
       // Clear existing stars
       this.clearStars();
-      
-      // Recreate stars from new events
       this.createStarsFromEvents();
-      
-      // Recreate constellation lines
       this.createConstellationLines();
-    } else {
-      console.log('⭐ System not initialized yet, events will be used during initialization');
     }
   }
   

@@ -207,12 +207,12 @@ export class StarObservatory extends BaseLevel {
    * Set timeline events for star generation
    */
   public setTimelineEvents(events: any[]): void {
-    console.log('🏗️ StarObservatory.setTimelineEvents called with:', events);
+    // console.log('🏗️ StarObservatory.setTimelineEvents called with:', events);
     if (this.starSystem) {
-      console.log('🏗️ Passing events to StarNavigationSystem');
+      // console.log('🏗️ Passing events to StarNavigationSystem');
       this.starSystem.setTimelineEvents(events);
     } else {
-      console.log('🏗️ StarNavigationSystem not initialized yet');
+      // console.log('🏗️ StarNavigationSystem not initialized yet');
     }
   }
   
