@@ -2,6 +2,7 @@ import { Engine } from '../engine/core/Engine';
 import { LevelManager } from './managers/LevelManager';
 import { GameStateManager } from './state/GameStateManager';
 import { InteractionSystem } from '../engine/systems/InteractionSystem';
+import { UniversalInputManager } from '../engine/input/UniversalInputManager';
 import { HybridControls } from '../engine/input/HybridControls';
 import { ErrorHandler } from '../engine/utils/ErrorHandler';
 import type { ErrorContext } from '../engine/utils/ErrorHandler';
@@ -21,6 +22,7 @@ export class GameManager {
   private gameStateManager: GameStateManager;
   private interactionSystem: InteractionSystem;
   private hybridControls: HybridControls;
+  private universalInputManager: UniversalInputManager;
   
   private isInitialized = false;
   private isRunning = false;
@@ -71,6 +73,10 @@ export class GameManager {
       // Initialize level manager (after InteractionSystem is created)
       this.levelManager = new LevelManager(this.engine, this.interactionSystem);
       
+      // Initialize the single, universal input manager
+      this.universalInputManager = new UniversalInputManager(this.engine.getContainer(), this.engine.getEventBus());
+      this.universalInputManager.initialize();
+
       // Initialize hybrid controls
       await this.initializeControls();
       
@@ -272,6 +278,13 @@ export class GameManager {
       });
     });
     
+    eventBus.on('level.transition', (data) => {
+      this.transitionToLevel(data.targetLevel).catch(error => {
+        console.error('Failed to transition to level:', error);
+        eventBus.emit('game.error', { error, context: 'level_transition' });
+      });
+    });
+    
     // Star selection events
     eventBus.on('star.selected', (data) => {
       this.gameStateManager.setSelectedStar(data.star);
@@ -280,15 +293,6 @@ export class GameManager {
     // Interaction events
     eventBus.on('interaction.performed', (data) => {
       this.gameStateManager.recordInteraction(data.interactionType, data);
-    });
-    
-    // Mobile control events
-    eventBus.on('mobile.movement', (data) => {
-      this.handleMobileMovement(data);
-    });
-    
-    eventBus.on('mobile.action', (data) => {
-      this.handleMobileAction(data);
     });
     
     // Error handling
@@ -303,6 +307,11 @@ export class GameManager {
   public async transitionToLevel(levelId: string): Promise<void> {
     try {
       console.log(`🔄 Transitioning to level: ${levelId}`);
+      
+      // Clear selected star when leaving StarObservatory to prevent stuck timeline card
+      if (this.gameStateManager.getCurrentLevel() === 'observatory' && levelId !== 'observatory') {
+        this.gameStateManager.setSelectedStar(null);
+      }
       
       const success = await this.levelManager.transitionToLevel(levelId);
       if (success) {
@@ -399,8 +408,8 @@ export class GameManager {
         break;
         
       case 'restaurant':
-        camera.position.set(15, 5, 20);
-        camera.lookAt(0, 0, 0);
+        camera.position.set(0, 2.5, 8);
+        camera.lookAt(0, 1.5, 0);
         this.hybridControls.setMoveSpeed(20);
         break;
     }
@@ -586,6 +595,7 @@ export class GameManager {
     this.levelManager?.dispose();
     this.gameStateManager?.dispose();
     this.interactionSystem?.dispose();
+    this.universalInputManager?.dispose();
     this.hybridControls?.dispose();
     this.engine?.dispose();
     

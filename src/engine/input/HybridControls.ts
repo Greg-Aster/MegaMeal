@@ -128,13 +128,17 @@ export class HybridControls {
   private setupFirstPersonMouseLook(): void {
     // Mouse look sensitivity
     const mouseSensitivity = 0.002;
+    let isDragging = false;
     
-    // Track mouse movement for first-person look
-    this.domElement.addEventListener('mousemove', (event) => {
-      // Only apply mouse look if mouse button is held down
-      if (event.buttons === 1) { // Left mouse button
-        const deltaX = event.movementX * mouseSensitivity;
-        const deltaY = event.movementY * mouseSensitivity;
+    // Listen to universal input drag events instead of direct DOM events
+    this.eventBus.on('input:drag:start', (data) => {
+      isDragging = true;
+    });
+    
+    this.eventBus.on('input:drag:move', (data) => {
+      if (isDragging && data.deltaX !== undefined && data.deltaY !== undefined) {
+        const deltaX = data.deltaX * mouseSensitivity;
+        const deltaY = data.deltaY * mouseSensitivity;
         
         // Get current camera rotation
         const euler = new this.THREE.Euler().setFromQuaternion(this.camera.quaternion, 'YXZ');
@@ -151,84 +155,57 @@ export class HybridControls {
       }
     });
     
-    console.log('👁️ First-person mouse look enabled (click and drag to look around)');
+    this.eventBus.on('input:drag:end', (data) => {
+      isDragging = false;
+    });
+    
+    // console.log('👁️ First-person mouse look enabled (click and drag to look around)');
   }
   
   private setupMobileTouchLook(): void {
     // Mobile touch look sensitivity
     const touchSensitivity = 0.003;
-    let lastTouch: Touch | null = null;
-    let isTouchDragging = false;
-    let touchStartTime = 0;
-    let touchMoved = false;
+    let lastDragPosition = { x: 0, y: 0 };
+    let isDragging = false;
     
-    // Track touch start
-    this.domElement.addEventListener('touchstart', (event) => {
-      if (event.touches.length === 1) {
-        lastTouch = event.touches[0];
-        isTouchDragging = true;
-        touchStartTime = Date.now();
-        touchMoved = false;
-        // Don't prevent default here - allow tap events through
-        console.log('📱 HybridControls: Touch start detected');
-      }
+    // Listen to universal input drag events instead of direct DOM events
+    this.eventBus.on('input:drag:start', (data) => {
+      lastDragPosition.x = data.x;
+      lastDragPosition.y = data.y;
+      isDragging = true;
+      // console.log('📱 HybridControls: Drag start detected');
     });
     
-    // Track touch movement for camera look
-    this.domElement.addEventListener('touchmove', (event) => {
-      if (isTouchDragging && event.touches.length === 1 && lastTouch) {
-        const touch = event.touches[0];
-        const deltaX = (touch.clientX - lastTouch.clientX) * touchSensitivity;
-        const deltaY = (touch.clientY - lastTouch.clientY) * touchSensitivity;
+    this.eventBus.on('input:drag:move', (data) => {
+      if (isDragging) {
+        const deltaX = (data.x - lastDragPosition.x) * touchSensitivity;
+        const deltaY = (data.y - lastDragPosition.y) * touchSensitivity;
         
-        // Mark as moved if significant movement
-        if (Math.abs(deltaX) > 0.01 || Math.abs(deltaY) > 0.01) {
-          touchMoved = true;
-          
-          // Get current camera rotation
-          const euler = new this.THREE.Euler().setFromQuaternion(this.camera.quaternion, 'YXZ');
-          
-          // Apply horizontal rotation (Y axis)
-          euler.y -= deltaX;
-          
-          // Apply vertical rotation (X axis) with limits
-          euler.x -= deltaY;
-          euler.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, euler.x)); // Limit vertical look
-          
-          // Apply rotation to camera
-          this.camera.quaternion.setFromEuler(euler);
-          
-          // Prevent default only when actually dragging
-          event.preventDefault();
-        }
+        // Get current camera rotation
+        const euler = new this.THREE.Euler().setFromQuaternion(this.camera.quaternion, 'YXZ');
         
-        // Update last touch
-        lastTouch = touch;
+        // Apply horizontal rotation (Y axis)
+        euler.y -= deltaX;
+        
+        // Apply vertical rotation (X axis) with limits
+        euler.x -= deltaY;
+        euler.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, euler.x)); // Limit vertical look
+        
+        // Apply rotation to camera
+        this.camera.quaternion.setFromEuler(euler);
+        
+        // Update last position
+        lastDragPosition.x = data.x;
+        lastDragPosition.y = data.y;
       }
     });
     
-    // Track touch end
-    this.domElement.addEventListener('touchend', (event) => {
-      const touchDuration = Date.now() - touchStartTime;
-      
-      console.log('📱 HybridControls: Touch end - duration:', touchDuration, 'moved:', touchMoved);
-      
-      // If it was a quick tap (< 200ms) and no significant movement, allow click events
-      if (touchDuration < 200 && !touchMoved) {
-        console.log('📱 HybridControls: Quick tap detected - allowing star selection');
-        // Don't prevent default - let tap events through for star selection
-      } else {
-        console.log('📱 HybridControls: Drag detected - preventing default');
-        // It was a drag - prevent default
-        event.preventDefault();
-      }
-      
-      isTouchDragging = false;
-      lastTouch = null;
-      touchMoved = false;
+    this.eventBus.on('input:drag:end', (data) => {
+      isDragging = false;
+      // console.log('📱 HybridControls: Drag end detected');
     });
     
-    console.log('📱 Mobile touch look enabled (drag to look, tap to select)');
+    // console.log('📱 Mobile touch look enabled (drag to look, tap to select)');
   }
   
   private setupPlayerPhysics(): void {
@@ -640,7 +617,12 @@ export class HybridControls {
   }
   
   public dispose(): void {
-    console.log('🧹 Disposing Hybrid Controls...');
+    // console.log('🧹 Disposing Hybrid Controls...');
+    
+    // Remove EventBus listeners
+    this.eventBus.off('input:drag:start');
+    this.eventBus.off('input:drag:move');
+    this.eventBus.off('input:drag:end');
     
     // Dispose orbit controls
     if (this.orbitControls) {
@@ -653,6 +635,6 @@ export class HybridControls {
     this.domElement = null as any;
     
     this.isInitialized = false;
-    console.log('✅ Hybrid Controls disposed');
+    // console.log('✅ Hybrid Controls disposed');
   }
 }

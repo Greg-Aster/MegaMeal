@@ -12,6 +12,7 @@
   import TimelineCard from './ui/components/TimelineCard.svelte';
   import MobileControls from './ui/MobileControls.svelte';
   import DebugPanel from './ui/DebugPanel.svelte';
+  import DialogueBox from './ui/components/DialogueBox.svelte';
 
   // Props
   export let timelineEvents: string = '[]';
@@ -30,6 +31,12 @@
   let gameState: GameState = new GameState();
   let isMobile = false;
   let showDebugPanel = false;
+  
+  // Dialogue state
+  let dialogueVisible = false;
+  let dialogueText = '';
+  let dialogueSpeaker = '';
+  let dialogueDuration = 3000;
   
   // Reactive values derived from game state
   $: currentLevel = gameState.currentLevel;
@@ -68,7 +75,7 @@
       isInitialized = true;
       loadingMessage = 'Welcome to the Star Observatory!';
       
-      console.log('✅ Game initialized successfully');
+      // console.log('✅ Game initialized successfully');
       
     } catch (err) {
       console.error('❌ Failed to initialize game:', err);
@@ -93,6 +100,18 @@
     eventBus.on('gamestate.star.selected', updateGameState);
     eventBus.on('gamestate.stats.updated', updateGameState);
     eventBus.on('gamestate.settings.updated', updateGameState);
+    
+    // Listen for dialogue events
+    eventBus.on('dialogue.show', (data: any) => {
+      dialogueText = data.text;
+      dialogueSpeaker = data.speaker;
+      dialogueDuration = data.duration || 3000;
+      dialogueVisible = true;
+    });
+    
+    eventBus.on('dialogue.hide', () => {
+      dialogueVisible = false;
+    });
     
     // Initial state update
     updateGameState();
@@ -176,12 +195,12 @@
   
   // Lifecycle
   onMount(async () => {
-    console.log('🎮 Starting MEGAMEAL Game with new architecture...');
+    // console.log('🎮 Starting MEGAMEAL Game with new architecture...');
     await initializeGame();
   });
 
   onDestroy(() => {
-    console.log('🧹 Cleaning up Game...');
+    // console.log('🧹 Cleaning up Game...');
     
     // Remove event listeners
     window.removeEventListener('resize', handleResize);
@@ -191,7 +210,7 @@
       gameManager.dispose();
     }
     
-    console.log('✅ Game cleaned up');
+    // console.log('✅ Game cleaned up');
   });
 </script>
 
@@ -246,6 +265,15 @@
         on:action={handleMobileAction}
       />
     {/if}
+    
+    <!-- Dialogue Box -->
+    <DialogueBox
+      isVisible={dialogueVisible}
+      text={dialogueText}
+      speaker={dialogueSpeaker}
+      duration={dialogueDuration}
+      on:close={() => dialogueVisible = false}
+    />
   {/if}
 </div>
 

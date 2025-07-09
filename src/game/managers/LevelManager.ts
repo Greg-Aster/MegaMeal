@@ -101,6 +101,11 @@ export class LevelManager {
       
       // Dispose current level
       if (this.currentLevel) {
+        console.log(`🧹 Performing cleanup for current level: ${this.currentLevel.getLevelId()}`);
+        
+        // Call automatic cleanup system before disposing
+        this.currentLevel.performLevelCleanup();
+        
         console.log(`🧹 Disposing current level: ${this.currentLevel.getLevelId()}`);
         await this.currentLevel.dispose();
         this.currentLevel = null;
