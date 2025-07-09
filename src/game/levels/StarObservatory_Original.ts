@@ -2,10 +2,6 @@
 // Environment and location system for Star Observatory
 // Based on the skybox and grid system from StarMapView.astro
 
-import { Materials } from '../../engine/rendering/Materials';
-import { AssetLoader } from '../../engine/resources/AssetLoader';
-import { ForestElementFactory } from '../systems/ForestElementFactory';
-
 export class StarObservatory {
   private THREE: any;
   private scene: any;
@@ -14,9 +10,6 @@ export class StarObservatory {
   private starVisuals: any;
   private camera: any;
   private gameContainer: any;
-  private materials: Materials;
-  private assetLoader: AssetLoader;
-  private forestFactory: ForestElementFactory;
   
   // State
   private isInitialized = false;
@@ -29,19 +22,20 @@ export class StarObservatory {
   private fireflies: any = null;
   private sciFiObjects: any[] = [];
   
+  // Water/waterfall elements that need disposal
+  private waterfallGroup: any = null;
+  private waterPool: any = null;
+  
   // Configuration
   private readonly skyboxImageUrl = '/assets/hdri/skywip4.webp';
   private readonly gridRadius = 940;
 
-  constructor(THREE: any, scene: any, physicsWorld?: any, camera?: any, gameContainer?: any, assetLoader?: AssetLoader) {
+  constructor(THREE: any, scene: any, physicsWorld?: any, camera?: any, gameContainer?: any) {
     this.THREE = THREE;
     this.scene = scene;
     this.physicsWorld = physicsWorld;
     this.camera = camera;
     this.gameContainer = gameContainer;
-    this.materials = new Materials();
-    this.assetLoader = assetLoader || new AssetLoader();
-    this.forestFactory = new ForestElementFactory(THREE, this.assetLoader, this.materials);
   }
 
   public async initialize(): Promise<void> {
@@ -50,50 +44,14 @@ export class StarObservatory {
       return;
     }
 
-    console.log('🌲 Initializing StarObservatory with pine forest assets...');
-    
-    // Initialize AssetLoader if not already done
-    await this.assetLoader.initialize();
-    
-    // Load pine forest assets
-    await this.loadForestAssets();
-    
-    // Initialize forest factory with model library
-    await this.forestFactory.initialize();
-    
     await this.loadSkybox();
-    this.createForestGround();
-    this.populateForestElements();
+    this.createGround();
     this.createWaterfalls();
     this.createGrid();
     this.setupLighting();
     this.createFireflies();
     
     this.isInitialized = true;
-    console.log('✅ StarObservatory initialized with forest environment');
-  }
-
-  private async loadForestAssets(): Promise<void> {
-    try {
-      console.log('🌲 Loading pine forest assets...');
-      
-      // Load the forest manifest
-      const response = await fetch('/assets/game/pine_forest/manifest.json');
-      if (!response.ok) {
-        throw new Error(`Failed to fetch manifest: ${response.status}`);
-      }
-      
-      const manifest = await response.json();
-      console.log('📄 Manifest loaded:', manifest);
-      
-      // Load all assets from manifest
-      await this.assetLoader.loadManifest(manifest);
-      
-      console.log('✅ Pine forest assets loaded successfully');
-    } catch (error) {
-      console.warn('⚠️ Failed to load pine forest assets, using fallback:', error);
-      // Continue without forest assets - the methods will use fallback materials
-    }
   }
 
   private async loadSkybox(): Promise<void> {
@@ -127,12 +85,6 @@ export class StarObservatory {
           // Add to scene
           this.scene.add(this.skyboxMesh);
           
-          // Enable environment mapping for PBR materials
-          this.scene.background = skyTexture;
-          this.scene.environment = skyTexture;
-          this.materials.setEnvironmentMap(skyTexture);
-          
-          console.log('✅ Environment mapping enabled with HDR skybox');
           resolve();
         },
         (progress) => {
@@ -200,353 +152,7 @@ export class StarObservatory {
     // Add to scene
     this.scene.add(this.skyboxMesh);
     
-    // Enable basic environment mapping even with fallback
-    this.scene.background = fallbackTexture;
-    this.scene.environment = fallbackTexture;
-    this.materials.setEnvironmentMap(fallbackTexture);
-    
-    console.log('Fallback skybox created with basic environment mapping');
-  }
-
-  private createForestGround(): void {
-    console.log('Creating realistic forest ground with PBR textures...');
-    
-    // Create a large terrain with high subdivisions for detailed geometry
-    const groundGeometry = new this.THREE.PlaneGeometry(500, 500, 512, 512);
-    
-    // Island parameters
-    const positions = groundGeometry.attributes.position.array;
-    const hillHeight = 15;
-    const hillRadius = 100;
-    const islandRadius = 220;
-    const edgeHeight = 8;
-    const edgeFalloff = 30;
-    const waterfallStart = islandRadius - 10;
-    
-    // Create the same terrain as before
-    for (let i = 0; i < positions.length; i += 3) {
-      const x = positions[i];
-      const z = positions[i + 1];
-      
-      const distanceFromCenter = Math.sqrt(x * x + z * z);
-      let height = 0;
-      
-      // Central hill
-      if (distanceFromCenter < hillRadius) {
-        const heightMultiplier = Math.cos((distanceFromCenter / hillRadius) * Math.PI * 0.5);
-        height = hillHeight * heightMultiplier * heightMultiplier;
-      }
-      
-      // Island edges with rocky terrain
-      if (distanceFromCenter > islandRadius - edgeFalloff && distanceFromCenter < islandRadius) {
-        const edgeProgress = (distanceFromCenter - (islandRadius - edgeFalloff)) / edgeFalloff;
-        const rockiness = Math.sin(x * 0.3) * Math.cos(z * 0.3) * 2;
-        const edgeHeightMultiplier = Math.cos(edgeProgress * Math.PI * 0.5);
-        
-        const rockHeight = (edgeHeight + rockiness) * edgeHeightMultiplier;
-        height = Math.max(height, rockHeight);
-      }
-      
-      // Waterfall area
-      if (distanceFromCenter >= waterfallStart && distanceFromCenter < islandRadius) {
-        const waterfallProgress = (distanceFromCenter - waterfallStart) / (islandRadius - waterfallStart);
-        height = height * (1 - waterfallProgress * waterfallProgress);
-      }
-      
-      // Outside island
-      if (distanceFromCenter >= islandRadius) {
-        const voidDistance = distanceFromCenter - islandRadius;
-        height = -Math.pow(voidDistance * 0.1, 2);
-      }
-      
-      positions[i + 2] = height;
-    }
-    
-    // Add small variations for natural look
-    for (let i = 0; i < positions.length; i += 3) {
-      const x = positions[i];
-      const z = positions[i + 1];
-      
-      const noise1 = Math.sin(x * 0.2) * Math.cos(z * 0.2) * 0.3;
-      const noise2 = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.1;
-      const noise3 = Math.sin(x * 1.0) * Math.cos(z * 1.0) * 0.05;
-      
-      positions[i + 2] += noise1 + noise2 + noise3;
-    }
-    
-    groundGeometry.attributes.position.needsUpdate = true;
-    groundGeometry.computeVertexNormals();
-    
-    // Create terrain with multiple materials based on zones
-    const terrainMaterials = this.createTerrainMaterials();
-    
-    // Create multiple terrain layers for different materials
-    this.createTerrainLayers(groundGeometry, terrainMaterials);
-    
-    // Add physics body for ground
-    if (this.physicsWorld) {
-      console.log('Adding physics collider for forest terrain...');
-      try {
-        this.physicsWorld.createStaticMesh(
-          'ground-forest', 
-          groundGeometry, 
-          new this.THREE.Vector3(0, -5, 0), 
-          new this.THREE.Quaternion().setFromEuler(new this.THREE.Euler(-Math.PI / 2, 0, 0))
-        );
-        
-        console.log('Forest terrain physics collider created');
-      } catch (error) {
-        console.warn('Failed to create forest physics - using simple ground:', error);
-        
-        this.physicsWorld.createRigidBody('ground', {
-          bodyType: 'static',
-          colliderType: 'cuboid',
-          position: new this.THREE.Vector3(0, -6, 0),
-          rotation: new this.THREE.Quaternion(0, 0, 0, 1),
-          scale: new this.THREE.Vector3(250, 1, 250),
-          friction: 0.7,
-          restitution: 0.0
-        });
-      }
-    }
-    
-    this.scene.add(this.groundMesh);
-    console.log('✅ Forest ground created with PBR textures');
-  }
-
-  private createTerrainMaterials(): { [key: string]: any } {
-    const materials: { [key: string]: any } = {};
-    
-    // Grass material for center areas
-    const grassTextureSet = this.assetLoader.getPBRTextureSet('grass_medium');
-    if (grassTextureSet) {
-      // Configure grass textures
-      Object.values(grassTextureSet).forEach(texture => {
-        if (texture) {
-          texture.wrapS = this.THREE.RepeatWrapping;
-          texture.wrapT = this.THREE.RepeatWrapping;
-          texture.repeat.set(16, 16); // Higher detail for grass
-        }
-      });
-      
-      materials.grass = this.materials.createPBRMaterial({
-        map: grassTextureSet.map,
-        normalMap: grassTextureSet.normalMap,
-        roughnessMap: grassTextureSet.roughnessMap,
-        roughness: 0.9,
-        metalness: 0.0,
-        envMapIntensity: 0.4
-      });
-    }
-    
-    // Forest ground material for base terrain
-    const forestGroundSet = this.assetLoader.getPBRTextureSet('forest_ground');
-    if (forestGroundSet) {
-      Object.values(forestGroundSet).forEach(texture => {
-        if (texture) {
-          texture.wrapS = this.THREE.RepeatWrapping;
-          texture.wrapT = this.THREE.RepeatWrapping;
-          texture.repeat.set(8, 8);
-        }
-      });
-      
-      materials.dirt = this.materials.createPBRMaterial({
-        map: forestGroundSet.map,
-        normalMap: forestGroundSet.normalMap,
-        roughnessMap: forestGroundSet.roughnessMap,
-        roughness: 0.8,
-        metalness: 0.1,
-        envMapIntensity: 0.3
-      });
-    }
-    
-    // Rock material for edges
-    const rockTextureSet = this.assetLoader.getPBRTextureSet('rock_moss_01');
-    if (rockTextureSet) {
-      Object.values(rockTextureSet).forEach(texture => {
-        if (texture) {
-          texture.wrapS = this.THREE.RepeatWrapping;
-          texture.wrapT = this.THREE.RepeatWrapping;
-          texture.repeat.set(4, 4);
-        }
-      });
-      
-      materials.rock = this.materials.createPBRMaterial({
-        map: rockTextureSet.map,
-        normalMap: rockTextureSet.normalMap,
-        roughnessMap: rockTextureSet.roughnessMap,
-        roughness: 0.9,
-        metalness: 0.1,
-        envMapIntensity: 0.5
-      });
-    }
-    
-    console.log(`Created ${Object.keys(materials).length} terrain materials:`, Object.keys(materials));
-    return materials;
-  }
-
-  private createTerrainLayers(baseGeometry: any, materials: { [key: string]: any }): void {
-    const terrainGroup = new this.THREE.Group();
-    
-    // Base layer - forest ground (dirt/soil)
-    if (materials.dirt) {
-      const baseMesh = new this.THREE.Mesh(baseGeometry.clone(), materials.dirt);
-      baseMesh.rotation.x = -Math.PI / 2;
-      baseMesh.position.y = -5;
-      baseMesh.receiveShadow = true;
-      terrainGroup.add(baseMesh);
-      this.groundMesh = baseMesh; // Keep reference for physics
-    }
-    
-    // Grass layer - center areas only
-    if (materials.grass) {
-      const grassGeometry = this.createGrassZoneGeometry(baseGeometry);
-      const grassMesh = new this.THREE.Mesh(grassGeometry, materials.grass);
-      grassMesh.rotation.x = -Math.PI / 2;
-      grassMesh.position.y = -4.95; // Slightly above base
-      grassMesh.receiveShadow = true;
-      terrainGroup.add(grassMesh);
-    }
-    
-    // Rock layer - edges only
-    if (materials.rock) {
-      const rockGeometry = this.createRockZoneGeometry(baseGeometry);
-      const rockMesh = new this.THREE.Mesh(rockGeometry, materials.rock);
-      rockMesh.rotation.x = -Math.PI / 2;
-      rockMesh.position.y = -4.9; // Above grass
-      rockMesh.receiveShadow = true;
-      terrainGroup.add(rockMesh);
-    }
-    
-    this.scene.add(terrainGroup);
-    console.log('✅ Multi-layer terrain created with zone-based materials');
-  }
-
-  private createGrassZoneGeometry(baseGeometry: any): any {
-    const geometry = baseGeometry.clone();
-    const positions = geometry.attributes.position.array;
-    const colors = new Float32Array(positions.length);
-    
-    // Create alpha mask for grass zones (center areas)
-    for (let i = 0; i < positions.length; i += 3) {
-      const x = positions[i];
-      const z = positions[i + 1];
-      const distanceFromCenter = Math.sqrt(x * x + z * z);
-      
-      // Grass appears in center areas (less than 150 units from center)
-      const grassZone = distanceFromCenter < 150;
-      const alpha = grassZone ? 1.0 : 0.0;
-      
-      const colorIndex = (i / 3) * 4; // 4 components per vertex (RGBA)
-      colors[colorIndex] = alpha;     // R (used as alpha mask)
-      colors[colorIndex + 1] = alpha; // G
-      colors[colorIndex + 2] = alpha; // B
-    }
-    
-    geometry.setAttribute('color', new this.THREE.BufferAttribute(colors, 3));
-    return geometry;
-  }
-
-  private createRockZoneGeometry(baseGeometry: any): any {
-    const geometry = baseGeometry.clone();
-    const positions = geometry.attributes.position.array;
-    const colors = new Float32Array(positions.length);
-    
-    // Create alpha mask for rock zones (edge areas)
-    for (let i = 0; i < positions.length; i += 3) {
-      const x = positions[i];
-      const z = positions[i + 1];
-      const distanceFromCenter = Math.sqrt(x * x + z * z);
-      
-      // Rocks appear at edges (180+ units from center)
-      const rockZone = distanceFromCenter > 180;
-      const alpha = rockZone ? 1.0 : 0.0;
-      
-      const colorIndex = (i / 3) * 4;
-      colors[colorIndex] = alpha;
-      colors[colorIndex + 1] = alpha;
-      colors[colorIndex + 2] = alpha;
-    }
-    
-    geometry.setAttribute('color', new this.THREE.BufferAttribute(colors, 3));
-    return geometry;
-  }
-
-  private populateForestElements(): void {
-    console.log('🌲 Populating forest with 3D elements...');
-    
-    // Create different zones with different element types
-    const forestElements = new this.THREE.Group();
-    
-    // Central area - mixed forest elements
-    const centerForest = this.forestFactory.populateArea(
-      new this.THREE.Vector3(0, 0, 0), 
-      120, // radius
-      15   // density
-    );
-    forestElements.add(centerForest);
-    
-    // Edge areas - more rocks and dead trees
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2;
-      const distance = 160;
-      const edgeCenter = new this.THREE.Vector3(
-        Math.cos(angle) * distance,
-        0,
-        Math.sin(angle) * distance
-      );
-      
-      // Create scattered elements near edges
-      for (let j = 0; j < 3; j++) {
-        const randomOffset = new this.THREE.Vector3(
-          (Math.random() - 0.5) * 40,
-          0,
-          (Math.random() - 0.5) * 40
-        );
-        const position = edgeCenter.clone().add(randomOffset);
-        
-        // Get height at this position
-        const groundHeight = this.getGroundHeightAt(position.x, position.z);
-        position.y = groundHeight;
-        
-        const elementType = Math.random();
-        const scale = 0.8 + Math.random() * 0.8;
-        const rotation = new this.THREE.Euler(0, Math.random() * Math.PI * 2, 0);
-        
-        let element;
-        if (elementType < 0.4) {
-          element = this.forestFactory.createBoulder({ position, scale, rotation });
-        } else if (elementType < 0.7) {
-          element = this.forestFactory.createDeadTree({ position, scale, rotation });
-        } else {
-          element = this.forestFactory.createFernCluster({ position, scale, rotation });
-        }
-        
-        forestElements.add(element);
-      }
-    }
-    
-    // Add some special large trees as landmarks
-    for (let i = 0; i < 5; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const distance = 60 + Math.random() * 40;
-      const position = new this.THREE.Vector3(
-        Math.cos(angle) * distance,
-        this.getGroundHeightAt(Math.cos(angle) * distance, Math.sin(angle) * distance),
-        Math.sin(angle) * distance
-      );
-      
-      const largeTree = this.forestFactory.createPineTree({
-        position,
-        scale: 1.5 + Math.random() * 0.5,
-        rotation: new this.THREE.Euler(0, Math.random() * Math.PI * 2, 0)
-      });
-      
-      forestElements.add(largeTree);
-    }
-    
-    this.scene.add(forestElements);
-    console.log('✅ Forest populated with varied 3D elements');
+    console.log('Fallback skybox created');
   }
 
   private createGround(): void {
@@ -685,16 +291,11 @@ export class StarObservatory {
     groundTexture.wrapT = this.THREE.RepeatWrapping;
     groundTexture.repeat.set(3, 3);
     
-    // Create ground material - use PBR material for realistic lighting
-    const groundMaterial = this.materials.createPBRMaterial({
-      color: 0x556633, // Lighter green so it's visible in low light
-      roughness: 0.9,
-      metalness: 0.1,
-      envMapIntensity: 0.3 // Subtle environment reflections
+    // Create ground material - use MeshBasicMaterial for consistent lighting
+    const groundMaterial = new this.THREE.MeshBasicMaterial({ 
+      map: groundTexture,
+      color: 0x556633 // Lighter green so it's visible in low light
     });
-    
-    // Apply the procedural texture if needed
-    groundMaterial.map = groundTexture;
     
     // Create ground mesh
     this.groundMesh = new this.THREE.Mesh(groundGeometry, groundMaterial);
@@ -746,394 +347,6 @@ export class StarObservatory {
     console.log('Observatory ground created');
   }
 
-  private create3DRockFormations(): void {
-    console.log('Creating 3D rock formations with forest textures...');
-    
-    const rockGroup = new this.THREE.Group();
-    const rockCount = 25;
-    const islandRadius = 200;
-    
-    // Create different rock materials using forest textures
-    const rockMaterials = this.createRockMaterials();
-    
-    // Default fallback material
-    const fallbackMaterial = this.materials.createPBRMaterial({
-      color: 0x4a4a4a,
-      roughness: 0.9,
-      metalness: 0.1,
-      envMapIntensity: 0.4
-    });
-    
-    for (let i = 0; i < rockCount; i++) {
-      // Random position within island
-      const angle = Math.random() * Math.PI * 2;
-      const distance = Math.random() * islandRadius * 0.8; // Keep away from edges
-      const x = Math.cos(angle) * distance;
-      const z = Math.sin(angle) * distance;
-      
-      // Get height at this position (sample from ground)
-      const groundHeight = this.getGroundHeightAt(x, z);
-      
-      // Create rock with random variations and materials
-      const selectedMaterial = rockMaterials.length > 0 ? rockMaterials[Math.floor(Math.random() * rockMaterials.length)] : fallbackMaterial;
-      const rock = this.createSingleRock(selectedMaterial);
-      
-      // Position on ground
-      rock.position.set(x, groundHeight + 1, z);
-      
-      // Random rotation
-      rock.rotation.x = (Math.random() - 0.5) * 0.3;
-      rock.rotation.y = Math.random() * Math.PI * 2;
-      rock.rotation.z = (Math.random() - 0.5) * 0.3;
-      
-      // Random scale
-      const scale = 0.5 + Math.random() * 1.5;
-      rock.scale.setScalar(scale);
-      
-      rockGroup.add(rock);
-    }
-    
-    this.scene.add(rockGroup);
-    console.log(`Created ${rockCount} 3D rock formations`);
-  }
-  
-  private createRockMaterials(): any[] {
-    const materials: any[] = [];
-    
-    // Rock with moss texture set 1
-    const rockMoss01 = this.assetLoader.getPBRTextureSet('rock_moss_01');
-    if (rockMoss01) {
-      // Configure texture settings
-      Object.values(rockMoss01).forEach(texture => {
-        if (texture) {
-          texture.wrapS = this.THREE.RepeatWrapping;
-          texture.wrapT = this.THREE.RepeatWrapping;
-          texture.repeat.set(2, 2);
-        }
-      });
-      
-      materials.push(this.materials.createPBRMaterial({
-        map: rockMoss01.map,
-        normalMap: rockMoss01.normalMap,
-        roughnessMap: rockMoss01.roughnessMap,
-        roughness: 0.8,
-        metalness: 0.1,
-        envMapIntensity: 0.4
-      }));
-    }
-    
-    // Rock with moss texture set 2
-    const rockMoss02 = this.assetLoader.getPBRTextureSet('rock_moss_02');
-    if (rockMoss02) {
-      Object.values(rockMoss02).forEach(texture => {
-        if (texture) {
-          texture.wrapS = this.THREE.RepeatWrapping;
-          texture.wrapT = this.THREE.RepeatWrapping;
-          texture.repeat.set(2, 2);
-        }
-      });
-      
-      materials.push(this.materials.createPBRMaterial({
-        map: rockMoss02.map,
-        normalMap: rockMoss02.normalMap,
-        roughnessMap: rockMoss02.roughnessMap,
-        roughness: 0.8,
-        metalness: 0.1,
-        envMapIntensity: 0.4
-      }));
-    }
-    
-    // Rocky trail texture for more rugged rocks
-    const rockyTrail = this.assetLoader.getPBRTextureSet('rocky_trail');
-    if (rockyTrail) {
-      Object.values(rockyTrail).forEach(texture => {
-        if (texture) {
-          texture.wrapS = this.THREE.RepeatWrapping;
-          texture.wrapT = this.THREE.RepeatWrapping;
-          texture.repeat.set(1.5, 1.5);
-        }
-      });
-      
-      materials.push(this.materials.createPBRMaterial({
-        map: rockyTrail.map,
-        normalMap: rockyTrail.normalMap,
-        roughnessMap: rockyTrail.roughnessMap,
-        displacementMap: rockyTrail.displacementMap,
-        displacementScale: 0.05,
-        roughness: 0.9,
-        metalness: 0.05,
-        envMapIntensity: 0.3
-      }));
-    }
-    
-    console.log(`Created ${materials.length} rock material variations`);
-    return materials;
-  }
-  
-  private createSingleRock(material: any): any {
-    // Create irregular rock geometry using multiple techniques
-    const rockType = Math.floor(Math.random() * 3);
-    
-    switch (rockType) {
-      case 0: return this.createAngularRock(material);
-      case 1: return this.createRoundedRock(material);
-      case 2: return this.createCrystalRock(material);
-      default: return this.createAngularRock(material);
-    }
-  }
-  
-  private createAngularRock(material: any): any {
-    // Create angular rock using modified dodecahedron
-    const geometry = new this.THREE.DodecahedronGeometry(2, 0);
-    const positions = geometry.attributes.position.array;
-    
-    // Randomize vertices for irregular shape
-    for (let i = 0; i < positions.length; i += 3) {
-      const vertex = new this.THREE.Vector3(
-        positions[i],
-        positions[i + 1],
-        positions[i + 2]
-      );
-      
-      // Add noise to vertex positions
-      const noise = (Math.random() - 0.5) * 0.8;
-      vertex.normalize().multiplyScalar(2 + noise);
-      
-      positions[i] = vertex.x;
-      positions[i + 1] = vertex.y;
-      positions[i + 2] = vertex.z;
-    }
-    
-    geometry.attributes.position.needsUpdate = true;
-    geometry.computeVertexNormals();
-    
-    return new this.THREE.Mesh(geometry, material);
-  }
-  
-  private createRoundedRock(material: any): any {
-    // Create smooth, rounded rock
-    const geometry = new this.THREE.SphereGeometry(2, 8, 6);
-    const positions = geometry.attributes.position.array;
-    
-    // Add subtle irregularities
-    for (let i = 0; i < positions.length; i += 3) {
-      const vertex = new this.THREE.Vector3(
-        positions[i],
-        positions[i + 1], 
-        positions[i + 2]
-      );
-      
-      // Subtle random variations
-      const noise = (Math.random() - 0.5) * 0.3;
-      vertex.normalize().multiplyScalar(2 + noise);
-      
-      positions[i] = vertex.x;
-      positions[i + 1] = vertex.y;
-      positions[i + 2] = vertex.z;
-    }
-    
-    geometry.attributes.position.needsUpdate = true;
-    geometry.computeVertexNormals();
-    
-    return new this.THREE.Mesh(geometry, material);
-  }
-  
-  private createCrystalRock(material: any): any {
-    // Create crystalline rock formation
-    const geometry = new this.THREE.OctahedronGeometry(2, 0);
-    
-    // Stretch it to make it more crystal-like
-    const positions = geometry.attributes.position.array;
-    for (let i = 0; i < positions.length; i += 3) {
-      positions[i + 1] *= 1.5 + Math.random() * 0.5; // Stretch Y axis
-    }
-    
-    geometry.attributes.position.needsUpdate = true;
-    geometry.computeVertexNormals();
-    
-    return new this.THREE.Mesh(geometry, material);
-  }
-  
-  private getGroundHeightAt(x: number, z: number): number {
-    // Calculate ground height at position using same algorithm as ground creation
-    const distanceFromCenter = Math.sqrt(x * x + z * z);
-    const islandRadius = 220;
-    const hillRadius = 100;
-    const hillHeight = 15;
-    
-    if (distanceFromCenter > islandRadius) {
-      return -20; // Below island
-    }
-    
-    // Hill calculation
-    const hillInfluence = Math.max(0, 1 - distanceFromCenter / hillRadius);
-    const hillHeightAtPos = hillHeight * hillInfluence * hillInfluence;
-    
-    // Add some noise
-    const noise = (Math.sin(x * 0.1) + Math.cos(z * 0.1)) * 0.5;
-    
-    return hillHeightAtPos + noise - 5; // -5 is ground base position
-  }
-  
-  private create3DGrassPatches(): void {
-    console.log('Creating 3D grass patches with forest textures...');
-    
-    const grassGroup = new this.THREE.Group();
-    const patchCount = 50;
-    const islandRadius = 180;
-    
-    // Create grass materials using forest textures
-    const grassMaterials = this.createGrassMaterials();
-    
-    // Default fallback material
-    const fallbackMaterial = this.materials.createPBRMaterial({
-      color: 0x4a7c59,
-      roughness: 0.8,
-      metalness: 0.0,
-      envMapIntensity: 0.3,
-      transparent: true,
-      opacity: 0.9,
-      side: this.THREE.DoubleSide
-    });
-    
-    for (let i = 0; i < patchCount; i++) {
-      // Random position within grassy area
-      const angle = Math.random() * Math.PI * 2;
-      const distance = Math.random() * islandRadius * 0.7; // Keep in center grassy area
-      const x = Math.cos(angle) * distance;
-      const z = Math.sin(angle) * distance;
-      
-      // Get height at this position
-      const groundHeight = this.getGroundHeightAt(x, z);
-      
-      // Create grass patch with random material
-      const selectedMaterial = grassMaterials.length > 0 ? grassMaterials[Math.floor(Math.random() * grassMaterials.length)] : fallbackMaterial;
-      const grassPatch = this.createSingleGrassPatch(selectedMaterial);
-      
-      // Position on ground
-      grassPatch.position.set(x, groundHeight + 0.5, z);
-      
-      // Random rotation
-      grassPatch.rotation.y = Math.random() * Math.PI * 2;
-      
-      // Random scale
-      const scale = 0.8 + Math.random() * 0.6;
-      grassPatch.scale.setScalar(scale);
-      
-      grassGroup.add(grassPatch);
-    }
-    
-    this.scene.add(grassGroup);
-    console.log(`Created ${patchCount} 3D grass patches`);
-  }
-  
-  private createGrassMaterials(): any[] {
-    const materials: any[] = [];
-    
-    // Medium grass texture
-    const grassMedium = this.assetLoader.getPBRTextureSet('grass_medium');
-    if (grassMedium) {
-      materials.push(this.materials.createPBRMaterial({
-        map: grassMedium.map,
-        normalMap: grassMedium.normalMap,
-        roughnessMap: grassMedium.roughnessMap,
-        alphaMap: grassMedium.aoMap, // Using alpha for transparency
-        roughness: 0.8,
-        metalness: 0.0,
-        envMapIntensity: 0.3,
-        transparent: true,
-        alphaTest: 0.5,
-        side: this.THREE.DoubleSide
-      }));
-    }
-    
-    // Dry grass texture
-    const grassDry = this.assetLoader.getPBRTextureSet('grass_dry');
-    if (grassDry) {
-      materials.push(this.materials.createPBRMaterial({
-        map: grassDry.map,
-        normalMap: grassDry.normalMap,
-        roughnessMap: grassDry.roughnessMap,
-        alphaMap: grassDry.aoMap,
-        roughness: 0.9,
-        metalness: 0.0,
-        envMapIntensity: 0.2,
-        transparent: true,
-        alphaTest: 0.5,
-        side: this.THREE.DoubleSide
-      }));
-    }
-    
-    // Fern texture for variety
-    const fern = this.assetLoader.getPBRTextureSet('fern');
-    if (fern) {
-      materials.push(this.materials.createPBRMaterial({
-        map: fern.map,
-        normalMap: fern.normalMap,
-        roughnessMap: fern.roughnessMap,
-        alphaMap: fern.aoMap,
-        roughness: 0.7,
-        metalness: 0.0,
-        envMapIntensity: 0.4,
-        transparent: true,
-        alphaTest: 0.5,
-        side: this.THREE.DoubleSide
-      }));
-    }
-    
-    console.log(`Created ${materials.length} grass material variations`);
-    return materials;
-  }
-  
-  private createSingleGrassPatch(material: any): any {
-    const patchGroup = new this.THREE.Group();
-    const bladesPerPatch = 15;
-    
-    for (let i = 0; i < bladesPerPatch; i++) {
-      const blade = this.createGrassBlade(material);
-      
-      // Random position within patch
-      const angle = Math.random() * Math.PI * 2;
-      const distance = Math.random() * 1.5;
-      const x = Math.cos(angle) * distance;
-      const z = Math.sin(angle) * distance;
-      
-      blade.position.set(x, 0, z);
-      blade.rotation.y = Math.random() * Math.PI * 2;
-      
-      // Random height variation
-      const height = 0.8 + Math.random() * 0.4;
-      blade.scale.y = height;
-      
-      patchGroup.add(blade);
-    }
-    
-    return patchGroup;
-  }
-  
-  private createGrassBlade(material: any): any {
-    // Create single grass blade geometry
-    const geometry = new this.THREE.PlaneGeometry(0.1, 1.5, 1, 3);
-    const positions = geometry.attributes.position.array;
-    
-    // Bend the grass blade naturally
-    for (let i = 0; i < positions.length; i += 3) {
-      const y = positions[i + 1];
-      const bendFactor = (y + 0.75) / 1.5; // 0 to 1 from bottom to top
-      
-      // Bend forward slightly
-      positions[i + 2] += bendFactor * bendFactor * 0.2;
-      
-      // Add slight random curve
-      positions[i] += Math.sin(bendFactor * Math.PI) * 0.05 * (Math.random() - 0.5);
-    }
-    
-    geometry.attributes.position.needsUpdate = true;
-    geometry.computeVertexNormals();
-    
-    return new this.THREE.Mesh(geometry, material);
-  }
-
   private createWaterfalls(): void {
     console.log('Creating waterfalls around island edge...');
     
@@ -1150,8 +363,9 @@ export class StarObservatory {
       this.createSingleWaterfall(x, z, waterfallGroup);
     }
     
-    // Add waterfall group to scene
-    this.scene.add(waterfallGroup);
+    // Store reference and add waterfall group to scene
+    this.waterfallGroup = waterfallGroup;
+    this.scene.add(this.waterfallGroup);
     
     // Create water pool below the island
     this.createWaterPool();
@@ -1313,7 +527,9 @@ export class StarObservatory {
     poolMesh.rotation.x = -Math.PI / 2; // Rotate to be horizontal
     poolMesh.position.y = -50; // Far below the island
     
-    this.scene.add(poolMesh);
+    // Store reference and add to scene
+    this.waterPool = poolMesh;
+    this.scene.add(this.waterPool);
     
     console.log('Water pool created below island');
   }
@@ -1470,28 +686,15 @@ export class StarObservatory {
   }
 
   private setupLighting(): void {
-    // Create ambient light (reduced for PBR workflow but still visible)
-    const ambientLight = new this.THREE.AmbientLight(0x404040, 0.4);
+    // Slightly more ambient lighting to see the ground
+    const ambientLight = new this.THREE.AmbientLight(0x202040, 0.05);
     this.scene.add(ambientLight);
     
-    // Create directional light (moonlight) - primary light for shadows
-    const moonlight = new this.THREE.DirectionalLight(0xffffff, 1.0);
-    moonlight.position.set(50, 100, 50);
+    // Stronger moonlight for ground visibility
+    const moonlight = new this.THREE.DirectionalLight(0x6666aa, 0.08);
+    moonlight.position.set(100, 200, 50);
     moonlight.castShadow = true;
-    
-    // Configure shadow properties
-    moonlight.shadow.mapSize.width = 2048;
-    moonlight.shadow.mapSize.height = 2048;
-    moonlight.shadow.camera.near = 0.5;
-    moonlight.shadow.camera.far = 200;
-    moonlight.shadow.camera.left = -100;
-    moonlight.shadow.camera.right = 100;
-    moonlight.shadow.camera.top = 100;
-    moonlight.shadow.camera.bottom = -100;
-    
     this.scene.add(moonlight);
-    
-    console.log('✅ PBR lighting setup complete - environment provides ambient lighting');
   }
 
   // Environmental effects
@@ -1802,8 +1005,33 @@ export class StarObservatory {
       this.fireflies = null;
     }
     
+    // CRITICAL: Dispose waterfalls to prevent global contamination
+    if (this.waterfallGroup) {
+      this.waterfallGroup.traverse((child: any) => {
+        if (child.isMesh) {
+          if (child.material) {
+            if (child.material.map) child.material.map.dispose();
+            child.material.dispose();
+          }
+          if (child.geometry) child.geometry.dispose();
+        }
+      });
+      this.scene.remove(this.waterfallGroup);
+      this.waterfallGroup = null;
+    }
+    
+    // CRITICAL: Dispose water pool to prevent global contamination
+    if (this.waterPool) {
+      if (this.waterPool.material) {
+        if (this.waterPool.material.map) this.waterPool.material.map.dispose();
+        this.waterPool.material.dispose();
+      }
+      if (this.waterPool.geometry) this.waterPool.geometry.dispose();
+      this.scene.remove(this.waterPool);
+      this.waterPool = null;
+    }
     
     this.isInitialized = false;
-    console.log('✅ StarObservatory disposed with all visual enhancements');
+    console.log('✅ StarObservatory disposed with all visual enhancements AND water elements');
   }
 }

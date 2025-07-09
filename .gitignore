@@ -28,3 +28,6 @@ yarn.lock
 
 # Blender Application
 blender-4.4.3-linux-x64
+
+# archived game files
+/src/game/archive1

@@ -9,7 +9,8 @@ export function createAdvancedStarTexture(
   isSelected: boolean = false,
   isHovered: boolean = false,
   animationTime: number = 0,
-  size: number = 512
+  size: number = 512,
+  animationSeed: number = 0 // New parameter for animation variety
 ) {
   const canvas = document.createElement('canvas');
   canvas.width = size;
@@ -24,40 +25,31 @@ export function createAdvancedStarTexture(
   // Clear canvas
   ctx.clearRect(0, 0, size, size);
   
-  // Animation calculations
-  const glowPhase = (Math.sin(animationTime * 0.0008) + 1) / 2;
-  const shimmerPhase = (Math.sin(animationTime * 0.001) + 1) / 2;
-  const orbitalPhase = animationTime * 0.0004;
-  const raysRotation = animationTime * 0.0003;
-  
-  // Backing plate
-  const backingRadius = finalRadius * 4;
-  const backingGradient = ctx.createRadialGradient(center, center, 0, center, center, backingRadius);
-  const backingOpacity = isSelected ? 0.95 : (isHovered ? 0.9 : 0.7);
-  backingGradient.addColorStop(0, `rgba(0,0,0,${backingOpacity})`);
-  backingGradient.addColorStop(0.7, `rgba(0,0,0,${backingOpacity * 0.6})`);
-  backingGradient.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = backingGradient;
-  ctx.beginPath();
-  ctx.arc(center, center, backingRadius, 0, Math.PI * 2);
-  ctx.fill();
+  // Animation calculations with seed for variety and slower speeds
+  const time = animationTime + animationSeed;
+  const glowPhase = (Math.sin(time * 0.0002) + 1) / 2; // Slower
+  const shimmerPhase = (Math.sin(time * 0.0003) + 1) / 2; // Slower
+  const orbitalPhase = time * 0.0001; // Slower
+  // No more rotation! const raysRotation = time * 0.0003;
   
   // Multi-layer glow
+  // Radii are reduced to prevent "square" clipping at texture edges.
+  // Opacity and blur are adjusted for a softer, more nebular appearance.
   const glowLayers = [
-    { radius: finalRadius * 20, opacity: 0.02 + glowPhase * 0.01, blur: 30 },
-    { radius: finalRadius * 15, opacity: 0.04 + glowPhase * 0.02, blur: 25 },
-    { radius: finalRadius * 12, opacity: 0.06 + glowPhase * 0.03, blur: 20 },
-    { radius: finalRadius * 8, opacity: 0.1 + glowPhase * 0.05, blur: 15 },
-    { radius: finalRadius * 5, opacity: 0.15 + glowPhase * 0.08, blur: 10 },
-    { radius: finalRadius * 3, opacity: 0.25 + glowPhase * 0.1, blur: 5 },
+    { radius: finalRadius * 6.0, opacity: 0.10 + glowPhase * 0.05, blur: 30 },
+    { radius: finalRadius * 4.5, opacity: 0.15 + glowPhase * 0.06, blur: 25 },
+    { radius: finalRadius * 3.5, opacity: 0.20 + glowPhase * 0.08, blur: 20 },
+    { radius: finalRadius * 2.5, opacity: 0.30 + glowPhase * 0.10, blur: 15 },
+    { radius: finalRadius * 1.8, opacity: 0.50 + glowPhase * 0.15, blur: 10 },
+    { radius: finalRadius * 1.2, opacity: 0.80 + glowPhase * 0.20, blur: 5 },
   ];
   
-  const hueShift = Math.sin(animationTime * 0.0004) * 20;
-  const brightness = 1 + Math.sin(animationTime * 0.0006) * 0.15;
+  const hueShift = Math.sin(time * 0.00015) * 20; // Slower
+  const brightness = 1 + Math.sin(time * 0.00025) * 0.15; // Slower
   
   glowLayers.forEach((layer, index) => {
     ctx.save();
-    ctx.filter = `blur(${layer.blur}px) hue-rotate(${hueShift * (index + 1) / glowLayers.length}deg) brightness(${brightness})`;
+    ctx.filter = `blur(${layer.blur}px) hue-rotate(${hueShift * (index / glowLayers.length)}deg) brightness(${brightness})`;
     
     const gradient = ctx.createRadialGradient(center, center, 0, center, center, layer.radius);
     const alpha = Math.floor(layer.opacity * 255).toString(16).padStart(2, '0');
@@ -78,19 +70,23 @@ export function createAdvancedStarTexture(
   if (isKeyEvent || isSelected || isHovered) {
     ctx.save();
     ctx.translate(center, center);
-    ctx.rotate(raysRotation);
+    // ctx.rotate(raysRotation); // ROTATION REMOVED
     ctx.translate(-center, -center);
     
     const raysRadius = finalRadius * 10;
-    const raysOpacity = isSelected ? 0.3 : (isHovered ? 0.18 : (isKeyEvent ? 0.2 : 0.15));
     
-    const rayCount = 8;
+    const rayCount = isKeyEvent ? 12 : 8;
     for (let i = 0; i < rayCount; i++) {
-      const angle = (i / rayCount) * Math.PI * 2;
-      const rayLength = raysRadius * (0.8 + Math.sin(animationTime * 0.003 + i) * 0.2);
+      // Add seed to angle for static, varied placement
+      const angle = (i / rayCount) * Math.PI * 2 + (animationSeed % 100 / 100) * Math.PI;
       
-      ctx.strokeStyle = color + Math.floor(raysOpacity * 255).toString(16).padStart(2, '0');
-      ctx.lineWidth = 2;
+      // Twinkle effect: vary length and opacity over time
+      const twinkleTime = time * 0.0008 + i * 0.5 + (animationSeed % 100); // Slower
+      const rayLength = raysRadius * (0.7 + Math.sin(twinkleTime) * 0.3);
+      const rayOpacity = (isSelected ? 0.4 : (isHovered ? 0.25 : 0.2)) * (0.5 + (Math.sin(twinkleTime * 1.5) + 1) / 2 * 0.5);
+
+      ctx.strokeStyle = color + Math.floor(rayOpacity * 255).toString(16).padStart(2, '0');
+      ctx.lineWidth = 1.5 + Math.sin(twinkleTime * 0.7) * 1; // Varying width
       ctx.beginPath();
       ctx.moveTo(center, center);
       ctx.lineTo(
@@ -113,14 +109,14 @@ export function createAdvancedStarTexture(
     
     orbitalRingsDef.forEach((ring, index) => {
       ctx.save();
-      const ringPhase = orbitalPhase * ring.speed + index * Math.PI;
-      const ringOpacity = ring.opacity * (0.7 + Math.sin(ringPhase * 2) * 0.3);
-      const ringRadius = ring.radius * (0.9 + Math.sin(ringPhase * 1.5) * 0.1);
+      // Pulsing effect instead of rotation
+      const ringTime = time * 0.0004; // Slower
+      const ringPhase = ringTime * ring.speed + index * Math.PI + (animationSeed % 100);
+      const ringOpacity = ring.opacity * (0.5 + (Math.sin(ringPhase) + 1) / 2 * 0.5);
+      const ringRadius = ring.radius * (0.95 + Math.sin(ringPhase * 0.7) * 0.05);
       
       ctx.strokeStyle = color + Math.floor(ringOpacity * 255).toString(16).padStart(2, '0');
       ctx.lineWidth = ring.width;
-      ctx.setLineDash([3, 2]);
-      ctx.lineDashOffset = ringPhase * 10;
       ctx.beginPath();
       ctx.arc(center, center, ringRadius, 0, Math.PI * 2);
       ctx.stroke();
@@ -166,7 +162,7 @@ export function createAdvancedStarTexture(
       ctx.arc(center, center, finalRadius * 1.2, 0, Math.PI * 2);
       ctx.fill();
       
-      const refractionOpacity = 0.2 + Math.sin(animationTime * 0.0025) * 0.4;
+      const refractionOpacity = 0.2 + Math.sin(time * 0.001) * 0.4; // Slower and uses time
       ctx.strokeStyle = color + Math.floor(refractionOpacity * 255).toString(16).padStart(2, '0');
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -187,7 +183,7 @@ export function createAdvancedStarTexture(
       break;
       
     case 'halo':
-      const breathingPhase = Math.sin(animationTime * 0.0015);
+      const breathingPhase = Math.sin(time * 0.0006); // Slower and uses time
       const haloRings = [
         { radius: finalRadius * (1.2 + breathingPhase * 0.2), opacity: 1 },
         { radius: finalRadius * (2 + breathingPhase * 0.3), opacity: 0.6 },
@@ -226,7 +222,7 @@ export function createAdvancedStarTexture(
   if (isKeyEvent) {
     ctx.save();
     ctx.globalCompositeOperation = 'screen';
-    const pulsePhase = Math.sin(animationTime * 0.002);
+    const pulsePhase = Math.sin(time * 0.0008); // Slower and uses time
     const glowRadius = finalRadius * (2.5 + pulsePhase * 0.7);
     const glowOpacity = 0.4 + pulsePhase * 0.2;
     

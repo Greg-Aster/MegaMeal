@@ -19,14 +19,18 @@ export const colorSpectrum = [
 export const starTypes = ['point', 'classic', 'sparkle', 'refraction', 'halo', 'subtle'];
 
 export const constellationConfig = {
-  'ancient-epoch': { centerAzimuth: 0, centerElevation: 45, spread: 40, pattern: 'ancient_wisdom' },
-  'awakening-era': { centerAzimuth: 60, centerElevation: 50, spread: 35, pattern: 'rising_dawn' },
-  'golden-age': { centerAzimuth: 120, centerElevation: 55, spread: 45, pattern: 'crown' },
-  'conflict-epoch': { centerAzimuth: 180, centerElevation: 40, spread: 40, pattern: 'crossed_swords' },
-  'singularity-conflict': { centerAzimuth: 240, centerElevation: 45, spread: 35, pattern: 'supernova' },
-  'transcendent-age': { centerAzimuth: 300, centerElevation: 60, spread: 40, pattern: 'ascension' },
-  'final-epoch': { centerAzimuth: 340, centerElevation: 65, spread: 30, pattern: 'omega' },
-  'unknown': { centerAzimuth: 30, centerElevation: 35, spread: 25, pattern: 'scattered' }
+    'ancient-epoch': { centerAzimuth: 0, centerElevation: 45, spread: 40, pattern: 'ancient_wisdom' },
+    'awakening-era': { centerAzimuth: 60, centerElevation: 50, spread: 35, pattern: 'rising_dawn' },
+    'golden-age': { centerAzimuth: 120, centerElevation: 55, spread: 45, pattern: 'crown' },
+    'conflict-epoch': { centerAzimuth: 180, centerElevation: 40, spread: 40, pattern: 'crossed_swords' },
+    'singularity-conflict': { centerAzimuth: 240, centerElevation: 45, spread: 35, pattern: 'supernova' },
+    'transcendent-age': { centerAzimuth: 300, centerElevation: 60, spread: 40, pattern: 'ascension' },
+    'final-epoch': { centerAzimuth: 340, centerElevation: 65, spread: 30, pattern: 'omega' },
+    'wip': { centerAzimuth: 90, centerElevation: 30, spread: 20, pattern: 'scattered' },
+    'neo-sensoria': { centerAzimuth: 150, centerElevation: 70, spread: 35, pattern: 'crown' },
+    'the-dark-between': { centerAzimuth: 270, centerElevation: 25, spread: 30, pattern: 'scattered' },
+    'preservation-era': { centerAzimuth: 210, centerElevation: 50, spread: 40, pattern: 'ascension' },
+    'unknown': { centerAzimuth: 30, centerElevation: 35, spread: 25, pattern: 'scattered' }
 };
 
 export const constellationPatterns = {
@@ -83,8 +87,8 @@ export const constellationPatterns = {
 export const connectionPatterns = {
   ancient_wisdom: [[0,1], [0,2], [1,5], [2,5], [0,3], [0,4]],
   rising_dawn: [[0,1], [1,2], [1,3], [1,4], [2,5], [2,6]],
-  crown: [[0,1], [0,2], [1,3], [2,4], [3,7], [4,7], [5,6]],
-  crossed_swords: [[0,4], [1,4], [2,4], [3,4], [4,5], [4,6]],
+  crown: [[0,1], [0,2], [1,3], [2,4], [3,7], [4,7], [5,6]], // Crown shape
+  crossed_swords: [[0,1], [2,3]], // Simpler X pattern for 4 stars
   supernova: [[0,1], [0,2], [0,3], [0,4], [0,5], [0,6], [0,7], [0,8]],
   ascension: [[0,1], [0,2], [1,3], [2,4], [3,5], [4,6], [7,1], [7,2]],
   omega: [[0,1], [2,3], [4,5], [0,6], [1,6], [2,4], [3,5]],
