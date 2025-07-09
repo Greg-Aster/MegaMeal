@@ -7,6 +7,7 @@
   import { StarVisuals, type StarData } from './systems/StarVisuals';
   import { StarObservatory } from './levels/StarObservatory';
   import { MirandaShip } from './levels/MirandaShip';
+  import { RestaurantBackroom } from './levels/RestaurantBackroom';
   import { Engine } from '../engine/core/Engine';
   import { HybridControls } from '../engine/input/HybridControls';
   import TimelineCard from './ui/components/TimelineCard.svelte';
@@ -29,11 +30,12 @@
   let starVisuals: StarVisuals;
   let starObservatory: StarObservatory;
   let mirandaShip: MirandaShip;
+  let restaurantBackroom: RestaurantBackroom;
   let hybridControls: HybridControls;
   let THREE: any; // Store THREE reference for use in click handlers
   
   // Level management
-  let currentLevel: 'observatory' | 'miranda' = 'observatory';
+  let currentLevel: 'observatory' | 'miranda' | 'restaurant' = 'observatory';
 
   // Game data
   let selectedStar: any = null;
@@ -45,6 +47,7 @@
 
   // Mobile detection
   let isMobile = false;
+  
 
   // Function to handle level transitions
   async function transitionToLevel(levelType: string) {
@@ -55,9 +58,14 @@
         // Clear the selected star
         selectedStar = null;
         
-        // Dispose current level
+        // Dispose current level completely
         if (starObservatory) {
           starObservatory.dispose();
+        }
+        
+        // CRITICAL: Also dispose StarVisuals to remove Observatory stars/environment
+        if (starVisuals) {
+          starVisuals.dispose();
         }
         
         // Initialize Miranda Ship level
@@ -79,8 +87,8 @@
           // Could show the recipe in a modal here
         });
         
-        // Update camera position for ship exploration
-        camera.position.set(60, 5, 0); // Start outside the ship
+        // Update camera position for ship exploration - spawn INSIDE the ship with better view
+        camera.position.set(40, 8, 15); // Start inside the bridge area with elevated view
         camera.lookAt(0, 0, 0);
         
         // Update controls for ship environment
@@ -97,29 +105,119 @@
       } catch (error) {
         console.error('❌ Failed to transition to Miranda Ship level:', error);
       }
+    } else if (levelType === 'restaurant-backroom-level' && currentLevel === 'observatory') {
+      console.log('🍴 Transitioning to Restaurant Backroom level...');
+      
+      try {
+        // Clear the selected star
+        selectedStar = null;
+        
+        // Dispose current level completely
+        if (starObservatory) {
+          starObservatory.dispose();
+        }
+        
+        // CRITICAL: Also dispose StarVisuals to remove Observatory environment
+        if (starVisuals) {
+          starVisuals.dispose();
+        }
+        
+        // Initialize Restaurant Backroom level
+        const scene = engine.getScene();
+        const physicsWorld = engine.getPhysicsWorld();
+        const camera = engine.getCamera();
+        
+        restaurantBackroom = new RestaurantBackroom(THREE, scene, physicsWorld, camera, gameContainer);
+        await restaurantBackroom.initialize();
+        
+        // Update camera position for restaurant exploration - inside the backroom
+        camera.position.set(15, 5, 20); // Start at the side of the room
+        camera.lookAt(0, 0, 0); // Look toward the center (prep table)
+        
+        // Update controls for restaurant environment
+        if (hybridControls) {
+          hybridControls.setMoveSpeed(20); // Slow movement for horror atmosphere
+        }
+        
+        // Update game state
+        currentLevel = 'restaurant';
+        gameStats.currentLocation = 'Restaurant Backroom';
+        
+        console.log('✅ Successfully transitioned to Restaurant Backroom level');
+        
+      } catch (error) {
+        console.error('❌ Failed to transition to Restaurant Backroom level:', error);
+      }
     }
   }
 
   // Function to return to observatory
   async function returnToObservatory() {
-    if (currentLevel === 'miranda') {
+    if (currentLevel === 'miranda' || currentLevel === 'restaurant') {
       console.log('🌟 Returning to Star Observatory...');
       
       try {
         // Clear selected star
         selectedStar = null;
         
-        // Dispose Miranda Ship level
+        // Dispose current level
         if (mirandaShip) {
           mirandaShip.dispose();
         }
+        if (restaurantBackroom) {
+          restaurantBackroom.dispose();
+        }
         
-        // Reinitialize Star Observatory
+        // Reinitialize Star Observatory AND StarVisuals
         const scene = engine.getScene();
         const physicsWorld = engine.getPhysicsWorld();
         const camera = engine.getCamera();
         
-        starObservatory = new StarObservatory(THREE, scene, physicsWorld, camera, gameContainer);
+        // Recreate StarVisuals from scratch
+        starVisuals = new StarVisuals(THREE, scene);
+        
+        // Re-parse timeline events
+        try {
+          const events = JSON.parse(timelineEvents);
+          const mirandaEvent = {
+            title: "The Miranda Incident",
+            description: "Investigate the mysterious debris field and uncover the secrets of the Perfect Mary recipe.",
+            slug: "miranda-ship-level",
+            uniqueId: "miranda-incident-level",
+            timelineYear: 28042,
+            timelineEra: "singularity-conflict",
+            timelineLocation: "Miranda Star System Debris Field",
+            isKeyEvent: true,
+            isLevel: true,
+            tags: ["Level", "Investigation", "Mystery"],
+            category: "GAME_LEVEL"
+          };
+          
+          // Add Restaurant Backroom event
+          const restaurantEvent = {
+            title: "The Hamburgler's Kitchen",
+            description: "Investigate the cosmic horror backroom of a SciFi restaurant. Someone knows where the Hamburgler is...",
+            slug: "restaurant-backroom-level",
+            uniqueId: "restaurant-backroom-level",
+            timelineYear: 28045,
+            timelineEra: "singularity-conflict",
+            timelineLocation: "Restaurant Backroom",
+            isKeyEvent: true,
+            isLevel: true,
+            tags: ["Level", "Horror", "Investigation"],
+            category: "GAME_LEVEL"
+          };
+          
+          events.push(mirandaEvent);
+          events.push(restaurantEvent);
+          starVisuals.setTimelineEvents(events);
+        } catch (error) {
+          console.warn('Failed to re-parse timeline events:', error);
+        }
+        
+        await starVisuals.initialize();
+        
+        starObservatory = new StarObservatory(THREE, scene, physicsWorld, camera, gameContainer, engine.getAssetLoader());
         await starObservatory.initialize();
         starObservatory.setStarVisuals(starVisuals);
         
@@ -230,7 +328,7 @@
       // Initialize game systems using the new engine
       const physicsWorld = engine.getPhysicsWorld();
       const engineCamera = engine.getCamera();
-      starObservatory = new StarObservatory(THREE, scene, physicsWorld, engineCamera, gameContainer);
+      starObservatory = new StarObservatory(THREE, scene, physicsWorld, engineCamera, gameContainer, engine.getAssetLoader());
       await starObservatory.initialize();
 
       starVisuals = new StarVisuals(THREE, scene);
@@ -255,9 +353,25 @@
           category: "GAME_LEVEL"
         };
         
-        // Add Miranda event to the timeline
+        // Add Restaurant Backroom level as a special star
+        const restaurantEvent = {
+          title: "The Hamburgler's Kitchen",
+          description: "Investigate the cosmic horror backroom of a SciFi restaurant. Someone knows where the Hamburgler is...",
+          slug: "restaurant-backroom-level",
+          uniqueId: "restaurant-backroom-level",
+          timelineYear: 28045,
+          timelineEra: "singularity-conflict",
+          timelineLocation: "Restaurant Backroom",
+          isKeyEvent: true,
+          isLevel: true,
+          tags: ["Level", "Horror", "Investigation"],
+          category: "GAME_LEVEL"
+        };
+        
+        // Add level events to the timeline
         events.push(mirandaEvent);
-        console.log(`Game: Added Miranda level star to timeline`);
+        events.push(restaurantEvent);
+        console.log(`Game: Added level stars to timeline`);
         
         starVisuals.setTimelineEvents(events);
       } catch (error) {
@@ -278,7 +392,7 @@
           gameStats.starsDiscovered++;
           
           // Check if this is a level transition star
-          if (star.isLevel && star.slug === 'miranda-ship-level') {
+          if (star.isLevel && (star.slug === 'miranda-ship-level' || star.slug === 'restaurant-backroom-level')) {
             console.log('🚀 Level transition star selected:', star.title);
           }
         }
@@ -312,6 +426,9 @@
               console.log('🔍 Player interaction detected:', interaction);
             }
           }
+        } else if (currentLevel === 'restaurant') {
+          restaurantBackroom?.update();
+          // Restaurant backroom uses InteractionSystem for click-to-select
         }
         
         gameStats.timeExplored = data.totalTime;
@@ -384,11 +501,14 @@
     }
   }
 
+
   function setupStarInteractions() {
     // Star interactions are now handled by StarObservatory
     // Set up mouse and touch interaction for star selection
     const renderer = engine.getRenderer();
     const canvas = renderer.getDomElement();
+    
+    // Interactions are now handled by each level's InteractionSystem
     
     // Mouse interaction for desktop
     canvas.addEventListener('mouseup', (event) => {
@@ -632,6 +752,7 @@
         />
       </div>
     {/if}
+    
     
     <!-- Mobile Controls -->
     <MobileControls 

@@ -22,6 +22,10 @@ export class StarObservatory {
   private fireflies: any = null;
   private sciFiObjects: any[] = [];
   
+  // Water/waterfall elements that need disposal
+  private waterfallGroup: any = null;
+  private waterPool: any = null;
+  
   // Configuration
   private readonly skyboxImageUrl = '/assets/hdri/skywip4.webp';
   private readonly gridRadius = 940;
@@ -359,8 +363,9 @@ export class StarObservatory {
       this.createSingleWaterfall(x, z, waterfallGroup);
     }
     
-    // Add waterfall group to scene
-    this.scene.add(waterfallGroup);
+    // Store reference and add waterfall group to scene
+    this.waterfallGroup = waterfallGroup;
+    this.scene.add(this.waterfallGroup);
     
     // Create water pool below the island
     this.createWaterPool();
@@ -522,7 +527,9 @@ export class StarObservatory {
     poolMesh.rotation.x = -Math.PI / 2; // Rotate to be horizontal
     poolMesh.position.y = -50; // Far below the island
     
-    this.scene.add(poolMesh);
+    // Store reference and add to scene
+    this.waterPool = poolMesh;
+    this.scene.add(this.waterPool);
     
     console.log('Water pool created below island');
   }
@@ -998,8 +1005,33 @@ export class StarObservatory {
       this.fireflies = null;
     }
     
+    // CRITICAL: Dispose waterfalls to prevent global contamination
+    if (this.waterfallGroup) {
+      this.waterfallGroup.traverse((child: any) => {
+        if (child.isMesh) {
+          if (child.material) {
+            if (child.material.map) child.material.map.dispose();
+            child.material.dispose();
+          }
+          if (child.geometry) child.geometry.dispose();
+        }
+      });
+      this.scene.remove(this.waterfallGroup);
+      this.waterfallGroup = null;
+    }
+    
+    // CRITICAL: Dispose water pool to prevent global contamination
+    if (this.waterPool) {
+      if (this.waterPool.material) {
+        if (this.waterPool.material.map) this.waterPool.material.map.dispose();
+        this.waterPool.material.dispose();
+      }
+      if (this.waterPool.geometry) this.waterPool.geometry.dispose();
+      this.scene.remove(this.waterPool);
+      this.waterPool = null;
+    }
     
     this.isInitialized = false;
-    console.log('✅ StarObservatory disposed with all visual enhancements');
+    console.log('✅ StarObservatory disposed with all visual enhancements AND water elements');
   }
 }
