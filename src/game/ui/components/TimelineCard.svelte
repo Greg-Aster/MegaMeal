@@ -114,8 +114,10 @@
     if (cardElement && isVisible) {
       requestAnimationFrame(() => {
         setTimeout(() => {
-          cardElement.style.opacity = '1';
-          cardElement.style.transform = 'translate(0px, 0px)';
+          if (cardElement && cardElement.style) {
+            cardElement.style.opacity = '1';
+            cardElement.style.transform = 'translate(0px, 0px)';
+          }
         }, 20);
       });
     }
