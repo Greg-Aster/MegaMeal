@@ -306,6 +306,20 @@ export class GameStateManager {
       this.recordInteraction(data.interactionType, data);
     });
     
+    // Listen for level cleanup
+    this.eventBus.on('level.cleanup', (data: any) => {
+      console.log(`🧹 Level cleanup received: ${data.levelId}`);
+      // Clear any level-specific state
+      this.setSelectedStar(null);
+    });
+    
+    // Listen for UI clear events
+    this.eventBus.on('ui.clearAll', () => {
+      console.log('🧹 UI clear all received');
+      // Clear selected star and other UI state
+      this.setSelectedStar(null);
+    });
+    
     // Listen for save/load requests
     this.eventBus.on('game.save.request', () => {
       this.saveGame();

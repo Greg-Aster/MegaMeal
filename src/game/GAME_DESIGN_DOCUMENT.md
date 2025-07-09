@@ -36,13 +36,15 @@ A cinematic exploration experience that combines the accessibility of web games 
 - **Atmospheric Pacing**: Slow, contemplative exploration encouraging discovery
 
 #### **Star Navigation System**
-- **Interactive Timeline Stars**: 41 timeline events represented as clickable 3D sprites
-- **Spherical Positioning**: Stars positioned at radius 990 using spherical coordinates
-- **Constellation Lines**: Dashed blue lines connecting stars within the same era
-- **Era-based Grouping**: Stars organized by historical periods (ancient-epoch, awakening-era, etc.)
-- **TimelineCard Integration**: Original TimelineCard component displays event details
-- **Level Transitions**: Level-type stars serve as portals between game areas
-- **Direct Mouse Interaction**: Raycasting-based click detection bypassing InteractionSystem
+- **Interactive Timeline Stars**: 41 timeline events represented as clickable 3D sprites positioned at radius 990
+- **Advanced Star Textures**: Dynamic star textures with multiple types (classic, sparkle, refraction, halo)
+- **Constellation Network**: Hardcoded constellation patterns with era-based connections
+- **Smart Era Grouping**: Stars organized by historical periods using predefined constellation configurations
+- **TimelineCard Integration**: Original TimelineCard component with dark theme overlay for optimal visibility
+- **Level Portal System**: Level-type stars (magenta color) serve as interactive portals between game areas
+- **Direct Raycasting Interaction**: Mouse click and hover detection using Three.js raycaster
+- **Adaptive Visual Feedback**: Hover effects, selection states, and pulsing animations
+- **Optimized Performance**: Throttled updates and efficient texture management
 
 #### **Investigation**
 - **Environmental Storytelling**: Clues embedded in level design
@@ -109,10 +111,9 @@ A cinematic exploration experience that combines the accessibility of web games 
 │   ├── MirandaShip.ts             # Investigation level with story
 │   └── RestaurantBackroom.ts      # Horror level with NPCs
 ├── systems/
-│   ├── StarNavigationSystem.ts    # Star interaction & rendering (refactored)
+│   ├── StarNavigationSystem.ts    # Complete star interaction & rendering system
 │   ├── ObservatoryEnvironment.ts  # Observatory-specific environment
-│   ├── AtmosphericEffects.ts      # Environmental effects (fireflies, dust)
-│   └── StarVisuals.ts             # Original star system (reference)
+│   └── AtmosphericEffects.ts      # Environmental effects (fireflies, dust)
 ├── ui/
 │   ├── GameUI.svelte              # Main game interface
 │   ├── MobileControls.svelte      # Mobile interface
@@ -120,8 +121,7 @@ A cinematic exploration experience that combines the accessibility of web games 
 │   └── components/
 │       ├── LoadingScreen.svelte   # Loading state
 │       ├── ErrorScreen.svelte     # Error handling
-│       ├── StarCard.svelte        # Star information
-│       └── TimelineCard.svelte    # Timeline events
+│       └── TimelineCard.svelte    # Primary star information display
 └── debug/
     └── StateDebugger.ts           # Debug tools
 ```
@@ -350,6 +350,54 @@ A cinematic exploration experience that combines the accessibility of web games 
 ---
 
 ## 🔧 **Technical Appendix**
+
+### **Star Navigation Implementation Details**
+
+#### **Advanced Star Texture System**
+```typescript
+// Dynamic texture generation with multiple star types
+const texture = createAdvancedStarTexture(
+  THREE,
+  hexColor,
+  starType, // 'classic', 'sparkle', 'refraction', 'halo'
+  isKeyEvent,
+  isSelected,
+  isHovered,
+  animationTime,
+  256, // texture size
+  animationSeed
+);
+```
+
+#### **Constellation Pattern System**
+```typescript
+// Hardcoded constellation configurations by era
+const constellationConfig = {
+  'ancient-epoch': {
+    pattern: 'bigDipper',
+    centerAzimuth: 0,
+    centerElevation: 60
+  },
+  'awakening-era': {
+    pattern: 'constellation',
+    centerAzimuth: 90,
+    centerElevation: 45
+  }
+};
+```
+
+#### **Performance Optimization**
+```typescript
+// Throttled animation updates
+if (currentTime % 100 < 16) { // ~6 fps for animations
+  updateStarTextures();
+}
+
+// Efficient texture disposal
+if (sprite.material && sprite.material.map) {
+  sprite.material.map.dispose();
+}
+```
 
 ### **File Structure**
 ```

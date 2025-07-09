@@ -225,6 +225,44 @@ export abstract class BaseLevel extends GameObject {
   }
   
   /**
+   * Automatic cleanup system - called when leaving a level
+   * Clears UI state, selected objects, etc.
+   */
+  public performLevelCleanup(): void {
+    console.log(`🧹 Performing automatic cleanup for level: ${this.levelName}`);
+    
+    // Get EventBus from engine
+    const eventBus = this.engine.getEventBus();
+    
+    // Clear any UI state through EventBus
+    eventBus.emit('level.cleanup', { 
+      levelId: this.levelId,
+      levelName: this.levelName 
+    });
+    
+    // Clear any selected objects/stars
+    eventBus.emit('ui.clearAll');
+    
+    // Reset interaction system
+    if (this.interactionSystem && typeof (this.interactionSystem as any).clearHover === 'function') {
+      (this.interactionSystem as any).clearHover();
+    }
+    
+    // Allow subclasses to add their own cleanup
+    this.onLevelExit();
+    
+    console.log(`✅ Level cleanup completed for: ${this.levelName}`);
+  }
+  
+  /**
+   * Called when exiting a level - for level-specific cleanup
+   * Can be overridden by subclasses
+   */
+  protected onLevelExit(): void {
+    // Default implementation - can be overridden by subclasses
+  }
+  
+  /**
    * Called during disposal for level-specific cleanup
    * Can be overridden by subclasses for custom cleanup
    */

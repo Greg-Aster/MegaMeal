@@ -1,6 +1,7 @@
 <!-- Main game UI component -->
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
+  import ReturnButton from './components/ReturnButton.svelte';
   
   export let gameStats: any = {};
   export let selectedStar: any = null;
@@ -10,24 +11,58 @@
   
   const dispatch = createEventDispatcher();
   
+  // Level name mapping
+  const levelNames: { [key: string]: string } = {
+    'observatory': 'STAR OBSERVATORY',
+    'miranda': 'MIRANDA SHIP',
+    'restaurant': 'RESTAURANT BACKROOM'
+  };
+  
+  // Auto-fade functionality
+  let hudVisible = true;
+  let fadeTimer: NodeJS.Timeout;
+  
+  function showHUD() {
+    hudVisible = true;
+    clearTimeout(fadeTimer);
+    fadeTimer = setTimeout(() => {
+      hudVisible = false;
+    }, 15000); // Fade out after 15 seconds
+  }
+  
   function handleReturnToObservatory() {
     dispatch('returnToObservatory');
   }
+  
+  // Show HUD when level changes
+  $: if (currentLevel) {
+    showHUD();
+  }
+  
+  onMount(() => {
+    showHUD();
+    
+    return () => {
+      clearTimeout(fadeTimer);
+    };
+  });
 </script>
 
 <!-- Top HUD -->
-<div class="absolute top-4 left-4 z-30 font-mono">
+<div class="absolute top-4 left-4 z-30 font-mono transition-opacity duration-1000 {hudVisible ? 'opacity-100' : 'opacity-0'}">
   <div class="card-base p-4 backdrop-blur-sm">
-    <div class="text-[color:var(--primary)] font-bold mb-2">STAR OBSERVATORY</div>
-    <div class="text-sm text-[color:var(--text-75)] space-y-1">
-      <div class="text-[color:var(--text-main)]">Location: {gameStats.currentLocation || 'Unknown'}</div>
-      <div class="text-[color:var(--text-main)]">Stars Discovered: {gameStats.starsDiscovered || 0}</div>
-    </div>
+    <div class="text-[color:var(--primary)] font-bold mb-2">{levelNames[currentLevel] || 'UNKNOWN LEVEL'}</div>
+    {#if currentLevel === 'observatory'}
+      <div class="text-sm text-[color:var(--text-75)] space-y-1">
+        <div class="text-[color:var(--text-main)]">Location: {gameStats.currentLocation || 'Star Observatory Alpha'}</div>
+        <div class="text-[color:var(--text-main)]">Stars Discovered: {gameStats.starsDiscovered || 0}</div>
+      </div>
+    {/if}
   </div>
 </div>
 
 <!-- Controls Info -->
-<div class="absolute top-4 right-4 z-30 font-mono">
+<!-- <div class="absolute top-4 right-4 z-30 font-mono">
   <div class="card-base p-3 backdrop-blur-sm text-sm text-[color:var(--text-75)]">
     {#if currentLevel === 'observatory'}
       {#if isMobile}
@@ -49,25 +84,28 @@
         <div class="text-[color:var(--text-main)]">WASD/Arrow keys, Space to jump</div>
         <div class="text-[color:var(--text-main)]">Walk near objects to interact</div>
       {/if}
+    {:else if currentLevel === 'restaurant'}
+      {#if isMobile}
+        <div class="text-[color:var(--text-main)]">Touch & drag to look</div>
+        <div class="text-[color:var(--text-main)]">Joystick to move</div>
+        <div class="text-[color:var(--text-main)]">↑ to jump, E to interact</div>
+      {:else}
+        <div class="text-[color:var(--text-main)]">Mouse to look around</div>
+        <div class="text-[color:var(--text-main)]">WASD/Arrow keys, Space to jump</div>
+        <div class="text-[color:var(--text-main)]">Walk near objects to interact</div>
+      {/if}
     {/if}
   </div>
-</div>
+</div> -->
 
 <!-- Level Navigation -->
-{#if currentLevel === 'miranda'}
-  <div class="absolute bottom-4 left-4 z-30">
-    <button 
-      class="btn-regular p-3 rounded-lg font-bold text-sm hover:scale-105 transition-transform flex items-center gap-2"
-      on:click={handleReturnToObservatory}
-      title="Return to Star Observatory"
-    >
-      ← Return to Observatory
-    </button>
-  </div>
-{/if}
+<ReturnButton 
+  {currentLevel}
+  on:return={handleReturnToObservatory}
+/>
 
 <!-- Reset View Button - Available in observatory -->
-{#if currentLevel === 'observatory'}
+<!-- {#if currentLevel === 'observatory'}
   <div class="absolute bottom-4 right-4 z-30">
     <button 
       class="btn-regular p-3 rounded-full font-bold text-lg hover:scale-110 transition-transform"
@@ -77,4 +115,4 @@
       🎯
     </button>
   </div>
-{/if}
+{/if} -->

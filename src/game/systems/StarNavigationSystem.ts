@@ -37,10 +37,14 @@ export class StarNavigationSystem extends GameObject {
   private hoveredStarSprite: THREE.Sprite | null = null;
   private onStarSelectedCallback?: (star: StarData | null) => void;
   
+  // Touch state for tap vs drag detection
   // Configuration - matching original StarVisuals
   private readonly starDistance = 990; // Just slightly inside skybox (1000) for perfect sync
   private readonly starSize = 20; // Base size for regular stars
   private readonly constellationLineOpacity = 0.05; // Control the opacity of constellation lines here
+  
+  // Event handlers that need to be stored for proper cleanup
+  private handleUIClearAll: () => void;
   
   // System identification
   public readonly id = 'star-navigation-system';
@@ -93,10 +97,8 @@ export class StarNavigationSystem extends GameObject {
     // Update star animations
     this.updateStarAnimations();
     
-    // Update screen positions for selected star
-    if (this.selectedStar) {
-      this.updateSelectedStarPosition();
-    }
+    // Note: We no longer update selectedStar position since we dismiss the card on drag
+    // This eliminates the jarring "following" effect that was mentioned
   }
   
   private async createStarSystem(): Promise<void> {
@@ -381,28 +383,36 @@ export class StarNavigationSystem extends GameObject {
   private async setupInteractions(): Promise<void> {
     console.log('🎯 Setting up star interactions...');
     
-    // Set up mouse click handler for star selection
-    this.handleMouseClick = this.handleMouseClick.bind(this);
-    this.gameContainer.addEventListener('click', this.handleMouseClick);
+    // Bind handlers to maintain 'this' context
+    this.handleTap = this.handleTap.bind(this);
+    this.handleHover = this.handleHover.bind(this);
+    this.handleDragStart = this.handleDragStart.bind(this);
+    this.handleUIClearAll = () => {
+      console.log('🧹 StarNavigationSystem: Clearing selected star');
+      this.selectStar(null);
+    };
+
+    // Subscribe to universal input events from the EventBus
+    this.eventBus.on('input:tap', this.handleTap);
+    this.eventBus.on('input:hover', this.handleHover);
+    this.eventBus.on('input:drag:start', this.handleDragStart);
     
-    // NEW: Set up mouse move handler for hover effects
-    this.handleMouseMove = this.handleMouseMove.bind(this);
-    this.gameContainer.addEventListener('mousemove', this.handleMouseMove);
+    // Subscribe to cleanup events
+    this.eventBus.on('ui.clearAll', this.handleUIClearAll);
     
     console.log('✅ Star interactions set up');
   }
   
   // Direct mouse interaction implementation
   
-  private handleMouseClick(event: MouseEvent): void {
-    // Perform raycast to find clicked star
+  private performRaycast(clientX: number, clientY: number): void {
     const raycaster = new this.THREE.Raycaster();
     const mouse = new this.THREE.Vector2();
     
     // Convert mouse coordinates to normalized device coordinates (-1 to +1)
     const rect = this.gameContainer.getBoundingClientRect();
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
     
     raycaster.setFromCamera(mouse, this.camera);
     
@@ -411,21 +421,25 @@ export class StarNavigationSystem extends GameObject {
     
     if (intersections.length > 0) {
       const clickedStar = intersections[0].object;
-      console.log('⭐ Star clicked:', clickedStar.userData.title);
+      console.log('⭐ Star interaction:', clickedStar.userData.title);
       this.selectStar(clickedStar.userData);
     } else {
-      console.log('🌌 No star clicked');
+      console.log('🌌 No star interaction');
       this.selectStar(null);
     }
   }
   
-  private handleMouseMove(event: MouseEvent): void {
+  private handleTap({ x, y }: { x: number, y: number }): void {
+    this.performRaycast(x, y);
+  }
+
+  private handleHover({ x, y }: { x: number, y: number }): void {
     const raycaster = new this.THREE.Raycaster();
     const mouse = new this.THREE.Vector2();
     
     const rect = this.gameContainer.getBoundingClientRect();
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    mouse.x = ((x - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((y - rect.top) / rect.height) * 2 + 1;
     
     raycaster.setFromCamera(mouse, this.camera);
     
@@ -449,6 +463,14 @@ export class StarNavigationSystem extends GameObject {
         }
 
         this.hoveredStarSprite = newHoveredSprite;
+    }
+  }
+
+  private handleDragStart(): void {
+    // Dismiss the timeline card when user starts dragging to look around
+    // This provides better UX since they're clearly not focused on reading the card
+    if (this.selectedStar) {
+      this.selectStar(null);
     }
   }
 
@@ -637,9 +659,13 @@ export class StarNavigationSystem extends GameObject {
     
     console.log('🧹 Disposing Star Navigation System...');
     
-    // Remove event listener
-    this.gameContainer.removeEventListener('click', this.handleMouseClick);
-    this.gameContainer.removeEventListener('mousemove', this.handleMouseMove);
+    // Unsubscribe from universal input events
+    this.eventBus.off('input:tap', this.handleTap);
+    this.eventBus.off('input:hover', this.handleHover);
+    this.eventBus.off('input:drag:start', this.handleDragStart);
+    
+    // Unsubscribe from cleanup events
+    this.eventBus.off('ui.clearAll', this.handleUIClearAll);
     
     // Clear stars
     this.clearStars();

@@ -109,6 +109,14 @@
 
   let cardElement: HTMLElement;
 
+  // Get positioning styles for the card
+  function getPositioningStyles() {
+    if (event.screenPosition && !isMobile) {
+      return `left: ${event.screenPosition.x}px; top: ${event.screenPosition.y}px;`;
+    }
+    return '';
+  }
+
   // Fly-in animation
   function triggerAnimation() {
     if (cardElement && isVisible) {
@@ -153,7 +161,7 @@
     class:timeline-card-bottom={!isMobile && position === 'bottom'}
     class:timeline-card-left={!isMobile && position === 'left'}
     class:timeline-card-right={!isMobile && position === 'right'}
-    style="opacity: 0; transform: translate({initialX}px, {initialY}px);"
+    style="opacity: 0; transform: translate({initialX}px, {initialY}px); {getPositioningStyles()}"
   >
     <div class="font-bold text-75 text-sm mb-1 card-title">
       {event.title}
