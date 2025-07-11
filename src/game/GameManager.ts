@@ -1,16 +1,14 @@
 import { Engine } from '../engine/core/Engine';
-import { LevelManager } from './managers/LevelManager';
+import { LevelManager, type LevelFactory } from './managers/LevelManager';
 import { GameStateManager } from './state/GameStateManager';
 import { InteractionSystem } from '../engine/systems/InteractionSystem';
 import { UniversalInputManager } from '../engine/input/UniversalInputManager';
-import { HybridControls } from '../engine/input/HybridControls';
 import { ErrorHandler } from '../engine/utils/ErrorHandler';
 import type { ErrorContext } from '../engine/utils/ErrorHandler';
 
-// Import the new migrated levels
-import { StarObservatory } from './levels/StarObservatory';
-import { MirandaShip } from './levels/MirandaShip';
-import { RestaurantBackroom } from './levels/RestaurantBackroom';
+// Import data-driven architecture components
+import { LevelSystem } from './systems/LevelSystem';
+import type { LevelConfig } from './systems/LevelSystem';
 
 /**
  * Updated GameManager using the new BaseLevel architecture
@@ -21,8 +19,11 @@ export class GameManager {
   private levelManager: LevelManager;
   private gameStateManager: GameStateManager;
   private interactionSystem: InteractionSystem;
-  private hybridControls: HybridControls;
+  // Movement handled by MovementComponent in BaseLevel
   private universalInputManager: UniversalInputManager;
+  
+  // Data-driven architecture
+  private levelSystem: LevelSystem;
   
   private isInitialized = false;
   private isRunning = false;
@@ -76,9 +77,14 @@ export class GameManager {
       // Initialize the single, universal input manager
       this.universalInputManager = new UniversalInputManager(this.engine.getContainer(), this.engine.getEventBus());
       this.universalInputManager.initialize();
-
-      // Initialize hybrid controls
-      await this.initializeControls();
+      
+      // Initialize data-driven level system
+      this.levelSystem = new LevelSystem();
+      
+      // Wait for component registration to complete
+      await this.levelSystem.waitForInitialization();
+      
+      // Movement now handled by MovementComponent in BaseLevel
       
       // Register migrated levels
       this.registerMigratedLevels();
@@ -111,54 +117,71 @@ export class GameManager {
   }
   
   /**
-   * Register the new migrated levels
+   * Register levels - fully data-driven architecture
    */
   private registerMigratedLevels(): void {
-    // Register levels using the new BaseLevel pattern
-    this.levelManager.registerLevel('observatory', StarObservatory);
-    this.levelManager.registerLevel('miranda', MirandaShip);
-    this.levelManager.registerLevel('restaurant', RestaurantBackroom);
+    // 🆕 Data-driven levels (NEW ARCHITECTURE)
+    this.levelManager.registerLevel('observatory', this.createDataDrivenLevel);
+    this.levelManager.registerLevel('miranda', this.createDataDrivenLevel);
+    this.levelManager.registerLevel('restaurant', this.createDataDrivenLevel);
+    
+    console.log('📦 Levels registered: observatory, miranda, restaurant (all data-driven)');
   }
   
   /**
-   * Initialize controls with improved settings
+   * Factory function for creating data-driven levels
    */
-  private async initializeControls(): Promise<void> {
-    const THREE = await import('three');
+  private createDataDrivenLevel: LevelFactory = async (levelId: string) => {
+    console.log(`🎮 Creating data-driven level: ${levelId}`);
     
-    this.hybridControls = new HybridControls(
-      THREE,
-      this.engine.getCamera(),
-      this.engine.getRenderer().getDomElement(),
-      this.engine.getEventBus(),
-      this.engine.getInputManager(),
-      this.engine.getPhysicsWorld(),
-      {
-        moveSpeed: 50,
-        orbitControls: {
-          enableDamping: true,
-          dampingFactor: 0.2,
-          rotateSpeed: 0.1,
-          zoomSpeed: 1.0,
-          enablePan: false,
-          minDistance: 50,
-          maxDistance: 300,
-          autoRotate: false,
-          enableTouch: true,
-          touchRotateSpeed: 0.3,
-          touchZoomSpeed: 1.5
-        }
-      }
-    );
-    
-    await this.hybridControls.initialize();
-    
-    // Set initial camera position
+    try {
+      // Load configuration for the level
+      const config = await this.loadLevelConfig(levelId);
+      
+      // Create and initialize GenericLevel with configuration
+      const { GenericLevel } = await import('./levels/GenericLevel');
+      const level = new GenericLevel(this.engine, this.interactionSystem, config);
+      await level.initialize();
+      
+      console.log(`✅ Data-driven level created and initialized: ${config.name}`);
+      return level;
+      
+    } catch (error) {
+      console.error(`❌ Failed to create data-driven level '${levelId}':`, error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Load level configuration from JSON
+   */
+  private async loadLevelConfig(levelId: string): Promise<LevelConfig> {
+    try {
+      // For now, load from static import - in future this could be dynamic
+      const configModule = await import(`./levels/${levelId}.json`);
+      const config: LevelConfig = configModule.default || configModule;
+      
+      // Validate configuration
+      await this.levelSystem.loadLevel(config);
+      
+      return config;
+      
+    } catch (error) {
+      console.error(`❌ Failed to load config for level '${levelId}':`, error);
+      throw new Error(`Level configuration not found: ${levelId}`);
+    }
+  }
+  
+  /**
+   * Set initial camera position for level
+   */
+  private setupInitialCamera(): void {
     const camera = this.engine.getCamera();
     camera.position.set(0, -3.4, 50);
     
-    const lookUpAngle = THREE.MathUtils.degToRad(15);
-    camera.rotation.x = -lookUpAngle;
+    // Look up slightly for better star observatory view
+    const lookUpAngle = -Math.PI / 12; // 15 degrees
+    camera.rotation.x = lookUpAngle;
   }
   
   /**
@@ -225,10 +248,10 @@ export class GameManager {
       // Store in game state
       this.gameStateManager.getState().timelineEvents = events;
       
-      // Pass to current level if it's the observatory
+      // Pass to current level if it's the observatory (generic approach)
       const currentLevel = this.levelManager.getCurrentLevel();
       if (currentLevel && currentLevel.getLevelId() === 'observatory') {
-        (currentLevel as StarObservatory).setTimelineEvents(events);
+        (currentLevel as any).callComponentMethod?.('StarNavigationSystem', 'setTimelineEvents', events);
       }
       
     } catch (error) {
@@ -315,8 +338,8 @@ export class GameManager {
       
       const success = await this.levelManager.transitionToLevel(levelId);
       if (success) {
-        // Update camera controls based on level
-        this.updateControlsForLevel(levelId);
+        // Set camera position for level
+        this.updateCameraForLevel(levelId);
         
         // Update game state
         this.gameStateManager.setCurrentLevel(levelId);
@@ -352,65 +375,53 @@ export class GameManager {
     
     switch (levelId) {
       case 'observatory':
-        const observatory = currentLevel as StarObservatory;
-        
+        // Set up timeline events for StarNavigationSystem (generic approach)
         const events = this.gameStateManager.getState().timelineEvents;
         if (events && events.length > 0) {
-          observatory.setTimelineEvents(events);
+          (currentLevel as any).callComponentMethod?.('StarNavigationSystem', 'setTimelineEvents', events);
         }
         
-        // Set up star selection callback
-        observatory.onStarSelected((star) => {
+        // Set up star selection callback (generic approach)
+        (currentLevel as any).callComponentMethod?.('StarNavigationSystem', 'onStarSelected', (star: any) => {
           this.gameStateManager.setSelectedStar(star);
         });
         
         break;
         
       case 'miranda':
-        const miranda = currentLevel as MirandaShip;
-        
-        // Set up story callbacks
-        miranda.onNoteFound((noteId, content) => {
-          console.log(`📝 Found captain's log ${noteId}: ${content}`);
-          this.engine.getEventBus().emit('story.note_found', { noteId, content });
-        });
-        
-        miranda.onSafeOpened((recipe) => {
-          console.log('🔓 Safe opened! Found the Perfect Mary recipe:', recipe);
-          this.engine.getEventBus().emit('story.safe_opened', { recipe });
-        });
+        // Story event listeners are handled by EventBus in data-driven architecture
+        console.log('🚀 Miranda level ready - story events handled by components');
         
         break;
         
       case 'restaurant':
-        const restaurant = currentLevel as RestaurantBackroom;
+        // Dialogue events are handled by EventBus in data-driven architecture
+        console.log('🍴 Restaurant level ready - dialogue events handled by components');
         
         break;
     }
   }
   
   /**
-   * Update controls for specific level
+   * Set camera position for specific level
    */
-  private updateControlsForLevel(levelId: string): void {
+  private updateCameraForLevel(levelId: string): void {
     const camera = this.engine.getCamera();
     
     switch (levelId) {
       case 'observatory':
         camera.position.set(0, -3.4, 50);
-        this.hybridControls.setMoveSpeed(50);
+        camera.rotation.x = -Math.PI / 12;
         break;
         
       case 'miranda':
         camera.position.set(40, 8, 15);
         camera.lookAt(0, 0, 0);
-        this.hybridControls.setMoveSpeed(25);
         break;
         
       case 'restaurant':
-        camera.position.set(0, 2.5, 8);
-        camera.lookAt(0, 1.5, 0);
-        this.hybridControls.setMoveSpeed(20);
+        camera.position.set(0, 1.7, 8);
+        camera.lookAt(0, 1.7, 0);
         break;
     }
   }
@@ -468,7 +479,7 @@ export class GameManager {
    */
   public resetView(): void {
     const currentLevel = this.gameStateManager.getCurrentLevel();
-    this.updateControlsForLevel(currentLevel);
+    this.updateCameraForLevel(currentLevel);
     
     // Clear selected star
     this.gameStateManager.setSelectedStar(null);
@@ -525,6 +536,13 @@ export class GameManager {
    */
   public getInteractionSystem(): InteractionSystem {
     return this.interactionSystem;
+  }
+  
+  /**
+   * Get level system
+   */
+  public getLevelSystem(): LevelSystem {
+    return this.levelSystem;
   }
   
   /**
@@ -596,7 +614,7 @@ export class GameManager {
     this.gameStateManager?.dispose();
     this.interactionSystem?.dispose();
     this.universalInputManager?.dispose();
-    this.hybridControls?.dispose();
+    // Movement handled by MovementComponent in BaseLevel
     this.engine?.dispose();
     
     console.log('✅ GameManager disposed');

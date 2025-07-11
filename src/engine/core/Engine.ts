@@ -11,6 +11,7 @@ import { Time } from './Time';
 import { EventBus } from './EventBus';
 import { Debug } from '../utils/Debug';
 import { Performance } from '../utils/Performance';
+import { OptimizationManager } from '../optimization/OptimizationManager';
 
 export interface EngineConfig {
   canvas?: HTMLCanvasElement;
@@ -35,6 +36,7 @@ export class Engine {
   private eventBus!: EventBus;
   private debug!: Debug;
   private performance!: Performance;
+  private optimizationManager!: OptimizationManager;
   
   // Three.js core
   private scene!: THREE.Scene;
@@ -80,6 +82,7 @@ export class Engine {
     this.eventBus = new EventBus();
     this.time = new Time();
     this.performance = new Performance();
+    this.optimizationManager = OptimizationManager.getInstance();
     
     // Initialize Three.js
     this.scene = new THREE.Scene();
@@ -155,6 +158,9 @@ export class Engine {
       }
       
       await this.assetLoader.initialize();
+      
+      // Initialize optimization system
+      this.optimizationManager.initialize(this.camera, this.scene, this.renderer.getRenderer());
       
       if (this.debug) {
         await this.debug.initialize();
@@ -257,6 +263,9 @@ export class Engine {
         this.audioManager.update(this.time.deltaTime);
       }
       
+      // Update optimization system
+      this.optimizationManager.update(this.time.deltaTime);
+      
       // Emit update event for game systems
       this.eventBus.emit('engine.update', {
         deltaTime: this.time.deltaTime,
@@ -323,6 +332,10 @@ export class Engine {
     return this.debug || null;
   }
   
+  public getOptimizationManager(): OptimizationManager {
+    return this.optimizationManager;
+  }
+  
   public getContainer(): HTMLElement {
     return this.container;
   }
@@ -347,6 +360,7 @@ export class Engine {
     this.assetLoader?.dispose();
     this.debug?.dispose();
     this.performance?.dispose();
+    this.optimizationManager?.dispose();
     
     // Clear references
     this.scene = null as any;

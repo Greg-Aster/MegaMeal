@@ -5,6 +5,11 @@ import { PhysicsWorld } from '../../engine/physics/PhysicsWorld';
 import { Engine } from '../../engine/core/Engine';
 import { InteractionSystem } from '../../engine/systems/InteractionSystem';
 import { ErrorHandler } from '../../engine/utils/ErrorHandler';
+import { MovementComponent } from '../../engine/components/MovementComponent';
+import type { LevelMovementConfig } from '../../engine/components/MovementTypes';
+import { PhysicsComponent } from '../../engine/components/PhysicsComponent';
+import { ResourceManager } from '../../engine/utils/ResourceManager';
+import { DisposableManager } from '../../engine/interfaces/IDisposable';
 
 /**
  * Abstract base class for all game levels
@@ -26,6 +31,14 @@ export abstract class BaseLevel extends GameObject {
   protected levelId: string;
   protected levelName: string;
   protected levelDescription: string;
+  
+  // New unified component system
+  protected movementComponent: MovementComponent | null = null;
+  protected physicsComponent: PhysicsComponent | null = null;
+  
+  // Centralized disposal management
+  protected disposableManager: DisposableManager = new DisposableManager();
+  
   
   constructor(
     engine: Engine,
@@ -76,6 +89,10 @@ export abstract class BaseLevel extends GameObject {
       await this.createLighting();
       await this.createInteractions();
       await this.setupPhysics();
+      
+      // Initialize new component system
+      await this.initializeComponents();
+      
       await this.onLevelReady();
       
       this.markInitialized();
@@ -100,7 +117,15 @@ export abstract class BaseLevel extends GameObject {
     if (!this.isInitialized || !this.isActive) return;
     
     const safeUpdate = ErrorHandler.wrapSync(
-      () => this.updateLevel(deltaTime),
+      () => {
+        // Update unified movement component
+        if (this.movementComponent) {
+          this.movementComponent.update(deltaTime, this.levelGroup);
+        }
+        
+        // Update level-specific logic
+        this.updateLevel(deltaTime);
+      },
       { component: 'Level', operation: 'update', details: { levelId: this.levelId } }
     );
     
@@ -116,14 +141,21 @@ export abstract class BaseLevel extends GameObject {
     console.log(`🧹 Disposing level: ${this.levelName}`);
     
     try {
+      // Dispose components first
+      this.disposeComponents();
+      
       // Call level-specific cleanup
       this.onDispose();
       
-      // Clean up level group and all its children
+      // Clean up level group and all its children using ResourceManager
       if (this.levelGroup) {
-        this.disposeGroup(this.levelGroup);
+        console.log(`🧹 Disposing level group for: ${this.levelName}`);
+        ResourceManager.disposeGroup(this.levelGroup);
         this.scene.remove(this.levelGroup);
       }
+      
+      // Dispose of all registered disposables
+      this.disposableManager.dispose();
       
       this.markDisposed();
       console.log(`✅ Level ${this.levelName} disposed successfully`);
@@ -136,48 +168,17 @@ export abstract class BaseLevel extends GameObject {
   }
   
   /**
-   * Recursively dispose of a Three.js group and all its children
+   * Register a disposable object for automatic cleanup
    */
-  private disposeGroup(group: THREE.Group): void {
-    group.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        // Dispose geometry
-        if (child.geometry) {
-          child.geometry.dispose();
-        }
-        
-        // Dispose material(s)
-        if (child.material) {
-          if (Array.isArray(child.material)) {
-            child.material.forEach(material => {
-              this.disposeMaterial(material);
-            });
-          } else {
-            this.disposeMaterial(child.material);
-          }
-        }
-      }
-    });
-    
-    // Clear the group
-    group.clear();
+  public registerDisposable(disposable: any): void {
+    this.disposableManager.registerDisposable(disposable);
   }
   
   /**
-   * Dispose of a Three.js material and its textures
+   * Unregister a disposable object
    */
-  private disposeMaterial(material: THREE.Material): void {
-    // Dispose textures
-    const materialWithTextures = material as any;
-    Object.keys(materialWithTextures).forEach(key => {
-      const value = materialWithTextures[key];
-      if (value && value.isTexture) {
-        value.dispose();
-      }
-    });
-    
-    // Dispose material
-    material.dispose();
+  public unregisterDisposable(disposable: any): void {
+    this.disposableManager.unregisterDisposable(disposable);
   }
   
   // Abstract methods that must be implemented by subclasses
@@ -217,6 +218,59 @@ export abstract class BaseLevel extends GameObject {
   }
   
   /**
+   * Initialize the new component system
+   */
+  private async initializeComponents(): Promise<void> {
+    console.log(`🔧 Initializing components for level: ${this.levelId}`);
+    
+    // Initialize physics component
+    this.physicsComponent = new PhysicsComponent(this.physicsWorld, this.levelId);
+    
+    // Always use auto-physics generation
+    //await this.physicsComponent.autoGeneratePhysics(this.levelGroup);
+    
+    // Initialize movement component
+    this.movementComponent = new MovementComponent(
+      this.camera,
+      this.engine.getEventBus(),
+      this.engine.getInputManager(),
+      this.physicsWorld
+    );
+    
+    await this.movementComponent.initialize();
+    
+    // Components will be registered as disposables once they implement IDisposable
+    // TODO: Update components to implement IDisposable interface
+    
+    // Get level-specific movement config and pass it to the component
+    const movementConfig = this.getMovementConfiguration();
+    this.movementComponent.setCurrentLevel(this.levelId, this.levelGroup, movementConfig);
+    
+    console.log(`✅ Components initialized for level: ${this.levelId}`);
+  }
+  
+  
+  /**
+   * Dispose of components
+   */
+  private disposeComponents(): void {
+    console.log(`🧹 Disposing components for level: ${this.levelId}`);
+    
+    // Manual disposal for components that don't yet implement IDisposable
+    if (this.movementComponent) {
+      this.movementComponent.dispose();
+      this.movementComponent = null;
+    }
+    
+    if (this.physicsComponent) {
+      this.physicsComponent.dispose();
+      this.physicsComponent = null;
+    }
+    
+    console.log(`✅ Components disposed for level: ${this.levelId}`);
+  }
+  
+  /**
    * Called when level is ready (after all initialization)
    * Can be overridden by subclasses for final setup
    */
@@ -230,6 +284,9 @@ export abstract class BaseLevel extends GameObject {
    */
   public performLevelCleanup(): void {
     console.log(`🧹 Performing automatic cleanup for level: ${this.levelName}`);
+    
+    // CRITICAL: Global scene cleanup - prevents cross-level contamination
+    this.clearGlobalSceneState();
     
     // Get EventBus from engine
     const eventBus = this.engine.getEventBus();
@@ -255,12 +312,40 @@ export abstract class BaseLevel extends GameObject {
   }
   
   /**
+   * Clear global scene state that can contaminate other levels
+   * This ensures clean transitions between levels
+   */
+  private clearGlobalSceneState(): void {
+    console.log(`🌍 Clearing global scene state for clean level transition`);
+    
+    // Clear environment mapping that can persist between levels
+    this.scene.environment = null;
+    
+    // Clear fog effects that can persist between levels  
+    this.scene.fog = null;
+    
+    // Clear scene background that can persist between levels
+    this.scene.background = null;
+    
+    // Clear any scene-level overrides that can persist
+    this.scene.overrideMaterial = null;
+    
+    console.log(`✅ Global scene state cleared - levels will not contaminate each other`);
+  }
+
+  /**
    * Called when exiting a level - for level-specific cleanup
    * Can be overridden by subclasses
    */
   protected onLevelExit(): void {
     // Default implementation - can be overridden by subclasses
   }
+
+  /**
+   * Provides the movement configuration for this specific level.
+   * Must be implemented by subclasses.
+   */
+  protected abstract getMovementConfiguration(): LevelMovementConfig;
   
   /**
    * Called during disposal for level-specific cleanup
@@ -302,6 +387,66 @@ export abstract class BaseLevel extends GameObject {
       objectCount: this.levelGroup ? this.levelGroup.children.length : 0
     };
   }
+  
+  // Public API for new component system
+  
+  /**
+   * Get the movement component
+   */
+  public getMovementComponent(): MovementComponent | null {
+    return this.movementComponent;
+  }
+  
+  /**
+   * Get the physics component
+   */
+  public getPhysicsComponent(): PhysicsComponent | null {
+    return this.physicsComponent;
+  }
+  
+  /**
+   * Add physics to a specific mesh (delegates to PhysicsComponent)
+   */
+  public addPhysicsToMesh(
+    mesh: THREE.Object3D,
+    bodyType: 'dynamic' | 'kinematic' | 'static' = 'static',
+    colliderType: 'ball' | 'cuboid' | 'capsule' | 'cylinder' | 'cone' | 'trimesh' | 'heightfield' = 'cuboid',
+    options: {
+      restitution?: number;
+      friction?: number;
+      density?: number;
+      isSensor?: boolean;
+    } = {}
+  ): string | null {
+    if (!this.physicsComponent) {
+      console.warn('PhysicsComponent not available');
+      return null;
+    }
+    
+    return this.physicsComponent.addPhysicsToMesh(mesh, bodyType, colliderType, options);
+  }
+  
+  /**
+   * Set movement configuration (delegates to MovementComponent)
+   */
+  public setMovementConfig(config: any): void {
+    if (this.movementComponent) {
+      this.movementComponent.setConfig(config);
+    }
+  }
+  
+  /**
+   * Set camera/player position (delegates to MovementComponent)
+   */
+  public setPlayerPosition(position: THREE.Vector3): void {
+    if (this.movementComponent) {
+      this.movementComponent.setPosition(position);
+    } else {
+      // Fallback to direct camera positioning
+      this.camera.position.copy(position);
+    }
+  }
+  
 }
 
 /**
