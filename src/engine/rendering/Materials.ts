@@ -1,6 +1,7 @@
 // Material library system with PBR support
 
 import * as THREE from 'three';
+import { AssetLoader } from '../resources/AssetLoader';
 
 export interface PBRMaterialOptions {
   color?: number;
@@ -21,6 +22,11 @@ export interface PBRMaterialOptions {
 export class Materials {
   private materials = new Map<string, THREE.Material>();
   private environmentMap: THREE.CubeTexture | THREE.Texture | null = null;
+  private THREE: any;
+
+  constructor(THREE: any) {
+    this.THREE = THREE;
+  }
   
   public createStarMaterial(color: number): THREE.MeshBasicMaterial {
     // Keep stars as basic material for performance (they're sprites)
@@ -50,23 +56,37 @@ export class Materials {
   
   // Create PBR material with physically-based properties
   public createPBRMaterial(options: PBRMaterialOptions = {}): THREE.MeshStandardMaterial {
-    const material = new THREE.MeshStandardMaterial({
-      color: options.color || 0xffffff,
-      metalness: options.metalness || 0.1,
-      roughness: options.roughness || 0.8,
-      normalMap: options.normalMap,
-      roughnessMap: options.roughnessMap,
-      metalnessMap: options.metalnessMap,
-      envMap: options.envMap || this.environmentMap,
-      envMapIntensity: options.envMapIntensity || 1.0,
-      emissive: options.emissive || 0x000000,
-      emissiveIntensity: options.emissiveIntensity || 0.0,
-      transparent: options.transparent || false,
-      opacity: options.opacity || 1.0,
-      side: options.side || THREE.FrontSide
-    });
-    
-    return material;
+    const isVectorMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
+
+    if (isVectorMode) {
+      // Return a ToonMaterial for the stylized vector graphic look
+      return new this.THREE.MeshToonMaterial({
+        color: options.color || 0x808080,
+        emissive: options.emissive || 0x000000,
+        emissiveIntensity: options.emissiveIntensity || 1.0,
+        map: (options as any).map, // Pass through texture map if it exists
+        side: options.side || THREE.FrontSide,
+      });
+    } else {
+      // Return a standard PBR material for a realistic look
+      const material = new this.THREE.MeshStandardMaterial({
+        color: options.color || 0xffffff,
+        metalness: options.metalness || 0.1,
+        roughness: options.roughness || 0.8,
+        normalMap: options.normalMap,
+        roughnessMap: options.roughnessMap,
+        metalnessMap: options.metalnessMap,
+        envMap: options.envMap || this.environmentMap,
+        envMapIntensity: options.envMapIntensity || 1.0,
+        emissive: options.emissive || 0x000000,
+        emissiveIntensity: options.emissiveIntensity || 0.0,
+        transparent: options.transparent || false,
+        opacity: options.opacity || 1.0,
+        side: options.side || THREE.FrontSide
+      });
+      
+      return material;
+    }
   }
   
   // Preset PBR materials for common use cases

@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { Renderer } from '../rendering/Renderer';
 // InputManager removed - now using UniversalInputManager
+import { Materials } from '../rendering/Materials';
 import { PhysicsWorld } from '../physics/PhysicsWorld';
 import { AudioManager } from '../audio/AudioManager';
 import { AssetLoader } from '../resources/AssetLoader';
@@ -29,6 +30,7 @@ export class Engine {
   // Core systems
   private renderer!: Renderer;
   // inputManager removed - now using UniversalInputManager in GameManager
+  private materials!: Materials;
   private physicsWorld!: PhysicsWorld;
   private audioManager!: AudioManager;
   private assetLoader!: AssetLoader;
@@ -95,6 +97,7 @@ export class Engine {
     
     // Initialize engine systems
     this.renderer = new Renderer(this.scene, this.camera, this.container);
+    this.materials = new Materials(THREE);
     // InputManager removed - now using UniversalInputManager in GameManager
     this.assetLoader = new AssetLoader();
     
@@ -301,6 +304,10 @@ export class Engine {
     return this.renderer;
   }
   
+  public getMaterials(): Materials {
+    return this.materials;
+  }
+  
   // getInputManager removed - now using UniversalInputManager in GameManager
   
   public getPhysicsWorld(): PhysicsWorld | null {
@@ -349,6 +356,7 @@ export class Engine {
     
     // Dispose systems
     this.renderer?.dispose();
+    this.materials?.dispose();
     // inputManager removed - disposed by GameManager's UniversalInputManager
     this.physicsWorld?.dispose();
     this.audioManager?.dispose();

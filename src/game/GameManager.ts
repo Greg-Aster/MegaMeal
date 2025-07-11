@@ -45,6 +45,9 @@ export class GameManager {
     
     // Detect mobile
     this.isMobile = this.detectMobile();
+
+    // Set a global flag for graphics style. Can be controlled by UI later.
+    (window as any).MEGAMEAL_VECTOR_MODE = false;
     
     this.setupEventListeners();
   }
@@ -479,6 +482,16 @@ export class GameManager {
     });
   }
   
+  /**
+   * Sets the global graphics style for the game.
+   * @param isVector - True for stylized vector graphics, false for realistic.
+   */
+  public setVectorGraphicsMode(isVector: boolean): void {
+    (window as any).MEGAMEAL_VECTOR_MODE = isVector;
+    console.log(`🎨 Graphics mode set to: ${isVector ? 'Vector' : 'Realistic'}`);
+    // Here you could emit an event to force a level reload or material update.
+    // this.engine.getEventBus().emit('graphics.style.changed', { isVector });
+  }
   /**
    * Reset view/camera
    */
