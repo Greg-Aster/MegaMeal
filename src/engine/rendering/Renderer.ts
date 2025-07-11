@@ -21,6 +21,10 @@ export interface RendererConfig {
   enableSSAO?: boolean;
   enableFXAA?: boolean;
   enableToneMapping?: boolean;
+  // Mobile-specific settings
+  isMobile?: boolean;
+  powerPreference?: 'default' | 'high-performance' | 'low-power';
+  maxPixelRatio?: number;
 }
 
 export class Renderer {
@@ -45,20 +49,32 @@ export class Renderer {
     this.camera = camera;
     this.container = container;
     
+    // Detect mobile for default configuration
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
     this.config = {
-      antialias: true,
-      enableShadows: true,
-      shadowMapType: THREE.PCFSoftShadowMap,
+      antialias: !isMobile, // Disable on mobile by default
+      enableShadows: true, // Keep shadows enabled for proper lighting on all devices
+      shadowMapType: isMobile ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap, // Use simpler shadows on mobile
       toneMapping: THREE.ACESFilmicToneMapping,
       toneMappingExposure: 1.0,
       outputColorSpace: THREE.SRGBColorSpace,
-      enablePostProcessing: true,
-      enableBloom: true,
-      enableSSAO: false, // Can be expensive, disabled by default
-      enableFXAA: true,
-      enableToneMapping: true,
+      enablePostProcessing: !isMobile, // Disable on mobile by default
+      enableBloom: !isMobile,
+      enableSSAO: false, // Expensive, disabled by default
+      enableFXAA: !isMobile, // Use native antialiasing on mobile instead
+      enableToneMapping: !isMobile,
+      // Mobile-specific defaults
+      isMobile,
+      powerPreference: isMobile ? 'default' : 'high-performance',
+      maxPixelRatio: isMobile ? 1.5 : 2,
       ...config
     };
+    
+    // Listen for optimization level changes
+    if (typeof window !== 'undefined') {
+      window.addEventListener('optimizationLevelChanged', this.handleOptimizationChange.bind(this) as EventListener);
+    }
   }
   
   public async initialize(): Promise<void> {
@@ -84,20 +100,48 @@ export class Renderer {
   }
   
   private createRenderer(): void {
-    this.renderer = new THREE.WebGLRenderer({
-      antialias: this.config.antialias,
-      alpha: false,
-      premultipliedAlpha: false,
-      stencil: true,
-      preserveDrawingBuffer: false,
-      powerPreference: 'high-performance'
-    });
+    try {
+      this.renderer = new THREE.WebGLRenderer({
+        antialias: this.config.antialias,
+        alpha: false,
+        premultipliedAlpha: false,
+        stencil: !this.config.isMobile, // Disable stencil buffer on mobile
+        preserveDrawingBuffer: false,
+        powerPreference: this.config.powerPreference || 'high-performance',
+        failIfMajorPerformanceCaveat: false // Don't fail if software rendering is required
+      });
+      
+      console.log('✅ WebGL renderer created successfully');
+      
+      // Log WebGL context info for debugging
+      const gl = this.renderer.getContext();
+      if (gl) {
+        console.log('🎮 WebGL Context Info:', {
+          vendor: gl.getParameter(gl.VENDOR),
+          renderer: gl.getParameter(gl.RENDERER),
+          version: gl.getParameter(gl.VERSION),
+          maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
+          isMobile: this.config.isMobile
+        });
+      }
+      
+    } catch (error) {
+      console.error('❌ Failed to create WebGL renderer:', error);
+      throw new Error(`WebGL initialization failed: ${error.message}`);
+    }
     
     // Set size
     const width = this.container.clientWidth;
     const height = this.container.clientHeight;
+    console.log('📐 Setting renderer size:', { width, height });
+    
     this.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit to 2x for performance
+    
+    // Use mobile-aware pixel ratio
+    const maxPixelRatio = this.config.maxPixelRatio || 2;
+    const pixelRatio = Math.min(window.devicePixelRatio, maxPixelRatio);
+    this.renderer.setPixelRatio(pixelRatio);
+    console.log('📱 Pixel ratio set to:', pixelRatio, '(max:', maxPixelRatio + ')');
     
     // Append to container
     this.container.appendChild(this.renderer.domElement);
@@ -298,8 +342,74 @@ export class Renderer {
     });
   }
   
+  /**
+   * Handle optimization level changes from OptimizationManager
+   */
+  private handleOptimizationChange(event: Event): void {
+    const { level } = (event as CustomEvent).detail;
+    
+    console.log('🎛️ Renderer responding to optimization level change:', level);
+    
+    // Update renderer configuration based on optimization level
+    if (level.includes('mobile')) {
+      // Mobile optimizations - keep shadows enabled for proper lighting
+      this.config.enablePostProcessing = level === 'mobile_high';
+      this.config.enableBloom = level === 'mobile_high';
+      this.config.enableFXAA = false; // Use native mobile antialiasing
+      this.config.enableToneMapping = level === 'mobile_high';
+      this.config.enableShadows = true; // Keep shadows enabled for proper ground lighting
+    } else {
+      // Desktop optimizations
+      this.config.enablePostProcessing = true;
+      this.config.enableBloom = true;
+      this.config.enableFXAA = true;
+      this.config.enableToneMapping = true;
+      this.config.enableShadows = true;
+    }
+    
+    // Update actual renderer shadow settings
+    if (this.renderer) {
+      this.renderer.shadowMap.enabled = this.config.enableShadows;
+      console.log('🌓 Shadow settings updated:', this.config.enableShadows);
+    }
+    
+    // Rebuild post-processing pipeline if initialized
+    if (this.isInitialized) {
+      this.rebuildPostProcessing();
+    }
+  }
+
+  /**
+   * Rebuild the post-processing pipeline with current configuration
+   */
+  private rebuildPostProcessing(): void {
+    // Dispose existing composer
+    if (this.composer) {
+      this.composer.dispose();
+      this.composer = null;
+    }
+    
+    // Dispose existing effects
+    Object.values(this.effects).forEach(effect => {
+      if (effect && typeof effect.dispose === 'function') {
+        effect.dispose();
+      }
+    });
+    this.effects = {};
+    
+    // Rebuild with current configuration
+    this.setupPostProcessing();
+    
+    console.log('🔄 Post-processing pipeline rebuilt with current optimization settings');
+  }
+
   public dispose(): void {
     console.log('🧹 Disposing Renderer...');
+    
+    // Remove optimization level listener
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('optimizationLevelChanged', this.handleOptimizationChange.bind(this) as EventListener);
+    }
     
     // Dispose post-processing
     if (this.composer) {

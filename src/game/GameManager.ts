@@ -64,6 +64,11 @@ export class GameManager {
       // Initialize engine
       await this.engine.initialize();
       
+      // Get optimization manager and ensure device detection is complete
+      const optimizationManager = this.engine.getOptimizationManager();
+      console.log('📱 Device capabilities:', optimizationManager.getDeviceCapabilities());
+      console.log('🎛️ Optimization level:', optimizationManager.getOptimizationLevel());
+      
       // Initialize interaction system
       this.interactionSystem = new InteractionSystem(
         this.engine.getCamera(),
