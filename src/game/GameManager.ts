@@ -318,6 +318,15 @@ export class GameManager {
       this.gameStateManager.recordInteraction(data.interactionType, data);
     });
     
+    // Mobile control events
+    eventBus.on('mobile.movement', (data) => {
+      this.handleMobileMovement(data);
+    });
+    
+    eventBus.on('mobile.action', (data) => {
+      this.handleMobileAction(data);
+    });
+    
     // Error handling
     eventBus.on('game.error', (data) => {
       this.handleGameError(data);
@@ -430,8 +439,8 @@ export class GameManager {
    * Handle mobile movement
    */
   private handleMobileMovement(data: { x: number, z: number }): void {
-    if (this.engine && this.engine.getInputManager()) {
-      this.engine.getInputManager().setVirtualMovement(data.x, 0, data.z);
+    if (this.universalInputManager) {
+      this.universalInputManager.setVirtualMovement(data.x, 0, data.z);
     }
   }
   
@@ -439,15 +448,15 @@ export class GameManager {
    * Handle mobile actions
    */
   private handleMobileAction(action: string): void {
-    if (action === 'jump') {
-      if (this.engine && this.engine.getInputManager()) {
-        this.engine.getInputManager().setVirtualAction('jump', true);
-        setTimeout(() => {
-          if (this.engine && this.engine.getInputManager()) {
-            this.engine.getInputManager().setVirtualAction('jump', false);
-          }
-        }, 100);
-      }
+    if (this.universalInputManager) {
+      this.universalInputManager.setVirtualAction(action, true);
+      
+      // Clear action after a short delay to simulate button press
+      setTimeout(() => {
+        if (this.universalInputManager) {
+          this.universalInputManager.setVirtualAction(action, false);
+        }
+      }, 100);
     }
   }
   

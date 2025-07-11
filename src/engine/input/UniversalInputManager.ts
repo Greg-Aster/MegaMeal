@@ -1,8 +1,7 @@
 import { EventBus } from '../core/EventBus';
 
 /**
- * A universal input manager that listens to raw DOM events and emits
- * high-level, normalized game input events on the EventBus.
+ * A universal input manager that handles all input including mobile controls.
  * This becomes the single source of truth for all user input.
  */
 export class UniversalInputManager {
@@ -17,10 +16,26 @@ export class UniversalInputManager {
   private isDragging = false;
   private dragThreshold = 10; // pixels
   private tapTimeThreshold = 300; // milliseconds
+  
+  // Mobile detection
+  private isMobile = false;
+  
+  // Movement and action state
+  private movementVector = { x: 0, y: 0, z: 0 };
+  private actionStates: { [action: string]: boolean } = {};
+  
+  // Sensitivity settings
+  private mouseSensitivity = 0.002;
+  private touchSensitivity = 0.0005; // Much lower for mobile
 
   constructor(gameContainer: HTMLElement, eventBus: EventBus) {
     this.gameContainer = gameContainer;
     this.eventBus = eventBus;
+    this.detectMobile();
+  }
+  
+  private detectMobile(): void {
+    this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   }
 
   public initialize(): void {
@@ -113,6 +128,17 @@ export class UniversalInputManager {
 
   private handleTouchStart(event: TouchEvent): void {
     if (event.touches.length === 1) {
+      // Check if touch is on mobile controls area (bottom 200px)
+      const touch = event.touches[0];
+      const containerRect = this.gameContainer.getBoundingClientRect();
+      const touchY = touch.clientY - containerRect.top;
+      const isOnMobileControls = touchY > (containerRect.height - 200);
+      
+      if (isOnMobileControls) {
+        console.log('🎮 Touch on mobile controls area, ignoring for camera drag');
+        return; // Don't handle touch events on mobile controls
+      }
+      
       this.isDragging = false;
       this.touchStartTime = Date.now();
       this.touchStartPos.x = event.touches[0].clientX;
@@ -129,7 +155,16 @@ export class UniversalInputManager {
 
   private handleTouchMove(event: TouchEvent): void {
     if (event.touches.length === 1) {
+      // Check if touch is on mobile controls area (bottom 200px)
       const touch = event.touches[0];
+      const containerRect = this.gameContainer.getBoundingClientRect();
+      const touchY = touch.clientY - containerRect.top;
+      const isOnMobileControls = touchY > (containerRect.height - 200);
+      
+      if (isOnMobileControls) {
+        return; // Don't handle touch events on mobile controls
+      }
+      
       const distanceMoved = Math.sqrt(
         Math.pow(touch.clientX - this.touchStartPos.x, 2) +
         Math.pow(touch.clientY - this.touchStartPos.y, 2)
@@ -137,20 +172,40 @@ export class UniversalInputManager {
 
       if (distanceMoved > this.dragThreshold) {
         this.isDragging = true;
+        
+        // Calculate deltas with proper mobile sensitivity
+        const rawDeltaX = touch.clientX - this.touchStartPos.x;
+        const rawDeltaY = touch.clientY - this.touchStartPos.y;
+        const deltaX = rawDeltaX * this.touchSensitivity;
+        const deltaY = rawDeltaY * this.touchSensitivity;
+        
         this.eventBus.emit('input:drag:move', { 
           x: touch.clientX, 
           y: touch.clientY,
-          deltaX: touch.clientX - this.touchStartPos.x,
-          deltaY: touch.clientY - this.touchStartPos.y,
+          deltaX: deltaX,
+          deltaY: deltaY,
           button: 0 
         });
+        
+        // Update touch start position for next delta calculation
+        this.touchStartPos.x = touch.clientX;
+        this.touchStartPos.y = touch.clientY;
       }
     }
   }
 
   private handleTouchEnd(event: TouchEvent): void {
     if (event.changedTouches.length === 1) {
+      // Check if touch is on mobile controls area (bottom 200px)
       const touch = event.changedTouches[0];
+      const containerRect = this.gameContainer.getBoundingClientRect();
+      const touchY = touch.clientY - containerRect.top;
+      const isOnMobileControls = touchY > (containerRect.height - 200);
+      
+      if (isOnMobileControls) {
+        return; // Don't handle touch events on mobile controls
+      }
+      
       const distanceMoved = Math.sqrt(
         Math.pow(touch.clientX - this.touchStartPos.x, 2) +
         Math.pow(touch.clientY - this.touchStartPos.y, 2)
@@ -174,6 +229,33 @@ export class UniversalInputManager {
 
   private emitTap(x: number, y: number): void {
     this.eventBus.emit('input:tap', { x, y });
+  }
+  
+  // Mobile control methods
+  public setVirtualMovement(x: number, y: number, z: number): void {
+    this.movementVector.x = x;
+    this.movementVector.y = y;
+    this.movementVector.z = z;
+    
+    // Don't emit events here - this method is called FROM event handlers
+  }
+  
+  public setVirtualAction(action: string, pressed: boolean): void {
+    this.actionStates[action] = pressed;
+    
+    // Don't emit events here - this method is called FROM event handlers
+  }
+  
+  public getMovementVector(): { x: number; y: number; z: number } {
+    return { ...this.movementVector };
+  }
+  
+  public isActionPressed(action: string): boolean {
+    return !!this.actionStates[action];
+  }
+  
+  public isMobileDevice(): boolean {
+    return this.isMobile;
   }
 
   public dispose(): void {

@@ -31,6 +31,15 @@ export class MovementComponent {
   private currentLevelId: string | null = null;
   private levelConfig: LevelMovementConfig | null = null;
   
+  // Event handlers (store references for proper removal)
+  private dragStartHandler: () => void = () => {};
+  private dragMoveHandler: (data: any) => void = () => {};
+  private dragEndHandler: () => void = () => {};
+  
+  // Mobile virtual controls state (from UniversalInputManager via EventBus)
+  private virtualMovement = { x: 0, y: 0, z: 0 };
+  private virtualActions: { [action: string]: boolean } = {};
+  
   constructor(
     camera: THREE.PerspectiveCamera,
     eventBus: EventBus,
@@ -173,8 +182,14 @@ export class MovementComponent {
     const isLeftPressed = this.inputManager.isActionPressed('left');
     const isRightPressed = this.inputManager.isActionPressed('right');
     
-    // Get mobile virtual movement
-    const movementVector = this.inputManager.getMovementVector();
+    // Get mobile virtual movement (from EventBus or InputManager)
+    const eventBusMovement = this.virtualMovement;
+    const inputManagerMovement = this.inputManager.getMovementVector();
+    
+    // Prefer EventBus movement (from UniversalInputManager) over InputManager
+    const movementVector = (eventBusMovement.x !== 0 || eventBusMovement.z !== 0) 
+      ? eventBusMovement 
+      : inputManagerMovement;
     const hasVirtualMovement = movementVector.x !== 0 || movementVector.z !== 0;
     
     // Calculate movement direction relative to camera
@@ -227,8 +242,8 @@ export class MovementComponent {
    * Handle vertical movement (gravity, jumping)
    */
   private handleVerticalMovement(deltaTime: number): void {
-    // Handle jumping
-    const isJumpPressed = this.inputManager.isActionPressed('jump');
+    // Handle jumping (check both InputManager and virtual actions from EventBus)
+    const isJumpPressed = this.inputManager.isActionPressed('jump') || this.virtualActions['jump'];
     
     if (isJumpPressed && this.state.canJump && this.state.isGrounded) {
       const jumpVelocity = Math.sqrt(2 * Math.abs(this.config.gravity) * this.config.jumpHeight);
@@ -278,15 +293,16 @@ export class MovementComponent {
   private setupMouseLook(): void {
     let isDragging = false;
     
-    // Listen to universal input drag events
-    this.eventBus.on('input:drag:start', () => {
+    // Setup event handlers
+    this.dragStartHandler = () => {
       isDragging = true;
-    });
+    };
     
-    this.eventBus.on('input:drag:move', (data) => {
+    this.dragMoveHandler = (data) => {
       if (isDragging && data.deltaX !== undefined && data.deltaY !== undefined) {
-        const deltaX = data.deltaX * this.config.mouseSensitivity;
-        const deltaY = data.deltaY * this.config.mouseSensitivity;
+        // Sensitivity is now handled by UniversalInputManager
+        const deltaX = data.deltaX;
+        const deltaY = data.deltaY;
         
         // Get current camera rotation
         const euler = new THREE.Euler().setFromQuaternion(this.camera.quaternion, 'YXZ');
@@ -301,19 +317,37 @@ export class MovementComponent {
         // Apply rotation to camera
         this.camera.quaternion.setFromEuler(euler);
       }
-    });
+    };
     
-    this.eventBus.on('input:drag:end', () => {
+    this.dragEndHandler = () => {
       isDragging = false;
-    });
+    };
+    
+    // Listen to universal input drag events
+    this.eventBus.on('input:drag:start', this.dragStartHandler);
+    this.eventBus.on('input:drag:move', this.dragMoveHandler);
+    this.eventBus.on('input:drag:end', this.dragEndHandler);
   }
   
   /**
    * Setup event listeners
    */
   private setupEventListeners(): void {
-    // Movement update is now handled directly by BaseLevel.update()
-    // No need to listen to engine.update events
+    // Listen for mobile movement events from UniversalInputManager
+    this.eventBus.on('mobile.movement', (data: { x: number; z: number }) => {
+      this.virtualMovement.x = data.x;
+      this.virtualMovement.z = data.z;
+    });
+    
+    // Listen for mobile action events from UniversalInputManager
+    this.eventBus.on('mobile.action', (action: string) => {
+      this.virtualActions[action] = true;
+      
+      // Clear action after a short delay to simulate button press
+      setTimeout(() => {
+        this.virtualActions[action] = false;
+      }, 100);
+    });
   }
   
   /**
@@ -383,9 +417,11 @@ export class MovementComponent {
     console.log('🧹 Disposing Movement Component...');
     
     // Remove event listeners
-    this.eventBus.off('input:drag:start');
-    this.eventBus.off('input:drag:move');
-    this.eventBus.off('input:drag:end');
+    this.eventBus.off('input:drag:start', this.dragStartHandler);
+    this.eventBus.off('input:drag:move', this.dragMoveHandler);
+    this.eventBus.off('input:drag:end', this.dragEndHandler);
+    this.eventBus.off('mobile.movement');
+    this.eventBus.off('mobile.action');
     
     this.isInitialized = false;
     console.log('✅ Movement Component disposed');
