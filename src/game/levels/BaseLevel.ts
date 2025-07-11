@@ -233,7 +233,6 @@ export abstract class BaseLevel extends GameObject {
     this.movementComponent = new MovementComponent(
       this.camera,
       this.engine.getEventBus(),
-      this.engine.getInputManager(),
       this.physicsWorld
     );
     

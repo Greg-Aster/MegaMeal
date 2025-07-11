@@ -3,7 +3,7 @@
 
 import * as THREE from 'three';
 import { Renderer } from '../rendering/Renderer';
-import { InputManager } from '../input/InputManager';
+// InputManager removed - now using UniversalInputManager
 import { PhysicsWorld } from '../physics/PhysicsWorld';
 import { AudioManager } from '../audio/AudioManager';
 import { AssetLoader } from '../resources/AssetLoader';
@@ -28,7 +28,7 @@ export class Engine {
   
   // Core systems
   private renderer!: Renderer;
-  private inputManager!: InputManager;
+  // inputManager removed - now using UniversalInputManager in GameManager
   private physicsWorld!: PhysicsWorld;
   private audioManager!: AudioManager;
   private assetLoader!: AssetLoader;
@@ -95,9 +95,7 @@ export class Engine {
     
     // Initialize engine systems
     this.renderer = new Renderer(this.scene, this.camera, this.container);
-    this.inputManager = new InputManager(this.container, this.eventBus, {
-      enablePointerLock: false  // Disable FPS pointer lock for now
-    });
+    // InputManager removed - now using UniversalInputManager in GameManager
     this.assetLoader = new AssetLoader();
     
     if (this.config.enablePhysics) {
@@ -147,7 +145,7 @@ export class Engine {
     try {
       // Initialize systems in order
       await this.renderer.initialize();
-      await this.inputManager.initialize();
+      // InputManager removed - now using UniversalInputManager in GameManager
       
       if (this.physicsWorld) {
         await this.physicsWorld.initialize();
@@ -252,8 +250,7 @@ export class Engine {
         this.performance.begin();
       }
       
-      // Update systems
-      this.inputManager.update(this.time.deltaTime);
+      // Update systems (InputManager removed - handled by UniversalInputManager)
       
       if (this.physicsWorld) {
         this.physicsWorld.update(this.time.deltaTime);
@@ -304,9 +301,7 @@ export class Engine {
     return this.renderer;
   }
   
-  public getInputManager(): InputManager {
-    return this.inputManager;
-  }
+  // getInputManager removed - now using UniversalInputManager in GameManager
   
   public getPhysicsWorld(): PhysicsWorld | null {
     return this.physicsWorld || null;
@@ -354,7 +349,7 @@ export class Engine {
     
     // Dispose systems
     this.renderer?.dispose();
-    this.inputManager?.dispose();
+    // inputManager removed - disposed by GameManager's UniversalInputManager
     this.physicsWorld?.dispose();
     this.audioManager?.dispose();
     this.assetLoader?.dispose();
