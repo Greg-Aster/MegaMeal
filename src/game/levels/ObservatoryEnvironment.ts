@@ -166,10 +166,14 @@ export class ObservatoryEnvironment extends GameObject {
         glow.material.opacity = fadeValue * 0.4;
       }
       
-      // Add subtle scale pulsing for breathing effect
+      // Add subtle scale pulsing for breathing effect - with proper null checks
       const pulseScale = 1 + Math.sin(time * userData.fadeSpeed * 3 + userData.fadePhase) * 0.2;
-      firefly.scale.setScalar(pulseScale);
-      glow.scale.setScalar(pulseScale);
+      if (firefly && firefly.scale) {
+        firefly.scale.setScalar(pulseScale);
+      }
+      if (glow && glow.scale) {
+        glow.scale.setScalar(pulseScale);
+      }
     });
   }
 
@@ -1087,8 +1091,8 @@ export class ObservatoryEnvironment extends GameObject {
       const firefly = new this.THREE.Mesh(fireflyGeometry, fireflyMaterial);
       firefly.position.set(x, y, z);
       
-      // Create bright point light for each firefly - main light source
-      const light = new this.THREE.PointLight(fireflyColor, 1.2, 20);
+      // Create bright point light for each firefly - main light source with extended range
+      const light = new this.THREE.PointLight(fireflyColor, 1.2, 100); // Increased from 20 to 100
       light.position.copy(firefly.position);
       
       // Create smaller glow effect with reduced geometry complexity

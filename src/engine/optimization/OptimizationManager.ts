@@ -4,10 +4,40 @@ import { ResourceManager } from '../utils/ResourceManager';
 
 /**
  * Global optimization manager that handles frustum culling, distance-based LOD,
- * and asset streaming for the entire game engine.
+ * device-specific optimizations, and asset streaming for the entire game engine.
  * 
  * Integrates with existing Performance, ResourceManager, and AssetLoader systems.
+ * Automatically detects mobile devices and applies appropriate optimization profiles.
  */
+
+// Quality levels for different device types
+export enum OptimizationLevel {
+  MOBILE_LOW = 'mobile_low',
+  MOBILE_MEDIUM = 'mobile_medium', 
+  MOBILE_HIGH = 'mobile_high',
+  DESKTOP_MEDIUM = 'desktop_medium',
+  DESKTOP_HIGH = 'desktop_high'
+}
+
+interface OptimizationConfig {
+  maxRenderDistance: number;
+  unloadDistance: number;
+  preloadDistance: number;
+  lodDistances: number[];
+  checkInterval: number;
+  maxObjectsPerFrame: number;
+  fadeDistance: number;
+  fadeSpeed: number;
+}
+
+interface DeviceCapabilities {
+  isMobile: boolean;
+  isLowEnd: boolean;
+  screenSize: { width: number; height: number };
+  pixelRatio: number;
+  estimatedGPUTier: 'low' | 'medium' | 'high';
+  supportsWebGL2: boolean;
+}
 export class OptimizationManager {
   private static instance: OptimizationManager | null = null;
   
@@ -23,17 +53,66 @@ export class OptimizationManager {
   private managedObjects: Map<string, ManagedObject> = new Map();
   private objectsToCheck: THREE.Object3D[] = [];
   
-  // Configuration
-  private readonly config = {
-    maxRenderDistance: 200,
-    unloadDistance: 250,
-    preloadDistance: 150,
-    lodDistances: [50, 100, 150], // Close, Medium, Far
-    checkInterval: 100, // ms between optimization checks
-    maxObjectsPerFrame: 50, // Limit processing per frame
-    fadeDistance: 30, // Distance over which objects fade in/out
-    fadeSpeed: 2.0 // Speed of fade animation (multiplier)
+  // Device capabilities and optimization level
+  private deviceCapabilities: DeviceCapabilities | null = null;
+  private currentOptimizationLevel: OptimizationLevel = OptimizationLevel.DESKTOP_HIGH;
+  
+  // Configuration profiles for different optimization levels
+  private readonly configProfiles: Record<OptimizationLevel, OptimizationConfig> = {
+    [OptimizationLevel.MOBILE_LOW]: {
+      maxRenderDistance: 50,
+      unloadDistance: 60,
+      preloadDistance: 40,
+      lodDistances: [15, 25, 35],
+      checkInterval: 200,
+      maxObjectsPerFrame: 10,
+      fadeDistance: 10,
+      fadeSpeed: 3.0
+    },
+    [OptimizationLevel.MOBILE_MEDIUM]: {
+      maxRenderDistance: 100,
+      unloadDistance: 120,
+      preloadDistance: 80,
+      lodDistances: [25, 50, 75],
+      checkInterval: 150,
+      maxObjectsPerFrame: 20,
+      fadeDistance: 15,
+      fadeSpeed: 2.5
+    },
+    [OptimizationLevel.MOBILE_HIGH]: {
+      maxRenderDistance: 150,
+      unloadDistance: 180,
+      preloadDistance: 120,
+      lodDistances: [40, 80, 120],
+      checkInterval: 120,
+      maxObjectsPerFrame: 30,
+      fadeDistance: 20,
+      fadeSpeed: 2.0
+    },
+    [OptimizationLevel.DESKTOP_MEDIUM]: {
+      maxRenderDistance: 200,
+      unloadDistance: 250,
+      preloadDistance: 150,
+      lodDistances: [50, 100, 150],
+      checkInterval: 100,
+      maxObjectsPerFrame: 40,
+      fadeDistance: 25,
+      fadeSpeed: 2.0
+    },
+    [OptimizationLevel.DESKTOP_HIGH]: {
+      maxRenderDistance: 300,
+      unloadDistance: 350,
+      preloadDistance: 250,
+      lodDistances: [75, 150, 225],
+      checkInterval: 80,
+      maxObjectsPerFrame: 50,
+      fadeDistance: 30,
+      fadeSpeed: 1.5
+    }
   };
+  
+  // Current active configuration
+  private config: OptimizationConfig;
   
   private lastOptimizationCheck = 0;
   private optimizationStats = {
@@ -44,7 +123,10 @@ export class OptimizationManager {
     memoryFreed: 0
   };
   
-  private constructor() {}
+  private constructor() {
+    // Initialize with desktop high quality by default
+    this.config = this.configProfiles[OptimizationLevel.DESKTOP_HIGH];
+  }
   
   /**
    * Get the singleton instance
@@ -64,7 +146,174 @@ export class OptimizationManager {
     this.scene = scene;
     this.renderer = renderer;
     
-    console.log('🚀 OptimizationManager initialized');
+    // Detect device capabilities and set appropriate optimization level
+    this.detectDeviceCapabilities();
+    this.autoSetOptimizationLevel();
+    
+    console.log('🚀 OptimizationManager initialized with level:', this.currentOptimizationLevel);
+  }
+
+  /**
+   * Detect device capabilities for optimization decisions
+   */
+  private detectDeviceCapabilities(): void {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const screenWidth = window.screen.width;
+    const screenHeight = window.screen.height;
+    const pixelRatio = window.devicePixelRatio || 1;
+    
+    // Estimate GPU tier based on device characteristics
+    let estimatedGPUTier: 'low' | 'medium' | 'high' = 'medium';
+    
+    if (isMobile) {
+      // Mobile GPU estimation based on screen resolution and pixel ratio
+      const totalPixels = screenWidth * screenHeight * pixelRatio;
+      if (totalPixels < 2000000) { // Lower resolution mobile devices
+        estimatedGPUTier = 'low';
+      } else if (totalPixels > 4000000) { // High-end mobile devices
+        estimatedGPUTier = 'high';
+      }
+    } else {
+      // Desktop typically has better GPUs
+      estimatedGPUTier = 'high';
+    }
+    
+    // Check for WebGL2 support
+    const canvas = document.createElement('canvas');
+    const gl2 = canvas.getContext('webgl2');
+    const supportsWebGL2 = !!gl2;
+    
+    // Detect low-end devices
+    const isLowEnd = isMobile && (
+      screenWidth < 1080 || 
+      pixelRatio < 2 || 
+      estimatedGPUTier === 'low' ||
+      navigator.hardwareConcurrency < 4
+    );
+    
+    this.deviceCapabilities = {
+      isMobile,
+      isLowEnd,
+      screenSize: { width: screenWidth, height: screenHeight },
+      pixelRatio,
+      estimatedGPUTier,
+      supportsWebGL2
+    };
+    
+    console.log('📱 Device capabilities detected:', this.deviceCapabilities);
+  }
+
+  /**
+   * Automatically set optimization level based on device capabilities
+   */
+  private autoSetOptimizationLevel(): void {
+    if (!this.deviceCapabilities) return;
+    
+    const { isMobile, isLowEnd, estimatedGPUTier } = this.deviceCapabilities;
+    
+    if (isMobile) {
+      if (isLowEnd || estimatedGPUTier === 'low') {
+        this.setOptimizationLevel(OptimizationLevel.MOBILE_LOW);
+      } else if (estimatedGPUTier === 'high') {
+        this.setOptimizationLevel(OptimizationLevel.MOBILE_HIGH);
+      } else {
+        this.setOptimizationLevel(OptimizationLevel.MOBILE_MEDIUM);
+      }
+    } else {
+      // Desktop - could add more sophisticated detection here
+      this.setOptimizationLevel(OptimizationLevel.DESKTOP_HIGH);
+    }
+  }
+
+  /**
+   * Set the optimization level and apply corresponding configuration
+   */
+  public setOptimizationLevel(level: OptimizationLevel): void {
+    this.currentOptimizationLevel = level;
+    this.config = this.configProfiles[level];
+    
+    console.log(`🎛️ Optimization level set to: ${level}`, this.config);
+    
+    // Emit event for other systems to react to quality changes
+    if (typeof window !== 'undefined' && window.dispatchEvent) {
+      window.dispatchEvent(new CustomEvent('optimizationLevelChanged', { 
+        detail: { level, config: this.config, deviceCapabilities: this.deviceCapabilities }
+      }));
+    }
+  }
+
+  /**
+   * Get current optimization level
+   */
+  public getOptimizationLevel(): OptimizationLevel {
+    return this.currentOptimizationLevel;
+  }
+
+  /**
+   * Get device capabilities
+   */
+  public getDeviceCapabilities(): DeviceCapabilities | null {
+    return this.deviceCapabilities;
+  }
+
+  /**
+   * Get current optimization configuration
+   */
+  public getOptimizationConfig(): OptimizationConfig {
+    return { ...this.config };
+  }
+
+  /**
+   * Get optimization statistics for debugging
+   */
+  public getOptimizationStats() {
+    return {
+      ...this.optimizationStats,
+      managedObjectsCount: this.managedObjects.size,
+      objectsToCheckCount: this.objectsToCheck.length,
+      currentOptimizationLevel: this.currentOptimizationLevel,
+      managedObjectsList: Array.from(this.managedObjects.values()).map(obj => ({
+        name: obj.object.name,
+        type: obj.type,
+        priority: obj.priority,
+        isVisible: obj.isVisible,
+        currentOpacity: obj.currentOpacity,
+        distanceToCamera: obj.distanceToCamera
+      }))
+    };
+  }
+
+  /**
+   * Disable optimization system (for debugging)
+   */
+  public disableOptimization(): void {
+    console.log('🚫 Disabling optimization system for debugging');
+    
+    // Make all managed objects fully visible
+    this.managedObjects.forEach(managedObject => {
+      managedObject.object.visible = true;
+      if (managedObject.object instanceof THREE.Mesh && managedObject.object.material) {
+        const material = managedObject.object.material as THREE.Material;
+        if ('opacity' in material) {
+          material.opacity = 1.0;
+          material.transparent = false;
+        }
+      }
+      managedObject.currentOpacity = 1.0;
+      managedObject.isVisible = true;
+    });
+    
+    // Clear managed objects
+    this.managedObjects.clear();
+    this.objectsToCheck = [];
+  }
+
+  /**
+   * Enable optimization system
+   */
+  public enableOptimization(): void {
+    console.log('✅ Enabling optimization system');
+    // Optimization will resume on next update cycle
   }
   
   /**
@@ -79,11 +328,27 @@ export class OptimizationManager {
       // Skip if already managed
       if (this.objectsToCheck.includes(object)) return;
       
-      // Skip system objects (cameras, lights, etc.)
-      if (object.type === 'Camera' || object.type === 'Light') return;
+      // NEVER scan lighting objects - they are essential for scene visibility
+      if (object instanceof THREE.Light || 
+          object instanceof THREE.DirectionalLight || 
+          object instanceof THREE.AmbientLight ||
+          object instanceof THREE.PointLight ||
+          object instanceof THREE.SpotLight ||
+          object.isLight ||
+          object.type === 'Light') {
+        return;
+      }
+      
+      // Skip system objects (cameras, etc.)
+      if (object.type === 'Camera') return;
       
       // Skip level groups and high-level containers
       if (object.name.includes('Level_') || object.name.includes('Group')) return;
+      
+      // NEVER optimize essential objects - double check here
+      if (this.isEssentialObject(object)) {
+        return;
+      }
       
       // Include vegetation, decorations, and similar objects
       if (this.shouldOptimizeObject(object)) {
@@ -96,19 +361,128 @@ export class OptimizationManager {
    * Determine if an object should be optimized
    */
   private shouldOptimizeObject(object: THREE.Object3D): boolean {
-    // Objects with many children (like grass/vegetation instances)
-    if (object instanceof THREE.Mesh || object instanceof THREE.Points) {
+    // NEVER optimize lighting objects - critical for scene visibility
+    if (object instanceof THREE.Light || 
+        object instanceof THREE.DirectionalLight || 
+        object instanceof THREE.AmbientLight ||
+        object instanceof THREE.PointLight ||
+        object instanceof THREE.SpotLight ||
+        object.type === 'Light') {
+      return false;
+    }
+    
+    // NEVER optimize essential game objects
+    if (this.isEssentialObject(object)) {
+      return false;
+    }
+    
+    // OPTIMIZE ALL OTHER OBJECTS - this is the key change
+    // Only exclude cameras and other system objects
+    if (object instanceof THREE.Camera) {
+      return false;
+    }
+    
+    // Optimize all meshes, groups, and other renderable objects
+    if (object instanceof THREE.Mesh || 
+        object instanceof THREE.Group || 
+        object instanceof THREE.Points ||
+        object instanceof THREE.Line ||
+        object instanceof THREE.Sprite) {
       return true;
     }
     
-    // Groups with vegetation/decoration naming patterns
-    if (object.name.match(/(grass|flower|tree|bush|vegetation|decoration)/i)) {
+    return false;
+  }
+
+  /**
+   * Check if an object is essential and should never be optimized
+   */
+  private isEssentialObject(object: THREE.Object3D): boolean {
+    const name = object.name.toLowerCase();
+    
+    // NEVER optimize lighting objects - this is critical for scene visibility
+    if (object instanceof THREE.Light || 
+        object instanceof THREE.DirectionalLight || 
+        object instanceof THREE.AmbientLight ||
+        object instanceof THREE.PointLight ||
+        object instanceof THREE.SpotLight ||
+        name.match(/(light|lamp|sun|moon|ambient|directional|point|spot)/i)) {
       return true;
     }
     
-    // Objects beyond a certain distance from origin (scattered decorations)
-    const distance = object.position.length();
-    if (distance > 20 && object instanceof THREE.Mesh) {
+    // NEVER optimize Groups that contain lights - this is the core fix
+    if (object instanceof THREE.Group) {
+      let containsLights = false;
+      object.traverse((child) => {
+        if (child instanceof THREE.Light || 
+            child instanceof THREE.DirectionalLight || 
+            child instanceof THREE.AmbientLight ||
+            child instanceof THREE.PointLight ||
+            child instanceof THREE.SpotLight) {
+          containsLights = true;
+        }
+      });
+      if (containsLights) {
+        return true;
+      }
+    }
+    
+    // NEVER optimize fireflies - they provide essential lighting
+    if (name.match(/fireflies/i) || name.match(/firefly/i)) {
+      return true;
+    }
+    
+    // Essential terrain and environment objects
+    if (name.match(/(ground|terrain|floor|base|platform|skybox|sky|water|pool)/i)) {
+      return true;
+    }
+    
+    // Essential structural objects
+    if (name.match(/(wall|building|structure|foundation|observatory|main)/i)) {
+      return true;
+    }
+    
+    // Level containers and main groups
+    if (name.match(/(level|group|container|scene|root)/i)) {
+      return true;
+    }
+    
+    // Camera and control objects
+    if (object instanceof THREE.Camera || name.match(/(camera|control|helper)/i)) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  /**
+   * Check if a mesh is a small decoration that can be optimized
+   */
+  private isDecorationMesh(object: THREE.Mesh): boolean {
+    const name = object.name.toLowerCase();
+    
+    // NEVER optimize essential objects, even if they're meshes
+    if (name.match(/(ground|terrain|floor|water|main|base|primary|skybox|sky)/i)) {
+      return false;
+    }
+    
+    // Get bounding box to check object size
+    const bbox = new THREE.Box3().setFromObject(object);
+    const size = bbox.getSize(new THREE.Vector3());
+    const maxDimension = Math.max(size.x, size.y, size.z);
+    
+    // Don't optimize very large objects (likely terrain/buildings)
+    if (maxDimension > 50) {
+      return false;
+    }
+    
+    // Include known decoration patterns
+    if (name.match(/(prop|decoration|ornament|detail|small|rock|stone|tree|bush|flower|grass)/i)) {
+      return true;
+    }
+    
+    // For unnamed or generically named objects, optimize them if they're small-medium size
+    if (maxDimension < 30) {
       return true;
     }
     
@@ -119,9 +493,26 @@ export class OptimizationManager {
    * Automatically register an object (used by scene scanning)
    */
   private autoRegisterObject(object: THREE.Object3D): void {
+    // FINAL SAFETY CHECK - NEVER register lighting objects
+    if (object instanceof THREE.Light || 
+        object instanceof THREE.DirectionalLight || 
+        object instanceof THREE.AmbientLight ||
+        object instanceof THREE.PointLight ||
+        object instanceof THREE.SpotLight ||
+        object.isLight ||
+        object.type === 'Light') {
+      console.warn(`🚨 Attempted to register lighting object for optimization: "${object.name}" - BLOCKED`);
+      return;
+    }
+    
     const id = this.generateObjectId(object);
     const type = this.inferObjectType(object);
     const priority = this.inferObjectPriority(object);
+    
+    // Debug logging disabled - system is working properly
+    // if (this.deviceCapabilities?.isMobile) {
+    //   console.log(`🎛️ Registering object for optimization: "${object.name}" (${object.constructor.name}) - Type: ${type}, Priority: ${priority}`);
+    // }
     
     const managedObject: ManagedObject = {
       object,
@@ -282,8 +673,21 @@ export class OptimizationManager {
     const distance = this.camera.position.distanceTo(object.position);
     managedObject.distanceToCamera = distance;
     
-    // Check if object is within frustum
-    const isInFrustum = this.frustum.intersectsObject(object);
+    // Check if object is within frustum - with safety check for invalid geometry
+    let isInFrustum = true; // Default to visible if we can't check
+    try {
+      // Only check frustum if object has valid geometry/boundingSphere
+      if (object.geometry && object.geometry.boundingSphere) {
+        isInFrustum = this.frustum.intersectsObject(object);
+      } else if (object instanceof THREE.Group && object.children.length > 0) {
+        // For groups, check if any children are in frustum
+        isInFrustum = this.frustum.intersectsObject(object);
+      }
+    } catch (error) {
+      // If frustum check fails, assume object is visible to be safe
+      console.warn('Frustum check failed for object:', object.name || 'unnamed', error);
+      isInFrustum = true;
+    }
     
     // Make optimization decisions
     this.applyOptimization(managedObject, distance, isInFrustum);
@@ -318,11 +722,13 @@ export class OptimizationManager {
     this.applySmoothFade(managedObject, targetOpacity, shouldBeVisible);
     
     // Handle distance-based unloading (only when fully faded)
-    if (managedObject.isLoaded && !shouldBeLoaded && managedObject.currentOpacity <= 0.01) {
-      this.unloadObject(managedObject);
-    } else if (!managedObject.isLoaded && shouldBeLoaded && distance <= this.config.preloadDistance) {
-      this.loadObject(managedObject);
-    }
+    // DISABLED: Don't actually unload objects since they don't have proper reload callbacks
+    // This prevents the issue where objects fade away and don't come back
+    // if (managedObject.isLoaded && !shouldBeLoaded && managedObject.currentOpacity <= 0.01) {
+    //   this.unloadObject(managedObject);
+    // } else if (!managedObject.isLoaded && shouldBeLoaded && distance <= this.config.preloadDistance) {
+    //   this.loadObject(managedObject);
+    // }
     
     // Handle LOD switching
     if (managedObject.lodVariants && managedObject.lodVariants.length > 0) {
@@ -337,6 +743,11 @@ export class OptimizationManager {
     // Initialize opacity if not set
     if (managedObject.currentOpacity === undefined) {
       managedObject.currentOpacity = managedObject.object.visible ? 1.0 : 0.0;
+    }
+    
+    // Debug logging for mobile optimization issues
+    if (this.deviceCapabilities?.isMobile && targetOpacity < 0.5) {
+      console.log(`🌫️ Fading object: "${managedObject.object.name}" to opacity ${targetOpacity.toFixed(2)}`);
     }
     
     // Smoothly interpolate to target opacity
@@ -469,8 +880,8 @@ export class OptimizationManager {
    * Report optimization statistics
    */
   private reportOptimizationStats(): void {
-    // Only log detailed stats occasionally to avoid console spam
-    if (Date.now() % 10000 < this.config.checkInterval) {
+    // Only log detailed stats very rarely to avoid console spam
+    if (Date.now() % 30000 < this.config.checkInterval) {
       const stats = {
         ...this.optimizationStats,
         managedObjectsCount: this.managedObjects.size,
@@ -480,7 +891,10 @@ export class OptimizationManager {
           .filter(mo => mo.isLoaded).length
       };
       
-      console.log('📊 OptimizationManager Stats:', stats);
+      // Only log if there are significant changes or first time
+      if (this.managedObjects.size > 0) {
+        console.log('📊 OptimizationManager Stats:', stats);
+      }
     }
   }
   
