@@ -367,6 +367,7 @@ export class OptimizationManager {
         object instanceof THREE.AmbientLight ||
         object instanceof THREE.PointLight ||
         object instanceof THREE.SpotLight ||
+        object.isLight ||
         object.type === 'Light') {
       return false;
     }
@@ -376,19 +377,32 @@ export class OptimizationManager {
       return false;
     }
     
-    // OPTIMIZE ALL OTHER OBJECTS - this is the key change
-    // Only exclude cameras and other system objects
-    if (object instanceof THREE.Camera) {
-      return false;
+    // Objects with many children (like grass/vegetation instances) - but NEVER fireflies
+    if (object instanceof THREE.Points && object.name.match(/(grass|flower|particle)/i) && !object.name.match(/fireflies/i)) {
+      return true;
     }
     
-    // Optimize all meshes, groups, and other renderable objects
-    if (object instanceof THREE.Mesh || 
-        object instanceof THREE.Group || 
-        object instanceof THREE.Points ||
-        object instanceof THREE.Line ||
-        object instanceof THREE.Sprite) {
+    // Groups with vegetation/decoration naming patterns - but NEVER fireflies
+    if (object.name.match(/(grass|flower|tree|bush|vegetation|decoration)/i) && !object.name.match(/fireflies/i)) {
       return true;
+    }
+    
+    // Optimize most meshes that are far from origin (but not essential objects)
+    const distance = object.position.length();
+    if (distance > 30 && object instanceof THREE.Mesh) {
+      return this.isDecorationMesh(object);
+    }
+    
+    // Also optimize Groups that contain meshes and are far away (but not essential groups)
+    if (distance > 50 && object instanceof THREE.Group && object.children.length > 0) {
+      // Check if this group contains any meshes
+      let containsMeshes = false;
+      object.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          containsMeshes = true;
+        }
+      });
+      return containsMeshes;
     }
     
     return false;
@@ -610,38 +624,34 @@ export class OptimizationManager {
   }
   
   /**
-   * Main optimization update loop - call this every frame
+   * Simple distance-based fading - no complex optimizations
    */
   public update(deltaTime: number): void {
     if (!this.camera || !this.scene) return;
-    
-    const now = Date.now();
-    
-    // Only run optimization checks at intervals to avoid performance impact
-    if (now - this.lastOptimizationCheck < this.config.checkInterval) {
-      return;
-    }
-    
-    this.lastOptimizationCheck = now;
-    
-    // Periodically scan for new objects to optimize (every 5 seconds)
-    if (now % 5000 < this.config.checkInterval) {
+
+    this.lastOptimizationCheck += deltaTime * 1000; // Convert to ms
+
+    // Periodically scan the scene for new objects to manage
+    if (this.lastOptimizationCheck > this.config.checkInterval) {
       this.scanSceneForOptimization();
+      this.lastOptimizationCheck = 0;
     }
-    
-    // Update frustum for culling
+
+    // Update the camera frustum for culling checks
     this.updateFrustum();
-    
-    // Process objects in batches to avoid frame drops
-    const objectsToProcess = Math.min(this.config.maxObjectsPerFrame, this.objectsToCheck.length);
-    
-    for (let i = 0; i < objectsToProcess; i++) {
-      const object = this.objectsToCheck[i];
-      this.optimizeObject(object);
+
+    // Process a batch of objects each frame to avoid performance spikes
+    const objectsToProcess = Array.from(this.managedObjects.values());
+    const batchSize = Math.min(objectsToProcess.length, this.config.maxObjectsPerFrame);
+
+    for (let i = 0; i < batchSize; i++) {
+      // Cycle through objects to ensure all get updated over time
+      const objectIndex = (Math.floor(this.lastOptimizationCheck / 10) + i) % objectsToProcess.length;
+      const managedObject = objectsToProcess[objectIndex];
+      if (managedObject) {
+        this.optimizeObject(managedObject.object);
+      }
     }
-    
-    // Report performance metrics
-    this.reportOptimizationStats();
   }
   
   /**
@@ -673,21 +683,8 @@ export class OptimizationManager {
     const distance = this.camera.position.distanceTo(object.position);
     managedObject.distanceToCamera = distance;
     
-    // Check if object is within frustum - with safety check for invalid geometry
-    let isInFrustum = true; // Default to visible if we can't check
-    try {
-      // Only check frustum if object has valid geometry/boundingSphere
-      if (object.geometry && object.geometry.boundingSphere) {
-        isInFrustum = this.frustum.intersectsObject(object);
-      } else if (object instanceof THREE.Group && object.children.length > 0) {
-        // For groups, check if any children are in frustum
-        isInFrustum = this.frustum.intersectsObject(object);
-      }
-    } catch (error) {
-      // If frustum check fails, assume object is visible to be safe
-      console.warn('Frustum check failed for object:', object.name || 'unnamed', error);
-      isInFrustum = true;
-    }
+    // Check if object is within frustum
+    const isInFrustum = this.frustum.intersectsObject(object);
     
     // Make optimization decisions
     this.applyOptimization(managedObject, distance, isInFrustum);
