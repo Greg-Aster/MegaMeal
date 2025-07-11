@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GameObject } from '../../engine/core/GameObject';
+import { Engine } from '../../engine/core/Engine';
 import { AssetLoader } from '../../engine/resources/AssetLoader';
 
 /**
@@ -8,6 +9,7 @@ import { AssetLoader } from '../../engine/resources/AssetLoader';
  */
 export class ObservatoryEnvironment extends GameObject {
   private scene: THREE.Scene;
+  private engine: Engine;
   private levelGroup: THREE.Group;
   private assetLoader: AssetLoader;
   private THREE: any;
@@ -50,10 +52,11 @@ export class ObservatoryEnvironment extends GameObject {
   private readonly skyboxImageUrl = '/assets/hdri/skywip4.webp';
   private readonly gridRadius = 940;
   
-  constructor(THREE: any, scene: THREE.Scene, levelGroup: THREE.Group, assetLoader: AssetLoader) {
+  constructor(THREE: any, engine: Engine, levelGroup: THREE.Group, assetLoader: AssetLoader) {
     super();
     this.THREE = THREE;
-    this.scene = scene;
+    this.engine = engine;
+    this.scene = engine.getScene();
     this.levelGroup = levelGroup;
     this.assetLoader = assetLoader;
   }
@@ -404,10 +407,11 @@ export class ObservatoryEnvironment extends GameObject {
     const groundTexture = this.createTerrainTexture();
     
     // Create ground material that responds to lighting
-    const groundMaterial = new this.THREE.MeshLambertMaterial({ 
+    // Use the new global material factory to get the correct style
+    const groundMaterial = this.engine.getMaterials().createPBRMaterial({ 
       map: groundTexture,
       color: 0x556633
-    });
+    }) as THREE.Material;
     
     // Create ground mesh
     this.groundMesh = new this.THREE.Mesh(groundGeometry, groundMaterial);

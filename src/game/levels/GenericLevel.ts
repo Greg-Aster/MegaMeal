@@ -205,13 +205,20 @@ export class GenericLevel extends BaseLevel {
       
       // Create component instance with appropriate constructor pattern
       let component;
-      if (systemConfig.type === 'ObservatoryEnvironment' || systemConfig.type === 'RoomFactory') {
-        // ObservatoryEnvironment and RoomFactory have a different constructor signature
+      if (systemConfig.type === 'ObservatoryEnvironment') {
+        // ObservatoryEnvironment expects the full engine instance
         component = new componentClass(
           this.THREE,
-          this.scene,
+          this.engine,
           this.levelGroup,
           this.assetLoader
+        );
+      } else if (systemConfig.type === 'RoomFactory') {
+        // RoomFactory has its own specific constructor signature
+        component = new componentClass(
+          this.THREE,
+          this.assetLoader,
+          this.engine.getMaterials() // It needs the Materials factory from the engine
         );
       } else {
         // Standard component constructor pattern
