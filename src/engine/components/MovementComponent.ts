@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { EventBus } from '../core/EventBus';
-import { InputManager } from '../input/InputManager';
+// InputManager removed - now using EventBus directly for mobile controls
 import { PhysicsWorld } from '../physics/PhysicsWorld';
 import type { MovementConfig, LevelMovementConfig, MovementState } from './MovementTypes';
 
@@ -13,7 +13,7 @@ import type { MovementConfig, LevelMovementConfig, MovementState } from './Movem
 export class MovementComponent {
   private camera: THREE.PerspectiveCamera;
   private eventBus: EventBus;
-  private inputManager: InputManager;
+  // inputManager removed - using EventBus directly
   private physicsWorld: PhysicsWorld | null;
   
   // Configurations
@@ -35,21 +35,24 @@ export class MovementComponent {
   private dragStartHandler: () => void = () => {};
   private dragMoveHandler: (data: any) => void = () => {};
   private dragEndHandler: () => void = () => {};
+  private mobileMovementHandler: (data: { x: number; z: number }) => void = () => {};
+  private mobileActionHandler: (action: string) => void = () => {};
+  private desktopMovementHandler: (data: { x: number; z: number }) => void = () => {};
+  private desktopActionHandler: (action: string) => void = () => {};
   
-  // Mobile virtual controls state (from UniversalInputManager via EventBus)
+  // Virtual controls state (from UniversalInputManager via EventBus)
   private virtualMovement = { x: 0, y: 0, z: 0 };
   private virtualActions: { [action: string]: boolean } = {};
   
   constructor(
     camera: THREE.PerspectiveCamera,
     eventBus: EventBus,
-    inputManager: InputManager,
     physicsWorld: PhysicsWorld | null = null,
     config: Partial<MovementConfig> = {}
   ) {
     this.camera = camera;
     this.eventBus = eventBus;
-    this.inputManager = inputManager;
+    // inputManager removed - using EventBus directly
     this.physicsWorld = physicsWorld;
     
     // Default configuration
@@ -173,30 +176,18 @@ export class MovementComponent {
   }
   
   /**
-   * Handle horizontal movement (WASD + camera-relative)
+   * Handle horizontal movement (mobile and desktop controls via EventBus)
    */
   private handleHorizontalMovement(deltaTime: number): void {
-    // Get input from keyboard or virtual controls
-    const isForwardPressed = this.inputManager.isActionPressed('forward');
-    const isBackwardPressed = this.inputManager.isActionPressed('backward');
-    const isLeftPressed = this.inputManager.isActionPressed('left');
-    const isRightPressed = this.inputManager.isActionPressed('right');
-    
-    // Get mobile virtual movement (from EventBus or InputManager)
-    const eventBusMovement = this.virtualMovement;
-    const inputManagerMovement = this.inputManager.getMovementVector();
-    
-    // Prefer EventBus movement (from UniversalInputManager) over InputManager
-    const movementVector = (eventBusMovement.x !== 0 || eventBusMovement.z !== 0) 
-      ? eventBusMovement 
-      : inputManagerMovement;
+    // Get virtual movement from EventBus (UniversalInputManager handles both mobile and desktop)
+    const movementVector = this.virtualMovement;
     const hasVirtualMovement = movementVector.x !== 0 || movementVector.z !== 0;
     
     // Calculate movement direction relative to camera
     let deltaX = 0;
     let deltaZ = 0;
     
-    if (isForwardPressed || isBackwardPressed || isLeftPressed || isRightPressed || hasVirtualMovement) {
+    if (hasVirtualMovement) {
       // Get camera's forward and right vectors
       const cameraMatrix = this.camera.matrixWorld;
       const forward = new THREE.Vector3();
@@ -212,20 +203,10 @@ export class MovementComponent {
       forward.normalize();
       right.normalize();
       
-      // Calculate movement direction
+      // Calculate movement direction using mobile virtual movement
       const moveDirection = new THREE.Vector3();
-      
-      if (hasVirtualMovement) {
-        // Mobile virtual movement
-        moveDirection.add(right.clone().multiplyScalar(movementVector.x));
-        moveDirection.add(forward.clone().multiplyScalar(-movementVector.z)); // Negative Z for forward
-      } else {
-        // Desktop keyboard movement
-        if (isForwardPressed) moveDirection.add(forward);
-        if (isBackwardPressed) moveDirection.add(forward.clone().multiplyScalar(-1));
-        if (isLeftPressed) moveDirection.add(right.clone().multiplyScalar(-1));
-        if (isRightPressed) moveDirection.add(right);
-      }
+      moveDirection.add(right.clone().multiplyScalar(movementVector.x));
+      moveDirection.add(forward.clone().multiplyScalar(-movementVector.z)); // Negative Z for forward
       
       // Apply movement with speed and time scaling
       moveDirection.multiplyScalar(this.config.moveSpeed * deltaTime);
@@ -242,8 +223,8 @@ export class MovementComponent {
    * Handle vertical movement (gravity, jumping)
    */
   private handleVerticalMovement(deltaTime: number): void {
-    // Handle jumping (check both InputManager and virtual actions from EventBus)
-    const isJumpPressed = this.inputManager.isActionPressed('jump') || this.virtualActions['jump'];
+    // Handle jumping (mobile and desktop controls via EventBus)
+    const isJumpPressed = this.virtualActions['jump'];
     
     if (isJumpPressed && this.state.canJump && this.state.isGrounded) {
       const jumpVelocity = Math.sqrt(2 * Math.abs(this.config.gravity) * this.config.jumpHeight);
@@ -300,7 +281,7 @@ export class MovementComponent {
     
     this.dragMoveHandler = (data) => {
       if (isDragging && data.deltaX !== undefined && data.deltaY !== undefined) {
-        // Sensitivity is now handled by UniversalInputManager
+        // Sensitivity is already applied by UniversalInputManager
         const deltaX = data.deltaX;
         const deltaY = data.deltaY;
         
@@ -333,21 +314,43 @@ export class MovementComponent {
    * Setup event listeners
    */
   private setupEventListeners(): void {
-    // Listen for mobile movement events from UniversalInputManager
-    this.eventBus.on('mobile.movement', (data: { x: number; z: number }) => {
+    // Setup mobile movement handler
+    this.mobileMovementHandler = (data: { x: number; z: number }) => {
       this.virtualMovement.x = data.x;
       this.virtualMovement.z = data.z;
-    });
+    };
     
-    // Listen for mobile action events from UniversalInputManager
-    this.eventBus.on('mobile.action', (action: string) => {
+    // Setup mobile action handler
+    this.mobileActionHandler = (action: string) => {
       this.virtualActions[action] = true;
       
       // Clear action after a short delay to simulate button press
       setTimeout(() => {
         this.virtualActions[action] = false;
       }, 100);
-    });
+    };
+    
+    // Setup desktop movement handler
+    this.desktopMovementHandler = (data: { x: number; z: number }) => {
+      this.virtualMovement.x = data.x;
+      this.virtualMovement.z = data.z;
+    };
+    
+    // Setup desktop action handler
+    this.desktopActionHandler = (action: string) => {
+      this.virtualActions[action] = true;
+      
+      // Clear action after a short delay to simulate button press
+      setTimeout(() => {
+        this.virtualActions[action] = false;
+      }, 100);
+    };
+    
+    // Listen for events from UniversalInputManager
+    this.eventBus.on('mobile.movement', this.mobileMovementHandler);
+    this.eventBus.on('mobile.action', this.mobileActionHandler);
+    this.eventBus.on('desktop.movement', this.desktopMovementHandler);
+    this.eventBus.on('desktop.action', this.desktopActionHandler);
   }
   
   /**
@@ -420,8 +423,10 @@ export class MovementComponent {
     this.eventBus.off('input:drag:start', this.dragStartHandler);
     this.eventBus.off('input:drag:move', this.dragMoveHandler);
     this.eventBus.off('input:drag:end', this.dragEndHandler);
-    this.eventBus.off('mobile.movement');
-    this.eventBus.off('mobile.action');
+    this.eventBus.off('mobile.movement', this.mobileMovementHandler);
+    this.eventBus.off('mobile.action', this.mobileActionHandler);
+    this.eventBus.off('desktop.movement', this.desktopMovementHandler);
+    this.eventBus.off('desktop.action', this.desktopActionHandler);
     
     this.isInitialized = false;
     console.log('✅ Movement Component disposed');

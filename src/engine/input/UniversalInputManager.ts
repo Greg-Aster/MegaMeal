@@ -24,6 +24,9 @@ export class UniversalInputManager {
   private movementVector = { x: 0, y: 0, z: 0 };
   private actionStates: { [action: string]: boolean } = {};
   
+  // Keyboard state
+  private keyStates: { [key: string]: boolean } = {};
+  
   // Sensitivity settings
   private mouseSensitivity = 0.002;
   private touchSensitivity = 0.0005; // Much lower for mobile
@@ -53,11 +56,17 @@ export class UniversalInputManager {
     this.handleTouchStart = this.handleTouchStart.bind(this);
     this.handleTouchEnd = this.handleTouchEnd.bind(this);
     this.handleTouchMove = this.handleTouchMove.bind(this);
+    this.handleKeyDown = this.handleKeyDown.bind(this);
+    this.handleKeyUp = this.handleKeyUp.bind(this);
 
     // Desktop events
     this.gameContainer.addEventListener('mousedown', this.handleMouseDown);
     this.gameContainer.addEventListener('mouseup', this.handleMouseUp);
     this.gameContainer.addEventListener('mousemove', this.handleMouseMove);
+    
+    // Keyboard events
+    window.addEventListener('keydown', this.handleKeyDown);
+    window.addEventListener('keyup', this.handleKeyUp);
 
     // Mobile events
     this.gameContainer.addEventListener('touchstart', this.handleTouchStart, { passive: true });
@@ -113,11 +122,15 @@ export class UniversalInputManager {
     // Detect if we're dragging
     if (event.buttons === 1 && distanceMoved > this.dragThreshold) {
       this.isDragging = true;
+      // Apply mouse sensitivity to movement deltas
+      const deltaX = event.movementX * this.mouseSensitivity;
+      const deltaY = event.movementY * this.mouseSensitivity;
+      
       this.eventBus.emit('input:drag:move', { 
         x: event.clientX, 
         y: event.clientY,
-        deltaX: event.movementX,
-        deltaY: event.movementY,
+        deltaX: deltaX,
+        deltaY: deltaY,
         button: 0 
       });
     } else if (!this.isDragging) {
@@ -230,6 +243,50 @@ export class UniversalInputManager {
   private emitTap(x: number, y: number): void {
     this.eventBus.emit('input:tap', { x, y });
   }
+
+  private handleKeyDown(event: KeyboardEvent): void {
+    // Prevent default for movement keys to avoid page scrolling
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space'].includes(event.code)) {
+      event.preventDefault();
+    }
+    
+    this.keyStates[event.code] = true;
+    
+    // Handle specific actions immediately
+    if (event.code === 'Space') {
+      this.eventBus.emit('desktop.action', 'jump');
+    }
+    
+    // Update movement vector based on current key states
+    this.updateMovementFromKeys();
+  }
+
+  private handleKeyUp(event: KeyboardEvent): void {
+    this.keyStates[event.code] = false;
+    
+    // Update movement vector based on current key states
+    this.updateMovementFromKeys();
+  }
+
+  private updateMovementFromKeys(): void {
+    let x = 0, z = 0;
+    
+    // WASD movement
+    if (this.keyStates['KeyW'] || this.keyStates['ArrowUp']) z -= 1;
+    if (this.keyStates['KeyS'] || this.keyStates['ArrowDown']) z += 1;
+    if (this.keyStates['KeyA'] || this.keyStates['ArrowLeft']) x -= 1;
+    if (this.keyStates['KeyD'] || this.keyStates['ArrowRight']) x += 1;
+    
+    // Normalize diagonal movement
+    if (x !== 0 && z !== 0) {
+      const length = Math.sqrt(x * x + z * z);
+      x /= length;
+      z /= length;
+    }
+    
+    // Emit movement event
+    this.eventBus.emit('desktop.movement', { x, z });
+  }
   
   // Mobile control methods
   public setVirtualMovement(x: number, y: number, z: number): void {
@@ -267,6 +324,10 @@ export class UniversalInputManager {
     this.gameContainer.removeEventListener('touchstart', this.handleTouchStart);
     this.gameContainer.removeEventListener('touchend', this.handleTouchEnd);
     this.gameContainer.removeEventListener('touchmove', this.handleTouchMove);
+    
+    // Remove keyboard events
+    window.removeEventListener('keydown', this.handleKeyDown);
+    window.removeEventListener('keyup', this.handleKeyUp);
     
     this.isDisposed = true;
     // console.log('🧹 Universal Input Manager disposed');

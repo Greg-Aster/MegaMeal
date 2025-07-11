@@ -436,28 +436,19 @@ export class GameManager {
   }
   
   /**
-   * Handle mobile movement
+   * Handle mobile movement - now handled directly through EventBus
    */
   private handleMobileMovement(data: { x: number, z: number }): void {
-    if (this.universalInputManager) {
-      this.universalInputManager.setVirtualMovement(data.x, 0, data.z);
-    }
+    // Mobile movement is now handled directly in MovementComponent via EventBus
+    // This event is already being emitted by MobileControls.svelte
   }
   
   /**
-   * Handle mobile actions
+   * Handle mobile actions - now handled directly through EventBus
    */
   private handleMobileAction(action: string): void {
-    if (this.universalInputManager) {
-      this.universalInputManager.setVirtualAction(action, true);
-      
-      // Clear action after a short delay to simulate button press
-      setTimeout(() => {
-        if (this.universalInputManager) {
-          this.universalInputManager.setVirtualAction(action, false);
-        }
-      }, 100);
-    }
+    // Mobile actions are now handled directly in MovementComponent via EventBus
+    // This event is already being emitted by MobileControls.svelte
   }
   
   /**
