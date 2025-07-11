@@ -75,11 +75,13 @@
     movementVector.x = clampedDistance > 5 ? knobX / joystickRadius : 0;
     movementVector.z = clampedDistance > 5 ? knobY / joystickRadius : 0;
     
+    console.log('📱 MobileControls: Joystick movement:', movementVector);
     dispatch('movement', movementVector);
   }
   
   // Action buttons
   function handleActionPress(action: string) {
+    console.log('📱 MobileControls: Action pressed:', action);
     dispatch('action', action);
   }
 </script>
