@@ -1,0 +1,210 @@
+{
+  "id": "restaurant",
+  "name": "The Hamburgler's Kitchen",
+  "description": "A claustrophobic cosmic horror experience in a sci-fi restaurant backroom",
+  "terrain": {
+    "type": "scifi_room",
+    "generator": "RoomFactory",
+    "parameters": {
+      "type": "restaurant",
+      "size": { "width": 20, "height": 12, "length": 20 },
+      "style": "horror",
+      "lighting": "dramatic",
+      "props": ["crates", "barrels", "computer"],
+      "doors": [
+        { "position": "front", "type": "simple" }
+      ]
+    }
+  },
+  "environment": {
+    "lighting": {
+      "type": "dramatic",
+      "config": {
+        "spotlight": { 
+          "intensity": 8.0, 
+          "position": [0, 10, 0],
+          "angle": 0.3,
+          "penumbra": 0.2,
+          "decay": 2,
+          "distance": 30,
+          "castShadow": true,
+          "flickering": {
+            "enabled": true,
+            "speed": 0.5,
+            "variation": 0.4
+          }
+        },
+        "emergency": { 
+          "color": "#ff3333", 
+          "intensity": 1.5,
+          "position": [8, 8, 8]
+        },
+        "ambient": { 
+          "intensity": 0.3,
+          "color": "#220000"
+        }
+      }
+    },
+    "effects": [
+      { 
+        "type": "fog", 
+        "config": { 
+          "density": 0.02, 
+          "color": "#220000",
+          "near": 12,
+          "far": 35
+        } 
+      },
+      {
+        "type": "particles",
+        "config": {
+          "type": "atmospheric_fog",
+          "count": 200,
+          "color": "#666666",
+          "size": 0.1,
+          "opacity": 0.1,
+          "area": { "width": 18, "height": 8, "depth": 18 }
+        }
+      }
+    ]
+  },
+  "movement": {
+    "terrainFollowing": false,
+    "boundaryType": "rectangular",
+    "boundaryConfig": { 
+      "width": 18, 
+      "length": 18,
+      "height": 10
+    },
+    "spawnPoint": [0, 1.7, 8],
+    "movementConfig": {
+      "moveSpeed": 5.0,
+      "jumpHeight": 1.0,
+      "gravity": -25.0,
+      "eyeHeight": 1.7
+    }
+  },
+  "systems": [
+    {
+      "type": "NPCSystem",
+      "config": {
+        "npcs": [
+          {
+            "id": "corndog_mascot",
+            "name": "Corndog Mascot",
+            "position": [0, 0.9, 0],
+            "model": "corndog_character",
+            "isInteractable": true,
+            "interactionRadius": 3.0,
+            "restraints": {
+              "enabled": true,
+              "type": "strapped_to_table",
+              "furniture": "butcher_block"
+            },
+            "dialogue": {
+              "greeting": "I don't know where she is! 🍔",
+              "story": "Help... they've trapped me here...",
+              "hints": [
+                "The Perfect Mary recipe... it's more than just food...",
+                "She disappeared after finding the truth...",
+                "Check the terminals... there might be clues..."
+              ]
+            },
+            "animations": {
+              "breathing": {
+                "enabled": true,
+                "scale": 0.02,
+                "speed": 0.002
+              },
+              "head_turn": {
+                "enabled": true,
+                "amplitude": 0.002,
+                "speed": 0.001
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "FurnitureSystem",
+      "config": {
+        "furniture": [
+          {
+            "id": "butcher_block",
+            "type": "table",
+            "position": [0, 0.9, 0],
+            "size": [1.5, 0.15, 0.75],
+            "material": "wood",
+            "color": "#8b4513",
+            "legs": {
+              "enabled": true,
+              "count": 4,
+              "size": [0.2, 0.9, 0.2],
+              "positions": [
+                [-0.6, 0.45, -0.3],
+                [0.6, 0.45, -0.3], 
+                [-0.6, 0.45, 0.3],
+                [0.6, 0.45, 0.3]
+              ]
+            },
+            "physics": {
+              "type": "static",
+              "collider": "cuboid"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "DialogueSystem",
+      "config": {
+        "autoHide": true,
+        "autoHideDelay": 3000,
+        "style": {
+          "background": "dark",
+          "textColor": "#ffffff",
+          "speakerColor": "#ffaa00"
+        }
+      }
+    },
+    {
+      "type": "PortalSystem",
+      "config": {
+        "portals": [
+          {
+            "id": "exit_portal",
+            "position": [0, 2, 9],
+            "targetLevel": "observatory",
+            "model": "teleport_sphere",
+            "color": "#00ffff",
+            "message": "Return to Star Observatory",
+            "size": 1.5
+          }
+        ]
+      }
+    }
+  ],
+  "physics": {
+    "autoGenerate": true,
+    "gravity": [0, -25.0, 0],
+    "customColliders": [
+      {
+        "id": "floor_collision",
+        "type": "cuboid", 
+        "position": [0, -0.1, 0],
+        "scale": [20, 0.2, 20],
+        "bodyType": "static",
+        "friction": 0.8,
+        "restitution": 0.1
+      }
+    ]
+  },
+  "audio": {
+    "ambient": "restaurant_ambience",
+    "effects": [
+      { "type": "electrical_buzz", "volume": 0.2 },
+      { "type": "ventilation_hum", "volume": 0.1 }
+    ]
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": "observatory",
+  "name": "Star Observatory Alpha", 
+  "description": "Central navigation hub with star timeline",
+  "terrain": {
+    "type": "procedural_island", 
+    "generator": "ObservatoryEnvironment",
+    "parameters": {
+      "baseGroundLevel": 5,
+      "hillHeight": 15,
+      "hillRadius": 100,
+      "islandRadius": 220,
+      "edgeHeight": 8,
+      "waterfalls": true,
+      "rocks": true,
+      "professionalTerrain": true
+    }
+  },
+  "environment": {
+    "lighting": {
+      "type": "atmospheric",
+      "config": {
+        "moonlight": { "intensity": 0.4, "color": "#b3d9ff" },
+        "ambient": { "intensity": 0.2 }
+      }
+    },
+    "effects": [
+      { "type": "fireflies", "config": { "count": 80, "radius": 200 } },
+      { "type": "particles", "config": { "type": "cosmic_dust" } }
+    ]
+  },
+  "movement": {
+    "terrainFollowing": true,
+    "boundaryType": "circular",
+    "boundaryConfig": { "radius": 205, "centerHeight": true },
+    "spawnPoint": [0, 15, 50],
+    "movementConfig": {
+      "moveSpeed": 8.0,
+      "jumpHeight": 4.0,
+      "gravity": -20.0,
+      "eyeHeight": 1.6
+    }
+  },
+  "systems": [
+    {
+      "type": "StarNavigationSystem",
+      "config": {
+        "starRadius": 990,
+        "starCount": 41,
+        "constellationMode": true,
+        "timelineIntegration": true
+      }
+    }
+  ],
+  "physics": {
+    "autoGenerate": false,
+    "gravity": [0, -9.81, 0]
+  }
+}

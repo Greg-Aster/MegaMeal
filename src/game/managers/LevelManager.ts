@@ -13,7 +13,7 @@ export class LevelManager {
   private eventBus: EventBus;
   private interactionSystem: InteractionSystem;
   private currentLevel: BaseLevel | null = null;
-  private levelRegistry: Map<string, LevelConstructor> = new Map();
+  private levelRegistry: Map<string, LevelProvider> = new Map();
   private levelHistory: string[] = [];
   private isTransitioning = false;
   
@@ -30,11 +30,12 @@ export class LevelManager {
   }
   
   /**
-   * Register a level class with the manager
+   * Register a level class or factory with the manager
    */
-  public registerLevel(levelId: string, levelConstructor: LevelConstructor): void {
-    this.levelRegistry.set(levelId, levelConstructor);
-    console.log(`📝 Registered level: ${levelId}`);
+  public registerLevel(levelId: string, levelProvider: LevelProvider): void {
+    this.levelRegistry.set(levelId, levelProvider);
+    const type = typeof levelProvider === 'function' && levelProvider.prototype ? 'constructor' : 'factory';
+    console.log(`📝 Registered level: ${levelId} (${type})`);
   }
   
   /**
@@ -112,11 +113,21 @@ export class LevelManager {
       }
       
       // Create and initialize new level
-      const LevelClass = this.levelRegistry.get(levelId)!;
+      const levelProvider = this.levelRegistry.get(levelId)!;
       console.log(`🏗️ Creating new level: ${levelId}`);
       
-      this.currentLevel = new LevelClass(this.engine, this.interactionSystem, levelId);
-      await this.currentLevel.initialize();
+      // Determine if it's a constructor or factory function
+      if (typeof levelProvider === 'function' && levelProvider.prototype) {
+        // Traditional constructor pattern (old architecture)
+        const LevelClass = levelProvider as LevelConstructor;
+        this.currentLevel = new LevelClass(this.engine, this.interactionSystem, levelId);
+        await this.currentLevel.initialize();
+      } else {
+        // Factory function pattern (new data-driven architecture)
+        const levelFactory = levelProvider as LevelFactory;
+        this.currentLevel = await levelFactory(levelId);
+        // Factory functions should return already initialized levels
+      }
       
       // Update level history
       this.levelHistory.push(levelId);
@@ -317,6 +328,8 @@ export class LevelManager {
  * Level constructor type
  */
 export type LevelConstructor = new (engine: Engine, interactionSystem: InteractionSystem, levelId: string) => BaseLevel;
+export type LevelFactory = (levelId: string) => Promise<BaseLevel>;
+export type LevelProvider = LevelConstructor | LevelFactory;
 
 /**
  * Level manager statistics

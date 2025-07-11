@@ -44,6 +44,9 @@ export class HybridControls {
   private targetPosition = { x: 0, y: 0, z: 0 };
   private velocity: any = null;
   
+  // Level awareness
+  private currentLevelId: string | null = null;
+  
   constructor(
     THREE: any,
     camera: any,
@@ -103,6 +106,14 @@ export class HybridControls {
     
     this.isInitialized = true;
     console.log('✅ Hybrid Controls initialized');
+  }
+  
+  /**
+   * Set the current level ID for level-aware movement
+   */
+  public setCurrentLevel(levelId: string): void {
+    console.log(`🎮 HybridControls: Switching to level ${levelId}`);
+    this.currentLevelId = levelId;
   }
   
   private async setupOrbitControls(): Promise<void> {
@@ -370,6 +381,73 @@ export class HybridControls {
   }
   
   private handleSimpleMovement(deltaTime: number): void {
+    // Use level-specific movement for restaurant
+    if (this.currentLevelId === 'restaurant') {
+      this.handleRestaurantMovement(deltaTime);
+      return;
+    }
+    
+    // Default to Star Observatory movement for other levels
+    this.handleObservatoryMovement(deltaTime);
+  }
+  
+  private handleRestaurantMovement(deltaTime: number): void {
+    // LOCK Y position for restaurant - no terrain following!
+    this.camera.position.y = 1.7;
+    
+    // Check for movement keys directly (desktop)
+    const isForwardPressed = this.inputManager.isActionPressed('forward');
+    const isBackwardPressed = this.inputManager.isActionPressed('backward');
+    const isLeftPressed = this.inputManager.isActionPressed('left');
+    const isRightPressed = this.inputManager.isActionPressed('right');
+    
+    // Get mobile virtual movement
+    const movementVector = this.inputManager.getMovementVector();
+    const hasVirtualMovement = movementVector.x !== 0 || movementVector.z !== 0;
+    
+    // Movement constants
+    const moveSpeed = 10; // Increased speed for better responsiveness
+    
+    // Simple movement calculation
+    let movementX = 0;
+    let movementZ = 0;
+    
+    // Desktop WASD movement - simple direction based movement
+    if (isForwardPressed) {
+      movementZ -= 1; // Forward (negative Z)
+    }
+    if (isBackwardPressed) {
+      movementZ += 1; // Backward (positive Z)
+    }
+    if (isLeftPressed) {
+      movementX -= 1; // Left (negative X)
+    }
+    if (isRightPressed) {
+      movementX += 1; // Right (positive X)
+    }
+    
+    // Mobile virtual movement
+    if (hasVirtualMovement) {
+      movementX += movementVector.x;
+      movementZ += movementVector.z;
+    }
+    
+    // Apply movement with proper scaling
+    if (movementX !== 0 || movementZ !== 0) {
+      // Normalize diagonal movement
+      const length = Math.sqrt(movementX * movementX + movementZ * movementZ);
+      if (length > 1) {
+        movementX /= length;
+        movementZ /= length;
+      }
+      
+      const moveDistance = moveSpeed * deltaTime;
+      this.camera.position.x += movementX * moveDistance;
+      this.camera.position.z += movementZ * moveDistance;
+    }
+  }
+  
+  private handleObservatoryMovement(deltaTime: number): void {
     // Check for movement keys directly (desktop)
     const isForwardPressed = this.inputManager.isActionPressed('forward');
     const isBackwardPressed = this.inputManager.isActionPressed('backward');

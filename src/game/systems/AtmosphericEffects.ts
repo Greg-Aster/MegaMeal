@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GameObject } from '../../engine/core/GameObject';
+import { ResourceManager } from '../../engine/utils/ResourceManager';
 
 /**
  * Handles atmospheric effects for the Star Observatory
@@ -406,31 +407,23 @@ export class AtmosphericEffects extends GameObject {
     
     console.log('🧹 Disposing Atmospheric Effects...');
     
-    // Dispose fireflies
+    // Dispose fireflies using ResourceManager
     if (this.fireflies) {
-      this.fireflies.geometry.dispose();
-      this.fireflies.material.dispose();
-      if (this.fireflies.material.map) {
-        this.fireflies.material.map.dispose();
-      }
+      ResourceManager.disposePoints(this.fireflies);
       this.levelGroup.remove(this.fireflies);
       this.fireflies = null;
     }
     
-    // Dispose cosmic dust
+    // Dispose cosmic dust using ResourceManager
     if (this.cosmicDust) {
-      this.cosmicDust.geometry.dispose();
-      this.cosmicDust.material.dispose();
+      ResourceManager.disposePoints(this.cosmicDust);
       this.levelGroup.remove(this.cosmicDust);
       this.cosmicDust = null;
     }
     
-    // Dispose grid
+    // Dispose grid using ResourceManager
     if (this.gridGroup) {
-      this.gridGroup.children.forEach((line: any) => {
-        if (line.material) line.material.dispose();
-        if (line.geometry) line.geometry.dispose();
-      });
+      ResourceManager.disposeGroup(this.gridGroup);
       this.levelGroup.remove(this.gridGroup);
       this.gridGroup = null;
     }
