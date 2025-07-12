@@ -13,6 +13,7 @@ import { EventBus } from './EventBus';
 import { Debug } from '../utils/Debug';
 import { Performance } from '../utils/Performance';
 import { OptimizationManager } from '../optimization/OptimizationManager';
+import { EnvironmentalEffectsSystem } from '../systems/EnvironmentalEffectsSystem';
 
 export interface EngineConfig {
   canvas?: HTMLCanvasElement;
@@ -39,6 +40,7 @@ export class Engine {
   private debug!: Debug;
   private performance!: Performance;
   private optimizationManager!: OptimizationManager;
+  private environmentalEffects!: EnvironmentalEffectsSystem;
   
   // Three.js core
   private scene!: THREE.Scene;
@@ -85,6 +87,7 @@ export class Engine {
     this.time = new Time();
     this.performance = new Performance();
     this.optimizationManager = OptimizationManager.getInstance();
+    this.environmentalEffects = EnvironmentalEffectsSystem.getInstance(this.eventBus);
     
     // Initialize Three.js
     this.scene = new THREE.Scene();
