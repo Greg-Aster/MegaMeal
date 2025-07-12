@@ -89,6 +89,9 @@ export class ObservatoryEnvironment extends GameObject {
       await this.createGround();
       await this.createWaterPool();
       
+      // Register water with global environmental effects system
+      this.registerWaterWithEnvironmentalSystem();
+      
       // Add natural environment (field with hill - no trees)
       await this.createVegetation();
       await this.createGlowingFireflies();
@@ -195,6 +198,29 @@ export class ObservatoryEnvironment extends GameObject {
   }
 
   /**
+   * Register water with the global environmental effects system
+   */
+  private registerWaterWithEnvironmentalSystem(): void {
+    if (!this.waterPool) {
+      console.warn('Cannot register water - waterPool not created yet');
+      return;
+    }
+    
+    const environmentalEffects = this.engine.getEnvironmentalEffects();
+    
+    // Create water source object for environmental system
+    const waterSource = {
+      id: 'observatory_water',
+      mesh: this.waterPool,
+      getCurrentLevel: () => this.currentWaterLevel,
+      isActive: true
+    };
+    
+    environmentalEffects.registerWaterSource(waterSource);
+    console.log('🌊 Registered observatory water with EnvironmentalEffectsSystem');
+  }
+
+  /**
    * Setup listeners for OptimizationManager level changes
    */
   private setupOptimizationListeners(): void {
@@ -256,8 +282,8 @@ export class ObservatoryEnvironment extends GameObject {
         let waveDisplacement = 0;
         
         // Large ocean swells only (most visible impact)
-        waveDisplacement += Math.sin(x * 0.001 + y * 0.0005 + time * 0.5) * 0.4;
-        waveDisplacement += Math.cos(x * 0.0008 - y * 0.001 + time * 0.3) * 0.3;
+        waveDisplacement += Math.sin(x * 0.001 + y * 0.0005 + time * 0.5) * 0.2;
+        waveDisplacement += Math.cos(x * 0.0008 - y * 0.001 + time * 0.3) * 0.1;
         
         // Medium waves for detail
         waveDisplacement += Math.sin(x * 0.004 + y * 0.003 + time * 1.0) * 0.15;
@@ -773,6 +799,7 @@ export class ObservatoryEnvironment extends GameObject {
       transparent: true,
       opacity: 0.8, // Semi-transparent water
       color: 0x006994, // Deep ocean blue tint
+      side: this.THREE.DoubleSide, // Render both sides for underwater visibility
     }) as THREE.MeshStandardMaterial;
     
     // Store material and geometry for animation updates
@@ -1270,6 +1297,7 @@ export class ObservatoryEnvironment extends GameObject {
     console.log('✨ Creating glowing fireflies...');
     
     this.firefliesGroup = new this.THREE.Group();
+    this.firefliesGroup.name = 'fireflies_main_group'; // Name for optimization
     
     const fireflyCount = 200; // 10x more fireflies
     const colors = [
@@ -1299,15 +1327,19 @@ export class ObservatoryEnvironment extends GameObject {
       const fireflyMaterial = new this.THREE.MeshBasicMaterial({
         color: fireflyColor,
         transparent: true,
-        opacity: 0.9
+        opacity: 0.9,
+        blending: this.THREE.AdditiveBlending, // Make it glow
+        depthWrite: false // Important for blending
       });
       
       const firefly = new this.THREE.Mesh(fireflyGeometry, fireflyMaterial);
       firefly.position.set(x, y, z);
+      firefly.name = 'firefly_core';
       
       // Create bright point light for each firefly - main light source with extended range
       const light = new this.THREE.PointLight(fireflyColor, 1.2, 100); // Increased from 20 to 100
       light.position.copy(firefly.position);
+      light.name = 'firefly_light';
       
       // Create smaller glow effect with reduced geometry complexity
       const glowGeometry = new this.THREE.SphereGeometry(0.15, 6, 4); // Smaller and less complex
@@ -1315,13 +1347,16 @@ export class ObservatoryEnvironment extends GameObject {
         color: fireflyColor,
         transparent: true,
         opacity: 0.3,
-        side: this.THREE.BackSide
+        blending: this.THREE.AdditiveBlending, // Make it glow
+        depthWrite: false // Important for blending
       });
       const glow = new this.THREE.Mesh(glowGeometry, glowMaterial);
       glow.position.copy(firefly.position);
+      glow.name = 'firefly_glow';
       
       // Create firefly group
       const fireflyGroup = new this.THREE.Group();
+      fireflyGroup.name = 'firefly_group_container';
       fireflyGroup.add(firefly);
       fireflyGroup.add(light);
       fireflyGroup.add(glow);
@@ -1356,6 +1391,10 @@ export class ObservatoryEnvironment extends GameObject {
     if (this.isDisposed) return;
     
     console.log('🧹 Disposing Observatory Environment...');
+    
+    // Unregister water from environmental effects system
+    const environmentalEffects = this.engine.getEnvironmentalEffects();
+    environmentalEffects.unregisterWaterSource('observatory_water');
     
     // Clear component references - BaseLevel.dispose() handles Three.js cleanup automatically
     this.skyboxMesh = null;

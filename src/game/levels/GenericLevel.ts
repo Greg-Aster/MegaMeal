@@ -262,7 +262,7 @@ export class GenericLevel extends BaseLevel {
     if (levelSpecificComponents.includes(componentType)) {
       try {
         // Try loading from levels directory for level-specific components
-        const levelModule = await import(`./${componentType}.ts`);
+        const levelModule = await import(`../levels/${componentType}.ts`);
         return levelModule[componentType];
       } catch (error) {
         console.warn(`Could not load level-specific component ${componentType}:`, error);
@@ -283,7 +283,7 @@ export class GenericLevel extends BaseLevel {
       } catch {
         try {
           // Fallback: try loading from levels directory
-          const levelModule = await import(`./${componentType}.ts`);
+          const levelModule = await import(`../levels/${componentType}.ts`);
           return levelModule[componentType];
         } catch (error) {
           console.warn(`Could not load component ${componentType}:`, error);
