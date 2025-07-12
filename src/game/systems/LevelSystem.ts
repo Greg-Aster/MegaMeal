@@ -116,6 +116,13 @@ export class LevelSystem {
     } catch (error) {
       console.warn('Failed to register AtmosphericEffects:', error);
     }
+    
+    try {
+      const { MirandaShipSystem } = await import('../systems/MirandaShipSystem');
+      this.registerComponent('MirandaShipSystem', MirandaShipSystem);
+    } catch (error) {
+      console.warn('Failed to register MirandaShipSystem:', error);
+    }
 
     // Register built-in terrain generators
     this.registerComponent('DataDrivenTerrain', { name: 'DataDrivenTerrain', builtin: true });

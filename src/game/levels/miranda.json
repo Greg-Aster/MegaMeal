@@ -1,14 +1,14 @@
 {
   "id": "miranda",
-  "name": "The Bibimbap Saloon - Miranda Incident Site",
-  "description": "Explore the haunted remains of the spaceship that witnessed 1,342 time loops and the creation of the Perfect Mary recipe. The air still tastes of celery salt and temporal distortion.",
+  "name": "Second Breakfast - Miranda Investigation Bridge",
+  "description": "Bridge of Captain Zhao's salvage vessel investigating the Miranda incident. Examine temporal anomalies, captain's logs, and the Perfect Bloody Mary sample that defied causality.",
   "terrain": {
-    "type": "scifi_ship_interior",
-    "generator": "RoomFactory",
+    "type": "spaceship_interior", 
+    "generator": "MirandaShipSystem",
     "parameters": {
-      "type": "corridor",
-      "size": { "width": 50, "height": 6, "length": 50 },
-      "style": "clean",
+      "type": "bridge",
+      "size": { "width": 20, "height": 4, "length": 20 },
+      "style": "investigation_vessel",
       "lighting": "bright",
       "floor": "Platform_Simple",
       "walls": "WallAstra_Straight",
@@ -106,14 +106,14 @@
     "effects": []
   },
   "movement": {
-    "terrainFollowing": false,
+    "terrainFollowing": true,
     "boundaryType": "ship_interior",
     "boundaryConfig": {
       "corridors": true,
       "prevent_falls": true,
       "invisible_walls": true
     },
-    "spawnPoint": [0, 1.7, -5],
+    "spawnPoint": [0, 0, -2],
     "movementConfig": {
       "moveSpeed": 5.0,
       "jumpHeight": 1.5,
@@ -122,148 +122,6 @@
     }
   },
   "systems": [
-    {
-      "type": "ShipTerminalSystem",
-      "config": {
-        "terminals": [
-          {
-            "id": "bridge_terminal_1",
-            "name": "Navigation Console",
-            "position": [22, 1.2, -5],
-            "model": "Prop_Computer",
-            "status": "damaged",
-            "data": {
-              "title": "Navigation Log - Final Entry",
-              "content": "Miranda Primary is exhibiting impossible fusion acceleration. Stellar collapse imminent. All hands to evacuation stations. This is not a drill.",
-              "timestamp": "45.7.21 - 08:32:15"
-            }
-          },
-          {
-            "id": "bridge_terminal_2", 
-            "name": "Communications Array",
-            "position": [18, 1.2, -2],
-            "model": "Prop_Computer",
-            "status": "flickering",
-            "data": {
-              "title": "Emergency Transmission Log",
-              "content": "Mayday, mayday! This is the civilian transport 'Second Dawn'. We're caught in some kind of temporal distortion. Time is... wrong here. The same moments keep repeating but different. Send help!",
-              "timestamp": "45.7.21 - 08:47:03"
-            }
-          },
-          {
-            "id": "saloon_terminal",
-            "name": "Service Unit RW-78",
-            "position": [-18, 1.2, -8],
-            "model": "Prop_AccessPoint", 
-            "status": "temporal_loop",
-            "data": {
-              "title": "Automated Service Log - Iteration 1,342",
-              "content": "Customer ordered: 'Bloody Mary, no pickles, make it a double.' ALERT: Quantum resonance detected in beverage. Temporal signature unprecedented. Customer collected sample. 8.7 second anomaly detected. System entering protective st[ERROR: DATA TRUNCATED]",
-              "timestamp": "45.7.21 - 08:55:41 [LOOP 1,342]"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "type": "MirandaStorySystem",
-      "config": {
-        "captain_logs": [
-          {
-            "id": "zhao_log_1",
-            "name": "Captain Helena Zhao - Personal Log 1", 
-            "position": [2, 1.5, 2],
-            "model": "Prop_Chest",
-            "content": "These dreams feel too real. Every night I find myself sitting at that bar, watching that drink being made 1,342 different ways. I can smell the celery salt. The radiation readings from the debris field match the quantum signatures in my dreams perfectly.",
-            "unlock_condition": "enter_saloon"
-          },
-          {
-            "id": "zhao_log_2",
-            "name": "Captain Helena Zhao - Personal Log 2",
-            "position": [-2, 1.5, 8],
-            "model": "Prop_Chest", 
-            "content": "Three elderly men playing cards, their faces blurred by cigar smoke. A figure in a fedora ordering 'a Bloody Mary, no pickles, make it a double' - the phrase echoes in my head. When I whispered it in the mess hall, my coffee cup vibrated slightly.",
-            "unlock_condition": "read_terminal_logs"
-          },
-          {
-            "id": "temporal_agent_evidence",
-            "name": "Temporal Agent Research",
-            "position": [0, 1.5, -15],
-            "model": "Prop_ItemHolder",
-            "content": "Multiple accounts describe an entity that maintained awareness across temporal iterations - 'The Sandwich Thief.' The temporal physics required for such capability exceeds all known technological parameters by several orders of magnitude.",
-            "unlock_condition": "explore_all_rooms"
-          }
-        ],
-        "interactive_objects": [
-          {
-            "id": "perfect_mary_recipe",
-            "name": "The Perfect Mary Recipe Fragment",
-            "position": [-22, 1.8, -6],
-            "model": "Prop_ItemHolder",
-            "glow": true,
-            "glow_color": "#8844ff",
-            "interaction": "examine",
-            "content": "A strange document that keeps reappearing despite being locked away. The ingredients list seems to shimmer and change when you're not looking directly at it. At the bottom, written in an urgent hand: 'NO PICKLES - CAUSALITY BREACH IMMINENT'"
-          },
-          {
-            "id": "service_robot_wreckage",
-            "name": "Service Unit RW-78 Remains",
-            "position": [-16, 0.5, -10],
-            "model": "Prop_Barrel_Large",
-            "interaction": "examine",
-            "content": "The damaged chassis of the robotic bartender that documented 1,342 temporal loop iterations. Its memory core still flickers occasionally, displaying fragments of impossible conversations and drink orders that never happened... or happened too many times."
-          },
-          {
-            "id": "purple_force_anomaly",
-            "name": "Temporal Anomaly Epicenter", 
-            "position": [-20, 2, -8],
-            "model": "Prop_Light_Small",
-            "visual_effect": "purple_glow_sphere",
-            "interaction": "approach",
-            "content": "The air here tastes of celery salt and ozone. Reality seems thin, as if you could step through it into another moment entirely. You glimpse shadows of three old men playing cards, eternally frozen in their game."
-          }
-        ]
-      }
-    },
-    {
-      "type": "AtmosphericAudioSystem",
-      "config": {
-        "ambient_tracks": [
-          {
-            "id": "ship_ambience",
-            "file": "ship_emergency_hum.ogg",
-            "volume": 0.3,
-            "loop": true,
-            "position": "global"
-          },
-          {
-            "id": "saloon_whispers",
-            "file": "temporal_whispers.ogg", 
-            "volume": 0.2,
-            "loop": true,
-            "position": [-20, 2, -8],
-            "radius": 8
-          }
-        ],
-        "sound_effects": [
-          {
-            "trigger": "enter_saloon",
-            "sound": "temporal_echo.ogg",
-            "volume": 0.5
-          },
-          {
-            "trigger": "interact_terminal",
-            "sound": "computer_beep_distorted.ogg",
-            "volume": 0.4
-          },
-          {
-            "trigger": "examine_recipe", 
-            "sound": "reality_flutter.ogg",
-            "volume": 0.6
-          }
-        ]
-      }
-    },
     {
       "type": "PortalSystem",
       "config": {
@@ -282,49 +140,6 @@
           }
         ]
       }
-    },
-    {
-      "type": "ShipPropsSystem",
-      "config": {
-        "props": [
-          {
-            "model": "Prop_Crate3",
-            "positions": [
-              [3, 0, 16], [-3, 0, 16], [1, 0, 18], [-1, 0, 18]
-            ],
-            "rotation": "random"
-          },
-          {
-            "model": "Prop_Barrel_Large", 
-            "positions": [
-              [8, 0, 14], [-8, 0, 14]
-            ]
-          },
-          {
-            "model": "Prop_Cable_3",
-            "positions": [
-              [0, 0, 0], [10, 0, 0], [-10, 0, 0],
-              [20, 0, -5], [-20, 0, -8]
-            ],
-            "attach_to": "ceiling"
-          },
-          {
-            "model": "Prop_Light_Corner",
-            "positions": [
-              [4, 3.5, 12], [-4, 3.5, 12],
-              [12, 3.5, 0], [-12, 3.5, 0]
-            ],
-            "lighting": true
-          },
-          {
-            "model": "Prop_Vent_Big",
-            "positions": [
-              [0, 3.8, 8], [15, 3.8, -3], [-15, 3.8, -5]
-            ],
-            "attach_to": "ceiling"
-          }
-        ]
-      }
     }
   ],
   "physics": {
@@ -333,38 +148,11 @@
     "ship_physics": true,
     "customColliders": [
       {
-        "id": "main_floor",
-        "type": "cuboid",
-        "position": [0, -0.1, 0], 
-        "scale": [50, 0.2, 50],
-        "bodyType": "static",
-        "friction": 0.8,
-        "restitution": 0.1
-      },
-      {
-        "id": "saloon_floor",
-        "type": "cuboid",
-        "position": [-20, -0.1, -8],
-        "scale": [15, 0.2, 12], 
-        "bodyType": "static",
-        "friction": 0.8,
-        "restitution": 0.1
-      },
-      {
         "id": "bridge_floor",
-        "type": "cuboid", 
-        "position": [20, -0.1, -5],
-        "scale": [12, 0.2, 10],
-        "bodyType": "static",
-        "friction": 0.8,
-        "restitution": 0.1
-      },
-      {
-        "id": "storage_floor",
         "type": "cuboid",
-        "position": [0, -0.1, 15],
-        "scale": [10, 0.2, 8],
-        "bodyType": "static", 
+        "position": [0, -1.1, 0], 
+        "scale": [20, 0.2, 20],
+        "bodyType": "static",
         "friction": 0.8,
         "restitution": 0.1
       }

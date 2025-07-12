@@ -259,6 +259,9 @@ export class GenericLevel extends BaseLevel {
     // Level-specific components (like ObservatoryEnvironment) should be in /levels/
     const levelSpecificComponents = ['ObservatoryEnvironment'];
     
+    // System-specific components should be in /systems/
+    const systemSpecificComponents = ['MirandaShipSystem'];
+    
     if (levelSpecificComponents.includes(componentType)) {
       try {
         // Try loading from levels directory for level-specific components
@@ -266,6 +269,17 @@ export class GenericLevel extends BaseLevel {
         return levelModule[componentType];
       } catch (error) {
         console.warn(`Could not load level-specific component ${componentType}:`, error);
+        return null;
+      }
+    }
+    
+    if (systemSpecificComponents.includes(componentType)) {
+      try {
+        // Try loading from systems directory for system-specific components
+        const systemModule = await import(`../systems/${componentType}.ts`);
+        return systemModule[componentType];
+      } catch (error) {
+        console.warn(`Could not load system-specific component ${componentType}:`, error);
         return null;
       }
     }

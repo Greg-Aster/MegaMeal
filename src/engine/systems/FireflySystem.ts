@@ -155,18 +155,21 @@ export class FireflySystem extends GameObject {
       console.log(`Firefly ${index} assigned color: 0x${color.toString(16)}`);
     }
     
-    // Create firefly mesh with proper bloom setup
-    const fireflyGeometry = new this.THREE.SphereGeometry(this.config.size, 6, 4); // Simpler geometry
+    // Create firefly mesh with smooth bloom setup to avoid hard edges
+    const fireflyGeometry = new this.THREE.SphereGeometry(this.config.size, 8, 6); // Smoother geometry
     const fireflyMaterial = new this.THREE.MeshStandardMaterial({
-      color: color,
-      emissive: color, // Set emissive color directly
+      color: new this.THREE.Color(color).multiplyScalar(0.1), // Darker base color
+      emissive: color, // Bright emissive color for bloom
       emissiveIntensity: this.config.emissiveIntensity,
       transparent: true,
-      opacity: 1.0, // Full opacity for the core
+      opacity: 0.8, // Slightly transparent to soften edges
       toneMapped: false, // CRITICAL for bloom effect
       fog: false, // Don't let fog affect fireflies
       metalness: 0.0, // Non-metallic for better glow
-      roughness: 1.0 // Fully rough for better emissive effect
+      roughness: 1.0, // Fully rough for better emissive effect
+      // Add soft falloff to prevent hard clipping
+      alphaTest: 0.01,
+      side: this.THREE.DoubleSide // Ensure glow is visible from all angles
     });
     
     const mesh = new this.THREE.Mesh(fireflyGeometry, fireflyMaterial);

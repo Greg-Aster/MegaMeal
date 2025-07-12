@@ -57,7 +57,7 @@ export class Renderer {
       enableShadows: true, // Keep shadows enabled for proper lighting on all devices
       shadowMapType: isMobile ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap, // Use simpler shadows on mobile
       toneMapping: THREE.ACESFilmicToneMapping,
-      toneMappingExposure: isMobile ? 1.0 : 1.4, // Higher exposure on desktop for better emissive visibility
+      toneMappingExposure: 1.0,
       outputColorSpace: THREE.SRGBColorSpace,
       enablePostProcessing: true, // Enable by default, let OptimizationManager decide
       enableBloom: true, // Enable by default
@@ -150,7 +150,10 @@ export class Renderer {
   private configureRenderer(): void {
     // Basic settings
     this.renderer.outputColorSpace = this.config.outputColorSpace!;
-    this.renderer.toneMapping = this.config.toneMapping!;
+    
+    // When using a post-processing pipeline with a ToneMappingEffect,
+    // the renderer's own tone mapping must be disabled. The composer will handle it.
+    this.renderer.toneMapping = THREE.NoToneMapping;
     this.renderer.toneMappingExposure = this.config.toneMappingExposure!;
     
     // Shadows
@@ -181,13 +184,12 @@ export class Renderer {
     // Create effects array for the effect pass
     const effects: any[] = [];
     
-    // Bloom effect with device-specific settings
+    // Bloom effect with smooth transitions to avoid hard edges
     if (this.config.enableBloom) {
-      const isMobile = this.config.isMobile;
       this.effects.bloom = new BloomEffect({
-        intensity: isMobile ? 1.2 : 1.8, // Higher intensity on desktop for better firefly visibility
-        luminanceThreshold: isMobile ? 0.3 : 0.25, // Lower threshold on desktop to catch more emissive
-        luminanceSmoothing: 0.1,
+        intensity: 1.0, // Balanced intensity
+        luminanceThreshold: 0.3, // Lower threshold to catch firefly emissive
+        luminanceSmoothing: 0.25, // Higher smoothing to prevent hard edges
         mipmapBlur: true
       });
       effects.push(this.effects.bloom);

@@ -2,6 +2,8 @@
 // Handles placement and rendering of ship interior props and decorative objects
 
 import * as THREE from 'three';
+import { ResourceManager } from '../../engine/utils/ResourceManager';
+import type { IDisposable } from '../../engine/interfaces/IDisposable';
 
 export interface PropsConfig {
   props?: Array<{
@@ -13,8 +15,10 @@ export interface PropsConfig {
   }>;
 }
 
-export class ShipPropsSystem {
+export class ShipPropsSystem implements IDisposable {
   private props: THREE.Object3D[] = [];
+  private propLights: THREE.Light[] = [];
+  public readonly isDisposed = false;
   
   constructor(
     private THREE: any,
@@ -28,15 +32,39 @@ export class ShipPropsSystem {
     
     if (config.props) {
       for (const propConfig of config.props) {
-        for (const position of propConfig.positions) {
-          const prop = this.createProp(propConfig.model, position, propConfig);
-          if (prop) {
-            this.levelGroup.add(prop);
-            this.props.push(prop);
-          }
-        }
+        await this.createPropGroup(propConfig);
       }
     }
+    
+    console.log(`✅ Created ${this.props.length} ship props`);
+  }
+  
+  private async createPropGroup(propConfig: any): Promise<void> {
+    for (const position of propConfig.positions) {
+      try {
+        const prop = this.createProp(propConfig.model, position, propConfig);
+        if (prop) {
+          this.levelGroup.add(prop);
+          this.props.push(prop);
+          
+          // Add lighting if specified
+          if (propConfig.lighting) {
+            this.addPropLighting(prop, position);
+          }
+        }
+      } catch (error) {
+        console.warn(`⚠️ Failed to create prop ${propConfig.model} at position`, position, error);
+        // Continue with other props
+      }
+    }
+  }
+  
+  private addPropLighting(prop: THREE.Object3D, position: [number, number, number]): void {
+    const light = new this.THREE.PointLight(0xffffff, 0.8, 8);
+    light.position.set(position[0], position[1] + 1, position[2]);
+    light.castShadow = true;
+    this.levelGroup.add(light);
+    this.propLights.push(light);
   }
   
   private createProp(modelType: string, position: [number, number, number], config: any): THREE.Object3D | null {
@@ -84,11 +112,7 @@ export class ShipPropsSystem {
         });
         propMesh = new this.THREE.Mesh(lightGeometry, lightMaterial);
         
-        if (config.lighting) {
-          const light = new this.THREE.PointLight(0xffffff, 0.5, 10);
-          light.position.set(...position);
-          this.levelGroup.add(light);
-        }
+        // Lighting handled by addPropLighting method
         break;
         
       case 'Prop_Vent_Big':
@@ -109,12 +133,12 @@ export class ShipPropsSystem {
     }
     
     if (propMesh) {
-      propMesh.position.set(...position);
+      propMesh.position.set(position[0], position[1], position[2]);
       
       if (config.rotation === 'random') {
         propMesh.rotation.y = Math.random() * Math.PI * 2;
       } else if (Array.isArray(config.rotation)) {
-        propMesh.rotation.set(...config.rotation);
+        propMesh.rotation.set(config.rotation[0], config.rotation[1], config.rotation[2]);
       }
       
       if (propMesh instanceof this.THREE.Mesh) {
@@ -128,12 +152,36 @@ export class ShipPropsSystem {
   
   update(_deltaTime: number): void {
     // Update prop animations if needed
+    // Could add rotating machinery, blinking lights, etc.
+  }
+  
+  /**
+   * Get statistics about placed props
+   */
+  public getStats() {
+    return {
+      totalProps: this.props.length,
+      totalLights: this.propLights.length
+    };
   }
   
   dispose(): void {
+    console.log('🧹 Disposing ShipPropsSystem...');
+    
+    // Dispose props using ResourceManager
     this.props.forEach(prop => {
+      ResourceManager.disposeObject3D(prop);
       this.levelGroup.remove(prop);
     });
     this.props = [];
+    
+    // Dispose lights
+    this.propLights.forEach(light => {
+      this.levelGroup.remove(light);
+    });
+    this.propLights = [];
+    
+    (this as any).isDisposed = true;
+    console.log('✅ ShipPropsSystem disposed');
   }
 }

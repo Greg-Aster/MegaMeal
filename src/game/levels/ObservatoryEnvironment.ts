@@ -3,6 +3,7 @@ import { GameObject } from '../../engine/core/GameObject';
 import { Engine } from '../../engine/core/Engine';
 import { AssetLoader } from '../../engine/resources/AssetLoader';
 import { FireflySystem } from '../../engine/systems/FireflySystem';
+import { OceanSystem } from '../../engine/systems/OceanSystem';
 
 /**
  * Handles the physical environment of the Star Observatory
@@ -19,12 +20,12 @@ export class ObservatoryEnvironment extends GameObject {
   private skyboxMesh: THREE.Mesh | null = null;
   private groundMesh: THREE.Mesh | null = null;
   private waterfallGroup: THREE.Group | null = null;
-  private waterPool: THREE.Mesh | null = null;
   
   // Natural environment elements
   private vegetationGroup: THREE.Group | null = null;
   private treesGroup: THREE.Group | null = null;
   private fireflySystem: FireflySystem | null = null;
+  private oceanSystem: OceanSystem | null = null;
   
   // Lighting elements
   private lightingGroup: THREE.Group | null = null;
@@ -34,29 +35,19 @@ export class ObservatoryEnvironment extends GameObject {
   
   // Terrain data
   private calculatedSpawnPoint: THREE.Vector3 | null = null;
-  private globalIntensityMultiplier = 100.0;
-  private globalFireflySpeed = .5;
-  private fireflyAnimationTime = 0;
   
-  // Water animation optimization (integrated with OptimizationManager)
-  private shouldUpdateWaves = true;
   
   // Rising water effect
-  private initialWaterLevel = -6;
-  private waterRiseRate = 0.05; // Units per second (faster rise)
+  private initialWaterLevel = -10;
+  private waterRiseRate = 0.008; // Much slower, more gradual rise
   private maxWaterLevel = 2; // Stop rising at this level
   private currentWaterLevel = -6;
   
   // Configuration for level-specific effects
   private readonly bloomConfig = {
-    intensity: 2.5, // Increased for more glow
+    intensity: 1.5, // Increased for more glow
     threshold: 0.55, // Slightly lower threshold to catch more light
     smoothing: 0.2
-  };
-  
-  private readonly fireflyEmissiveConfig = {
-    coreIntensity: 15.0, // Significantly increased for a bright core
-    glowIntensity: 4.0 // Increased for a larger glow effect
   };
   
   // Terrain parameters for height calculation
@@ -72,7 +63,6 @@ export class ObservatoryEnvironment extends GameObject {
   
   // Configuration
   private readonly skyboxImageUrl = '/assets/hdri/skywip4.webp';
-  private readonly gridRadius = 940;
   
   constructor(THREE: any, engine: Engine, levelGroup: THREE.Group, assetLoader: AssetLoader) {
     super();
@@ -94,16 +84,12 @@ export class ObservatoryEnvironment extends GameObject {
     try {
       console.log('🌍 Initializing Observatory Environment...');
       
-      // Listen for optimization level changes from OptimizationManager
-      this.setupOptimizationListeners();
       
       await this.loadSkybox();
       await this.createLighting();
       await this.createGround();
       await this.createWaterPool();
       
-      // Register water with global environmental effects system
-      this.registerWaterWithEnvironmentalSystem();
       
       // Add natural environment (field with hill - no trees)
       await this.createVegetation();
@@ -135,14 +121,13 @@ export class ObservatoryEnvironment extends GameObject {
   public update(deltaTime: number): void {
     if (!this.isInitialized || !this.isActive) return;
     
-    // Accumulate time for animations, adjusted by speed
-    this.fireflyAnimationTime += deltaTime * this.globalFireflySpeed;
-    
     // Update firefly animations
     this.updateFireflies(deltaTime);
     
-    // Update water wave animations
-    this.updateWaterWaves(this.fireflyAnimationTime);
+    // Update ocean system (now manages its own time)
+    if (this.oceanSystem) {
+      this.oceanSystem.update(deltaTime);
+    }
     
     // Update rising water effect
     this.updateRisingWater(deltaTime);
@@ -150,116 +135,17 @@ export class ObservatoryEnvironment extends GameObject {
   
   /**
    * Update firefly animations using the new FireflySystem.
-   * @param time The accumulated animation time.
+   * @param deltaTime Frame time in seconds.
    */
-  private updateFireflies(time: number): void {
+  private updateFireflies(deltaTime: number): void {
     if (!this.fireflySystem) return;
     
     // FireflySystem handles all animation internally
-    this.fireflySystem.update(time);
+    this.fireflySystem.update(deltaTime);
   }
 
-  /**
-   * Register water with the global environmental effects system
-   */
-  private registerWaterWithEnvironmentalSystem(): void {
-    if (!this.waterPool) {
-      console.warn('Cannot register water - waterPool not created yet');
-      return;
-    }
-    
-    const environmentalEffects = this.engine.getEnvironmentalEffects();
-    
-    // Create water source object for environmental system
-    const waterSource = {
-      id: 'observatory_water',
-      mesh: this.waterPool,
-      getCurrentLevel: () => this.currentWaterLevel,
-      isActive: true
-    };
-    
-    environmentalEffects.registerWaterSource(waterSource);
-    console.log('🌊 Registered observatory water with EnvironmentalEffectsSystem');
-  }
 
-  /**
-   * Setup listeners for OptimizationManager level changes
-   */
-  private setupOptimizationListeners(): void {
-    // Listen for optimization level changes from the global OptimizationManager
-    if (typeof window !== 'undefined') {
-      window.addEventListener('optimizationLevelChanged', (event: any) => {
-        const { level, deviceCapabilities } = event.detail;
-        
-        // Adjust water animation based on optimization level
-        if (deviceCapabilities?.isMobile || level.includes('mobile')) {
-          this.shouldUpdateWaves = false; // Disable vertex animation on mobile
-          console.log('🌊 Water vertex animation disabled for mobile performance');
-        } else {
-          this.shouldUpdateWaves = true; // Enable on desktop
-          console.log('🌊 Water vertex animation enabled for desktop');
-        }
-      });
-    }
-  }
 
-  /**
-   * Update water wave animations - integrates with OptimizationManager
-   * Uses texture-only animation on mobile, vertex displacement on desktop
-   * @param time The accumulated animation time
-   */
-  private updateWaterWaves(time: number): void {
-    if (!this.waterPool) return;
-    
-    const material = this.waterPool.material as THREE.MeshStandardMaterial;
-    
-    // Always animate textures for basic water movement (low performance cost)
-    if (material.map) {
-      material.map.offset.x = Math.sin(time * 0.1) * 0.02;
-      material.map.offset.y = time * 0.005;
-    }
-    
-    if (material.normalMap) {
-      material.normalMap.offset.x = Math.sin(time * 0.3) * 0.015;
-      material.normalMap.offset.y = time * 0.012;
-    }
-    
-    // Subtle opacity variation for depth simulation
-    const baseOpacity = 0.8;
-    const opacityVariation = Math.sin(time * 0.4) * 0.05;
-    material.opacity = baseOpacity + opacityVariation;
-    
-    // Only update vertex positions if performance allows (desktop only)
-    if (this.shouldUpdateWaves) {
-      const geometry = this.waterPool.geometry as THREE.BufferGeometry;
-      const positions = geometry.attributes.position.array as Float32Array;
-      
-      // Simplified wave function for better performance
-      for (let i = 0; i < positions.length; i += 3) {
-        const x = positions[i];
-        const y = positions[i + 1];
-        
-        // Calculate wave displacement relative to base level (z = 0)
-        // This creates wave offsets that work with the mesh's Y position
-        let waveDisplacement = 0;
-        
-        // Large ocean swells only (most visible impact)
-        waveDisplacement += Math.sin(x * 0.001 + y * 0.0005 + time * 0.5) * 0.2;
-        waveDisplacement += Math.cos(x * 0.0008 - y * 0.001 + time * 0.3) * 0.1;
-        
-        // Medium waves for detail
-        waveDisplacement += Math.sin(x * 0.004 + y * 0.003 + time * 1.0) * 0.15;
-        
-        // Apply wave displacement as relative offset from base level (z = 0)
-        // The mesh's Y position (controlled by updateRisingWater) handles the overall water level
-        positions[i + 2] = waveDisplacement;
-      }
-      
-      // Mark geometry for update
-      geometry.attributes.position.needsUpdate = true;
-      geometry.computeVertexNormals(); // Recalculate normals for proper lighting
-    }
-  }
 
   /**
    * Update the rising water effect for dramatic atmosphere
@@ -268,7 +154,7 @@ export class ObservatoryEnvironment extends GameObject {
    * @param deltaTime Frame time in seconds
    */
   private updateRisingWater(deltaTime: number): void {
-    if (!this.waterPool) return;
+    if (!this.oceanSystem) return;
     
     // Only rise if we haven't reached the maximum level
     if (this.currentWaterLevel < this.maxWaterLevel) {
@@ -278,25 +164,24 @@ export class ObservatoryEnvironment extends GameObject {
       // Clamp to maximum level
       this.currentWaterLevel = Math.min(this.currentWaterLevel, this.maxWaterLevel);
       
-      // Apply the new position to the water mesh (base level)
-      // Wave vertex displacements in updateWaterWaves work as offsets from this position
-      this.waterPool.position.y = this.currentWaterLevel;
+      // Update ocean system water level
+      this.oceanSystem.setWaterLevel(this.currentWaterLevel);
       
       // Optional: Log dramatic milestones
       const riseAmount = this.currentWaterLevel - this.initialWaterLevel;
-      if (Math.floor(riseAmount * 10) % 10 === 0 && riseAmount > 0) {
-        console.log(`🌊 Water has risen ${riseAmount.toFixed(1)} units... the island is being consumed by the sea!`);
-      }
+      // if (Math.floor(riseAmount * 10) % 10 === 0 && riseAmount > 0) {
+      //   console.log(`🌊 Water has risen ${riseAmount.toFixed(1)} units... the island is being consumed by the sea!`);
+      // }
       
       // Optional: When water reaches certain levels, trigger atmosphere changes
-      if (this.currentWaterLevel > -2 && this.currentWaterLevel < -1.8) {
-        // Water is approaching ground level - could trigger special effects here
-        console.log('🌊 The waters are rising dangerously high!');
-      }
+      // if (this.currentWaterLevel > -2 && this.currentWaterLevel < -1.8) {
+      //   // Water is approaching ground level - could trigger special effects here
+      //   console.log('🌊 The waters are rising dangerously high!');
+      // }
       
       if (this.currentWaterLevel >= this.maxWaterLevel - 0.1) {
         // Water has reached maximum level
-        console.log('🌊 The ocean has claimed the observatory... only the highest peaks remain above the waves.');
+        // console.log('🌊 The ocean has claimed the observatory... only the highest peaks remain above the waves.');
       }
     }
   }
@@ -321,27 +206,12 @@ export class ObservatoryEnvironment extends GameObject {
    */
   public resetWaterLevel(): void {
     this.currentWaterLevel = this.initialWaterLevel;
-    if (this.waterPool) {
-      this.waterPool.position.y = this.initialWaterLevel;
+    if (this.oceanSystem) {
+      this.oceanSystem.setWaterLevel(this.initialWaterLevel);
     }
     console.log('🌊 Water level reset to initial position');
   }
 
-  /**
-   * Sets a global multiplier for the intensity of all firefly lights.
-   * @param intensity The desired intensity multiplier (e.g., 1.0 for normal, 0.5 for half).
-   */
-  public setFireflyIntensity(intensity: number): void {
-    this.globalIntensityMultiplier = Math.max(0, intensity);
-  }
-
-  /**
-   * Sets a global multiplier for the animation speed of all fireflies.
-   * @param speed The desired speed multiplier (e.g., 1.0 for normal, 2.0 for double speed).
-   */
-  public setFireflySpeed(speed: number): void {
-    this.globalFireflySpeed = Math.max(0, speed);
-  }
 
   /**
    * Sets the color and intensity of the ambient light in the scene.
@@ -754,37 +624,46 @@ export class ObservatoryEnvironment extends GameObject {
   }
   
   private async createWaterPool(): Promise<void> {
-    console.log('🌊 Creating animated 3D ocean water...');
+    console.log('🌊 Creating ocean system...');
     
-    // Create high-detail water plane with vertex displacement geometry
-    const waterGeometry = this.createWaterGeometry();
-    const waterData = this.createAnimatedWaterData();
-    
-    // Use the PBR material factory for realistic, light-reactive water
-    const poolMaterial = this.engine.getMaterials().createPBRMaterial({
-      map: waterData.map,
-      normalMap: waterData.normalMap,
+    // Configure ocean system to match original Observatory water system exactly
+    const oceanConfig = {
+      // Exact dimensions and segments from original
+      size: { width: 10000, height: 10000 }, 
+      segments: { width: 128, height: 128 },
+      position: new this.THREE.Vector3(0, this.initialWaterLevel, 0),
+      waterLevel: this.initialWaterLevel,
+      
+      // Visual properties exactly matching original
+      color: 0x006994, // Deep ocean blue from original
+      opacity: 0.98, // Increased for a more opaque, less transparent look
       metalness: 0.02, // Very low metalness for water
-      roughness: 0.1, // Very smooth for reflections
-      transparent: true,
-      opacity: 0.8, // Semi-transparent water
-      color: 0x006994, // Deep ocean blue tint
-      side: this.THREE.DoubleSide, // Render both sides for underwater visibility
-    }) as THREE.MeshStandardMaterial;
+      roughness: 0.1,  // Very smooth for reflections
+      
+      // Use default 8-layer wave system (matches original complexity)
+      // The default waves are configured to match the original's 8-layer system
+      
+      enableReflection: true,
+      enableRefraction: true,
+      enableAnimation: true,
+      animationSpeed: 1.0,
+      
+      // Performance optimization
+      enableLOD: true,
+      maxDetailDistance: 500
+    };
     
-    // Store material and geometry for animation updates
-    this.waterPool = new this.THREE.Mesh(waterGeometry, poolMaterial);
-    this.waterPool.name = 'WaterPool';
-    this.waterPool.rotation.x = -Math.PI / 2;
-    this.waterPool.position.y = this.initialWaterLevel; // Start at initial level
-    this.waterPool.userData.isAnimatedWater = true;
-    this.waterPool.userData.waterData = waterData;
+    // Create and initialize ocean system with material factory
+    this.oceanSystem = new OceanSystem(this.THREE, this.scene, oceanConfig, this.engine.getMaterials());
+    await this.oceanSystem.initialize();
     
     // Initialize current water level
     this.currentWaterLevel = this.initialWaterLevel;
     
-    this.levelGroup.add(this.waterPool);
-    console.log('✅ Animated 3D ocean water created with vertex displacement');
+    // Get the ocean mesh for compatibility with existing code
+    this.waterPool = this.oceanSystem.getOceanMesh();
+    
+    console.log('✅ Ocean system created with realistic wave simulation');
   }
 
   /**
@@ -1268,8 +1147,8 @@ export class ObservatoryEnvironment extends GameObject {
     
     // Configure firefly system for Observatory environment
     const fireflyConfig = {
-      count: 60, // Keep all 200 fireflies for visual richness
-      maxLights: 60, // Full firefly lighting on desktop (FireflySystem auto-detects mobile and reduces to 8)
+      count: 80, // Keep all 200 fireflies for visual richness
+      maxLights: 80, // Full firefly lighting on desktop (FireflySystem auto-detects mobile and reduces to 8)
       colors: [
         0x87CEEB, // Sky blue
         0x98FB98, // Pale green
@@ -1280,18 +1159,18 @@ export class ObservatoryEnvironment extends GameObject {
         0x20B2AA, // Light sea green
         0x9370DB  // Medium purple
       ],
-      emissiveIntensity: 20.0, // A softer, more subtle glow
-      lightIntensity: 25.0, // Less intense light cast on the environment
-      lightRange: 100,
+      emissiveIntensity: 15.0, // A softer, more subtle glow
+      lightIntensity: 15.0, // Less intense light cast on the environment
+      lightRange: 80,
       cycleDuration: 12.0, // Even longer cycle for very stable lighting
       fadeSpeed: 0.3, // Very slow fade for smooth transitions
       heightRange: { min: 0.5, max: 2.5 },
       radius: 180,
-      size: 0.025, // Smaller, more delicate fireflies
+      size: 0.015, // Smaller, more delicate fireflies
       // New movement configuration for fine-tuning
       movement: {
-        speed: 0.5, // Slower floating animation
-        wanderSpeed: 0.001, // Slower, more gentle wandering
+        speed: 0.2, // Slower floating animation
+        wanderSpeed: 0.004, // Slower, more gentle wandering
         wanderRadius: 4, // Wander in a smaller area
         floatAmplitude: { x: 1.5, y: 0.5, z: 1.5 }, // Less dramatic up/down and side-to-side movement
         lerpFactor: 1.0 // Smoother, less snappy movement
