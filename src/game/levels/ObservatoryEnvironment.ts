@@ -75,7 +75,6 @@ export class ObservatoryEnvironment extends GameObject {
       await this.loadSkybox();
       await this.createLighting();
       await this.createGround();
-      await this.createWaterfalls();
       await this.createWaterPool();
       
       // Add natural environment (field with hill - no trees)
@@ -363,22 +362,6 @@ export class ObservatoryEnvironment extends GameObject {
         height = baseGroundLevel;
       }
       
-      // Rocky edges
-      if (distanceFromCenter > islandRadius - edgeFalloff && distanceFromCenter < islandRadius) {
-        const edgeProgress = (distanceFromCenter - (islandRadius - edgeFalloff)) / edgeFalloff;
-        const rockiness = Math.sin(x * 0.3) * Math.cos(z * 0.3) * 2;
-        const edgeHeightMultiplier = Math.cos(edgeProgress * Math.PI * 0.5);
-        
-        const rockHeight = baseGroundLevel + ((edgeHeight + rockiness) * edgeHeightMultiplier);
-        height = Math.max(height, rockHeight);
-      }
-      
-      // Waterfall cliffs
-      if (distanceFromCenter >= waterfallStart && distanceFromCenter < islandRadius) {
-        const waterfallProgress = (distanceFromCenter - waterfallStart) / (islandRadius - waterfallStart);
-        height = height * (1 - waterfallProgress * waterfallProgress);
-      }
-      
       // Void drop-off
       if (distanceFromCenter >= islandRadius) {
         const voidDistance = distanceFromCenter - islandRadius;
@@ -430,20 +413,19 @@ export class ObservatoryEnvironment extends GameObject {
     const ctx = canvas.getContext('2d')!;
     
     // Create base gradient
-    const gradient = ctx.createRadialGradient(256, 256, 0, 256, 256, 280);
+    const gradient = ctx.createRadialGradient(256, 256, 0, 256, 256, 250); // Slightly smaller radius for a wider beach
     gradient.addColorStop(0, '#3d6017');    // Grass center
     gradient.addColorStop(0.4, '#2d5016');  // Medium green
-    gradient.addColorStop(0.7, '#4a3c28');  // Dirt transition
-    gradient.addColorStop(0.85, '#5a5a5a'); // Gray rock
-    gradient.addColorStop(1, '#2a2a2a');    // Dark rock edges
+    gradient.addColorStop(0.7, '#c2b280');  // Sandy beach color
+    gradient.addColorStop(0.85, '#a19060'); // Darker sand
+    gradient.addColorStop(1, '#8b7355');    // Wet sand at the edge
     
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     // Add texture details
     this.addGrassTexture(ctx, canvas);
-    this.addRockTexture(ctx, canvas);
-    this.addWaterfallStreaks(ctx, canvas);
+    this.addSandTexture(ctx, canvas);
     
     const texture = new this.THREE.CanvasTexture(canvas);
     texture.wrapS = this.THREE.RepeatWrapping;
@@ -470,36 +452,21 @@ export class ObservatoryEnvironment extends GameObject {
     }
   }
   
-  private addRockTexture(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void {
+  private addSandTexture(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void {
     for (let i = 0; i < 400; i++) {
       const x = Math.random() * canvas.width;
       const y = Math.random() * canvas.height;
       const distFromCenter = Math.sqrt((x - 256) ** 2 + (y - 256) ** 2);
       
-      if (distFromCenter > 220) {
-        const size = Math.random() * 4 + 2;
+      // Draw sand texture in the outer ring of the island
+      if (distFromCenter > 180 && distFromCenter < 250) {
+        const size = Math.random() * 2 + 1;
         const brightness = Math.random() * 0.3 + 0.1;
-        ctx.fillStyle = `rgba(${Math.floor(80 + brightness * 40)}, ${Math.floor(80 + brightness * 40)}, ${Math.floor(80 + brightness * 40)}, 0.6)`;
+        ctx.fillStyle = `rgba(${Math.floor(180 + brightness * 20)}, ${Math.floor(160 + brightness * 20)}, ${Math.floor(120 + brightness * 20)}, 0.7)`;
         ctx.beginPath();
         ctx.arc(x, y, size, 0, Math.PI * 2);
         ctx.fill();
       }
-    }
-  }
-  
-  private addWaterfallStreaks(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void {
-    for (let i = 0; i < 50; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 240 + Math.random() * 40;
-      const x = 256 + Math.cos(angle) * radius;
-      const y = 256 + Math.sin(angle) * radius;
-      
-      ctx.strokeStyle = 'rgba(100, 150, 255, 0.3)';
-      ctx.lineWidth = Math.random() * 3 + 1;
-      ctx.beginPath();
-      ctx.moveTo(x, y - 10);
-      ctx.lineTo(x, y + 10);
-      ctx.stroke();
     }
   }
   
@@ -623,7 +590,8 @@ export class ObservatoryEnvironment extends GameObject {
   private async createWaterPool(): Promise<void> {
     console.log('🌊 Creating water pool...');
     
-    const poolGeometry = new this.THREE.PlaneGeometry(600, 600);
+    // Make the water plane significantly larger to create an ocean effect
+    const poolGeometry = new this.THREE.PlaneGeometry(10000, 10000);
     const poolTexture = this.createPoolTexture();
     
     const poolMaterial = new this.THREE.MeshBasicMaterial({
@@ -691,23 +659,6 @@ export class ObservatoryEnvironment extends GameObject {
     if (distanceFromCenter < this.terrainParams.hillRadius) {
       const heightMultiplier = Math.cos((distanceFromCenter / this.terrainParams.hillRadius) * Math.PI * 0.5);
       height = this.terrainParams.baseGroundLevel + (this.terrainParams.hillHeight * heightMultiplier * heightMultiplier);
-    }
-    
-    // Rocky edges calculation
-    if (distanceFromCenter > this.terrainParams.islandRadius - this.terrainParams.edgeFalloff && 
-        distanceFromCenter < this.terrainParams.islandRadius) {
-      const edgeProgress = (distanceFromCenter - (this.terrainParams.islandRadius - this.terrainParams.edgeFalloff)) / this.terrainParams.edgeFalloff;
-      const rockiness = Math.sin(x * 0.3) * Math.cos(z * 0.3) * 2;
-      const edgeHeightMultiplier = Math.cos(edgeProgress * Math.PI * 0.5);
-      
-      const rockHeight = this.terrainParams.baseGroundLevel + ((this.terrainParams.edgeHeight + rockiness) * edgeHeightMultiplier);
-      height = Math.max(height, rockHeight);
-    }
-    
-    // Waterfall cliffs calculation
-    if (distanceFromCenter >= this.terrainParams.waterfallStart && distanceFromCenter < this.terrainParams.islandRadius) {
-      const waterfallProgress = (distanceFromCenter - this.terrainParams.waterfallStart) / (this.terrainParams.islandRadius - this.terrainParams.waterfallStart);
-      height = height * (1 - waterfallProgress * waterfallProgress);
     }
     
     // Void drop-off calculation

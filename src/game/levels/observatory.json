@@ -26,7 +26,14 @@
     },
     "effects": [
       { "type": "fireflies", "config": { "count": 80, "radius": 200 } },
-      { "type": "particles", "config": { "type": "cosmic_dust" } }
+      { "type": "particles", "config": { "type": "cosmic_dust" } },
+      {
+        "type": "fog",
+        "config": {
+          "color": "#050a15",
+          "density": 0.0008
+        }
+      }
     ]
   },
   "movement": {

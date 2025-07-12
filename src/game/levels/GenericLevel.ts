@@ -51,6 +51,19 @@ export class GenericLevel extends BaseLevel {
     } else {
       console.warn('No terrain generator specified in level config.');
     }
+
+    // Handle environment effects like fog
+    if (this.config.environment && this.config.environment.effects) {
+      const fogEffect = this.config.environment.effects.find(e => e.type === 'fog');
+      if (fogEffect && fogEffect.config) {
+        console.log('🌫️ Applying scene fog...');
+        const { color = '#000000', density = 0.001 } = fogEffect.config;
+        // Use exponential fog for a natural falloff
+        this.scene.fog = new this.THREE.FogExp2(new this.THREE.Color(color), density);
+      }
+    }
+    // Note: BaseLevel.clearGlobalSceneState() already handles removing the fog
+    // when the level is disposed, preventing it from leaking into other levels.
   }
   
   /**
