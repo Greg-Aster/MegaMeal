@@ -57,13 +57,13 @@ export class Renderer {
       enableShadows: true, // Keep shadows enabled for proper lighting on all devices
       shadowMapType: isMobile ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap, // Use simpler shadows on mobile
       toneMapping: THREE.ACESFilmicToneMapping,
-      toneMappingExposure: 1.0,
+      toneMappingExposure: isMobile ? 1.0 : 1.4, // Higher exposure on desktop for better emissive visibility
       outputColorSpace: THREE.SRGBColorSpace,
-      enablePostProcessing: !isMobile, // Disable on mobile by default
-      enableBloom: !isMobile,
+      enablePostProcessing: true, // Enable by default, let OptimizationManager decide
+      enableBloom: true, // Enable by default
       enableSSAO: false, // Expensive, disabled by default
-      enableFXAA: !isMobile, // Use native antialiasing on mobile instead
-      enableToneMapping: !isMobile,
+      enableFXAA: true, // Enable by default
+      enableToneMapping: true, // Enable by default
       // Mobile-specific defaults
       isMobile,
       powerPreference: isMobile ? 'default' : 'high-performance',
@@ -181,12 +181,13 @@ export class Renderer {
     // Create effects array for the effect pass
     const effects: any[] = [];
     
-    // Bloom effect
+    // Bloom effect with device-specific settings
     if (this.config.enableBloom) {
+      const isMobile = this.config.isMobile;
       this.effects.bloom = new BloomEffect({
-        intensity: 0.5,
-        luminanceThreshold: 0.9,
-        luminanceSmoothing: 0.025,
+        intensity: isMobile ? 1.2 : 1.8, // Higher intensity on desktop for better firefly visibility
+        luminanceThreshold: isMobile ? 0.3 : 0.25, // Lower threshold on desktop to catch more emissive
+        luminanceSmoothing: 0.1,
         mipmapBlur: true
       });
       effects.push(this.effects.bloom);
@@ -284,6 +285,27 @@ export class Renderer {
     this.config.toneMappingExposure = exposure;
   }
   
+  public setBloomConfig(config: { intensity?: number; threshold?: number; smoothing?: number }): void {
+    if (this.effects.bloom) {
+      if (config.intensity !== undefined) {
+        this.effects.bloom.intensity = config.intensity;
+      }
+      if (config.threshold !== undefined) {
+        this.effects.bloom.luminanceMaterial.threshold = config.threshold;
+      }
+      if (config.smoothing !== undefined) {
+        this.effects.bloom.luminanceMaterial.smoothing = config.smoothing;
+      }
+      console.log('✨ Bloom effect updated:', { 
+        intensity: this.effects.bloom.intensity, 
+        threshold: this.effects.bloom.luminanceMaterial.threshold,
+        smoothing: this.effects.bloom.luminanceMaterial.smoothing
+      });
+    } else {
+      console.warn('Bloom effect not enabled, cannot set config.');
+    }
+  }
+  
   public toggleEffect(effectName: keyof typeof this.effects, enabled: boolean): void {
     const effect = this.effects[effectName];
     if (effect) {
@@ -352,11 +374,12 @@ export class Renderer {
     
     // Update renderer configuration based on optimization level
     if (level.includes('mobile')) {
-      // Mobile optimizations - keep shadows enabled for proper lighting
-      this.config.enablePostProcessing = level === 'mobile_high';
-      this.config.enableBloom = level === 'mobile_high';
+      // Keep post-processing and bloom enabled on all mobile tiers
+      // to allow for effects like firefly glows.
+      this.config.enablePostProcessing = true;
+      this.config.enableBloom = true;
       this.config.enableFXAA = false; // Use native mobile antialiasing
-      this.config.enableToneMapping = level === 'mobile_high';
+      this.config.enableToneMapping = true;
       this.config.enableShadows = true; // Keep shadows enabled for proper ground lighting
     } else {
       // Desktop optimizations

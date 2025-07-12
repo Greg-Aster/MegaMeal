@@ -59,11 +59,17 @@ A cinematic exploration experience that combines the accessibility of web games 
 - **Particle Effects**: Fireflies, waterfalls, and cosmic dust
 - **3D Audio**: Spatial audio system (currently disabled for performance)
 - **Weather Systems**: Planned future feature
+- **Global Environmental Effects**: Professional underwater detection system
+- **Rising Water Mechanics**: Dynamic water level changes with visual displacement mapping
+- **3D Wave Animation**: Realistic water surface with vertex displacement shaders
+- **Performance-Adaptive Effects**: Device-appropriate visual quality scaling
 
 #### **Performance Adaptation**
 - **Adaptive Quality**: Automatic quality adjustment based on device capabilities
 - **Resource Management**: Efficient loading and disposal of assets
 - **Cross-Platform Optimization**: Separate code paths for mobile vs desktop
+- **Global OptimizationManager**: Device detection and performance scaling
+- **Environmental Effects Integration**: Underwater effects scaled by device capabilities
 
 ---
   
@@ -86,12 +92,13 @@ A cinematic exploration experience that combines the accessibility of web games 
  ```
 /src/engine/
 ├── core/           # Core engine systems (Engine, GameObject)
-├── rendering/      # Graphics and visual effects
+├── rendering/      # Graphics and visual effects (Materials.ts with PBR support)
 ├── input/          # Control and interaction systems (HybridControls)
 ├── physics/        # Collision detection and movement
 ├── audio/          # 3D spatial audio system (disabled for performance)
 ├── resources/      # Asset loading and management
-├── systems/        # Engine subsystems (InteractionSystem)
+├── systems/        # Engine subsystems (InteractionSystem, EnvironmentalEffectsSystem)
+├── optimization/   # Performance scaling and device adaptation (OptimizationManager)
 └── utils/          # Shared utilities and tools (ErrorHandler)
 ```
 
@@ -112,7 +119,7 @@ A cinematic exploration experience that combines the accessibility of web games 
 │   └── RestaurantBackroom.ts      # Horror level with automated generation
 ├── systems/
 │   ├── StarNavigationSystem.ts    # Complete star interaction & rendering system
-│   ├── ObservatoryEnvironment.ts  # Observatory-specific environment
+│   ├── ObservatoryEnvironment.ts  # Observatory-specific environment with water effects
 │   ├── AtmosphericEffects.ts      # Environmental effects (fireflies, dust)
 │   ├── RoomFactory.ts             # 🆕 Automated level generation system
 │   ├── ModelLibrary.ts            # 3D asset management and organization
@@ -155,6 +162,115 @@ A cinematic exploration experience that combines the accessibility of web games 
 - **Build System**: Astro for static site generation
 - **Asset Pipeline**: Custom tools for 3D model management
   
+---
+
+## 🌊 **Environmental Effects System**
+
+### **🎯 Professional Underwater & Water Effects**
+
+#### **Global Environmental Effects System**
+- **Architecture**: Singleton system integrated with main engine loop
+- **Location**: `/src/engine/systems/EnvironmentalEffectsSystem.ts`
+- **Integration**: Fully integrated with Engine.ts, OptimizationManager, and EventBus
+- **Performance**: Device-appropriate effect quality with mobile optimization
+
+#### **Water Source Registration System**
+```typescript
+// Professional water source interface
+export interface WaterSource {
+  id: string;
+  mesh: THREE.Mesh;
+  getCurrentLevel(): number;  // Dynamic water level support
+  isActive: boolean;
+}
+
+// Global registration for any level
+environmentalEffects.registerWaterSource({
+  id: "observatory-pool",
+  mesh: waterPoolMesh,
+  getCurrentLevel: () => this.currentWaterLevel,
+  isActive: true
+});
+```
+
+#### **Underwater Detection & Effects**
+- **Real-time Detection**: Camera position vs registered water levels
+- **Visual Effects**: Blue tint overlay with depth-based intensity
+- **Fog Effects**: Underwater fog for reduced visibility realism
+- **Performance Scaling**: Effect quality adapts to device capabilities
+- **Event System**: Other systems can respond to underwater state changes
+
+#### **Advanced Water Animation (Observatory Level)**
+
+##### **3D Wave Displacement**
+- **Vertex Shader Animation**: Real displacement mapping on water geometry
+- **Performance Integration**: Wave quality scales with OptimizationManager
+- **Professional Separation**: Wave displacement (relative) vs water level (absolute)
+- **Texture Mapping**: Enhanced Materials.ts with `map` property support
+
+##### **Rising Water Mechanics**
+```typescript
+// Dynamic water level system
+private currentWaterLevel = -6;           // Base level
+private waterRiseRate = 0.05;            // Units per second
+private maxWaterLevel = 2;               // Rising limit
+
+// Professional implementation separates concerns:
+this.waterPool.position.y = this.currentWaterLevel;  // Mesh position for water level
+positions[i + 2] = waveDisplacement;                 // Vertex displacement for waves
+```
+
+##### **Underwater Visibility Fix**
+- **DoubleSide Rendering**: Water visible from below surface
+- **Material Enhancement**: `side: THREE.DoubleSide` for proper underwater rendering
+- **Performance Optimization**: Only applied when needed
+
+#### **System Integration**
+
+##### **Engine Integration**
+```typescript
+// Engine.ts - Full system integration
+private environmentalEffects!: EnvironmentalEffectsSystem;
+
+// Initialization
+this.environmentalEffects = EnvironmentalEffectsSystem.getInstance(this.eventBus);
+this.environmentalEffects.initialize(this.camera, this.scene);
+
+// Game loop integration
+this.environmentalEffects.update(this.time.deltaTime);
+```
+
+##### **Optimization Integration**
+- **Device Detection**: Mobile vs desktop effect quality
+- **Performance Scaling**: Check intervals and effect complexity adapt
+- **Resource Management**: Proper disposal and cleanup
+- **Memory Efficiency**: Minimal overhead for inactive effects
+
+#### **Technical Implementation Details**
+
+##### **Observatory Water Enhancement**
+- **Location**: `/src/game/levels/ObservatoryEnvironment.ts`
+- **Features**: Rising water + 3D waves + underwater effects + performance optimization
+- **Integration**: Uses global EnvironmentalEffectsSystem for underwater detection
+- **Materials**: Enhanced PBR material support with texture mapping
+
+##### **Materials System Enhancement**
+- **Location**: `/src/engine/rendering/Materials.ts`
+- **Addition**: `map?: THREE.Texture` property for texture mapping
+- **Integration**: Full PBR material support for advanced water effects
+
+##### **Performance Architecture**
+- **OptimizationManager Integration**: Effect quality scales by device
+- **Resource Cleanup**: Proper disposal patterns prevent memory leaks
+- **Event-Driven**: Efficient communication between systems
+- **Mobile Optimization**: Reduced effect complexity on mobile devices
+
+#### **Future Expansion Capabilities**
+- **Multiple Water Sources**: System supports unlimited water bodies
+- **Custom Effect Configs**: Per-water-source customization
+- **Advanced Effects**: Bubble systems, underwater audio filters (prepared but disabled)
+- **Cross-Level Compatibility**: Any level can register water sources
+
 ---
 
 ## 🏗️ **Data-Driven Engine Architecture**
@@ -516,6 +632,14 @@ interface LevelConfig {
 4. ✅ **Robust Error Handling**: Graceful fallbacks for asset loading failures
 5. ✅ **Proper Interface Implementation**: Fixed InteractionSystem compatibility issues
 
+##### **✅ Phase 3.6: Environmental Effects & Water System (COMPLETED - Current Session)**
+1. ✅ **Global EnvironmentalEffectsSystem**: Professional underwater detection and effects
+2. ✅ **Enhanced Water Animation**: 3D wave displacement with vertex shaders in Observatory
+3. ✅ **Rising Water Mechanics**: Dynamic water level system with performance optimization
+4. ✅ **Materials System Enhancement**: PBR material support with texture mapping
+5. ✅ **OptimizationManager Integration**: Device-appropriate effect quality scaling
+6. ✅ **Engine Integration**: Full system integration with main game loop and EventBus
+
 #### **🔮 Phase 4: Advanced Features (FUTURE DEVELOPMENT)**
 1. **Level Editor Tools**: Visual configuration creation interface
 2. **Advanced Component Systems**: Complex behaviors through composition
@@ -530,6 +654,13 @@ interface LevelConfig {
 - **GenericLevel**: Universal level class replaces hardcoded level classes
 - **Factory Pattern**: Seamless integration with existing LevelManager
 - **Configuration Validation**: Type-safe loading with graceful error handling
+
+**✅ Professional Environmental Effects Achieved**:
+- **Global EnvironmentalEffectsSystem**: Engine-level underwater detection and effects
+- **Advanced Water Animation**: Real 3D wave displacement using vertex shaders
+- **Rising Water Mechanics**: Dynamic water level system with smooth animation
+- **Performance Optimization**: Device-appropriate effect quality with mobile scaling
+- **Cross-Level Compatibility**: Water system works in any level through registration
 
 **Current System Status**:
 ```typescript
@@ -550,6 +681,9 @@ const restaurantLevel = new RestaurantBackroom(engine, interactionSystem, 'resta
 - **Backward Compatibility**: Legacy levels continue working alongside new system
 - **Industry Standards**: Following Unity/Unreal patterns for component composition
 - **Developer Experience**: Rapid level creation through configuration files
+- **Professional Water Effects**: AAA-quality water animation with underwater detection
+- **Performance Architecture**: Device-adaptive optimization with mobile scaling
+- **Modular Environmental Systems**: Clean separation between water, effects, and optimization
 
 #### **🔬 Implementation Architecture Details**
 
@@ -563,6 +697,10 @@ private async initializeDefaultComponents(): Promise<void> {
   
   const { RoomFactory } = await import('../systems/RoomFactory');
   this.registerComponent('RoomFactory', RoomFactory);
+  
+  // Environmental effects and optimization systems auto-registered at engine level
+  // EnvironmentalEffectsSystem - Global singleton with water source registration
+  // OptimizationManager - Device detection and performance scaling
   
   // Additional components registered automatically...
 }

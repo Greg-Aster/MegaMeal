@@ -72,15 +72,11 @@ export class Materials {
         side: options.side || THREE.FrontSide,
       });
     } else {
-      // Return a standard PBR material for a realistic look
-      const material = new this.THREE.MeshStandardMaterial({
+      // Return a standard PBR material for a realistic look - only set defined properties
+      const materialConfig: any = {
         color: options.color || 0xffffff,
         metalness: options.metalness || 0.1,
         roughness: options.roughness || 0.8,
-        map: options.map,
-        normalMap: options.normalMap,
-        roughnessMap: options.roughnessMap,
-        metalnessMap: options.metalnessMap,
         envMap: options.envMap || this.environmentMap,
         envMapIntensity: options.envMapIntensity || 1.0,
         emissive: options.emissive || 0x000000,
@@ -88,9 +84,17 @@ export class Materials {
         transparent: options.transparent || false,
         opacity: options.opacity || 1.0,
         side: options.side || THREE.FrontSide,
-        displacementMap: options.displacementMap,
         displacementScale: options.displacementScale || 1.0
-      });
+      };
+      
+      // Only add optional maps if they're actually defined
+      if (options.map) materialConfig.map = options.map;
+      if (options.normalMap) materialConfig.normalMap = options.normalMap;
+      if (options.roughnessMap) materialConfig.roughnessMap = options.roughnessMap;
+      if (options.metalnessMap) materialConfig.metalnessMap = options.metalnessMap;
+      if (options.displacementMap) materialConfig.displacementMap = options.displacementMap;
+      
+      const material = new this.THREE.MeshStandardMaterial(materialConfig);
       
       return material;
     }

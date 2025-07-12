@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GameObject } from '../../engine/core/GameObject';
 import { Engine } from '../../engine/core/Engine';
 import { AssetLoader } from '../../engine/resources/AssetLoader';
+import { FireflySystem } from '../../engine/systems/FireflySystem';
 
 /**
  * Handles the physical environment of the Star Observatory
@@ -23,7 +24,7 @@ export class ObservatoryEnvironment extends GameObject {
   // Natural environment elements
   private vegetationGroup: THREE.Group | null = null;
   private treesGroup: THREE.Group | null = null;
-  private firefliesGroup: THREE.Group | null = null;
+  private fireflySystem: FireflySystem | null = null;
   
   // Lighting elements
   private lightingGroup: THREE.Group | null = null;
@@ -45,6 +46,18 @@ export class ObservatoryEnvironment extends GameObject {
   private waterRiseRate = 0.05; // Units per second (faster rise)
   private maxWaterLevel = 2; // Stop rising at this level
   private currentWaterLevel = -6;
+  
+  // Configuration for level-specific effects
+  private readonly bloomConfig = {
+    intensity: 2.5, // Increased for more glow
+    threshold: 0.55, // Slightly lower threshold to catch more light
+    smoothing: 0.2
+  };
+  
+  private readonly fireflyEmissiveConfig = {
+    coreIntensity: 15.0, // Significantly increased for a bright core
+    glowIntensity: 4.0 // Increased for a larger glow effect
+  };
   
   // Terrain parameters for height calculation
   private readonly terrainParams = {
@@ -94,7 +107,10 @@ export class ObservatoryEnvironment extends GameObject {
       
       // Add natural environment (field with hill - no trees)
       await this.createVegetation();
-      await this.createGlowingFireflies();
+      await this.createFireflies();
+      
+      // Setup level-specific post-processing
+      this.setupLevelEffects();
       
       // Calculate and set proper spawn point based on terrain
       this.calculateSpawnPoint();
@@ -108,6 +124,14 @@ export class ObservatoryEnvironment extends GameObject {
     }
   }
   
+  private setupLevelEffects(): void {
+    console.log('✨ Applying level-specific post-processing effects...');
+    const renderer = this.engine.getRenderer();
+    if (renderer) {
+      renderer.setBloomConfig(this.bloomConfig);
+    }
+  }
+  
   public update(deltaTime: number): void {
     if (!this.isInitialized || !this.isActive) return;
     
@@ -115,7 +139,7 @@ export class ObservatoryEnvironment extends GameObject {
     this.fireflyAnimationTime += deltaTime * this.globalFireflySpeed;
     
     // Update firefly animations
-    this.updateFireflies(this.fireflyAnimationTime);
+    this.updateFireflies(deltaTime);
     
     // Update water wave animations
     this.updateWaterWaves(this.fireflyAnimationTime);
@@ -125,76 +149,14 @@ export class ObservatoryEnvironment extends GameObject {
   }
   
   /**
-   * Update firefly animations with realistic movement and fading.
+   * Update firefly animations using the new FireflySystem.
    * @param time The accumulated animation time.
    */
   private updateFireflies(time: number): void {
-    if (!this.firefliesGroup) return;
+    if (!this.fireflySystem) return;
     
-    this.firefliesGroup.children.forEach((fireflyGroup: any) => {
-      const userData = fireflyGroup.userData;
-      if (!userData) return;
-      
-      // Realistic wandering movement
-      const wanderX = Math.sin(time * userData.baseSpeed + userData.phase) * userData.wanderRange;
-      const wanderZ = Math.cos(time * userData.baseSpeed + userData.phase * 1.3) * userData.wanderRange;
-      
-      // Floating up and down
-      const floatY = Math.sin(time * userData.floatSpeed + userData.phase * 2) * userData.floatRange;
-      
-      // Apply smooth wandering direction changes to prevent jumping
-      const directionChangeSpeed = 0.02; // Very slow direction changes
-      if (Math.random() < directionChangeSpeed) {
-        userData.wanderDirection.x += (Math.random() - 0.5) * 0.1;
-        userData.wanderDirection.z += (Math.random() - 0.5) * 0.1;
-        
-        // Clamp to prevent excessive wandering
-        userData.wanderDirection.x = Math.max(-1, Math.min(1, userData.wanderDirection.x));
-        userData.wanderDirection.z = Math.max(-1, Math.min(1, userData.wanderDirection.z));
-      }
-      
-      // Calculate new position with natural movement
-      const newX = userData.originalX + wanderX + userData.wanderDirection.x;
-      const newZ = userData.originalZ + wanderZ + userData.wanderDirection.z;
-      
-      // Get the current terrain height at the new position to follow the surface
-      const currentGroundHeight = this.getHeightAt(newX, newZ);
-      const newY = currentGroundHeight + 0.5 + floatY; // Stay close to terrain surface
-      
-      // Update position with terrain-following movement
-      fireflyGroup.position.set(newX, newY, newZ);
-      
-      // Fade in and out like real fireflies
-      const fadeIntensity = Math.sin(time * userData.fadeSpeed + userData.fadePhase);
-      const fadeValue = Math.max(0.1, (fadeIntensity + 1) * 0.5); // Keep some minimum visibility
-      
-      // Update firefly mesh opacity
-      const firefly = fireflyGroup.children[0]; // First child is the main mesh
-      if (firefly && firefly.material) {
-        firefly.material.opacity = fadeValue * 0.9;
-      }
-      
-      // Update light intensity with more dramatic fading
-      const light = fireflyGroup.children[1]; // Second child is the light
-      if (light && light.isLight) {
-        light.intensity = fadeValue * userData.maxIntensity * this.globalIntensityMultiplier;
-      }
-      
-      // Update glow opacity
-      const glow = fireflyGroup.children[2]; // Third child is glow
-      if (glow && glow.material) {
-        glow.material.opacity = fadeValue * 0.4;
-      }
-      
-      // Add subtle scale pulsing for breathing effect - with proper null checks
-      const pulseScale = 1 + Math.sin(time * userData.fadeSpeed * 3 + userData.fadePhase) * 0.2;
-      if (firefly && firefly.scale) {
-        firefly.scale.setScalar(pulseScale);
-      }
-      if (glow && glow.scale) {
-        glow.scale.setScalar(pulseScale);
-      }
-    });
+    // FireflySystem handles all animation internally
+    this.fireflySystem.update(time);
   }
 
   /**
@@ -488,8 +450,8 @@ export class ObservatoryEnvironment extends GameObject {
     
     this.lightingGroup = new this.THREE.Group();
     
-    // Dim moonlight - fireflies will be the main light source
-    this.mainLight = new this.THREE.DirectionalLight(0x8bb3ff, 0.15);
+    // Soft moonlight - provides base visibility while fireflies add atmosphere
+    this.mainLight = new this.THREE.DirectionalLight(0x8bb3ff, 0.3); // Increased from 0.1
     this.mainLight.position.set(100, 200, 50);
     this.mainLight.target.position.set(0, 0, 0);
     this.mainLight.castShadow = true;
@@ -509,8 +471,8 @@ export class ObservatoryEnvironment extends GameObject {
       this.lightingGroup.add(this.mainLight.target);
     }
     
-    // Very dim fill light - fireflies will provide most illumination
-    this.fillLight = new this.THREE.DirectionalLight(0x6a7db3, 1.0);
+    // Soft fill light - helps with shadow contrast
+    this.fillLight = new this.THREE.DirectionalLight(0x6a7db3, 0.15); // Increased from 0.1
     this.fillLight.position.set(-50, 100, -30);
     this.fillLight.target.position.set(0, 0, 0);
     if (this.lightingGroup) {
@@ -518,8 +480,8 @@ export class ObservatoryEnvironment extends GameObject {
       this.lightingGroup.add(this.fillLight.target);
     }
     
-    // Minimal ambient lighting - let fireflies be the stars
-    this.ambientLight = new this.THREE.AmbientLight(0x202040, 20);
+    // Gentle moonlight ambient - provides base scene visibility
+    this.ambientLight = new this.THREE.AmbientLight(0x404060, 2.0); // Increased for basic visibility
     if (this.lightingGroup) {
       this.lightingGroup.add(this.ambientLight);
     }
@@ -1291,107 +1253,71 @@ export class ObservatoryEnvironment extends GameObject {
   }
   
   /**
-   * Create glowing fireflies as actual light sources
+   * Create fireflies using the new FireflySystem
    */
-  private async createGlowingFireflies(): Promise<void> {
-    console.log('✨ Creating glowing fireflies...');
+  private async createFireflies(): Promise<void> {
+    console.log('✨ Creating fireflies with mobile-optimized system...');
     
-    this.firefliesGroup = new this.THREE.Group();
-    this.firefliesGroup.name = 'fireflies_main_group'; // Name for optimization
+    // Configure firefly system for Observatory environment
+    const fireflyConfig = {
+      count: 100, // Keep all 200 fireflies for visual richness
+      maxLights: 100, // Full firefly lighting on desktop (FireflySystem auto-detects mobile and reduces to 8)
+      colors: [
+        0x87CEEB, // Sky blue
+        0x98FB98, // Pale green
+        0xFFFFE0, // Light yellow
+        0xDDA0DD, // Plum
+        0xF0E68C, // Khaki
+        0xFFA07A, // Light salmon
+        0x20B2AA, // Light sea green
+        0x9370DB  // Medium purple
+      ],
+      emissiveIntensity: 20.0, // A softer, more subtle glow
+      lightIntensity: 35.0, // Less intense light cast on the environment
+      lightRange: 200,
+      cycleDuration: 12.0, // Even longer cycle for very stable lighting
+      fadeSpeed: 0.3, // Very slow fade for smooth transitions
+      heightRange: { min: 0.5, max: 2.5 },
+      radius: 180,
+      size: 0.025, // Smaller, more delicate fireflies
+      // New movement configuration for fine-tuning
+      movement: {
+        speed: 0.5, // Slower floating animation
+        wanderSpeed: 0.001, // Slower, more gentle wandering
+        wanderRadius: 6, // Wander in a smaller area
+        floatAmplitude: { x: 1.5, y: 0.5, z: 1.5 }, // Less dramatic up/down and side-to-side movement
+        lerpFactor: 1.0 // Smoother, less snappy movement
+      }
+    };
     
-    const fireflyCount = 200; // 10x more fireflies
-    const colors = [
-      0x87CEEB, // Sky blue
-      0x98FB98, // Pale green
-      0xFFFFE0, // Light yellow
-      0xDDA0DD, // Plum
-      0xF0E68C  // Khaki
-    ];
+    // Create firefly system with height callback
+    this.fireflySystem = new FireflySystem(
+      this.THREE,
+      this.scene,
+      fireflyConfig,
+      (x: number, z: number) => this.getHeightAt(x, z)
+    );
     
-    for (let i = 0; i < fireflyCount; i++) {
-      // Create firefly position
-      const angle = Math.random() * Math.PI * 2;
-      const radius = Math.random() * 180; // Across the island
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-      
-      // Get terrain height and add random height above ground (closer to ground)
-      const groundHeight = this.getHeightAt(x, z);
-      const y = groundHeight + 0.5 + Math.random() * 2; // 0.5-2.5 units above ground (closer to ground)
-      
-      // Create firefly visual with smaller glowing sphere
-      const fireflyColor = colors[Math.floor(Math.random() * colors.length)];
-      
-      // Create smaller glowing firefly with reduced geometry complexity
-      const fireflyGeometry = new this.THREE.SphereGeometry(0.03, 6, 4); // Smaller and less complex
-      const fireflyMaterial = new this.THREE.MeshBasicMaterial({
-        color: fireflyColor,
-        transparent: true,
-        opacity: 0.9,
-        blending: this.THREE.AdditiveBlending, // Make it glow
-        depthWrite: false // Important for blending
-      });
-      
-      const firefly = new this.THREE.Mesh(fireflyGeometry, fireflyMaterial);
-      firefly.position.set(x, y, z);
-      firefly.name = 'firefly_core';
-      
-      // Create bright point light for each firefly - main light source with extended range
-      const light = new this.THREE.PointLight(fireflyColor, 1.2, 100); // Increased from 20 to 100
-      light.position.copy(firefly.position);
-      light.name = 'firefly_light';
-      
-      // Create smaller glow effect with reduced geometry complexity
-      const glowGeometry = new this.THREE.SphereGeometry(0.15, 6, 4); // Smaller and less complex
-      const glowMaterial = new this.THREE.MeshBasicMaterial({
-        color: fireflyColor,
-        transparent: true,
-        opacity: 0.3,
-        blending: this.THREE.AdditiveBlending, // Make it glow
-        depthWrite: false // Important for blending
-      });
-      const glow = new this.THREE.Mesh(glowGeometry, glowMaterial);
-      glow.position.copy(firefly.position);
-      glow.name = 'firefly_glow';
-      
-      // Create firefly group
-      const fireflyGroup = new this.THREE.Group();
-      fireflyGroup.name = 'firefly_group_container';
-      fireflyGroup.add(firefly);
-      fireflyGroup.add(light);
-      fireflyGroup.add(glow);
-      
-      // Store animation data for realistic firefly behavior (slower movement)
-      fireflyGroup.userData = {
-        originalX: x,
-        originalY: y,
-        originalZ: z,
-        baseSpeed: 0.2 + Math.random() * 0.3, // Slower base movement
-        floatSpeed: 0.4 + Math.random() * 0.4, // Slower floating
-        phase: Math.random() * Math.PI * 2,
-        wanderRange: 4 + Math.random() * 6,
-        floatRange: 1.5 + Math.random() * 2, // Smaller float range (closer to ground)
-        fadePhase: Math.random() * Math.PI * 2,
-        fadeSpeed: 0.3 + Math.random() * 0.4, // Slower fade speed
-        maxIntensity: 1.0 + Math.random() * 0.5,
-        wanderDirection: {
-          x: (Math.random() - 0.5) * 1.5, // Slower wander direction changes
-          z: (Math.random() - 0.5) * 1.5
-        }
-      };
-      
-      this.firefliesGroup!.add(fireflyGroup);
-    }
+    await this.fireflySystem.initialize();
     
-    this.levelGroup.add(this.firefliesGroup);
-    console.log('✅ Glowing fireflies created');
+    console.log('✅ FireflySystem created with mobile optimization');
   }
   
   public dispose(): void {
     if (this.isDisposed) return;
     
-    console.log('🧹 Disposing Observatory Environment...');
+    console.log('🧹 Disposing Observatory Environment and resetting effects...');
     
+    // Reset bloom to default values so other levels aren't overly bright
+    const renderer = this.engine.getRenderer();
+    if (renderer) {
+      renderer.setBloomConfig({
+        intensity: 0.8,
+        threshold: 0.85,
+        smoothing: 0.07
+      });
+    }
+
     // Unregister water from environmental effects system
     const environmentalEffects = this.engine.getEnvironmentalEffects();
     environmentalEffects.unregisterWaterSource('observatory_water');
@@ -1403,7 +1329,12 @@ export class ObservatoryEnvironment extends GameObject {
     this.waterPool = null;
     this.vegetationGroup = null;
     this.treesGroup = null;
-    this.firefliesGroup = null;
+    
+    // Dispose firefly system
+    if (this.fireflySystem) {
+      this.fireflySystem.dispose();
+      this.fireflySystem = null;
+    }
     this.lightingGroup = null;
     this.mainLight = null;
     this.fillLight = null;
