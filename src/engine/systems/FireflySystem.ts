@@ -203,18 +203,16 @@ export class FireflySystem extends GameObject {
         light.name = `firefly_light_${index}`;
         
         // Vector mode uses geometric fireflies with hard light falloff - no visual discs needed
-        
-        if (light) {
-          this.activeLights.push(light);
-        }
       } else {
         // Realistic mode: keep soft falloff
         light = new this.THREE.PointLight(color, 0, this.config.lightRange);
         light.position.copy(position);
         light.name = `firefly_light_${index}`;
-        if (light) {
-          this.activeLights.push(light);
-        }
+      }
+      
+      // Add light to active lights array if it was created
+      if (light) {
+        this.activeLights.push(light);
       }
     }
     
