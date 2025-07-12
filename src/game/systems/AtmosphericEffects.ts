@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { GameObject } from '../../engine/core/GameObject';
+import type { Engine } from '../../engine/core/Engine';
+import type { OptimizationLevel } from '../../engine/optimization/OptimizationManager';
 import { ResourceManager } from '../../engine/utils/ResourceManager';
 
 /**
@@ -10,6 +12,7 @@ export class AtmosphericEffects extends GameObject {
   private scene: THREE.Scene;
   private levelGroup: THREE.Group;
   private THREE: any;
+  private engine: Engine;
   
   // Effects
   private fireflies: THREE.Points | null = null;
@@ -20,16 +23,30 @@ export class AtmosphericEffects extends GameObject {
   private animationTime = 0;
   private originalFireflyPositions: Float32Array | null = null;
   
+  // Optimization
+  private isMobile: boolean = false;
+  private optimizationLevel: OptimizationLevel;
+
   // Configuration
-  private readonly gridRadius = 940;
-  private readonly fireflyCount = 80;
-  private readonly cosmicDustCount = 500;
+  private gridRadius = 940;
+  private fireflyCount = 80;
+  private cosmicDustCount = 500;
   
-  constructor(THREE: any, scene: THREE.Scene, levelGroup: THREE.Group) {
+  constructor(THREE: any, engine: Engine, scene: THREE.Scene, levelGroup: THREE.Group) {
     super();
     this.THREE = THREE;
+    this.engine = engine;
     this.scene = scene;
     this.levelGroup = levelGroup;
+
+    const optimizationManager = this.engine.getOptimizationManager();
+    this.isMobile = optimizationManager.getDeviceCapabilities()?.isMobile || false;
+    this.optimizationLevel = optimizationManager.getOptimizationLevel();
+
+    if (this.isMobile) {
+      this.fireflyCount = 25;
+      this.cosmicDustCount = 150;
+    }
   }
   
   public async initialize(): Promise<void> {
@@ -42,6 +59,7 @@ export class AtmosphericEffects extends GameObject {
     
     try {
       console.log('✨ Initializing Atmospheric Effects...');
+      console.log(`   - Optimization Level: ${this.optimizationLevel} (isMobile: ${this.isMobile})`);
       
       await this.createFireflies();
       await this.createCosmicDust();
@@ -305,15 +323,26 @@ export class AtmosphericEffects extends GameObject {
   private async setupLighting(): Promise<void> {
     console.log('💡 Setting up atmospheric lighting...');
     
-    // Subtle ambient lighting
-    const ambientLight = new this.THREE.AmbientLight(0x202040, 0.05);
-    this.levelGroup.add(ambientLight);
-    
-    // Moonlight for ground visibility
-    const moonlight = new this.THREE.DirectionalLight(0x6666aa, 0.08);
-    moonlight.position.set(100, 200, 50);
-    moonlight.castShadow = true;
-    this.levelGroup.add(moonlight);
+    if (this.isMobile) {
+      // MOBILE OPTIMIZATION: Simpler lighting for mobile
+      const ambientLight = new this.THREE.AmbientLight(0x404060, 0.4);
+      this.levelGroup.add(ambientLight);
+
+      const moonlight = new this.THREE.DirectionalLight(0x8888cc, 0.2);
+      moonlight.position.set(100, 200, 50);
+      moonlight.castShadow = false; // Disable shadows on mobile
+      this.levelGroup.add(moonlight);
+
+    } else {
+      // DESKTOP: Higher quality lighting
+      const ambientLight = new this.THREE.AmbientLight(0x202040, 0.2);
+      this.levelGroup.add(ambientLight);
+      
+      const moonlight = new this.THREE.DirectionalLight(0x6666aa, 0.3);
+      moonlight.position.set(100, 200, 50);
+      moonlight.castShadow = true; // Enable shadows on desktop
+      this.levelGroup.add(moonlight);
+    }
     
     console.log('✅ Atmospheric lighting set up');
   }

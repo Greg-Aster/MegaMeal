@@ -1,6 +1,9 @@
 // Atmospheric Audio System Component
 // Handles ambient sounds and audio effects for enhanced atmosphere
 
+import type { IDisposable } from '../../engine/interfaces/IDisposable';
+import { EventBus } from '../../engine/core/EventBus';
+
 export interface AudioConfig {
   ambient_tracks?: Array<{
     id: string;
@@ -17,16 +20,18 @@ export interface AudioConfig {
   }>;
 }
 
-export class AtmosphericAudioSystem {
+export class AtmosphericAudioSystem implements IDisposable {
   private audioContext: AudioContext | null = null;
   private audioSources: Map<string, AudioBufferSourceNode> = new Map();
   private eventListeners: Map<string, () => void> = new Map();
+  private trackingData: Map<string, any> = new Map();
+  public readonly isDisposed = false;
   
   constructor(
     private THREE: any,
     private scene: any,
     private levelGroup: any,
-    private eventBus: any // Will be properly typed when we fix the interface
+    private eventBus: EventBus
   ) {
     this.initAudioContext();
   }
@@ -34,8 +39,9 @@ export class AtmosphericAudioSystem {
   private initAudioContext(): void {
     try {
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      console.log('🎧 Audio context initialized');
     } catch (error) {
-      console.warn('Audio context not available:', error);
+      console.warn('⚠️ Audio context not available:', error);
     }
   }
   
@@ -67,25 +73,59 @@ export class AtmosphericAudioSystem {
   
   private playAmbientTrack(track: any): void {
     console.log(`🎵 Playing ambient track: ${track.id}`);
+    
+    // Store track information for later real implementation
+    this.trackingData.set(track.id, {
+      file: track.file,
+      volume: track.volume,
+      loop: track.loop,
+      position: track.position,
+      radius: track.radius,
+      type: 'ambient'
+    });
+    
     // In a real implementation, this would load and play audio files
-    // For now, just log the track info
     if (track.position === 'global') {
-      console.log(`Global ambient: ${track.file} at volume ${track.volume}`);
+      console.log(`🌍 Global ambient: ${track.file} at volume ${track.volume}`);
     } else {
-      console.log(`Positional audio: ${track.file} at ${track.position} (radius: ${track.radius})`);
+      console.log(`📍 Positional audio: ${track.file} at ${track.position} (radius: ${track.radius})`);
     }
   }
   
   private playSoundEffect(effect: any): void {
     console.log(`🔊 Playing sound effect: ${effect.sound} at volume ${effect.volume}`);
+    
+    // Store effect information for later real implementation
+    this.trackingData.set(`effect_${Date.now()}`, {
+      sound: effect.sound,
+      volume: effect.volume,
+      trigger: effect.trigger,
+      type: 'effect',
+      timestamp: Date.now()
+    });
+    
     // In a real implementation, this would play the sound effect
   }
   
   update(_deltaTime: number): void {
     // Update positional audio based on player position
+    // When audio is re-enabled, this will handle 3D audio positioning
+  }
+  
+  /**
+   * Get audio system statistics
+   */
+  public getStats() {
+    return {
+      totalTracks: this.trackingData.size,
+      activeListeners: this.eventListeners.size,
+      audioContextState: this.audioContext?.state || 'unavailable'
+    };
   }
   
   dispose(): void {
+    console.log('🧹 Disposing AtmosphericAudioSystem...');
+    
     // Clean up event listeners
     this.eventListeners.forEach((listener, trigger) => {
       if (this.eventBus && typeof this.eventBus.off === 'function') {
@@ -104,8 +144,17 @@ export class AtmosphericAudioSystem {
     });
     this.audioSources.clear();
     
+    // Clear tracking data
+    this.trackingData.clear();
+    
+    // Close audio context
     if (this.audioContext) {
-      this.audioContext.close();
+      this.audioContext.close().catch(e => {
+        console.warn('Error closing audio context:', e);
+      });
     }
+    
+    (this as any).isDisposed = true;
+    console.log('✅ AtmosphericAudioSystem disposed');
   }
 }

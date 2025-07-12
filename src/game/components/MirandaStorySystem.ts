@@ -4,7 +4,10 @@
 import * as THREE from 'three';
 import { InteractionSystem } from '../../engine/systems/InteractionSystem';
 import { EventBus } from '../../engine/core/EventBus';
-import { InteractableObject, InteractionType, InteractionData, InteractionMetadata } from '../../engine/interfaces/InteractableObject';
+import { InteractionType } from '../../engine/interfaces/InteractableObject';
+import type { InteractableObject, InteractionData, InteractionMetadata } from '../../engine/interfaces/InteractableObject';
+import { ResourceManager } from '../../engine/utils/ResourceManager';
+import type { IDisposable } from '../../engine/interfaces/IDisposable';
 
 export interface StoryConfig {
   captain_logs?: Array<{
@@ -28,8 +31,15 @@ export interface StoryConfig {
   }>;
 }
 
-export class MirandaStorySystem {
+export class MirandaStorySystem implements IDisposable {
   private storyObjects: THREE.Object3D[] = [];
+  private storyLights: THREE.Light[] = [];
+  private animationCleanups: (() => void)[] = [];
+  public readonly isDisposed = false;
+  
+  // Story progression tracking
+  private foundLogs: Set<string> = new Set();
+  private examinedObjects: Set<string> = new Set();
   
   constructor(
     private THREE: any,
@@ -89,9 +99,36 @@ export class MirandaStorySystem {
       isInteractable: true,
       interactionType: InteractionType.CLICK,
       onInteract: (_interactionData: InteractionData) => {
-        console.log(`Found log: ${log.name}`);
-        console.log(log.content);
-        this.eventBus.emit('story.log_found', { logId: log.id, content: log.content });
+        console.log(`📖 INTERACTION TRIGGERED! Found log: ${log.name}`);
+        
+        // Track story progression
+        this.foundLogs.add(log.id);
+        
+        // Show visual feedback
+        this.showWorldNotification(log.name, logMesh.position);
+        
+        // Show UI dialogue with the log content
+        this.eventBus.emit('ui.dialogue.show', {
+          title: log.name,
+          content: log.content,
+          speaker: 'Captain\'s Log',
+          type: 'story_log'
+        });
+        
+        // Also try a simple alert as fallback
+        setTimeout(() => {
+          alert(`📖 ${log.name}\n\n${log.content}`);
+        }, 100);
+        
+        // Emit story progression event
+        this.eventBus.emit('story.log_found', { 
+          logId: log.id, 
+          content: log.content,
+          totalFound: this.foundLogs.size 
+        });
+        
+        // Check for story completion
+        this.checkStoryProgress();
       },
       getInteractionPrompt: () => `Read ${log.name}`,
       getInteractionData: (): InteractionMetadata => ({
@@ -106,11 +143,12 @@ export class MirandaStorySystem {
       })
     };
     
+    console.log(`🎯 Registering interactable captain log: ${log.id} at position`, log.position);
     this.interactionSystem.registerInteractable(interactableObj);
   }
   
   private async createInteractiveObject(obj: any): Promise<void> {
-    let objectMesh;
+    let objectMesh: THREE.Object3D;
     
     if (obj.model === 'Prop_ItemHolder') {
       // Create pedestal-like holder
@@ -129,6 +167,7 @@ export class MirandaStorySystem {
         light.position.copy(objectMesh.position);
         light.position.y += 0.5;
         this.levelGroup.add(light);
+        this.storyLights.push(light);
       }
     } else if (obj.model === 'Prop_Light_Small') {
       // Create anomaly visualization
@@ -140,16 +179,24 @@ export class MirandaStorySystem {
       });
       objectMesh = new this.THREE.Mesh(anomalyGeometry, anomalyMaterial);
       
-      // Add pulsing animation
+      // Add pulsing animation with proper cleanup
       const startTime = Date.now();
+      let animationId: number;
       const animate = () => {
+        if (this.isDisposed) return;
+        
         const elapsed = (Date.now() - startTime) * 0.001;
         const pulse = Math.sin(elapsed * 2) * 0.2 + 0.8;
         anomalyMaterial.opacity = 0.6 * pulse;
         objectMesh.scale.setScalar(1 + pulse * 0.1);
-        requestAnimationFrame(animate);
+        animationId = requestAnimationFrame(animate);
       };
       animate();
+      
+      // Store cleanup function
+      this.animationCleanups.push(() => {
+        if (animationId) cancelAnimationFrame(animationId);
+      });
     } else {
       // Default object
       const objGeometry = new this.THREE.BoxGeometry(0.3, 0.3, 0.3);
@@ -157,9 +204,13 @@ export class MirandaStorySystem {
       objectMesh = new this.THREE.Mesh(objGeometry, objMaterial);
     }
     
-    objectMesh.position.set(...obj.position);
-    objectMesh.castShadow = true;
-    objectMesh.receiveShadow = true;
+    objectMesh.position.set(obj.position[0], obj.position[1], obj.position[2]);
+    
+    // Apply shadow properties if it's a mesh
+    if (objectMesh instanceof this.THREE.Mesh) {
+      objectMesh.castShadow = true;
+      objectMesh.receiveShadow = true;
+    }
     this.levelGroup.add(objectMesh);
     this.storyObjects.push(objectMesh);
     
@@ -170,12 +221,36 @@ export class MirandaStorySystem {
       isInteractable: true,
       interactionType: InteractionType.CLICK,
       onInteract: (_interactionData: InteractionData) => {
-        console.log(`Examined: ${obj.name}`);
-        console.log(obj.content);
+        console.log(`🔍 INTERACTION TRIGGERED! Examined: ${obj.name}`);
+        
+        // Track story progression
+        this.examinedObjects.add(obj.id);
+        
+        // Show visual feedback
+        this.showWorldNotification(obj.name, objectMesh.position);
+        
+        // Show UI dialogue with the object content
+        this.eventBus.emit('ui.dialogue.show', {
+          title: obj.name,
+          content: obj.content,
+          speaker: 'Investigation',
+          type: 'story_object'
+        });
+        
+        // Also try a simple alert as fallback
+        setTimeout(() => {
+          alert(`🔍 ${obj.name}\n\n${obj.content}`);
+        }, 100);
+        
+        // Emit story progression event
         this.eventBus.emit('story.object_examined', { 
           objectId: obj.id, 
-          content: obj.content 
+          content: obj.content,
+          totalExamined: this.examinedObjects.size
         });
+        
+        // Check for story completion
+        this.checkStoryProgress();
       },
       getInteractionPrompt: () => `${obj.interaction} ${obj.name}`,
       getInteractionData: (): InteractionMetadata => ({
@@ -190,17 +265,140 @@ export class MirandaStorySystem {
       })
     };
     
+    console.log(`🎯 Registering interactable object: ${obj.id} at position`, obj.position);
     this.interactionSystem.registerInteractable(interactableObj);
   }
   
   update(_deltaTime: number): void {
     // Update story object animations if needed
+    // Could add temporal distortion effects here
+  }
+  
+  /**
+   * Check story progression and unlock new content
+   */
+  private checkStoryProgress(): void {
+    const totalLogs = this.foundLogs.size;
+    const totalObjects = this.examinedObjects.size;
+    
+    // Unlock special content based on progression
+    if (totalLogs >= 2 && totalObjects >= 1) {
+      this.eventBus.emit('story.milestone_reached', {
+        milestone: 'investigation_progress',
+        description: 'The Miranda incident is becoming clearer...'
+      });
+    }
+    
+    if (totalLogs >= 3 && totalObjects >= 3) {
+      this.eventBus.emit('story.milestone_reached', {
+        milestone: 'incident_understood',
+        description: 'You have uncovered the truth of the Miranda incident.'
+      });
+    }
+  }
+  
+  /**
+   * Show a floating notification in the 3D world
+   */
+  private showWorldNotification(title: string, position: THREE.Vector3): void {
+    // Create floating text notification
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    
+    canvas.width = 512;
+    canvas.height = 256;
+    
+    // Style the text
+    context.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    
+    context.fillStyle = '#4488ff';
+    context.font = 'bold 24px Arial';
+    context.textAlign = 'center';
+    context.fillText('📖 ' + title, canvas.width / 2, canvas.height / 2 - 20);
+    
+    context.fillStyle = '#ffffff';
+    context.font = '16px Arial';
+    context.fillText('Click to read Captain\'s log', canvas.width / 2, canvas.height / 2 + 20);
+    
+    // Create texture and material
+    const texture = new this.THREE.CanvasTexture(canvas);
+    const material = new this.THREE.MeshBasicMaterial({ 
+      map: texture, 
+      transparent: true,
+      alphaTest: 0.1
+    });
+    
+    // Create notification plane
+    const geometry = new this.THREE.PlaneGeometry(2, 1);
+    const notification = new this.THREE.Mesh(geometry, material);
+    notification.position.copy(position);
+    notification.position.y += 1.5;
+    notification.lookAt(position.x, position.y + 1.5, position.z + 10); // Face the camera
+    
+    this.levelGroup.add(notification);
+    
+    // Animate and remove after 3 seconds
+    let startTime = Date.now();
+    const animate = () => {
+      const elapsed = (Date.now() - startTime) / 1000;
+      if (elapsed > 3) {
+        this.levelGroup.remove(notification);
+        material.dispose();
+        geometry.dispose();
+        texture.dispose();
+        return;
+      }
+      
+      // Float upward and fade out
+      notification.position.y = position.y + 1.5 + elapsed * 0.5;
+      material.opacity = Math.max(0, 1 - elapsed / 3);
+      
+      requestAnimationFrame(animate);
+    };
+    animate();
+  }
+
+  /**
+   * Get current story progression
+   */
+  public getStoryProgress() {
+    return {
+      logsFound: this.foundLogs.size,
+      objectsExamined: this.examinedObjects.size,
+      milestones: [
+        'investigation_progress',
+        'incident_understood'
+      ]
+    };
   }
   
   dispose(): void {
+    console.log('🧹 Disposing MirandaStorySystem...');
+    
+    // Clean up animations
+    this.animationCleanups.forEach(cleanup => cleanup());
+    this.animationCleanups = [];
+    
+    // Dispose story objects using ResourceManager
     this.storyObjects.forEach(obj => {
+      ResourceManager.disposeObject3D(obj);
       this.levelGroup.remove(obj);
     });
     this.storyObjects = [];
+    
+    // Dispose lights
+    this.storyLights.forEach(light => {
+      this.levelGroup.remove(light);
+    });
+    this.storyLights = [];
+    
+    // Clear progression tracking
+    this.foundLogs.clear();
+    this.examinedObjects.clear();
+    
+    (this as any).isDisposed = true;
+    console.log('✅ MirandaStorySystem disposed');
   }
 }

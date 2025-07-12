@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { GameObject } from '../../engine/core/GameObject';
+import type { Engine } from '../../engine/core/Engine';
+import type { OptimizationLevel } from '../../engine/optimization/Manager';
 import { InteractionSystem } from '../../engine/systems/InteractionSystem';
 // Direct mouse interaction - no longer using InteractableObject interface
 import { EventBus } from '../../engine/core/EventBus';
@@ -22,6 +24,7 @@ export class StarNavigationSystem extends GameObject {
   private scene: THREE.Scene;
   private levelGroup: THREE.Group;
   private interactionSystem: InteractionSystem;
+  private engine: Engine;
   private eventBus: EventBus;
   private camera: THREE.PerspectiveCamera;
   private gameContainer: HTMLElement;
@@ -37,6 +40,10 @@ export class StarNavigationSystem extends GameObject {
   private hoveredStarSprite: THREE.Sprite | null = null;
   private onStarSelectedCallback?: (star: StarData | null) => void;
   
+  // Optimization
+  private isMobile: boolean = false;
+  private optimizationLevel: OptimizationLevel;
+  
   // Touch state for tap vs drag detection
   // Configuration - matching original StarVisuals
   private readonly starDistance = 990; // Just slightly inside skybox (1000) for perfect sync
@@ -51,6 +58,7 @@ export class StarNavigationSystem extends GameObject {
   
   constructor(
     THREE: any,
+    engine: Engine,
     scene: THREE.Scene,
     levelGroup: THREE.Group,
     interactionSystem: InteractionSystem,
@@ -60,12 +68,17 @@ export class StarNavigationSystem extends GameObject {
   ) {
     super();
     this.THREE = THREE;
+    this.engine = engine;
     this.scene = scene;
     this.levelGroup = levelGroup;
     this.interactionSystem = interactionSystem;
     this.eventBus = eventBus;
     this.camera = camera;
     this.gameContainer = gameContainer;
+
+    const optimizationManager = this.engine.getOptimizationManager();
+    this.isMobile = optimizationManager.getDeviceCapabilities()?.isMobile || false;
+    this.optimizationLevel = optimizationManager.getOptimizationLevel();
   }
   
   public async initialize(): Promise<void> {
@@ -78,6 +91,7 @@ export class StarNavigationSystem extends GameObject {
     
     try {
       console.log('⭐ Initializing Star Navigation System...');
+      console.log(`   - Optimization Level: ${this.optimizationLevel} (isMobile: ${this.isMobile})`);
       
       await this.createStarSystem();
       await this.setupInteractions();
@@ -205,6 +219,30 @@ export class StarNavigationSystem extends GameObject {
   }
   
   private createStarSprite(event: any): THREE.Sprite {
+    // MOBILE OPTIMIZATION: Use simpler textures for mobile devices
+    if (this.isMobile) {
+      return this.createSimpleStarSprite(event);
+    }
+
+    return this.createAdvancedStarSprite(event);
+  }
+
+  private createSimpleStarSprite(event: any): THREE.Sprite {
+    const hexColor = this.getStarHexColor(event);
+    const material = new this.THREE.SpriteMaterial({
+      map: this.createSimpleStarTexture(hexColor),
+      blending: this.THREE.AdditiveBlending,
+      depthTest: false,
+      transparent: true,
+    });
+    const sprite = new this.THREE.Sprite(material);
+    const baseScale = event.isKeyEvent ? 30 : 18;
+    const scaleVariation = 0.8 + (Math.random() * 0.4);
+    sprite.scale.setScalar(baseScale * scaleVariation);
+    return sprite;
+  }
+
+  private createAdvancedStarSprite(event: any): THREE.Sprite {
     // Get star properties
     const uniqueId = event.uniqueId || event.slug || `star-${event.index}`;
     const starType = this.getStarType(uniqueId, event.isKeyEvent);
@@ -240,6 +278,21 @@ export class StarNavigationSystem extends GameObject {
     sprite.scale.setScalar(baseScale * scaleVariation);
     
     return sprite;
+  }
+
+  private createSimpleStarTexture(hexColor: string): THREE.Texture {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const context = canvas.getContext('2d')!;
+    const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gradient.addColorStop(0, 'white');
+    gradient.addColorStop(0.3, hexColor);
+    gradient.addColorStop(1, 'transparent');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 64, 64);
+    const texture = new this.THREE.CanvasTexture(canvas);
+    return texture;
   }
   
   private createConstellationLines(): void {
@@ -340,6 +393,12 @@ export class StarNavigationSystem extends GameObject {
   }
   
   private updateStarAnimations(): void {
+    // MOBILE OPTIMIZATION: Skip expensive texture regeneration on mobile
+    if (this.isMobile) {
+      // Could add a very simple, cheap animation here if needed, like opacity pulsing.
+      return;
+    }
+
     const currentTime = Date.now();
     
     // Throttle updates for performance
