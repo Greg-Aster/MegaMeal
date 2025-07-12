@@ -42,7 +42,7 @@ export class ObservatoryEnvironment extends GameObject {
   
   // Rising water effect
   private initialWaterLevel = -6;
-  private waterRiseRate = 0.002; // Units per second (very slow rise)
+  private waterRiseRate = 0.05; // Units per second (faster rise)
   private maxWaterLevel = 2; // Stop rising at this level
   private currentWaterLevel = -6;
   
@@ -256,11 +256,11 @@ export class ObservatoryEnvironment extends GameObject {
         let waveDisplacement = 0;
         
         // Large ocean swells only (most visible impact)
-        waveDisplacement += Math.sin(x * 0.001 + y * 0.0005 + time * 0.5) * 2.0;
-        waveDisplacement += Math.cos(x * 0.0008 - y * 0.001 + time * 0.3) * 1.5;
+        waveDisplacement += Math.sin(x * 0.001 + y * 0.0005 + time * 0.5) * 0.4;
+        waveDisplacement += Math.cos(x * 0.0008 - y * 0.001 + time * 0.3) * 0.3;
         
         // Medium waves for detail
-        waveDisplacement += Math.sin(x * 0.004 + y * 0.003 + time * 1.0) * 0.8;
+        waveDisplacement += Math.sin(x * 0.004 + y * 0.003 + time * 1.0) * 0.15;
         
         // Apply wave displacement as relative offset from base level (z = 0)
         // The mesh's Y position (controlled by updateRisingWater) handles the overall water level
@@ -797,32 +797,10 @@ export class ObservatoryEnvironment extends GameObject {
     const size = 10000;
     const segments = 128; // Reduced from 256 for better performance
     
+    // Create a flat plane. The wave displacement will be handled entirely
+    // by the updateWaterWaves() method for animation. This prevents a static
+    // displacement from being baked into the geometry.
     const geometry = new this.THREE.PlaneGeometry(size, size, segments, segments);
-    const positions = geometry.attributes.position.array as Float32Array;
-    
-    // Apply initial wave displacement to vertices (relative to z = 0)
-    for (let i = 0; i < positions.length; i += 3) {
-      const x = positions[i];
-      const y = positions[i + 1];
-      
-      // Initial wave displacement pattern (relative to base level)
-      let waveDisplacement = 0;
-      
-      // Large ocean swells
-      waveDisplacement += Math.sin(x * 0.001 + y * 0.0005) * 2.0;
-      waveDisplacement += Math.cos(x * 0.0008 - y * 0.001) * 1.5;
-      
-      // Medium waves  
-      waveDisplacement += Math.sin(x * 0.004 + y * 0.003) * 0.8;
-      
-      // Apply wave displacement relative to z = 0
-      // The mesh position will control the overall water level
-      positions[i + 2] = waveDisplacement;
-    }
-    
-    // Update geometry
-    geometry.attributes.position.needsUpdate = true;
-    geometry.computeVertexNormals();
     
     return geometry;
   }
