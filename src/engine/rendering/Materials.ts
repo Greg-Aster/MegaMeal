@@ -7,6 +7,7 @@ export interface PBRMaterialOptions {
   color?: number;
   metalness?: number;
   roughness?: number;
+  map?: THREE.Texture;
   normalMap?: THREE.Texture;
   roughnessMap?: THREE.Texture;
   metalnessMap?: THREE.Texture;
@@ -17,6 +18,8 @@ export interface PBRMaterialOptions {
   transparent?: boolean;
   opacity?: number;
   side?: THREE.Side;
+  displacementMap?: THREE.Texture;
+  displacementScale?: number;
 }
 
 export class Materials {
@@ -65,6 +68,7 @@ export class Materials {
         emissive: options.emissive || 0x000000,
         emissiveIntensity: options.emissiveIntensity || 1.0,
         map: (options as any).map, // Pass through texture map if it exists
+        normalMap: options.normalMap,
         side: options.side || THREE.FrontSide,
       });
     } else {
@@ -73,6 +77,7 @@ export class Materials {
         color: options.color || 0xffffff,
         metalness: options.metalness || 0.1,
         roughness: options.roughness || 0.8,
+        map: options.map,
         normalMap: options.normalMap,
         roughnessMap: options.roughnessMap,
         metalnessMap: options.metalnessMap,
@@ -82,7 +87,9 @@ export class Materials {
         emissiveIntensity: options.emissiveIntensity || 0.0,
         transparent: options.transparent || false,
         opacity: options.opacity || 1.0,
-        side: options.side || THREE.FrontSide
+        side: options.side || THREE.FrontSide,
+        displacementMap: options.displacementMap,
+        displacementScale: options.displacementScale || 1.0
       });
       
       return material;
