@@ -61,13 +61,13 @@ export class FireflySystem extends GameObject {
   // Default configuration
   private static readonly DEFAULT_CONFIG: FireflyConfig = {
     count: 200,
-    maxLights: 100, // Full firefly lighting on desktop - mobile will auto-reduce to 8
-    colors: [0x87CEEB, 0x98FB98, 0xFFFFE0, 0xDDA0DD, 0xF0E68C],
-    emissiveIntensity: 50.0, // Much brighter for magical lantern effect
-    lightIntensity: 12.0, // Much stronger light intensity for toon shading
-    lightRange: 200, // Larger range for better coverage
-    cycleDuration: 4.0, // Faster cycling for more dynamic lighting
-    fadeSpeed: 3.5, // Much faster fade for more dramatic light changes
+    maxLights: 50, // Reduce lights for better performance with vector style
+    colors: [0x00ffff, 0x00ff88, 0xffff00, 0xff44ff, 0x88ff44], // More vibrant vector colors
+    emissiveIntensity: 80.0, // Very bright emissive for magical vector effect
+    lightIntensity: 8.0, // Slightly lower but with hard falloff
+    lightRange: 120, // Smaller, more defined light areas
+    cycleDuration: 3.0, // Faster cycling for more magical feel
+    fadeSpeed: 5.0, // Much faster for sharp on/off transitions
     heightRange: { min: 0.5, max: 2.5 },
     radius: 180,
     size: 0.02, // Smaller fireflies
@@ -155,22 +155,39 @@ export class FireflySystem extends GameObject {
       console.log(`Firefly ${index} assigned color: 0x${color.toString(16)}`);
     }
     
-    // Create firefly mesh with smooth bloom setup to avoid hard edges
-    const fireflyGeometry = new this.THREE.SphereGeometry(this.config.size, 8, 6); // Smoother geometry
-    const fireflyMaterial = new this.THREE.MeshStandardMaterial({
-      color: new this.THREE.Color(color).multiplyScalar(0.1), // Darker base color
-      emissive: color, // Bright emissive color for bloom
-      emissiveIntensity: this.config.emissiveIntensity,
-      transparent: true,
-      opacity: 0.8, // Slightly transparent to soften edges
-      toneMapped: false, // CRITICAL for bloom effect
-      fog: false, // Don't let fog affect fireflies
-      metalness: 0.0, // Non-metallic for better glow
-      roughness: 1.0, // Fully rough for better emissive effect
-      // Add soft falloff to prevent hard clipping
-      alphaTest: 0.01,
-      side: this.THREE.DoubleSide // Ensure glow is visible from all angles
-    });
+    // Check if we're in vector mode for stylized fireflies
+    const isVectorMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
+    
+    let fireflyGeometry, fireflyMaterial;
+    
+    if (isVectorMode) {
+      // Vector art style - flat, geometric shapes
+      fireflyGeometry = new this.THREE.SphereGeometry(this.config.size * 3, 6, 4); // Larger, more angular
+      fireflyMaterial = new this.THREE.MeshBasicMaterial({
+        color: color,
+        transparent: true,
+        opacity: 1.0, // Fully opaque for vector look
+        toneMapped: false,
+        fog: false,
+        // No emission - rely on pure color brightness
+      });
+    } else {
+      // Realistic style - keep original smooth approach
+      fireflyGeometry = new this.THREE.SphereGeometry(this.config.size, 8, 6);
+      fireflyMaterial = new this.THREE.MeshStandardMaterial({
+        color: new this.THREE.Color(color).multiplyScalar(0.1),
+        emissive: color,
+        emissiveIntensity: this.config.emissiveIntensity,
+        transparent: true,
+        opacity: 0.8,
+        toneMapped: false,
+        fog: false,
+        metalness: 0.0,
+        roughness: 1.0,
+        alphaTest: 0.01,
+        side: this.THREE.DoubleSide
+      });
+    }
     
     const mesh = new this.THREE.Mesh(fireflyGeometry, fireflyMaterial);
     mesh.position.copy(position);
@@ -179,11 +196,25 @@ export class FireflySystem extends GameObject {
     // Create light only for the first maxLights fireflies
     let light: THREE.PointLight | null = null;
     if (index < this.config.maxLights) {
-      light = new this.THREE.PointLight(color, 0, this.config.lightRange); // Start with 0 intensity
-      light.position.copy(position);
-      light.name = `firefly_light_${index}`;
-      if (light) {
-        this.activeLights.push(light);
+      if (isVectorMode) {
+        // Vector mode: hard falloff light for stylized effect
+        light = new this.THREE.PointLight(color, 0, this.config.lightRange, 2.0); // decay=2 for harder falloff
+        light.position.copy(position);
+        light.name = `firefly_light_${index}`;
+        
+        // Vector mode uses geometric fireflies with hard light falloff - no visual discs needed
+        
+        if (light) {
+          this.activeLights.push(light);
+        }
+      } else {
+        // Realistic mode: keep soft falloff
+        light = new this.THREE.PointLight(color, 0, this.config.lightRange);
+        light.position.copy(position);
+        light.name = `firefly_light_${index}`;
+        if (light) {
+          this.activeLights.push(light);
+        }
       }
     }
     
