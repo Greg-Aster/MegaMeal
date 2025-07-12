@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { Engine } from '../engine/core/Engine';
 import { LevelManager, type LevelFactory } from './managers/LevelManager';
 import { GameStateManager } from './state/GameStateManager';
@@ -9,6 +10,7 @@ import type { ErrorContext } from '../engine/utils/ErrorHandler';
 // Import data-driven architecture components
 import { LevelSystem } from './systems/LevelSystem';
 import type { LevelConfig } from './systems/LevelSystem';
+import { PlayerLightComponent } from '../engine/components/PlayerLightComponent';
 
 /**
  * Updated GameManager using the new BaseLevel architecture
@@ -24,6 +26,9 @@ export class GameManager {
   
   // Data-driven architecture
   private levelSystem: LevelSystem;
+  
+  // Player lighting system
+  private playerLight: PlayerLightComponent | null = null;
   
   private isInitialized = false;
   private isRunning = false;
@@ -285,6 +290,11 @@ export class GameManager {
         this.levelManager.update(data.deltaTime);
         this.interactionSystem.update(data.deltaTime, this.engine.getCamera().position);
         
+        // Update player light
+        if (this.playerLight) {
+          this.playerLight.update(data.deltaTime);
+        }
+        
         // Update game state
         this.gameStateManager.updatePlayTime(data.deltaTime);
         
@@ -367,6 +377,9 @@ export class GameManager {
         // Update game state
         this.gameStateManager.setCurrentLevel(levelId);
         
+        // Setup player light for new level
+        await this.setupPlayerLight();
+        
         // Handle level-specific setup
         await this.handleLevelSpecificSetup(levelId);
         
@@ -446,6 +459,63 @@ export class GameManager {
         camera.position.set(0, 1.7, 8);
         camera.lookAt(0, 1.7, 0);
         break;
+    }
+  }
+  
+  /**
+   * Setup player light for the current level
+   */
+  private async setupPlayerLight(): Promise<void> {
+    try {
+      // Dispose existing player light if any
+      if (this.playerLight) {
+        this.playerLight.dispose();
+        this.playerLight = null;
+      }
+      
+      // Get current level to find player object
+      const currentLevel = this.levelManager.getCurrentLevel();
+      if (!currentLevel) {
+        console.warn('No current level - cannot setup player light');
+        return;
+      }
+      
+      // Try to get player object from level
+      let playerObject: THREE.Object3D | null = null;
+      
+      // For data-driven levels, try to get the player from MovementComponent
+      if (typeof (currentLevel as any).getComponent === 'function') {
+        const movementComponent = (currentLevel as any).getComponent('MovementComponent');
+        if (movementComponent && typeof movementComponent.getPlayerObject === 'function') {
+          playerObject = movementComponent.getPlayerObject();
+        }
+      }
+      
+      // If no player object found, attach to camera (fallback)
+      if (!playerObject) {
+        playerObject = this.engine.getCamera();
+        console.log('💡 No player object found - attaching light to camera');
+      }
+      
+      // Create new player light
+      this.playerLight = new PlayerLightComponent(
+        THREE,
+        this.engine.getScene(),
+        playerObject,
+        {
+          // Customize based on level if needed
+          intensity: 6.0,
+          range: 25,
+          color: 0xffa366 // Warm firefly color
+        }
+      );
+      
+      await this.playerLight.initialize();
+      console.log('💡 Player light setup complete');
+      
+    } catch (error) {
+      console.error('Failed to setup player light:', error);
+      // Don't throw - player light is nice to have but not critical
     }
   }
   
@@ -649,6 +719,7 @@ export class GameManager {
     this.isRunning = false;
     
     // Dispose systems in reverse order
+    this.playerLight?.dispose();
     this.levelManager?.dispose();
     this.gameStateManager?.dispose();
     this.interactionSystem?.dispose();
