@@ -320,15 +320,29 @@ export class ObservatoryEnvironment extends GameObject {
     
     this.lightingGroup = new this.THREE.Group();
     
-    // Determine lighting intensity based on device capabilities
+    // Determine lighting intensity based on device capabilities and graphics mode
     const optimizationManager = this.engine.getOptimizationManager();
     const isMobile = optimizationManager.getDeviceCapabilities()?.isMobile ?? false;
-    const mainIntensity = isMobile ? 0.4 : 0.3;
-    const fillIntensity = isMobile ? 0.2 : 0.15;
-    const ambientIntensity = isMobile ? 4.0 : 2.0;
+    const isToonMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
+    
+    // Toon shading needs stronger, more directional lighting for better cell shading
+    let mainIntensity, fillIntensity, ambientIntensity;
+    
+    if (isToonMode) {
+      // Bright, magical lighting for toon shading - much higher ambient for visibility
+      mainIntensity = isMobile ? 1.0 : 0.8;
+      fillIntensity = isMobile ? 0.5 : 0.4;
+      ambientIntensity = isMobile ? 6.0 : 4.0; // Much higher ambient for toon visibility
+    } else {
+      // Softer lighting for realistic shading
+      mainIntensity = isMobile ? 0.4 : 0.3;
+      fillIntensity = isMobile ? 0.2 : 0.15;
+      ambientIntensity = isMobile ? 4.0 : 2.0;
+    }
 
-    // Soft moonlight - provides base visibility while fireflies add atmosphere
-    this.mainLight = new this.THREE.DirectionalLight(0x8bb3ff, mainIntensity);
+    // Main light - stronger and more directional for toon mode
+    const mainLightColor = isToonMode ? 0x9ac4ff : 0x8bb3ff; // Slightly brighter blue for toon
+    this.mainLight = new this.THREE.DirectionalLight(mainLightColor, mainIntensity);
     this.mainLight.position.set(100, 200, 50);
     this.mainLight.target.position.set(0, 0, 0);
     this.mainLight.castShadow = true;
@@ -348,8 +362,9 @@ export class ObservatoryEnvironment extends GameObject {
       this.lightingGroup.add(this.mainLight.target);
     }
     
-    // Soft fill light - helps with shadow contrast
-    this.fillLight = new this.THREE.DirectionalLight(0x6a7db3, fillIntensity);
+    // Fill light - more contrasting for toon mode
+    const fillLightColor = isToonMode ? 0x7a9dc3 : 0x6a7db3; // Slightly different color for toon
+    this.fillLight = new this.THREE.DirectionalLight(fillLightColor, fillIntensity);
     this.fillLight.position.set(-50, 100, -30);
     this.fillLight.target.position.set(0, 0, 0);
     if (this.lightingGroup) {
@@ -373,8 +388,13 @@ export class ObservatoryEnvironment extends GameObject {
   private async createGround(): Promise<void> {
     console.log('🏔️ Creating floating island terrain...');
     
-    // Create detailed terrain geometry
-    const groundGeometry = new this.THREE.PlaneGeometry(500, 500, 512, 512);
+    // Check if we're in toon mode for simplified geometry
+    const isToonMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
+    
+    // Create geometry - much simpler for toon shading, more detailed for realistic
+    const groundGeometry = isToonMode ? 
+      new this.THREE.PlaneGeometry(500, 500, 32, 32) :   // 1K vertices for toon
+      new this.THREE.PlaneGeometry(500, 500, 128, 128);  // 16K vertices for realistic (down from 262K)
     const positions = groundGeometry.attributes.position.array;
     
     // Use shared terrain parameters for consistency with getHeightAt
@@ -444,17 +464,34 @@ export class ObservatoryEnvironment extends GameObject {
   
   private createTerrainTexture(): THREE.CanvasTexture {
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
+    const isToonMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
+    
+    // Much lower resolution for toon mode to enhance 2D pixelated look
+    canvas.width = isToonMode ? 128 : 512;
+    canvas.height = isToonMode ? 128 : 512;
     const ctx = canvas.getContext('2d')!;
     
-    // Create base gradient
-    const gradient = ctx.createRadialGradient(256, 256, 0, 256, 256, 250); // Slightly smaller radius for a wider beach
-    gradient.addColorStop(0, '#3d6017');    // Grass center
-    gradient.addColorStop(0.4, '#2d5016');  // Medium green
-    gradient.addColorStop(0.7, '#c2b280');  // Sandy beach color
-    gradient.addColorStop(0.85, '#a19060'); // Darker sand
-    gradient.addColorStop(1, '#8b7355');    // Wet sand at the edge
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const maxRadius = Math.min(centerX, centerY) * 0.98;
+    
+    let gradient;
+    if (isToonMode) {
+      // Bold, flat colors for strong 2D cartoon look
+      gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxRadius);
+      gradient.addColorStop(0, '#7dd321');    // Vibrant cartoon grass green
+      gradient.addColorStop(0.4, '#6bb81f');  // Slightly darker green
+      gradient.addColorStop(0.7, '#ffeb3b');  // Bright cartoon sand yellow
+      gradient.addColorStop(1, '#ffc107');    // Golden sand edge
+    } else {
+      // Detailed gradient for realistic shading
+      gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxRadius);
+      gradient.addColorStop(0, '#3d6017');    // Grass center
+      gradient.addColorStop(0.4, '#2d5016');  // Medium green
+      gradient.addColorStop(0.7, '#c2b280');  // Sandy beach color
+      gradient.addColorStop(0.85, '#a19060'); // Darker sand
+      gradient.addColorStop(1, '#8b7355');    // Wet sand at the edge
+    }
     
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -467,6 +504,13 @@ export class ObservatoryEnvironment extends GameObject {
     texture.wrapS = this.THREE.RepeatWrapping;
     texture.wrapT = this.THREE.RepeatWrapping;
     texture.repeat.set(3, 3);
+    
+    // For toon mode, use nearest neighbor filtering for pixelated look
+    if (isToonMode) {
+      texture.magFilter = this.THREE.NearestFilter;
+      texture.minFilter = this.THREE.NearestFilter;
+      texture.generateMipmaps = false;
+    }
     
     return texture;
   }
