@@ -450,8 +450,15 @@ export class ObservatoryEnvironment extends GameObject {
     
     this.lightingGroup = new this.THREE.Group();
     
+    // Determine lighting intensity based on device capabilities
+    const optimizationManager = this.engine.getOptimizationManager();
+    const isMobile = optimizationManager.getDeviceCapabilities()?.isMobile ?? false;
+    const mainIntensity = isMobile ? 0.4 : 0.3;
+    const fillIntensity = isMobile ? 0.2 : 0.15;
+    const ambientIntensity = isMobile ? 4.0 : 2.0;
+
     // Soft moonlight - provides base visibility while fireflies add atmosphere
-    this.mainLight = new this.THREE.DirectionalLight(0x8bb3ff, 0.3); // Increased from 0.1
+    this.mainLight = new this.THREE.DirectionalLight(0x8bb3ff, mainIntensity);
     this.mainLight.position.set(100, 200, 50);
     this.mainLight.target.position.set(0, 0, 0);
     this.mainLight.castShadow = true;
@@ -472,7 +479,7 @@ export class ObservatoryEnvironment extends GameObject {
     }
     
     // Soft fill light - helps with shadow contrast
-    this.fillLight = new this.THREE.DirectionalLight(0x6a7db3, 0.15); // Increased from 0.1
+    this.fillLight = new this.THREE.DirectionalLight(0x6a7db3, fillIntensity);
     this.fillLight.position.set(-50, 100, -30);
     this.fillLight.target.position.set(0, 0, 0);
     if (this.lightingGroup) {
@@ -480,8 +487,9 @@ export class ObservatoryEnvironment extends GameObject {
       this.lightingGroup.add(this.fillLight.target);
     }
     
-    // Gentle moonlight ambient - provides base scene visibility
-    this.ambientLight = new this.THREE.AmbientLight(0x404060, 2.0); // Increased for basic visibility
+    // Gentle moonlight ambient - provides base scene visibility.
+    // On mobile, this is higher to compensate for fewer firefly point lights.
+    this.ambientLight = new this.THREE.AmbientLight(0x404060, ambientIntensity);
     if (this.lightingGroup) {
       this.lightingGroup.add(this.ambientLight);
     }
@@ -1260,8 +1268,8 @@ export class ObservatoryEnvironment extends GameObject {
     
     // Configure firefly system for Observatory environment
     const fireflyConfig = {
-      count: 100, // Keep all 200 fireflies for visual richness
-      maxLights: 100, // Full firefly lighting on desktop (FireflySystem auto-detects mobile and reduces to 8)
+      count: 60, // Keep all 200 fireflies for visual richness
+      maxLights: 60, // Full firefly lighting on desktop (FireflySystem auto-detects mobile and reduces to 8)
       colors: [
         0x87CEEB, // Sky blue
         0x98FB98, // Pale green
@@ -1273,8 +1281,8 @@ export class ObservatoryEnvironment extends GameObject {
         0x9370DB  // Medium purple
       ],
       emissiveIntensity: 20.0, // A softer, more subtle glow
-      lightIntensity: 35.0, // Less intense light cast on the environment
-      lightRange: 200,
+      lightIntensity: 25.0, // Less intense light cast on the environment
+      lightRange: 100,
       cycleDuration: 12.0, // Even longer cycle for very stable lighting
       fadeSpeed: 0.3, // Very slow fade for smooth transitions
       heightRange: { min: 0.5, max: 2.5 },
@@ -1284,7 +1292,7 @@ export class ObservatoryEnvironment extends GameObject {
       movement: {
         speed: 0.5, // Slower floating animation
         wanderSpeed: 0.001, // Slower, more gentle wandering
-        wanderRadius: 6, // Wander in a smaller area
+        wanderRadius: 4, // Wander in a smaller area
         floatAmplitude: { x: 1.5, y: 0.5, z: 1.5 }, // Less dramatic up/down and side-to-side movement
         lerpFactor: 1.0 // Smoother, less snappy movement
       }
