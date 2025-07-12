@@ -275,6 +275,12 @@ export class GameManager {
       if (!this.isRunning) return;
       
       try {
+        // Update engine systems first
+        const optimizationManager = this.engine.getOptimizationManager();
+        if (optimizationManager) {
+          optimizationManager.update(data.deltaTime);
+        }
+
         // Update managers
         this.levelManager.update(data.deltaTime);
         this.interactionSystem.update(data.deltaTime, this.engine.getCamera().position);

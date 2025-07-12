@@ -649,7 +649,7 @@ export class OptimizationManager {
       const objectIndex = (Math.floor(this.lastOptimizationCheck / 10) + i) % objectsToProcess.length;
       const managedObject = objectsToProcess[objectIndex];
       if (managedObject) {
-        this.optimizeObject(managedObject.object);
+        this.optimizeObject(managedObject.object, deltaTime);
       }
     }
   }
@@ -670,7 +670,7 @@ export class OptimizationManager {
   /**
    * Optimize a single object based on distance and visibility
    */
-  private optimizeObject(object: THREE.Object3D): void {
+  private optimizeObject(object: THREE.Object3D, deltaTime: number): void {
     if (!this.camera) return;
     
     // Find the managed object data
@@ -687,7 +687,7 @@ export class OptimizationManager {
     const isInFrustum = this.frustum.intersectsObject(object);
     
     // Make optimization decisions
-    this.applyOptimization(managedObject, distance, isInFrustum);
+    this.applyOptimization(managedObject, distance, isInFrustum, deltaTime);
   }
   
   /**
@@ -696,7 +696,8 @@ export class OptimizationManager {
   private applyOptimization(
     managedObject: ManagedObject,
     distance: number,
-    isInFrustum: boolean
+    isInFrustum: boolean,
+    deltaTime: number
   ): void {
     const shouldBeVisible = isInFrustum && distance <= this.config.maxRenderDistance;
     const shouldBeLoaded = distance <= this.config.unloadDistance;
@@ -716,7 +717,7 @@ export class OptimizationManager {
     }
     
     // Apply smooth fading instead of abrupt visibility changes
-    this.applySmoothFade(managedObject, targetOpacity, shouldBeVisible);
+    this.applySmoothFade(managedObject, targetOpacity, shouldBeVisible, deltaTime);
     
     // Handle distance-based unloading (only when fully faded)
     // DISABLED: Don't actually unload objects since they don't have proper reload callbacks
@@ -736,7 +737,7 @@ export class OptimizationManager {
   /**
    * Apply smooth fade transition to an object
    */
-  private applySmoothFade(managedObject: ManagedObject, targetOpacity: number, shouldBeVisible: boolean): void {
+  private applySmoothFade(managedObject: ManagedObject, targetOpacity: number, shouldBeVisible: boolean, deltaTime: number): void {
     // Initialize opacity if not set
     if (managedObject.currentOpacity === undefined) {
       managedObject.currentOpacity = managedObject.object.visible ? 1.0 : 0.0;
@@ -748,7 +749,7 @@ export class OptimizationManager {
     }
     
     // Smoothly interpolate to target opacity
-    const opacityDelta = (targetOpacity - managedObject.currentOpacity) * this.config.fadeSpeed * 0.016; // Assume 60fps
+    const opacityDelta = (targetOpacity - managedObject.currentOpacity) * this.config.fadeSpeed * deltaTime;
     managedObject.currentOpacity += opacityDelta;
     
     // Clamp opacity

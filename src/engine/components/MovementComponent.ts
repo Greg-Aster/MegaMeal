@@ -163,8 +163,9 @@ export class MovementComponent {
         this.state.groundLevel = this.getFallbackGroundLevel() + this.config.eyeHeight;
       }
     } else if (this.levelConfig?.terrainProvider) {
-      // Use the level-provided terrain function - it returns camera position (ground + eye height)
-      this.state.groundLevel = this.levelConfig.terrainProvider(this.state.position.x, this.state.position.z);
+      // Use the level-provided terrain function, which returns the raw ground height.
+      // We add the eyeHeight to get the camera's correct "on ground" Y position.
+      this.state.groundLevel = this.levelConfig.terrainProvider(this.state.position.x, this.state.position.z) + this.config.eyeHeight;
     } else {
       // No ground detection method, use fallback
       this.state.groundLevel = this.getFallbackGroundLevel() + this.config.eyeHeight;

@@ -51,19 +51,6 @@ export class GenericLevel extends BaseLevel {
     } else {
       console.warn('No terrain generator specified in level config.');
     }
-
-    // Handle environment effects like fog
-    if (this.config.environment && this.config.environment.effects) {
-      const fogEffect = this.config.environment.effects.find(e => e.type === 'fog');
-      if (fogEffect && fogEffect.config) {
-        console.log('🌫️ Applying scene fog...');
-        const { color = '#000000', density = 0.001 } = fogEffect.config;
-        // Use exponential fog for a natural falloff
-        this.scene.fog = new this.THREE.FogExp2(new this.THREE.Color(color), density);
-      }
-    }
-    // Note: BaseLevel.clearGlobalSceneState() already handles removing the fog
-    // when the level is disposed, preventing it from leaking into other levels.
   }
   
   /**
@@ -275,7 +262,7 @@ export class GenericLevel extends BaseLevel {
     if (levelSpecificComponents.includes(componentType)) {
       try {
         // Try loading from levels directory for level-specific components
-        const levelModule = await import(`./${componentType}`);
+        const levelModule = await import(`./${componentType}.ts`);
         return levelModule[componentType];
       } catch (error) {
         console.warn(`Could not load level-specific component ${componentType}:`, error);
@@ -286,17 +273,17 @@ export class GenericLevel extends BaseLevel {
     // General-purpose components should be in /systems/ or /components/
     try {
       // Try loading from systems directory first
-      const systemModule = await import(`../systems/${componentType}`);
+      const systemModule = await import(`../systems/${componentType}.ts`);
       return systemModule[componentType];
     } catch {
       try {
         // Try loading from components directory
-        const componentModule = await import(`../components/${componentType}`);
+        const componentModule = await import(`../components/${componentType}.ts`);
         return componentModule[componentType];
       } catch {
         try {
           // Fallback: try loading from levels directory
-          const levelModule = await import(`./${componentType}`);
+          const levelModule = await import(`./${componentType}.ts`);
           return levelModule[componentType];
         } catch (error) {
           console.warn(`Could not load component ${componentType}:`, error);

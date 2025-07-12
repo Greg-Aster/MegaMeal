@@ -37,6 +37,15 @@ export class ObservatoryEnvironment extends GameObject {
   private globalFireflySpeed = .5;
   private fireflyAnimationTime = 0;
   
+  // Water animation optimization (integrated with OptimizationManager)
+  private shouldUpdateWaves = true;
+  
+  // Rising water effect
+  private initialWaterLevel = -6;
+  private waterRiseRate = 0.002; // Units per second (very slow rise)
+  private maxWaterLevel = 2; // Stop rising at this level
+  private currentWaterLevel = -6;
+  
   // Terrain parameters for height calculation
   private readonly terrainParams = {
     hillHeight: 15,
@@ -72,6 +81,9 @@ export class ObservatoryEnvironment extends GameObject {
     try {
       console.log('🌍 Initializing Observatory Environment...');
       
+      // Listen for optimization level changes from OptimizationManager
+      this.setupOptimizationListeners();
+      
       await this.loadSkybox();
       await this.createLighting();
       await this.createGround();
@@ -102,8 +114,11 @@ export class ObservatoryEnvironment extends GameObject {
     // Update firefly animations
     this.updateFireflies(this.fireflyAnimationTime);
     
-    // Update water animations if needed
-    // This can be expanded for animated water effects
+    // Update water wave animations
+    this.updateWaterWaves(this.fireflyAnimationTime);
+    
+    // Update rising water effect
+    this.updateRisingWater(deltaTime);
   }
   
   /**
@@ -180,6 +195,151 @@ export class ObservatoryEnvironment extends GameObject {
   }
 
   /**
+   * Setup listeners for OptimizationManager level changes
+   */
+  private setupOptimizationListeners(): void {
+    // Listen for optimization level changes from the global OptimizationManager
+    if (typeof window !== 'undefined') {
+      window.addEventListener('optimizationLevelChanged', (event: any) => {
+        const { level, deviceCapabilities } = event.detail;
+        
+        // Adjust water animation based on optimization level
+        if (deviceCapabilities?.isMobile || level.includes('mobile')) {
+          this.shouldUpdateWaves = false; // Disable vertex animation on mobile
+          console.log('🌊 Water vertex animation disabled for mobile performance');
+        } else {
+          this.shouldUpdateWaves = true; // Enable on desktop
+          console.log('🌊 Water vertex animation enabled for desktop');
+        }
+      });
+    }
+  }
+
+  /**
+   * Update water wave animations - integrates with OptimizationManager
+   * Uses texture-only animation on mobile, vertex displacement on desktop
+   * @param time The accumulated animation time
+   */
+  private updateWaterWaves(time: number): void {
+    if (!this.waterPool) return;
+    
+    const material = this.waterPool.material as THREE.MeshStandardMaterial;
+    
+    // Always animate textures for basic water movement (low performance cost)
+    if (material.map) {
+      material.map.offset.x = Math.sin(time * 0.1) * 0.02;
+      material.map.offset.y = time * 0.005;
+    }
+    
+    if (material.normalMap) {
+      material.normalMap.offset.x = Math.sin(time * 0.3) * 0.015;
+      material.normalMap.offset.y = time * 0.012;
+    }
+    
+    // Subtle opacity variation for depth simulation
+    const baseOpacity = 0.8;
+    const opacityVariation = Math.sin(time * 0.4) * 0.05;
+    material.opacity = baseOpacity + opacityVariation;
+    
+    // Only update vertex positions if performance allows (desktop only)
+    if (this.shouldUpdateWaves) {
+      const geometry = this.waterPool.geometry as THREE.BufferGeometry;
+      const positions = geometry.attributes.position.array as Float32Array;
+      
+      // Simplified wave function for better performance
+      for (let i = 0; i < positions.length; i += 3) {
+        const x = positions[i];
+        const y = positions[i + 1];
+        
+        // Calculate wave displacement relative to base level (z = 0)
+        // This creates wave offsets that work with the mesh's Y position
+        let waveDisplacement = 0;
+        
+        // Large ocean swells only (most visible impact)
+        waveDisplacement += Math.sin(x * 0.001 + y * 0.0005 + time * 0.5) * 2.0;
+        waveDisplacement += Math.cos(x * 0.0008 - y * 0.001 + time * 0.3) * 1.5;
+        
+        // Medium waves for detail
+        waveDisplacement += Math.sin(x * 0.004 + y * 0.003 + time * 1.0) * 0.8;
+        
+        // Apply wave displacement as relative offset from base level (z = 0)
+        // The mesh's Y position (controlled by updateRisingWater) handles the overall water level
+        positions[i + 2] = waveDisplacement;
+      }
+      
+      // Mark geometry for update
+      geometry.attributes.position.needsUpdate = true;
+      geometry.computeVertexNormals(); // Recalculate normals for proper lighting
+    }
+  }
+
+  /**
+   * Update the rising water effect for dramatic atmosphere
+   * Controls the base water level via mesh Y position.
+   * Wave animations (vertex displacement) work as offsets from this base level.
+   * @param deltaTime Frame time in seconds
+   */
+  private updateRisingWater(deltaTime: number): void {
+    if (!this.waterPool) return;
+    
+    // Only rise if we haven't reached the maximum level
+    if (this.currentWaterLevel < this.maxWaterLevel) {
+      // Calculate new water level
+      this.currentWaterLevel += this.waterRiseRate * deltaTime;
+      
+      // Clamp to maximum level
+      this.currentWaterLevel = Math.min(this.currentWaterLevel, this.maxWaterLevel);
+      
+      // Apply the new position to the water mesh (base level)
+      // Wave vertex displacements in updateWaterWaves work as offsets from this position
+      this.waterPool.position.y = this.currentWaterLevel;
+      
+      // Optional: Log dramatic milestones
+      const riseAmount = this.currentWaterLevel - this.initialWaterLevel;
+      if (Math.floor(riseAmount * 10) % 10 === 0 && riseAmount > 0) {
+        console.log(`🌊 Water has risen ${riseAmount.toFixed(1)} units... the island is being consumed by the sea!`);
+      }
+      
+      // Optional: When water reaches certain levels, trigger atmosphere changes
+      if (this.currentWaterLevel > -2 && this.currentWaterLevel < -1.8) {
+        // Water is approaching ground level - could trigger special effects here
+        console.log('🌊 The waters are rising dangerously high!');
+      }
+      
+      if (this.currentWaterLevel >= this.maxWaterLevel - 0.1) {
+        // Water has reached maximum level
+        console.log('🌊 The ocean has claimed the observatory... only the highest peaks remain above the waves.');
+      }
+    }
+  }
+
+  /**
+   * Get current water level (useful for other systems that need to know flood status)
+   */
+  public getCurrentWaterLevel(): number {
+    return this.currentWaterLevel;
+  }
+
+  /**
+   * Set water rise rate for dynamic control
+   */
+  public setWaterRiseRate(rate: number): void {
+    this.waterRiseRate = Math.max(0, rate); // Prevent negative rates
+    console.log(`🌊 Water rise rate set to ${rate} units per second`);
+  }
+
+  /**
+   * Reset water to initial level (for level restart)
+   */
+  public resetWaterLevel(): void {
+    this.currentWaterLevel = this.initialWaterLevel;
+    if (this.waterPool) {
+      this.waterPool.position.y = this.initialWaterLevel;
+    }
+    console.log('🌊 Water level reset to initial position');
+  }
+
+  /**
    * Sets a global multiplier for the intensity of all firefly lights.
    * @param intensity The desired intensity multiplier (e.g., 1.0 for normal, 0.5 for half).
    */
@@ -213,7 +373,7 @@ export class ObservatoryEnvironment extends GameObject {
       
       textureLoader.load(
         this.skyboxImageUrl,
-        (skyTexture) => {
+        (skyTexture: any) => {
           // Configure texture for equirectangular mapping
           skyTexture.mapping = this.THREE.EquirectangularReflectionMapping;
           skyTexture.colorSpace = this.THREE.SRGBColorSpace;
@@ -238,10 +398,10 @@ export class ObservatoryEnvironment extends GameObject {
           console.log('✅ Skybox loaded successfully');
           resolve();
         },
-        (progress) => {
+        (progress: any) => {
           console.log('Skybox loading progress:', Math.round((progress.loaded / progress.total) * 100) + '%');
         },
-        (error) => {
+        (error: any) => {
           console.error('Failed to load skybox texture:', error);
           this.createFallbackSkybox();
           resolve(); // Don't reject, continue with fallback
@@ -318,21 +478,29 @@ export class ObservatoryEnvironment extends GameObject {
     this.mainLight.shadow.camera.top = 300;
     this.mainLight.shadow.camera.bottom = -300;
     
-    this.lightingGroup.add(this.mainLight);
-    this.lightingGroup.add(this.mainLight.target);
+    if (this.lightingGroup && this.mainLight) {
+      this.lightingGroup.add(this.mainLight);
+      this.lightingGroup.add(this.mainLight.target);
+    }
     
     // Very dim fill light - fireflies will provide most illumination
     this.fillLight = new this.THREE.DirectionalLight(0x6a7db3, 1.0);
     this.fillLight.position.set(-50, 100, -30);
     this.fillLight.target.position.set(0, 0, 0);
-    this.lightingGroup.add(this.fillLight);
-    this.lightingGroup.add(this.fillLight.target);
+    if (this.lightingGroup) {
+      this.lightingGroup.add(this.fillLight);
+      this.lightingGroup.add(this.fillLight.target);
+    }
     
     // Minimal ambient lighting - let fireflies be the stars
     this.ambientLight = new this.THREE.AmbientLight(0x202040, 20);
-    this.lightingGroup.add(this.ambientLight);
+    if (this.lightingGroup) {
+      this.lightingGroup.add(this.ambientLight);
+    }
     
-    this.levelGroup.add(this.lightingGroup);
+    if (this.lightingGroup) {
+      this.levelGroup.add(this.lightingGroup);
+    }
     console.log('✅ Observatory lighting created');
   }
   
@@ -398,11 +566,13 @@ export class ObservatoryEnvironment extends GameObject {
     
     // Create ground mesh
     this.groundMesh = new this.THREE.Mesh(groundGeometry, groundMaterial);
-    this.groundMesh.rotation.x = -Math.PI / 2;
-    this.groundMesh.position.y = -5;
-    this.groundMesh.receiveShadow = true;
-    
-    this.levelGroup.add(this.groundMesh);
+    if (this.groundMesh) {
+      this.groundMesh.rotation.x = -Math.PI / 2;
+      this.groundMesh.position.y = 0; // Heights are now absolute, based on terrainParams
+      this.groundMesh.receiveShadow = true;
+      
+      this.levelGroup.add(this.groundMesh);
+    }
     console.log('✅ Terrain created');
   }
   
@@ -588,55 +758,166 @@ export class ObservatoryEnvironment extends GameObject {
   }
   
   private async createWaterPool(): Promise<void> {
-    console.log('🌊 Creating water pool...');
+    console.log('🌊 Creating animated 3D ocean water...');
     
-    // Make the water plane significantly larger to create an ocean effect
-    const poolGeometry = new this.THREE.PlaneGeometry(10000, 10000);
-    const poolTexture = this.createPoolTexture();
+    // Create high-detail water plane with vertex displacement geometry
+    const waterGeometry = this.createWaterGeometry();
+    const waterData = this.createAnimatedWaterData();
     
-    const poolMaterial = new this.THREE.MeshBasicMaterial({
-      map: poolTexture,
+    // Use the PBR material factory for realistic, light-reactive water
+    const poolMaterial = this.engine.getMaterials().createPBRMaterial({
+      map: waterData.map,
+      normalMap: waterData.normalMap,
+      metalness: 0.02, // Very low metalness for water
+      roughness: 0.1, // Very smooth for reflections
       transparent: true,
-      opacity: 0.6,
-      side: this.THREE.DoubleSide
-    });
+      opacity: 0.8, // Semi-transparent water
+      color: 0x006994, // Deep ocean blue tint
+    }) as THREE.MeshStandardMaterial;
     
-    this.waterPool = new this.THREE.Mesh(poolGeometry, poolMaterial);
+    // Store material and geometry for animation updates
+    this.waterPool = new this.THREE.Mesh(waterGeometry, poolMaterial);
+    this.waterPool.name = 'WaterPool';
     this.waterPool.rotation.x = -Math.PI / 2;
-    this.waterPool.position.y = -50;
+    this.waterPool.position.y = this.initialWaterLevel; // Start at initial level
+    this.waterPool.userData.isAnimatedWater = true;
+    this.waterPool.userData.waterData = waterData;
+    
+    // Initialize current water level
+    this.currentWaterLevel = this.initialWaterLevel;
     
     this.levelGroup.add(this.waterPool);
-    console.log('✅ Water pool created');
+    console.log('✅ Animated 3D ocean water created with vertex displacement');
   }
-  
-  private createPoolTexture(): THREE.CanvasTexture {
-    const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
-    const ctx = canvas.getContext('2d')!;
+
+  /**
+   * Create custom water geometry with vertex displacement for 3D waves
+   */
+  private createWaterGeometry(): THREE.BufferGeometry {
+    const size = 10000;
+    const segments = 128; // Reduced from 256 for better performance
     
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    const geometry = new this.THREE.PlaneGeometry(size, size, segments, segments);
+    const positions = geometry.attributes.position.array as Float32Array;
     
-    for (let x = 0; x < canvas.width; x++) {
-      for (let y = 0; y < canvas.height; y++) {
-        const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
-        const wave = Math.sin(distance * 0.1) * 0.3 + 0.7;
-        
-        const blue = Math.floor(100 + wave * 100);
-        const green = Math.floor(120 + wave * 80);
-        
-        ctx.fillStyle = `rgba(20, ${green}, ${blue}, 0.8)`;
-        ctx.fillRect(x, y, 1, 1);
-      }
+    // Apply initial wave displacement to vertices (relative to z = 0)
+    for (let i = 0; i < positions.length; i += 3) {
+      const x = positions[i];
+      const y = positions[i + 1];
+      
+      // Initial wave displacement pattern (relative to base level)
+      let waveDisplacement = 0;
+      
+      // Large ocean swells
+      waveDisplacement += Math.sin(x * 0.001 + y * 0.0005) * 2.0;
+      waveDisplacement += Math.cos(x * 0.0008 - y * 0.001) * 1.5;
+      
+      // Medium waves  
+      waveDisplacement += Math.sin(x * 0.004 + y * 0.003) * 0.8;
+      
+      // Apply wave displacement relative to z = 0
+      // The mesh position will control the overall water level
+      positions[i + 2] = waveDisplacement;
     }
     
-    const texture = new this.THREE.CanvasTexture(canvas);
-    texture.wrapS = this.THREE.RepeatWrapping;
-    texture.wrapT = this.THREE.RepeatWrapping;
-    texture.repeat.set(4, 4);
+    // Update geometry
+    geometry.attributes.position.needsUpdate = true;
+    geometry.computeVertexNormals();
     
-    return texture;
+    return geometry;
+  }
+  
+  private createAnimatedWaterData(): { map: THREE.CanvasTexture, normalMap: THREE.CanvasTexture, displacementMap: THREE.CanvasTexture } {
+    const size = 1024; // Higher resolution for better quality
+    
+    // Create color map canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+
+    // Create displacement map canvas
+    const displacementCanvas = document.createElement('canvas');
+    displacementCanvas.width = size;
+    displacementCanvas.height = size;
+    const displacementCtx = displacementCanvas.getContext('2d')!;
+
+    // Create normal map canvas for surface detail
+    const normalCanvas = document.createElement('canvas');
+    normalCanvas.width = size;
+    normalCanvas.height = size;
+    const normalCtx = normalCanvas.getContext('2d')!;
+
+    // Multi-layered noise function for realistic water patterns
+    const waveNoise = (x: number, y: number, time: number = 0) => {
+      let value = 0;
+      // Large ocean swells
+      value += Math.sin((x * 0.02 + y * 0.01) + time * 0.5) * 0.4;
+      value += Math.cos((x * 0.015 - y * 0.02) + time * 0.3) * 0.3;
+      
+      // Medium waves
+      value += Math.sin((x * 0.05 + y * 0.08) + time * 1.2) * 0.2;
+      value += Math.cos((x * 0.08 - y * 0.05) + time * 0.8) * 0.15;
+      
+      // Small ripples
+      value += Math.sin((x * 0.15 + y * 0.12) + time * 2.0) * 0.08;
+      value += Math.cos((x * 0.18 - y * 0.15) + time * 1.5) * 0.06;
+      
+      // Fine surface detail
+      value += Math.sin((x * 0.3 + y * 0.25) + time * 3.0) * 0.04;
+      value += Math.cos((x * 0.35 - y * 0.3) + time * 2.5) * 0.03;
+      
+      return (value + 1) / 2; // Normalize to 0-1 range
+    };
+
+    // Generate textures
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const wave = waveNoise(x, y);
+        
+        // Color map - deep ocean blues with wave-based variation
+        const blueBase = 20;
+        const greenBase = 50;
+        const blue = Math.floor(blueBase + wave * 120);
+        const green = Math.floor(greenBase + wave * 100);
+        const red = Math.floor(10 + wave * 30);
+        ctx.fillStyle = `rgb(${red}, ${green}, ${blue})`;
+        ctx.fillRect(x, y, 1, 1);
+
+        // Displacement map - grayscale height for wave geometry
+        const displacement = Math.floor(wave * 255);
+        displacementCtx.fillStyle = `rgb(${displacement}, ${displacement}, ${displacement})`;
+        displacementCtx.fillRect(x, y, 1, 1);
+
+        // Normal map - calculate surface normals for lighting
+        const waveHeight = wave;
+        const waveHeightX = waveNoise(x + 1, y) - waveHeight;
+        const waveHeightY = waveNoise(x, y + 1) - waveHeight;
+        
+        // Convert height gradients to normal map colors
+        const normalX = Math.floor((waveHeightX + 1) * 127.5);
+        const normalY = Math.floor((waveHeightY + 1) * 127.5);
+        const normalZ = 255; // Pointing up
+        
+        normalCtx.fillStyle = `rgb(${normalX}, ${normalY}, ${normalZ})`;
+        normalCtx.fillRect(x, y, 1, 1);
+      }
+    }
+
+    // Create Three.js textures
+    const map = new this.THREE.CanvasTexture(canvas);
+    map.wrapS = map.wrapT = this.THREE.RepeatWrapping;
+    map.repeat.set(15, 15); // More repetitions for finer detail
+
+    const displacementMap = new this.THREE.CanvasTexture(displacementCanvas);
+    displacementMap.wrapS = displacementMap.wrapT = this.THREE.RepeatWrapping;
+    displacementMap.repeat.set(15, 15);
+
+    const normalMap = new this.THREE.CanvasTexture(normalCanvas);
+    normalMap.wrapS = normalMap.wrapT = this.THREE.RepeatWrapping;
+    normalMap.repeat.set(15, 15);
+
+    return { map, normalMap, displacementMap };
   }
   
   public getSkybox(): THREE.Mesh | null {
