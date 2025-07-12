@@ -47,7 +47,7 @@ export class GameManager {
     this.isMobile = this.detectMobile();
 
     // Set a global flag for graphics style. Can be controlled by UI later.
-    (window as any).MEGAMEAL_VECTOR_MODE = false;
+    (window as any).MEGAMEAL_VECTOR_MODE = true;
     
     this.setupEventListeners();
   }
