@@ -6,7 +6,7 @@ import { BaseLevel } from './BaseLevel';
 import { ResourceManager } from '../../engine/utils/ResourceManager';
 import { EventBus } from '../../engine/core/EventBus';
 import { InteractionSystem } from '../../engine/systems/InteractionSystem';
-import { AssetLoader } from '../../engine/core/AssetLoader';
+import { AssetLoader } from '../../engine/resources/AssetLoader';
 
 // Import spaceship-specific systems
 import { AtmosphericAudioSystem } from '../components/AtmosphericAudioSystem';
