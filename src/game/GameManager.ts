@@ -494,9 +494,24 @@ export class GameManager {
    */
   public setVectorGraphicsMode(isVector: boolean): void {
     (window as any).MEGAMEAL_VECTOR_MODE = isVector;
-    console.log(`🎨 Graphics mode set to: ${isVector ? 'Vector' : 'Realistic'}`);
-    // Here you could emit an event to force a level reload or material update.
-    // this.engine.getEventBus().emit('graphics.style.changed', { isVector });
+    console.log(`🎨 Graphics mode set to: ${isVector ? 'Toon/Vector' : 'Realistic'}`);
+    
+    // Update outline renderer
+    const outlineRenderer = this.engine.getOutlineRenderer();
+    outlineRenderer.updateConfig({ enabled: isVector });
+    
+    if (isVector) {
+      // Scan scene and add outlines for toon mode
+      outlineRenderer.scanAndOutlineScene();
+      console.log('✨ Toon mode enabled with outlines');
+    } else {
+      // Clear outlines for realistic mode
+      outlineRenderer.clearAllOutlines();
+      console.log('📷 Realistic mode enabled');
+    }
+    
+    // Emit event for other systems to react
+    this.engine.getEventBus().emit('graphics.style.changed', { isVector });
   }
   /**
    * Reset view/camera

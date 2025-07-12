@@ -63,9 +63,9 @@ export class FireflySystem extends GameObject {
     count: 200,
     maxLights: 100, // Full firefly lighting on desktop - mobile will auto-reduce to 8
     colors: [0x87CEEB, 0x98FB98, 0xFFFFE0, 0xDDA0DD, 0xF0E68C],
-    emissiveIntensity: 25.0, // Increased for better visibility
-    lightIntensity: 4.5, // Higher intensity for better scene illumination
-    lightRange: 180, // Larger range for better coverage
+    emissiveIntensity: 50.0, // Much brighter for magical lantern effect
+    lightIntensity: 12.0, // Much stronger light intensity for toon shading
+    lightRange: 200, // Larger range for better coverage
     cycleDuration: 4.0, // Faster cycling for more dynamic lighting
     fadeSpeed: 3.5, // Much faster fade for more dramatic light changes
     heightRange: { min: 0.5, max: 2.5 },
