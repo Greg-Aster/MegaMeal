@@ -391,9 +391,9 @@ export class ObservatoryEnvironment extends GameObject {
     // Check if we're in toon mode for simplified geometry
     const isToonMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
     
-    // Create geometry - much simpler for toon shading, more detailed for realistic
+    // Create geometry - improved balance for toon shading
     const groundGeometry = isToonMode ? 
-      new this.THREE.PlaneGeometry(500, 500, 32, 32) :   // 1K vertices for toon
+      new this.THREE.PlaneGeometry(500, 500, 64, 64) :   // 4K vertices for toon (smoother than 32x32)
       new this.THREE.PlaneGeometry(500, 500, 128, 128);  // 16K vertices for realistic (down from 262K)
     const positions = groundGeometry.attributes.position.array;
     
@@ -467,8 +467,8 @@ export class ObservatoryEnvironment extends GameObject {
     const isToonMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
     
     // Much lower resolution for toon mode to enhance 2D pixelated look
-    canvas.width = isToonMode ? 128 : 512;
-    canvas.height = isToonMode ? 128 : 512;
+    canvas.width = isToonMode ? 256 : 512;  // Improved resolution for toon mode
+    canvas.height = isToonMode ? 256 : 512;
     const ctx = canvas.getContext('2d')!;
     
     const centerX = canvas.width / 2;
@@ -505,11 +505,11 @@ export class ObservatoryEnvironment extends GameObject {
     texture.wrapT = this.THREE.RepeatWrapping;
     texture.repeat.set(3, 3);
     
-    // For toon mode, use nearest neighbor filtering for pixelated look
+    // For toon mode, use linear filtering for smoother vector art look
     if (isToonMode) {
-      texture.magFilter = this.THREE.NearestFilter;
-      texture.minFilter = this.THREE.NearestFilter;
-      texture.generateMipmaps = false;
+      texture.magFilter = this.THREE.LinearFilter;
+      texture.minFilter = this.THREE.LinearFilter;
+      texture.generateMipmaps = true; // Enable mipmaps for better performance
     }
     
     return texture;
