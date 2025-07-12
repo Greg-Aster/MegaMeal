@@ -166,6 +166,9 @@ export class Engine {
       // Initialize optimization system
       this.optimizationManager.initialize(this.camera, this.scene, this.renderer.getRenderer());
       
+      // Initialize environmental effects system
+      this.environmentalEffects.initialize(this.camera, this.scene);
+      
       if (this.debug) {
         await this.debug.initialize();
       }
@@ -269,6 +272,9 @@ export class Engine {
       // Update optimization system
       this.optimizationManager.update(this.time.deltaTime);
       
+      // Update environmental effects system
+      this.environmentalEffects.update(this.time.deltaTime);
+      
       // Emit update event for game systems
       this.eventBus.emit('engine.update', {
         deltaTime: this.time.deltaTime,
@@ -341,6 +347,10 @@ export class Engine {
     return this.optimizationManager;
   }
   
+  public getEnvironmentalEffects(): EnvironmentalEffectsSystem {
+    return this.environmentalEffects;
+  }
+  
   public getContainer(): HTMLElement {
     return this.container;
   }
@@ -367,6 +377,7 @@ export class Engine {
     this.debug?.dispose();
     this.performance?.dispose();
     this.optimizationManager?.dispose();
+    this.environmentalEffects?.dispose();
     
     // Clear references
     this.scene = null as any;
