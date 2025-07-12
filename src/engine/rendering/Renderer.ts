@@ -67,7 +67,7 @@ export class Renderer {
       // Mobile-specific defaults
       isMobile,
       powerPreference: isMobile ? 'default' : 'high-performance',
-      maxPixelRatio: isMobile ? 1.5 : 2,
+      maxPixelRatio: isMobile ? 1.0 : 2,
       ...config
     };
     
