@@ -129,11 +129,11 @@ export class OceanSystem extends GameObject {
     // Auto-detect mobile for performance optimization
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     if (isMobile) {
-      // Reduce complexity on mobile
-      this.config.segments.width = Math.min(this.config.segments.width, 100);
-      this.config.segments.height = Math.min(this.config.segments.height, 100);
-      this.config.waves = this.config.waves.slice(0, 2); // Fewer waves
-      this.updateInterval = 1000 / 30; // 30 FPS on mobile
+      // Significantly reduce complexity on mobile for better performance
+      this.config.segments.width = Math.min(this.config.segments.width, 32);
+      this.config.segments.height = Math.min(this.config.segments.height, 32);
+      this.config.waves = this.config.waves.slice(0, 1); // Single wave only
+      this.updateInterval = 1000 / 20; // 20 FPS on mobile
     }
     
     console.log(`🌊 OceanSystem created: ${this.config.size.width}x${this.config.size.height}, ${this.config.segments.width}x${this.config.segments.height} segments`);

@@ -232,6 +232,12 @@ export class GenericLevel extends BaseLevel {
           this.camera,
           this.gameContainer
         );
+      } else if (systemConfig.type === 'OutlineRenderer') {
+        // OutlineRenderer has a simple constructor signature
+        component = new componentClass(
+          this.THREE,
+          this.scene
+        );
       } else {
         // Standard component constructor pattern
         component = new componentClass(

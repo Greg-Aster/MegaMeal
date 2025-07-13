@@ -1,13 +1,16 @@
 // Texture caching system
 
 import * as THREE from 'three';
+import { OptimizationManager } from '../optimization/OptimizationManager';
 
 export class TextureManager {
   private textures = new Map<string, THREE.Texture>();
   private loader: THREE.TextureLoader;
+  private optimizationManager: OptimizationManager;
   
   constructor() {
     this.loader = new THREE.TextureLoader();
+    this.optimizationManager = OptimizationManager.getInstance();
   }
   
   public load(id: string, url: string): Promise<THREE.Texture> {
@@ -20,8 +23,10 @@ export class TextureManager {
       this.loader.load(
         url,
         (texture) => {
-          this.textures.set(id, texture);
-          resolve(texture);
+          // Apply mobile optimizations to texture
+          const optimizedTexture = this.optimizationManager.optimizeTexture(texture);
+          this.textures.set(id, optimizedTexture);
+          resolve(optimizedTexture);
         },
         undefined,
         reject

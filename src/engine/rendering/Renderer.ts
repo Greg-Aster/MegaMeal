@@ -54,20 +54,20 @@ export class Renderer {
     
     this.config = {
       antialias: !isMobile, // Disable on mobile by default
-      enableShadows: true, // Keep shadows enabled for proper lighting on all devices
+      enableShadows: !isMobile, // Disable shadows on mobile for better performance
       shadowMapType: isMobile ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap, // Use simpler shadows on mobile
       toneMapping: THREE.ACESFilmicToneMapping,
       toneMappingExposure: 1.0,
       outputColorSpace: THREE.SRGBColorSpace,
-      enablePostProcessing: true, // Enable by default, let OptimizationManager decide
-      enableBloom: true, // Enable by default
+      enablePostProcessing: !isMobile, // Disable post-processing on mobile for performance
+      enableBloom: !isMobile, // Disable bloom on mobile for performance
       enableSSAO: false, // Expensive, disabled by default
-      enableFXAA: true, // Enable by default
-      enableToneMapping: true, // Enable by default
+      enableFXAA: !isMobile, // Disable FXAA on mobile, use native antialiasing
+      enableToneMapping: !isMobile, // Disable tone mapping on mobile for performance
       // Mobile-specific defaults
       isMobile,
       powerPreference: isMobile ? 'default' : 'high-performance',
-      maxPixelRatio: isMobile ? 1.5 : 2,
+      maxPixelRatio: isMobile ? 1.0 : 2,
       ...config
     };
     
@@ -376,13 +376,20 @@ export class Renderer {
     
     // Update renderer configuration based on optimization level
     if (level.includes('mobile')) {
-      // Keep post-processing and bloom enabled on all mobile tiers
-      // to allow for effects like firefly glows.
-      this.config.enablePostProcessing = true;
-      this.config.enableBloom = true;
-      this.config.enableFXAA = false; // Use native mobile antialiasing
-      this.config.enableToneMapping = true;
-      this.config.enableShadows = true; // Keep shadows enabled for proper ground lighting
+      // Aggressive mobile optimizations - disable expensive effects
+      if (level === 'mobile_low' || level === 'mobile_medium') {
+        this.config.enablePostProcessing = false; // Disable entirely for low/medium mobile
+        this.config.enableBloom = false; // Very expensive on mobile
+        this.config.enableFXAA = false;
+        this.config.enableToneMapping = false;
+      } else {
+        // mobile_high - minimal post-processing
+        this.config.enablePostProcessing = true;
+        this.config.enableBloom = false; // Still disable bloom - too expensive
+        this.config.enableFXAA = false;
+        this.config.enableToneMapping = true;
+      }
+      this.config.enableShadows = true; // Keep shadows for lighting
     } else {
       // Desktop optimizations
       this.config.enablePostProcessing = true;
