@@ -113,17 +113,17 @@ export class OptimizationManager {
       enableShadows: false
     },
     [OptimizationLevel.LOW]: {
-      // Budget mobile devices - improved quality with textures
-      oceanSegments: { width: 16, height: 16 },
-      terrainSegments: { width: 20, height: 20 },
-      maxFireflyLights: 1,
-      enableDynamicLighting: true,
-      maxVegetationInstances: 5,
+      // Budget mobile devices - performance optimized with textures
+      oceanSegments: { width: 12, height: 12 }, // Reduced geometry for better performance
+      terrainSegments: { width: 16, height: 16 }, // Reduced geometry for better performance
+      maxFireflyLights: 0, // Remove lights - biggest performance drain on mobile
+      enableDynamicLighting: false, // Disable dynamic lighting calculations
+      maxVegetationInstances: 3, // Reduce vegetation instances
       enableVegetation: true,
       textureResolution: 512,
-      enableProceduralTextures: true, // Enable textures for better visuals
+      enableProceduralTextures: true, // Keep textures for visual quality
       enableNormalMaps: false,
-      canvasScale: 0.8,
+      canvasScale: 0.75, // Slightly lower resolution for performance
       enablePostProcessing: false,
       enableShadows: false
     },
@@ -189,16 +189,16 @@ export class OptimizationManager {
       maxShadowMapSize: 256
     },
     [OptimizationLevel.LOW]: {
-      maxRenderDistance: 1200,
-      unloadDistance: 1400,
-      preloadDistance: 1000,
-      lodDistances: [100, 300, 600],
-      checkInterval: 200,
-      maxObjectsPerFrame: 10,
-      fadeDistance: 40,
-      fadeSpeed: 3.0,
-      shadowDistance: 25,
-      maxShadowMapSize: 512
+      maxRenderDistance: 800, // Reduced render distance for better performance
+      unloadDistance: 1000, // Reduced unload distance
+      preloadDistance: 600, // Reduced preload distance
+      lodDistances: [50, 150, 300], // More aggressive LOD switching
+      checkInterval: 300, // Less frequent checks to reduce CPU usage
+      maxObjectsPerFrame: 5, // Process fewer objects per frame
+      fadeDistance: 30, // Shorter fade distance
+      fadeSpeed: 4.0, // Faster fade to quickly cull distant objects
+      shadowDistance: 0, // No shadows for performance
+      maxShadowMapSize: 256
     },
     [OptimizationLevel.MEDIUM]: {
       maxRenderDistance: 1200,
