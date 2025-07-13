@@ -102,20 +102,28 @@ export class Materials {
   // Create PBR material with physically-based properties
   public createPBRMaterial(options: PBRMaterialOptions = {}): THREE.MeshStandardMaterial {
     const isVectorMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    if (isVectorMode) {
-      // Return a ToonMaterial for the stylized vector graphic look
-      const toonMaterial = new this.THREE.MeshToonMaterial({
+    if (isVectorMode || isMobile) {
+      // Use MeshLambertMaterial on mobile for better performance
+      // ToonMaterial for desktop vector mode, Lambert for mobile
+      const MaterialClass = isMobile ? this.THREE.MeshLambertMaterial : this.THREE.MeshToonMaterial;
+      
+      const materialConfig: any = {
         color: options.color || 0x808080,
         emissive: options.emissive || 0x000000,
         emissiveIntensity: options.emissiveIntensity || 1.0,
-        map: (options as any).map, // Pass through texture map if it exists
-        normalMap: options.normalMap,
         side: options.side || THREE.FrontSide,
-        gradientMap: this.toonGradientTexture, // Use custom toon gradient
-      });
+      };
       
-      return toonMaterial;
+      // Only add texture map if provided, skip normal maps on mobile
+      if (options.map && !isMobile) materialConfig.map = options.map;
+      if (!isMobile && this.toonGradientTexture && MaterialClass === this.THREE.MeshToonMaterial) {
+        materialConfig.gradientMap = this.toonGradientTexture;
+      }
+      
+      const material = new MaterialClass(materialConfig);
+      return material;
     } else {
       // Return a standard PBR material for a realistic look - only set defined properties
       const materialConfig: any = {
@@ -150,14 +158,14 @@ export class Materials {
     const isVectorMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
     
     if (isVectorMode) {
-      // Vibrant cartoon colors for toon mode
+      // Monument Valley inspired colors - warm, muted, geometric
       return this.createPBRMaterial({
-        color: 0x88bb44, // Bright cartoon green
+        color: 0xd4b896, // Warm sandy beige like Monument Valley
         metalness: 0.0,
-        roughness: 0.9,
-        emissive: 0x334411, // Bright emissive glow
-        emissiveIntensity: 0.4,
-        envMapIntensity: 0.2
+        roughness: 1.0, // Completely flat shading for clean look
+        emissive: 0x000000, // No emissive for clean style
+        emissiveIntensity: 0.0,
+        envMapIntensity: 0.0 // No reflections for flat aesthetic
       });
     } else {
       return this.createPBRMaterial({

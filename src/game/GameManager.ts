@@ -51,7 +51,8 @@ export class GameManager {
     // Detect mobile
     this.isMobile = this.detectMobile();
 
-    // Set a global flag for graphics style. Can be controlled by UI later.
+    // Set a global flag for graphics style optimized for mobile performance
+    // Enable vector/toon mode for Monument Valley/Alto's Adventure aesthetic
     (window as any).MEGAMEAL_VECTOR_MODE = true;
     
     this.setupEventListeners();

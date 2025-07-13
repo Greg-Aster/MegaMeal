@@ -80,10 +80,10 @@ export class OceanSystem extends GameObject {
   // Wave animation optimization (integrated with OptimizationManager)
   private shouldUpdateWaves = true;
   
-  // Default configuration exactly matching original Observatory water system
+  // Default configuration optimized for Monument Valley style and mobile performance
   private static readonly DEFAULT_CONFIG: OceanConfig = {
-    size: { width: 10000, height: 10000 }, // Exact match: 10,000 x 10,000 units
-    segments: { width: 128, height: 128 }, // Exact match: 128 x 128 segments
+    size: { width: 8000, height: 8000 }, // Reduced size for better performance
+    segments: { width: 64, height: 64 }, // Reduced segments for mobile (4K vertices instead of 16K)
     position: new THREE.Vector3(0, -6, 0),
     waterLevel: -6,
     
@@ -159,12 +159,19 @@ export class OceanSystem extends GameObject {
   }
   
   private createOcean(): void {
-    // Create detailed ocean geometry matching original (10k x 10k with 128x128 segments)
+    // Mobile optimization for Monument Valley style
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // Use even lower segments on mobile for better performance
+    const segments = isMobile ? 
+      { width: 32, height: 32 } : // 1K vertices for mobile
+      this.config.segments; // Use config segments for desktop
+    
     const geometry = new this.THREE.PlaneGeometry(
       this.config.size.width,
       this.config.size.height,
-      this.config.segments.width,
-      this.config.segments.height
+      segments.width,
+      segments.height
     );
     
     // Store original vertices for wave calculations

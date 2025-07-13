@@ -391,10 +391,13 @@ export class ObservatoryEnvironment extends GameObject {
     // Check if we're in toon mode for simplified geometry
     const isToonMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
     
-    // Create geometry - improved balance for toon shading
-    const groundGeometry = isToonMode ? 
-      new this.THREE.PlaneGeometry(500, 500, 64, 64) :   // 4K vertices for toon (smoother than 32x32)
-      new this.THREE.PlaneGeometry(500, 500, 128, 128);  // 16K vertices for realistic (down from 262K)
+    // Create geometry - optimized for mobile performance and Monument Valley style
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const groundGeometry = isMobile ? 
+      new this.THREE.PlaneGeometry(500, 500, 32, 32) :   // 1K vertices for mobile
+      isToonMode ? 
+        new this.THREE.PlaneGeometry(500, 500, 48, 48) : // 2.3K vertices for toon desktop
+        new this.THREE.PlaneGeometry(500, 500, 64, 64);  // 4K vertices for realistic desktop
     const positions = groundGeometry.attributes.position.array;
     
     // Use shared terrain parameters for consistency with getHeightAt

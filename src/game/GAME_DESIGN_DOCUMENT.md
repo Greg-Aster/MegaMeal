@@ -1966,10 +1966,11 @@ const lightingConfigs = {
 ## 🎨 **Visual Design**
 
 ### **Art Direction**
-- **Style**: Realistic 3D environments with atmospheric lighting
-- **Color Palette**: Deep space blues, warm firefly glows, dramatic reds
-- **Mood**: Contemplative, mysterious, with moments of wonder and tension
-- **Quality**: Professional-grade 3D assets with PBR materials
+- **Style**: **Vector Art/Toon Shading** - Stylized 3D environments with flat cartoon-like rendering
+- **Graphics Mode**: **Dual-mode system** - Vector art (default) and realistic mode toggle
+- **Color Palette**: **Vibrant cartoon colors** - bright greens, warm firefly glows, bold contrast
+- **Mood**: **Magical vector illustration** - Clean, stylized, 2D-like appearance in 3D space
+- **Quality**: **Optimized cartoon rendering** with MeshToonMaterial and global black outlines
 
 ### **Asset Library**
 - **SciFi Models**: 189+ professional models (walls, props, equipment)
@@ -1977,11 +1978,18 @@ const lightingConfigs = {
 - **Character Models**: Various human characters and alien designs
 - **Textures**: Complete PBR material sets with normal/roughness maps
 
-### **Lighting Design**
-- **Star Observatory**: Soft moonlight with magical firefly glows
-- **Miranda Ship**: Harsh emergency lighting with dramatic shadows
-- **Restaurant Backroom**: Red warning lights creating horror atmosphere
-- **General**: Adaptive lighting system supporting story mood
+### **Vector Art Rendering System**
+- **Toon Materials**: MeshToonMaterial with custom gradient textures for cell shading
+- **Global Outlines**: Black outline renderer using scaled geometry technique
+- **Simplified Geometry**: Optimized vertex counts (64x64 terrain vs 128x128)
+- **Cartoon Textures**: 256x256 resolution with linear filtering for smooth vector look
+- **Vibrant Colors**: Enhanced color palette with bright, cartoon-like appearance
+
+### **Lighting Design** 
+- **Star Observatory**: **Bright ambient lighting** (4.0-6.0 intensity) with **larger, angular fireflies**
+- **Miranda Ship**: **Hard light falloff** (decay=2.0) for stylized vector lighting effects
+- **Restaurant Backroom**: **Simplified lighting** optimized for mobile performance
+- **General**: **Cartoon-style lighting** with reduced shadow complexity and bloom disabled on mobile
 
 ---
 
@@ -2045,16 +2053,31 @@ const lightingConfigs = {
 ## 📊 **Performance Specifications**
 
 ### **Target Performance**
-- **Frame Rate**: 60 FPS on desktop, 30 FPS on mobile
-- **Load Times**: <5 seconds for level transitions
-- **Memory Usage**: <2GB total memory footprint
-- **Asset Size**: Optimized for web delivery
+- **Frame Rate**: 60 FPS on desktop, 30+ FPS on mobile (post-optimization)
+- **Load Times**: <3 seconds for level transitions  
+- **Memory Usage**: <1GB total memory footprint (reduced from 2GB)
+- **Asset Size**: **Aggressively optimized** for mobile delivery
+
+### **Mobile Performance Optimizations**
+- **Bloom Effects**: **Disabled on mobile** (major performance gain)
+- **Post-Processing**: **Disabled on low/medium mobile devices**
+- **Pixel Ratio**: **Limited to 1.0 on mobile** (vs 1.5 previously)
+- **Frustum Culling**: **Active optimization system** culling invisible objects
+- **Texture Optimization**: **Automatic mobile texture compression** and mipmapping
+- **Shadow Optimization**: **Distance-based shadow disabling** beyond 25-150 units
+- **Vector Art Mode**: **Simplified geometry** (64x64 vs 128x128 vertices) for better performance
+
+### **Optimization Manager System**
+- **Device Detection**: **Automatic mobile/desktop detection** with appropriate optimization levels
+- **Dynamic Culling**: **Frustum culling** and distance-based object management
+- **Memory Management**: **Automatic texture/material disposal** via ResourceManager
+- **Smooth Fading**: **Gradual object fade-out** instead of abrupt pop-in/pop-out
 
 ### **Technical Requirements**
-- **WebGL**: WebGL 2.0 support required
-- **Memory**: 4GB RAM minimum, 8GB recommended
+- **WebGL**: WebGL 2.0 support required (WebGL 1.0 fallback available)
+- **Memory**: **2GB RAM minimum** (reduced from 4GB), 4GB recommended
 - **Network**: Broadband connection for initial asset download
-- **Storage**: 500MB browser cache for optimal performance
+- **Storage**: 200MB browser cache for optimal performance (reduced from 500MB)
 
 ---
 
