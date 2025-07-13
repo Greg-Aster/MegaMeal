@@ -95,18 +95,53 @@ export class FireflySystem extends GameObject {
     this.fireflyGroup = new this.THREE.Group();
     this.fireflyGroup.name = 'firefly_system';
     
-    // Auto-detect mobile for better defaults
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    if (isMobile) {
-      if (!config.maxLights) {
-        this.config.maxLights = 0; // No dynamic lights on mobile for best performance
-      }
-      if (!config.count) {
-        this.config.count = Math.min(this.config.count, 30); // Fewer total fireflies on mobile
-      }
-    }
+    // Auto-detect device capabilities and apply intelligent optimization
+    this.applyIntelligentOptimization(config);
     
     console.log(`✨ FireflySystem created: ${this.config.count} fireflies, ${this.config.maxLights} max lights`);
+  }
+
+  /**
+   * Apply intelligent optimization based on device capabilities
+   */
+  private applyIntelligentOptimization(config: Partial<FireflyConfig>): void {
+    try {
+      // Get optimization manager for intelligent settings
+      const OptimizationManager = require('../optimization/OptimizationManager').OptimizationManager;
+      const optimizationManager = OptimizationManager.getInstance();
+      const qualitySettings = optimizationManager.getQualitySettings();
+      
+      if (qualitySettings) {
+        // Override with intelligent settings if not explicitly provided
+        if (!config.maxLights) {
+          this.config.maxLights = qualitySettings.maxFireflyLights;
+        }
+        
+        if (!config.count) {
+          // Scale firefly count based on quality settings
+          const baseCount = this.config.count;
+          const scaleFactor = qualitySettings.maxFireflyLights / 4; // Scale relative to max lights
+          this.config.count = Math.max(10, Math.floor(baseCount * scaleFactor));
+        }
+        
+        console.log(`🎯 FireflySystem: Applied intelligent optimization`, {
+          maxLights: this.config.maxLights,
+          count: this.config.count,
+          qualityLevel: optimizationManager.getOptimizationLevel()
+        });
+      }
+    } catch (error) {
+      // Fallback to simple mobile detection if optimization manager isn't available
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      if (isMobile) {
+        if (!config.maxLights) {
+          this.config.maxLights = 0;
+        }
+        if (!config.count) {
+          this.config.count = Math.min(this.config.count, 30);
+        }
+      }
+    }
   }
   
   public async initialize(): Promise<void> {

@@ -401,38 +401,68 @@ export class Renderer {
    * Handle optimization level changes from OptimizationManager
    */
   private handleOptimizationChange(event: Event): void {
-    const { level } = (event as CustomEvent).detail;
+    const { level, qualitySettings } = (event as CustomEvent).detail;
     
-    console.log('🎛️ Renderer responding to optimization level change:', level);
+    console.log('🎛️ Renderer responding to intelligent optimization change:', level);
     
-    // Update renderer configuration based on optimization level
-    if (level.includes('mobile')) {
-      // Aggressive mobile optimizations - disable expensive effects
-      if (level === 'mobile_low' || level === 'mobile_medium') {
-        this.config.enablePostProcessing = false; // Disable entirely for low/medium mobile
-        this.config.enableBloom = false; // Very expensive on mobile
-        this.config.enableFXAA = false;
-        this.config.enableToneMapping = false;
-      } else {
-        // mobile_high - minimal post-processing
-        this.config.enablePostProcessing = true;
-        this.config.enableBloom = false; // Still disable bloom - too expensive
-        this.config.enableFXAA = false;
-        this.config.enableToneMapping = true;
+    // Update renderer configuration based on intelligent quality settings
+    if (qualitySettings) {
+      // Use quality settings for precise control
+      this.config.enablePostProcessing = qualitySettings.enablePostProcessing;
+      this.config.enableShadows = qualitySettings.enableShadows;
+      
+      // Enhanced effects based on quality level
+      switch (level) {
+        case 'ultra_low':
+          this.config.enableBloom = false;
+          this.config.enableFXAA = false;
+          this.config.enableToneMapping = false;
+          this.config.enableSSAO = false;
+          break;
+          
+        case 'low':
+          this.config.enableBloom = false;
+          this.config.enableFXAA = false;
+          this.config.enableToneMapping = false;
+          this.config.enableSSAO = false;
+          break;
+          
+        case 'medium':
+          this.config.enableBloom = false; // Still too expensive for medium
+          this.config.enableFXAA = true;
+          this.config.enableToneMapping = true;
+          this.config.enableSSAO = false;
+          break;
+          
+        case 'high':
+          // Restore beautiful effects for high-end devices!
+          this.config.enableBloom = true;
+          this.config.enableFXAA = true;
+          this.config.enableToneMapping = true;
+          this.config.enableSSAO = false; // SSAO still expensive, save for ultra
+          break;
+          
+        case 'ultra':
+          // Full premium experience with all effects!
+          this.config.enableBloom = true;
+          this.config.enableFXAA = true;
+          this.config.enableToneMapping = true;
+          this.config.enableSSAO = true; // Enable SSAO for ultra quality
+          break;
       }
-      this.config.enableShadows = true; // Keep shadows for lighting
     } else {
-      // Desktop optimizations
-      this.config.enablePostProcessing = true;
-      this.config.enableBloom = true;
-      this.config.enableFXAA = true;
-      this.config.enableToneMapping = true;
-      this.config.enableShadows = true;
+      // Fallback to basic settings
+      this.config.enablePostProcessing = false;
+      this.config.enableBloom = false;
+      this.config.enableFXAA = false;
+      this.config.enableToneMapping = false;
+      this.config.enableShadows = false;
+      this.config.enableSSAO = false;
     }
     
     // Update actual renderer shadow settings
     if (this.renderer) {
-      this.renderer.shadowMap.enabled = this.config.enableShadows;
+      this.renderer.shadowMap.enabled = this.config.enableShadows || false;
       console.log('🌓 Shadow settings updated:', this.config.enableShadows);
     }
     
