@@ -39,8 +39,8 @@ export class ObservatoryEnvironment extends GameObject {
   
   // Rising water effect
   private initialWaterLevel = -10;
-  private waterRiseRate = 0.008; // Much slower, more gradual rise
-  private maxWaterLevel = 2; // Stop rising at this level
+  private waterRiseRate = 0.02; // Much slower, more gradual rise
+  private maxWaterLevel = 4; // Stop rising at this level
   private currentWaterLevel = -6;
   
   // Configuration for level-specific effects
@@ -943,7 +943,7 @@ export class ObservatoryEnvironment extends GameObject {
         })
       );
       
-      console.log(`✅ Loaded ${grassAssets.length} grass templates, creating instances...`);
+      // Loaded grass templates (reduced logging)
       
       // Create instances from the loaded templates
       const grassCount = 15;
@@ -970,7 +970,7 @@ export class ObservatoryEnvironment extends GameObject {
         this.vegetationGroup!.add(grassInstance);
       }
       
-      console.log(`✅ Created ${grassCount} grass instances efficiently`);
+      // Created grass instances (reduced logging)
       
     } catch (error) {
       console.error('Failed to create grass patches:', error);
@@ -1082,7 +1082,7 @@ export class ObservatoryEnvironment extends GameObject {
         })
       );
       
-      console.log(`✅ Loaded ${flowerAssets.length} flower templates, creating instances...`);
+      // Loaded flower templates (reduced logging)
       
       // Create instances from the loaded templates
       const flowerCount = 10;
@@ -1109,7 +1109,7 @@ export class ObservatoryEnvironment extends GameObject {
         this.vegetationGroup!.add(flowerInstance);
       }
       
-      console.log(`✅ Created ${flowerCount} flower instances efficiently`);
+      // Created flower instances (reduced logging)
       
     } catch (error) {
       console.error('Failed to create flower clusters:', error);

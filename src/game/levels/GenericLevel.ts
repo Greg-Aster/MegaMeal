@@ -263,7 +263,7 @@ export class GenericLevel extends BaseLevel {
       // Always store by type for direct access
       this.storeComponent(systemConfig.type, component);
       
-      console.log(`✅ ${systemConfig.type} created successfully`);
+      // System created successfully (reduced logging)
       
     } catch (error) {
       console.error(`Failed to create system ${systemConfig.type}:`, error);

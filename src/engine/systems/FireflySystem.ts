@@ -155,10 +155,7 @@ export class FireflySystem extends GameObject {
     const position = new this.THREE.Vector3(x, y, z);
     const color = this.config.colors[Math.floor(Math.random() * this.config.colors.length)];
     
-    // Debug color assignment
-    if (index < 5) {
-      console.log(`Firefly ${index} assigned color: 0x${color.toString(16)}`);
-    }
+    // Debug color assignment (reduced logging)
     
     // Check if we're in vector mode for stylized fireflies
     const isVectorMode = (window as any).MEGAMEAL_VECTOR_MODE === true;

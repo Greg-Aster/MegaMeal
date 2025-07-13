@@ -187,10 +187,11 @@ export class UniversalInputManager {
         this.isDragging = true;
         
         // Calculate deltas with proper mobile sensitivity
+        // Invert deltas for intuitive mobile controls (swipe right = look right)
         const rawDeltaX = touch.clientX - this.touchStartPos.x;
         const rawDeltaY = touch.clientY - this.touchStartPos.y;
-        const deltaX = rawDeltaX * this.touchSensitivity;
-        const deltaY = rawDeltaY * this.touchSensitivity;
+        const deltaX = -rawDeltaX * this.touchSensitivity; // Inverted for mobile
+        const deltaY = -rawDeltaY * this.touchSensitivity; // Inverted for mobile
         
         this.eventBus.emit('input:drag:move', { 
           x: touch.clientX, 

@@ -197,7 +197,7 @@ export class GameStateManager {
       const saveData = this.gameState.serialize();
       localStorage.setItem('megameal_save', saveData);
       
-      console.log('💾 Game state saved successfully');
+      // Game state saved (reduced logging)
       
       this.emitStateChange('game.saved', {
         saveTime: this.gameState.sessionData.lastSaveTime
