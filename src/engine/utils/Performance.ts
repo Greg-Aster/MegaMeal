@@ -98,6 +98,32 @@ export class Performance {
       const metrics = this.getMetrics();
       this.onMetricsUpdate(metrics);
     }
+    
+    // Log performance warnings on mobile
+    this.checkMobilePerformance();
+  }
+  
+  private checkMobilePerformance(): void {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (!isMobile) return;
+    
+    // Log performance issues every 5 seconds
+    if (this.frameCount % 300 === 0) { // ~60fps * 5 seconds
+      const metrics = this.getMetrics();
+      
+      if (metrics.fps < 20) {
+        console.warn(`🐌 Poor mobile performance: ${metrics.fps.toFixed(1)} FPS`);
+        console.warn(`📊 Frame time: ${metrics.frameTime.toFixed(1)}ms (target: 16.7ms)`);
+        
+        if (metrics.memoryUsage) {
+          const memMB = metrics.memoryUsage.used / (1024 * 1024);
+          console.warn(`🧠 Memory usage: ${memMB.toFixed(1)}MB`);
+        }
+        
+        // Log render stats if available
+        console.warn(`🎨 Render stats: ${metrics.renderCalls} calls, ${metrics.triangles} triangles`);
+      }
+    }
   }
   
   private calculateFPS(): void {

@@ -395,8 +395,8 @@ export class ObservatoryEnvironment extends GameObject {
     // Create geometry - optimized for mobile performance
     let groundGeometry;
     if (isMobile) {
-      // Much simpler geometry for mobile devices
-      groundGeometry = new this.THREE.PlaneGeometry(500, 500, 32, 32); // 1K vertices for mobile
+      // Aggressively simplified geometry for mobile devices
+      groundGeometry = new this.THREE.PlaneGeometry(500, 500, 20, 20); // 400 vertices for mobile
     } else if (isToonMode) {
       groundGeometry = new this.THREE.PlaneGeometry(500, 500, 64, 64); // 4K vertices for toon
     } else {
