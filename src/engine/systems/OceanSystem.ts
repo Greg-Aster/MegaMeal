@@ -90,7 +90,7 @@ export class OceanSystem extends GameObject {
     
     // Visual properties with improved realism
     color: 0x006994, // Deep ocean blue from original
-    opacity: 0.4, // Much more transparent for realistic ocean depth
+    opacity: 0.95, // Nearly opaque for performance
     metalness: 0.02, // Very low metalness for water
     roughness: 0.1, // Very smooth for reflections
     
@@ -317,7 +317,7 @@ export class OceanSystem extends GameObject {
       return new this.THREE.MeshBasicMaterial({
         color: 0x006994,
         transparent: true,
-        opacity: 0.7,
+        opacity: 0.9,
         side: this.THREE.DoubleSide,
       });
     }
@@ -328,7 +328,7 @@ export class OceanSystem extends GameObject {
       return new this.THREE.MeshLambertMaterial({
         color: 0x006994,
         transparent: true,
-        opacity: 0.6,
+        opacity: 0.95,
         side: this.THREE.DoubleSide,
       });
     }
@@ -338,7 +338,7 @@ export class OceanSystem extends GameObject {
     const waterMaterial = new this.THREE.MeshStandardMaterial({
       color: 0x006994,
       transparent: true,
-      opacity: 0.3, // More transparent for realistic depth
+      opacity: 0.95, // Nearly opaque as requested
       metalness: 0.05, // Slight metallic reflection
       roughness: 0.05, // Very smooth for mirror-like reflections
       side: this.THREE.DoubleSide,
@@ -349,9 +349,7 @@ export class OceanSystem extends GameObject {
 
     // ULTRA quality gets the most advanced effects
     if (optimizationManager?.getOptimizationLevel() === 'ultra') {
-      // Enable advanced reflections and refractions
-      waterMaterial.transparent = true;
-      waterMaterial.opacity = 0.25; // Even more transparent
+      // Enhanced metallic properties for reflections
       waterMaterial.metalness = 0.1; // More metallic
       waterMaterial.roughness = 0.02; // Mirror-smooth
       

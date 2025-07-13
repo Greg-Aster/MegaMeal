@@ -30,6 +30,8 @@ export class ObservatoryEnvironment extends GameObject {
   
   // Level of Detail (LOD) system for intelligent performance optimization
   private lodObjects: THREE.LOD[] = [];
+  private terrainLOD: THREE.LOD | null = null;
+  private waterLOD: THREE.LOD | null = null;
   
   // Lighting elements
   private lightingGroup: THREE.Group | null = null;
@@ -134,11 +136,23 @@ export class ObservatoryEnvironment extends GameObject {
     }
     
     // Update all LOD objects for intelligent performance optimization
+    const camera = this.engine.getCamera();
+    
+    // Update vegetation LOD
     if (this.lodObjects.length > 0) {
-      const camera = this.engine.getCamera();
       for (const lod of this.lodObjects) {
         lod.update(camera);
       }
+    }
+    
+    // Update terrain LOD
+    if (this.terrainLOD) {
+      this.terrainLOD.update(camera);
+    }
+    
+    // Update water LOD  
+    if (this.waterLOD) {
+      this.waterLOD.update(camera);
     }
     
     // Update rising water effect
@@ -398,74 +412,31 @@ export class ObservatoryEnvironment extends GameObject {
   }
   
   private async createGround(): Promise<void> {
-    console.log('🏔️ Creating floating island terrain...');
+    console.log('🏔️ Creating intelligent LOD terrain system...');
     
-    // Check if we're in toon mode for simplified geometry
-    const isToonMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    // Create geometry with intelligent optimization
-    let groundGeometry;
-    const terrainSegments = this.getIntelligentTerrainSettings(isToonMode);
-    groundGeometry = new this.THREE.PlaneGeometry(500, 500, terrainSegments.width, terrainSegments.height);
-    const positions = groundGeometry.attributes.position.array;
-    
-    // Use shared terrain parameters for consistency with getHeightAt
-    const { hillHeight, hillRadius, islandRadius, edgeHeight, edgeFalloff, waterfallStart, baseGroundLevel } = this.terrainParams;
-    
-    // Generate terrain heights
-    for (let i = 0; i < positions.length; i += 3) {
-      const x = positions[i];
-      const z = positions[i + 1];
-      const distanceFromCenter = Math.sqrt(x * x + z * z);
+    try {
+      const optimizationManager = OptimizationManager.getInstance();
+      const optimizationLevel = optimizationManager.getOptimizationLevel();
       
-      let height = 0;
-      
-      // Central hill
-      if (distanceFromCenter < hillRadius) {
-        const heightMultiplier = Math.cos((distanceFromCenter / hillRadius) * Math.PI * 0.5);
-        height = baseGroundLevel + (hillHeight * heightMultiplier * heightMultiplier);
+      // Create terrain LOD system based on device capabilities
+      if (optimizationLevel === 'ultra_low' || optimizationLevel === 'low') {
+        // Simple single-mesh terrain for low-end devices
+        this.groundMesh = this.createTerrainMesh(20, 20, false);
+        this.levelGroup.add(this.groundMesh);
+        console.log('✅ Simple terrain created for low-end device');
       } else {
-        height = baseGroundLevel;
+        // Advanced LOD terrain system for capable devices
+        this.terrainLOD = this.createTerrainLODSystem(optimizationLevel);
+        this.levelGroup.add(this.terrainLOD);
+        this.lodObjects.push(this.terrainLOD);
+        console.log('✅ LOD terrain system created for capable device');
       }
-      
-      // Void drop-off
-      if (distanceFromCenter >= islandRadius) {
-        const voidDistance = distanceFromCenter - islandRadius;
-        height = baseGroundLevel - Math.pow(voidDistance * 0.1, 2);
-      }
-      
-      positions[i + 2] = height;
-    }
-    
-    // Add surface detail
-    for (let i = 0; i < positions.length; i += 3) {
-      const x = positions[i];
-      const z = positions[i + 1];
-      
-      const noise1 = Math.sin(x * 0.2) * Math.cos(z * 0.2) * 0.3;
-      const noise2 = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.1;
-      const noise3 = Math.sin(x * 1.0) * Math.cos(z * 1.0) * 0.05;
-      
-      positions[i + 2] += noise1 + noise2 + noise3;
-    }
-    
-    groundGeometry.attributes.position.needsUpdate = true;
-    groundGeometry.computeVertexNormals();
-    
-    // Create intelligent terrain material based on device capabilities
-    const groundMaterial = this.createIntelligentTerrainMaterial();
-    
-    // Create ground mesh
-    this.groundMesh = new this.THREE.Mesh(groundGeometry, groundMaterial);
-    if (this.groundMesh) {
-      this.groundMesh.rotation.x = -Math.PI / 2;
-      this.groundMesh.position.y = 0; // Heights are now absolute, based on terrainParams
-      this.groundMesh.receiveShadow = true;
-      
+    } catch (error) {
+      console.error('Failed to create LOD terrain, falling back to simple terrain:', error);
+      // Fallback to simple terrain
+      this.groundMesh = this.createTerrainMesh(32, 32, true);
       this.levelGroup.add(this.groundMesh);
     }
-    console.log('✅ Terrain created');
   }
   
   private createTerrainTexture(): THREE.CanvasTexture {
@@ -520,6 +491,107 @@ export class ObservatoryEnvironment extends GameObject {
     }
     
     return texture;
+  }
+
+  /**
+   * Create terrain LOD system with multiple detail levels
+   */
+  private createTerrainLODSystem(optimizationLevel: string): THREE.LOD {
+    const terrainLOD = new this.THREE.LOD();
+    
+    // Level 0: High detail (close up, 0-100 units)
+    const highDetailTerrain = this.createTerrainMesh(96, 96, true);
+    terrainLOD.addLevel(highDetailTerrain, 0);
+    
+    // Level 1: Medium detail (medium distance, 100-300 units) 
+    if (optimizationLevel === 'high' || optimizationLevel === 'ultra') {
+      const mediumDetailTerrain = this.createTerrainMesh(48, 48, true);
+      terrainLOD.addLevel(mediumDetailTerrain, 100);
+    }
+    
+    // Level 2: Low detail (far distance, 300+ units)
+    if (optimizationLevel === 'ultra') {
+      const lowDetailTerrain = this.createTerrainMesh(24, 24, false);
+      terrainLOD.addLevel(lowDetailTerrain, 300);
+    }
+    
+    return terrainLOD;
+  }
+
+  /**
+   * Create a single terrain mesh with specified detail level
+   */
+  private createTerrainMesh(segmentsX: number, segmentsY: number, useAdvancedMaterial: boolean): THREE.Mesh {
+    // Create geometry with specified detail level
+    const groundGeometry = new this.THREE.PlaneGeometry(500, 500, segmentsX, segmentsY);
+    const positions = groundGeometry.attributes.position.array;
+    
+    // Use shared terrain parameters for consistency with getHeightAt
+    const { hillHeight, hillRadius, islandRadius, baseGroundLevel } = this.terrainParams;
+    
+    // Generate terrain heights
+    for (let i = 0; i < positions.length; i += 3) {
+      const x = positions[i];
+      const z = positions[i + 1];
+      const distanceFromCenter = Math.sqrt(x * x + z * z);
+      
+      let height = 0;
+      
+      // Central hill
+      if (distanceFromCenter < hillRadius) {
+        const heightMultiplier = Math.cos((distanceFromCenter / hillRadius) * Math.PI * 0.5);
+        height = baseGroundLevel + (hillHeight * heightMultiplier * heightMultiplier);
+      } else {
+        height = baseGroundLevel;
+      }
+      
+      // Void drop-off
+      if (distanceFromCenter >= islandRadius) {
+        const voidDistance = distanceFromCenter - islandRadius;
+        height = baseGroundLevel - Math.pow(voidDistance * 0.1, 2);
+      }
+      
+      positions[i + 2] = height;
+    }
+    
+    // Add surface detail (reduce for lower LOD levels)
+    const detailFactor = segmentsX / 96; // Scale detail based on geometry complexity
+    for (let i = 0; i < positions.length; i += 3) {
+      const x = positions[i];
+      const z = positions[i + 1];
+      
+      const noise1 = Math.sin(x * 0.2) * Math.cos(z * 0.2) * 0.3 * detailFactor;
+      const noise2 = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.1 * detailFactor;
+      const noise3 = Math.sin(x * 1.0) * Math.cos(z * 1.0) * 0.05 * detailFactor;
+      
+      positions[i + 2] += noise1 + noise2 + noise3;
+    }
+    
+    groundGeometry.attributes.position.needsUpdate = true;
+    groundGeometry.computeVertexNormals();
+    
+    // Create material based on detail level
+    const groundMaterial = useAdvancedMaterial ? 
+      this.createIntelligentTerrainMaterial() :
+      this.createSimpleTerrainMaterial();
+    
+    // Create mesh
+    const groundMesh = new this.THREE.Mesh(groundGeometry, groundMaterial);
+    groundMesh.rotation.x = -Math.PI / 2;
+    groundMesh.position.y = 0;
+    groundMesh.receiveShadow = true;
+    
+    return groundMesh;
+  }
+
+  /**
+   * Create simple terrain material for LOD levels
+   */
+  private createSimpleTerrainMaterial(): THREE.Material {
+    return new this.THREE.MeshLambertMaterial({
+      color: 0x556633,
+      fog: true
+    });
   }
 
   /**
@@ -971,59 +1043,162 @@ export class ObservatoryEnvironment extends GameObject {
   }
   
   private async createWaterPool(): Promise<void> {
-    console.log('🌊 Creating ocean system...');
+    console.log('🌊 Creating intelligent ocean system...');
     
-    // Configure ocean system to match original Observatory water system exactly
+    try {
+      // Always use the full-featured OceanSystem with its beautiful textures and waves
+      await this.createSimpleOceanSystem();
+      console.log('✅ Full-featured ocean system created');
+      
+      // Initialize current water level
+      this.currentWaterLevel = this.initialWaterLevel;
+      
+      // Register with environmental effects system
+      const environmentalEffects = this.engine.getEnvironmentalEffects();
+      if (environmentalEffects) {
+        environmentalEffects.registerWaterSource({
+          id: 'observatory_water',
+          mesh: this.oceanSystem?.getOceanMesh() || null,
+          getCurrentLevel: () => this.currentWaterLevel,
+          isActive: true,
+        });
+        console.log('✅ Registered observatory water with EnvironmentalEffectsSystem');
+      }
+      
+    } catch (error) {
+      console.error('Failed to create LOD water, falling back to simple water:', error);
+      await this.createSimpleOceanSystem();
+    }
+  }
+
+  /**
+   * Create full-featured ocean system with beautiful textures and waves
+   */
+  private async createSimpleOceanSystem(): Promise<void> {
+    const optimizationManager = OptimizationManager.getInstance();
+    const qualitySettings = optimizationManager.getQualitySettings();
+    
+    // Use intelligent settings based on device capabilities
     const oceanConfig = {
-      // Exact dimensions and segments from original
-      size: { width: 10000, height: 10000 }, 
-      segments: { width: 128, height: 128 },
+      size: { width: 10000, height: 10000 }, // Full size like original
+      segments: qualitySettings?.oceanSegments || { width: 128, height: 128 }, // High detail
       position: new this.THREE.Vector3(0, this.initialWaterLevel, 0),
       waterLevel: this.initialWaterLevel,
-      
-      // Visual properties exactly matching original
-      color: 0x006994, // Deep ocean blue from original
-      opacity: 0.98, // Increased for a more opaque, less transparent look
-      metalness: 0.02, // Very low metalness for water
-      roughness: 0.1,  // Very smooth for reflections
-      
-      // Use default 8-layer wave system (matches original complexity)
-      // The default waves are configured to match the original's 8-layer system
-      
-      enableReflection: true,
-      enableRefraction: true,
-      enableAnimation: true,
-      animationSpeed: 1.0,
-      
-      // Performance optimization
+      color: 0x006994,
+      opacity: 0.95, // Nearly opaque as requested
+      metalness: 0.02,
+      roughness: 0.1, // Smoother for better reflections
+      enableReflection: true, // Restore reflections!
+      enableRefraction: true, // Restore refractions!
+      enableAnimation: true, // Restore wave animations!
+      animationSpeed: 1.0, // Full animation speed
       enableLOD: true,
       maxDetailDistance: 500
     };
     
-    // Create and initialize ocean system with material factory
-    this.oceanSystem = new OceanSystem(this.THREE, this.scene, oceanConfig, this.engine.getMaterials());
+    this.oceanSystem = new OceanSystem(this.THREE, this.scene, oceanConfig);
     await this.oceanSystem.initialize();
+  }
+
+  /**
+   * Create water LOD system with multiple detail levels using direct geometry creation
+   */
+  private async createWaterLODSystem(optimizationLevel: string): Promise<THREE.LOD> {
+    const waterLOD = new this.THREE.LOD();
     
-    // Initialize current water level
-    this.currentWaterLevel = this.initialWaterLevel;
+    // Level 0: High detail water (close up, 0-150 units)
+    const highDetailWater = this.createDirectWaterMesh(64, 64, true, true);
+    waterLOD.addLevel(highDetailWater, 0);
     
-    // Get the ocean mesh for compatibility with existing code
-    this.waterPool = this.oceanSystem.getOceanMesh();
-    
-    // CRITICAL FIX: Register the new ocean system with the global environmental effects manager
-    // This was missed during the OceanSystem refactor and is required for underwater effects.
-    const environmentalEffects = this.engine.getEnvironmentalEffects();
-    if (environmentalEffects) {
-      environmentalEffects.registerWaterSource({
-        id: 'observatory_water',
-        mesh: this.waterPool,
-        getCurrentLevel: () => this.currentWaterLevel,
-        isActive: true,
-      });
-      console.log('✅ Registered observatory water with EnvironmentalEffectsSystem');
+    // Level 1: Medium detail water (medium distance, 150-400 units)
+    if (optimizationLevel === 'high' || optimizationLevel === 'ultra') {
+      const mediumDetailWater = this.createDirectWaterMesh(32, 32, true, false);
+      waterLOD.addLevel(mediumDetailWater, 150);
     }
     
-    console.log('✅ Ocean system created with realistic wave simulation');
+    // Level 2: Low detail water (far distance, 400+ units) 
+    if (optimizationLevel === 'ultra') {
+      const lowDetailWater = this.createDirectWaterMesh(16, 16, false, false);
+      waterLOD.addLevel(lowDetailWater, 400);
+    }
+    
+    // Create the main OceanSystem for animation updates (but don't add to scene)
+    const oceanConfig = {
+      size: { width: 10000, height: 10000 },
+      segments: { width: 64, height: 64 },
+      position: new this.THREE.Vector3(0, this.initialWaterLevel, 0),
+      waterLevel: this.initialWaterLevel,
+      color: 0x006994,
+      opacity: 0.95, // Match original high opacity
+      metalness: 0.02, // Match original settings
+      roughness: 0.1,  // Match original settings
+      enableReflection: true,
+      enableRefraction: true,
+      enableAnimation: true,
+      animationSpeed: 1.0,
+      enableLOD: false,
+      maxDetailDistance: 200
+    };
+    
+    // Create OceanSystem without adding to scene for animation updates
+    this.oceanSystem = new OceanSystem(this.THREE, this.scene, oceanConfig);
+    await this.oceanSystem.initialize();
+    
+    // Remove the OceanSystem's mesh from the scene to prevent duplication
+    const oceanMesh = this.oceanSystem.getOceanMesh();
+    if (oceanMesh && oceanMesh.parent) {
+      oceanMesh.parent.remove(oceanMesh);
+    }
+    
+    return waterLOD;
+  }
+
+  /**
+   * Create a direct water mesh without using OceanSystem (to avoid stacking)
+   */
+  private createDirectWaterMesh(segmentsX: number, segmentsY: number, useAnimation: boolean, useAdvancedEffects: boolean): THREE.Mesh {
+    const size = useAdvancedEffects ? 10000 : 5000;
+    
+    // Create geometry directly
+    const geometry = new this.THREE.PlaneGeometry(size, size, segmentsX, segmentsY);
+    geometry.rotateX(-Math.PI / 2);
+    
+    // Create material based on quality level
+    const material = this.createWaterMaterial(useAdvancedEffects);
+    
+    // Create mesh
+    const waterMesh = new this.THREE.Mesh(geometry, material);
+    waterMesh.position.set(0, this.initialWaterLevel, 0);
+    waterMesh.receiveShadow = true;
+    waterMesh.name = 'water_lod_mesh';
+    
+    return waterMesh;
+  }
+
+  /**
+   * Create water material for LOD levels
+   */
+  private createWaterMaterial(useAdvancedEffects: boolean): THREE.Material {
+    if (useAdvancedEffects) {
+      // High quality PBR material - nearly opaque
+      return new this.THREE.MeshStandardMaterial({
+        color: 0x006994,
+        transparent: true,
+        opacity: 0.95, // Nearly opaque as requested
+        metalness: 0.02, // Match original lower metalness
+        roughness: 0.1,  // Match original higher roughness
+        side: this.THREE.DoubleSide,
+        envMapIntensity: 1.5,
+      });
+    } else {
+      // Simple material for lower detail - semi-transparent
+      return new this.THREE.MeshLambertMaterial({
+        color: 0x006994,
+        transparent: true,
+        opacity: 0.95, // Nearly opaque for distance
+        side: this.THREE.DoubleSide,
+      });
+    }
   }
 
   /**
@@ -1652,6 +1827,8 @@ export class ObservatoryEnvironment extends GameObject {
     
     // Clear LOD objects
     this.lodObjects = [];
+    this.terrainLOD = null;
+    this.waterLOD = null;
     
     // Dispose firefly system
     if (this.fireflySystem) {

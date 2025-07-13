@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GameObject } from '../core/GameObject';
+import { OptimizationManager } from '../optimization/OptimizationManager';
 
 export interface FireflyMovementConfig {
   speed: number;
@@ -107,7 +108,6 @@ export class FireflySystem extends GameObject {
   private applyIntelligentOptimization(config: Partial<FireflyConfig>): void {
     try {
       // Get optimization manager for intelligent settings
-      const OptimizationManager = require('../optimization/OptimizationManager').OptimizationManager;
       const optimizationManager = OptimizationManager.getInstance();
       const qualitySettings = optimizationManager.getQualitySettings();
       
