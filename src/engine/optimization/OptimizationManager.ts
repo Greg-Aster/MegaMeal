@@ -12,11 +12,11 @@ import { ResourceManager } from '../utils/ResourceManager';
 
 // Quality levels for different device types
 export enum OptimizationLevel {
-  MOBILE_LOW = 'mobile_low',
-  MOBILE_MEDIUM = 'mobile_medium', 
-  MOBILE_HIGH = 'mobile_high',
-  DESKTOP_MEDIUM = 'desktop_medium',
-  DESKTOP_HIGH = 'desktop_high'
+  ULTRA_LOW = 'ultra_low',     // Very old/weak devices
+  LOW = 'low',                 // Budget mobile devices  
+  MEDIUM = 'medium',           // Mid-range devices
+  HIGH = 'high',               // Flagship mobile/low-end desktop
+  ULTRA = 'ultra'              // High-end desktop/gaming devices
 }
 
 interface OptimizationConfig {
@@ -37,8 +37,37 @@ interface DeviceCapabilities {
   isLowEnd: boolean;
   screenSize: { width: number; height: number };
   pixelRatio: number;
-  estimatedGPUTier: 'low' | 'medium' | 'high';
+  estimatedGPUTier: 'low' | 'medium' | 'high' | 'ultra';
   supportsWebGL2: boolean;
+  deviceMemory?: number; // GB of RAM if available
+  hardwareConcurrency: number; // CPU cores
+  maxTextureSize: number;
+  deviceType: 'phone' | 'tablet' | 'desktop' | 'unknown';
+  benchmarkScore?: number; // Performance benchmark result
+}
+
+interface QualitySettings {
+  // Geometry complexity
+  oceanSegments: { width: number; height: number };
+  terrainSegments: { width: number; height: number };
+  
+  // Lighting
+  maxFireflyLights: number;
+  enableDynamicLighting: boolean;
+  
+  // Vegetation
+  maxVegetationInstances: number;
+  enableVegetation: boolean;
+  
+  // Materials
+  textureResolution: number; // Max texture size
+  enableProceduralTextures: boolean;
+  enableNormalMaps: boolean;
+  
+  // Rendering
+  canvasScale: number; // Render resolution multiplier
+  enablePostProcessing: boolean;
+  enableShadows: boolean;
 }
 export class OptimizationManager {
   private static instance: OptimizationManager | null = null;
@@ -57,68 +86,154 @@ export class OptimizationManager {
   
   // Device capabilities and optimization level
   private deviceCapabilities: DeviceCapabilities | null = null;
-  private currentOptimizationLevel: OptimizationLevel = OptimizationLevel.DESKTOP_HIGH;
+  private currentOptimizationLevel: OptimizationLevel = OptimizationLevel.MEDIUM;
+  private currentQualitySettings: QualitySettings | null = null;
   
-  // Configuration profiles for different optimization levels
+  // Performance monitoring for real-time adaptation
+  private averageFPS = 60;
+  private frameTimeHistory: number[] = [];
+  private lastPerformanceCheck = 0;
+  private performanceCheckInterval = 5000; // Check every 5 seconds
+  
+  // Quality settings profiles for intelligent adaptation
+  private readonly qualityProfiles: Record<OptimizationLevel, QualitySettings> = {
+    [OptimizationLevel.ULTRA_LOW]: {
+      // Minimal settings for very old devices
+      oceanSegments: { width: 8, height: 8 },
+      terrainSegments: { width: 12, height: 12 },
+      maxFireflyLights: 0,
+      enableDynamicLighting: false,
+      maxVegetationInstances: 0,
+      enableVegetation: false,
+      textureResolution: 256,
+      enableProceduralTextures: false,
+      enableNormalMaps: false,
+      canvasScale: 0.5,
+      enablePostProcessing: false,
+      enableShadows: false
+    },
+    [OptimizationLevel.LOW]: {
+      // Budget mobile devices
+      oceanSegments: { width: 12, height: 12 },
+      terrainSegments: { width: 16, height: 16 },
+      maxFireflyLights: 0,
+      enableDynamicLighting: false,
+      maxVegetationInstances: 3,
+      enableVegetation: true,
+      textureResolution: 512,
+      enableProceduralTextures: false,
+      enableNormalMaps: false,
+      canvasScale: 0.75,
+      enablePostProcessing: false,
+      enableShadows: false
+    },
+    [OptimizationLevel.MEDIUM]: {
+      // Mid-range devices (phones/tablets)
+      oceanSegments: { width: 16, height: 16 },
+      terrainSegments: { width: 24, height: 24 },
+      maxFireflyLights: 2,
+      enableDynamicLighting: true,
+      maxVegetationInstances: 8,
+      enableVegetation: true,
+      textureResolution: 1024,
+      enableProceduralTextures: true,
+      enableNormalMaps: false,
+      canvasScale: 0.85,
+      enablePostProcessing: false,
+      enableShadows: true
+    },
+    [OptimizationLevel.HIGH]: {
+      // Flagship mobile/entry desktop
+      oceanSegments: { width: 32, height: 32 },
+      terrainSegments: { width: 48, height: 48 },
+      maxFireflyLights: 4,
+      enableDynamicLighting: true,
+      maxVegetationInstances: 15,
+      enableVegetation: true,
+      textureResolution: 1024,
+      enableProceduralTextures: true,
+      enableNormalMaps: true,
+      canvasScale: 1.0,
+      enablePostProcessing: true,
+      enableShadows: true
+    },
+    [OptimizationLevel.ULTRA]: {
+      // High-end desktop/gaming devices
+      oceanSegments: { width: 64, height: 64 },
+      terrainSegments: { width: 96, height: 96 },
+      maxFireflyLights: 8,
+      enableDynamicLighting: true,
+      maxVegetationInstances: 30,
+      enableVegetation: true,
+      textureResolution: 2048,
+      enableProceduralTextures: true,
+      enableNormalMaps: true,
+      canvasScale: 1.0,
+      enablePostProcessing: true,
+      enableShadows: true
+    }
+  };
+
+  // Legacy configuration profiles (kept for compatibility)
   private readonly configProfiles: Record<OptimizationLevel, OptimizationConfig> = {
-    [OptimizationLevel.MOBILE_LOW]: {
-      maxRenderDistance: 1200, // Increased to ensure stars and skybox are visible
+    [OptimizationLevel.ULTRA_LOW]: {
+      maxRenderDistance: 1200,
+      unloadDistance: 1400,
+      preloadDistance: 800,
+      lodDistances: [50, 150, 300],
+      checkInterval: 300,
+      maxObjectsPerFrame: 5,
+      fadeDistance: 20,
+      fadeSpeed: 4.0,
+      shadowDistance: 0,
+      maxShadowMapSize: 256
+    },
+    [OptimizationLevel.LOW]: {
+      maxRenderDistance: 1200,
       unloadDistance: 1400,
       preloadDistance: 1000,
-      lodDistances: [100, 300, 600], // Adjusted LOD distances
+      lodDistances: [100, 300, 600],
       checkInterval: 200,
       maxObjectsPerFrame: 10,
-      fadeDistance: 50,
+      fadeDistance: 40,
       fadeSpeed: 3.0,
-      shadowDistance: 25, // Very close shadows only on low-end mobile
+      shadowDistance: 25,
       maxShadowMapSize: 512
     },
-    [OptimizationLevel.MOBILE_MEDIUM]: {
-      maxRenderDistance: 1200, // Increased to ensure stars and skybox are visible
+    [OptimizationLevel.MEDIUM]: {
+      maxRenderDistance: 1200,
       unloadDistance: 1400,
       preloadDistance: 1000,
-      lodDistances: [150, 400, 700], // Adjusted LOD distances
+      lodDistances: [150, 400, 700],
       checkInterval: 150,
       maxObjectsPerFrame: 20,
-      fadeDistance: 25,
+      fadeDistance: 60,
       fadeSpeed: 2.5,
-      shadowDistance: 40, // Medium shadow range
+      shadowDistance: 50,
       maxShadowMapSize: 1024
     },
-    [OptimizationLevel.MOBILE_HIGH]: {
-      maxRenderDistance: 1200, // Increased to ensure stars and skybox are visible
+    [OptimizationLevel.HIGH]: {
+      maxRenderDistance: 1200,
       unloadDistance: 1400,
       preloadDistance: 1000,
-      lodDistances: [200, 500, 800], // Adjusted LOD distances
+      lodDistances: [200, 500, 800],
       checkInterval: 120,
       maxObjectsPerFrame: 30,
-      fadeDistance: 30,
+      fadeDistance: 80,
       fadeSpeed: 2.0,
-      shadowDistance: 60, // Better shadow range on high-end mobile
+      shadowDistance: 100,
       maxShadowMapSize: 1024
     },
-    [OptimizationLevel.DESKTOP_MEDIUM]: {
-      maxRenderDistance: 200,
-      unloadDistance: 250,
-      preloadDistance: 150,
-      lodDistances: [50, 100, 150],
-      checkInterval: 100,
-      maxObjectsPerFrame: 40,
-      fadeDistance: 25,
-      fadeSpeed: 2.0,
-      shadowDistance: 100, // Good shadow range on desktop
-      maxShadowMapSize: 2048
-    },
-    [OptimizationLevel.DESKTOP_HIGH]: {
-      maxRenderDistance: 300,
-      unloadDistance: 350,
-      preloadDistance: 250,
-      lodDistances: [75, 150, 225],
-      checkInterval: 80,
+    [OptimizationLevel.ULTRA]: {
+      maxRenderDistance: 1500,
+      unloadDistance: 1700,
+      preloadDistance: 1200,
+      lodDistances: [300, 600, 900],
+      checkInterval: 60,
       maxObjectsPerFrame: 50,
-      fadeDistance: 30,
+      fadeDistance: 100,
       fadeSpeed: 1.5,
-      shadowDistance: 150, // Full shadow range on high-end desktop
+      shadowDistance: 200,
       maxShadowMapSize: 2048
     }
   };
@@ -166,41 +281,86 @@ export class OptimizationManager {
   }
 
   /**
-   * Detect device capabilities for optimization decisions
+   * Intelligent device capability detection with detailed analysis
    */
   private detectDeviceCapabilities(): void {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    // Guard against running in a non-browser environment (e.g., SSR)
+    if (typeof window === 'undefined' || typeof navigator === 'undefined' || typeof document === 'undefined') {
+      console.warn('⚠️ OptimizationManager: Cannot detect device capabilities in a non-browser environment. Using defaults.');
+      return;
+    }
+
+    const userAgent = navigator.userAgent;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    const isTablet = /iPad|Tablet|PlayBook/i.test(userAgent) || (window.innerWidth > 768 && isMobile);
     const screenWidth = window.screen.width;
     const screenHeight = window.screen.height;
     const pixelRatio = window.devicePixelRatio || 1;
+    const hardwareConcurrency = navigator.hardwareConcurrency || 4;
     
-    // Estimate GPU tier based on device characteristics
-    let estimatedGPUTier: 'low' | 'medium' | 'high' = 'medium';
-    
-    if (isMobile) {
-      // Mobile GPU estimation based on screen resolution and pixel ratio
-      const totalPixels = screenWidth * screenHeight * pixelRatio;
-      if (totalPixels < 2000000) { // Lower resolution mobile devices
-        estimatedGPUTier = 'low';
-      } else if (totalPixels > 4000000) { // High-end mobile devices
-        estimatedGPUTier = 'high';
-      }
+    // Detect device type more accurately
+    let deviceType: 'phone' | 'tablet' | 'desktop' | 'unknown' = 'unknown';
+    if (!isMobile) {
+      deviceType = 'desktop';
+    } else if (isTablet) {
+      deviceType = 'tablet';
     } else {
-      // Desktop typically has better GPUs
-      estimatedGPUTier = 'high';
+      deviceType = 'phone';
     }
     
-    // Check for WebGL2 support
+    // Get WebGL context and capabilities
     const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     const gl2 = canvas.getContext('webgl2');
     const supportsWebGL2 = !!gl2;
     
-    // Detect low-end devices
-    const isLowEnd = isMobile && (
-      screenWidth < 1080 || 
-      pixelRatio < 2 || 
+    let maxTextureSize = 2048; // Conservative default
+    if (gl) {
+      maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+    }
+    
+    // Advanced GPU tier estimation
+    let estimatedGPUTier: 'low' | 'medium' | 'high' | 'ultra' = 'medium';
+    
+    if (isMobile) {
+      // Mobile GPU estimation based on multiple factors
+      const totalPixels = screenWidth * screenHeight * pixelRatio;
+      const deviceYear = this.estimateDeviceYear(userAgent);
+      
+      if (totalPixels > 6000000 && deviceYear >= 2022 && hardwareConcurrency >= 8) {
+        estimatedGPUTier = 'ultra'; // Flagship phones like iPhone 15 Pro, S24 Ultra
+      } else if (totalPixels > 4000000 && deviceYear >= 2020 && hardwareConcurrency >= 6) {
+        estimatedGPUTier = 'high'; // High-end phones
+      } else if (totalPixels > 2000000 && deviceYear >= 2019) {
+        estimatedGPUTier = 'medium'; // Mid-range phones
+      } else {
+        estimatedGPUTier = 'low'; // Budget/old phones
+      }
+    } else {
+      // Desktop GPU estimation
+      if (maxTextureSize >= 16384 && hardwareConcurrency >= 16) {
+        estimatedGPUTier = 'ultra'; // High-end gaming PCs
+      } else if (maxTextureSize >= 8192 && hardwareConcurrency >= 8) {
+        estimatedGPUTier = 'high'; // Mid-high end desktops
+      } else if (maxTextureSize >= 4096) {
+        estimatedGPUTier = 'medium'; // Standard desktops
+      } else {
+        estimatedGPUTier = 'low'; // Old or integrated graphics
+      }
+    }
+    
+    // Detect device memory if available
+    let deviceMemory: number | undefined;
+    if ('deviceMemory' in navigator) {
+      deviceMemory = (navigator as any).deviceMemory;
+    }
+    
+    // Enhanced low-end detection
+    const isLowEnd = (
       estimatedGPUTier === 'low' ||
-      navigator.hardwareConcurrency < 4
+      hardwareConcurrency < 4 ||
+      (deviceMemory && deviceMemory < 4) ||
+      maxTextureSize < 2048
     );
     
     this.deviceCapabilities = {
@@ -209,10 +369,53 @@ export class OptimizationManager {
       screenSize: { width: screenWidth, height: screenHeight },
       pixelRatio,
       estimatedGPUTier,
-      supportsWebGL2
+      supportsWebGL2,
+      deviceMemory,
+      hardwareConcurrency,
+      maxTextureSize,
+      deviceType
     };
+
+    console.log('📱 Advanced device detection:', {
+      deviceType,
+      estimatedGPUTier,
+      hardwareConcurrency,
+      maxTextureSize,
+      totalPixels: screenWidth * screenHeight * pixelRatio,
+      deviceMemory: deviceMemory || 'unknown'
+    });
+  }
+
+  /**
+   * Estimate device release year based on user agent patterns
+   */
+  private estimateDeviceYear(userAgent: string): number {
+    const currentYear = new Date().getFullYear();
     
-    console.log('📱 Device capabilities detected:', this.deviceCapabilities);
+    // iPhone patterns
+    if (/iPhone/.test(userAgent)) {
+      if (/iPhone1[5-9]|iPhone[2-9][0-9]/.test(userAgent)) return currentYear; // iPhone 15+
+      if (/iPhone1[2-4]/.test(userAgent)) return 2022; // iPhone 12-14
+      if (/iPhone1[0-1]/.test(userAgent)) return 2019; // iPhone X-11
+      return 2018; // Older iPhones
+    }
+    
+    // Android patterns (approximate based on Android version)
+    if (/Android/.test(userAgent)) {
+      const androidMatch = userAgent.match(/Android (\d+)/);
+      if (androidMatch) {
+        const version = parseInt(androidMatch[1]);
+        if (version >= 14) return 2023;
+        if (version >= 13) return 2022;
+        if (version >= 12) return 2021;
+        if (version >= 11) return 2020;
+        if (version >= 10) return 2019;
+        return 2018;
+      }
+    }
+    
+    // Default to slightly older for unknown devices
+    return currentYear - 2;
   }
 
   /**
@@ -224,16 +427,21 @@ export class OptimizationManager {
     const { isMobile, isLowEnd, estimatedGPUTier } = this.deviceCapabilities;
     
     if (isMobile) {
+      // Use the correct enum values for mobile devices, which now map to LOW, MEDIUM, and HIGH.
       if (isLowEnd || estimatedGPUTier === 'low') {
-        this.setOptimizationLevel(OptimizationLevel.MOBILE_LOW);
+        this.setOptimizationLevel(OptimizationLevel.LOW);
       } else if (estimatedGPUTier === 'high') {
-        this.setOptimizationLevel(OptimizationLevel.MOBILE_HIGH);
+        this.setOptimizationLevel(OptimizationLevel.HIGH);
       } else {
-        this.setOptimizationLevel(OptimizationLevel.MOBILE_MEDIUM);
+        this.setOptimizationLevel(OptimizationLevel.MEDIUM);
       }
     } else {
-      // Desktop - could add more sophisticated detection here
-      this.setOptimizationLevel(OptimizationLevel.DESKTOP_HIGH);
+      // Use ULTRA for high-end desktops and HIGH for others.
+      if (estimatedGPUTier === 'ultra') {
+        this.setOptimizationLevel(OptimizationLevel.ULTRA);
+      } else {
+        this.setOptimizationLevel(OptimizationLevel.HIGH);
+      }
     }
   }
 
@@ -513,17 +721,6 @@ export class OptimizationManager {
       
       // Skip system objects (cameras, etc.)
       if (object.type === 'Camera') return;
-      
-      // Skip only top-level containers, but allow traversal into child objects
-      if (object.name.includes('Level_') && object.type === 'Group') {
-        // Don't register the level group itself, but continue traversing its children
-        return;
-      }
-      
-      // NEVER optimize essential objects - double check here
-      if (this.isEssentialObject(object)) {
-        return;
-      }
       
       // Include vegetation, decorations, and similar objects
       if (this.shouldOptimizeObject(object)) {
