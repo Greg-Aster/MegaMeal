@@ -27,6 +27,7 @@ export interface FireflyConfig {
 export interface FireflyData {
   mesh: THREE.Mesh;
   light: THREE.PointLight | null;
+  lightPool?: THREE.Mesh | null; // Geometric light pool for vector mode
   targetPosition: THREE.Vector3;
   basePosition: THREE.Vector3;
   animationOffset: number;
@@ -232,7 +233,24 @@ export class FireflySystem extends GameObject {
     // Create geometric light pool on ground in vector mode
     let lightPool: THREE.Mesh | null = null;
     if (isVectorMode) {
-      const groundY = this.getHeightAt ? this.getHeightAt(x, z) : 0;
+      // Use raycasting to find exact ground position and normal
+      const raycaster = new this.THREE.Raycaster();
+      raycaster.set(new this.THREE.Vector3(x, y + 10, z), new this.THREE.Vector3(0, -1, 0));
+      
+      // Cast ray downward to find ground intersection
+      const intersects = raycaster.intersectObjects(this.scene.children, true);
+      
+      let groundY = this.getHeightAt ? this.getHeightAt(x, z) : 0;
+      let groundNormal = new this.THREE.Vector3(0, 1, 0); // Default upward normal
+      
+      // If we hit something, use that position and normal
+      if (intersects.length > 0) {
+        const intersection = intersects[0];
+        groundY = intersection.point.y;
+        if (intersection.face && intersection.face.normal) {
+          groundNormal = intersection.face.normal.clone();
+        }
+      }
       
       // Create larger circular geometry for ground light pool
       const poolGeometry = new this.THREE.PlaneGeometry(this.config.lightRange * 0.4, this.config.lightRange * 0.4, 1, 1);
@@ -266,8 +284,16 @@ export class FireflySystem extends GameObject {
       });
       
       lightPool = new this.THREE.Mesh(poolGeometry, poolMaterial);
-      lightPool.position.set(x, groundY + 0.01, z); // Slightly above ground
-      lightPool.rotation.x = -Math.PI / 2; // Lay flat on ground
+      lightPool.position.set(x, groundY + 0.005, z); // Very slightly above ground to prevent z-fighting
+      
+      // Orient the pool to match the ground surface normal
+      lightPool.lookAt(
+        lightPool.position.x + groundNormal.x,
+        lightPool.position.y + groundNormal.y,
+        lightPool.position.z + groundNormal.z
+      );
+      lightPool.rotateX(Math.PI / 2); // Adjust for plane orientation
+      
       lightPool.name = `firefly_pool_${index}`;
       
       // Add pool to firefly group
