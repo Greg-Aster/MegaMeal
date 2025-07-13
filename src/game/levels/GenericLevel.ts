@@ -221,7 +221,7 @@ export class GenericLevel extends BaseLevel {
           this.engine.getMaterials() // It needs the Materials factory from the engine
         );
       } else if (systemConfig.type === 'StarNavigationSystem') {
-        // StarNavigationSystem has a specific constructor signature needing the full engine
+        // StarNavigationSystem has a specific constructor signature with the full engine
         component = new componentClass(
           this.THREE,
           this.engine,
