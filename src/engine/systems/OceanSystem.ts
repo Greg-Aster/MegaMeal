@@ -134,6 +134,10 @@ export class OceanSystem extends GameObject {
       this.config.segments.height = Math.min(this.config.segments.height, 32);
       this.config.waves = this.config.waves.slice(0, 1); // Single wave only
       this.updateInterval = 1000 / 20; // 20 FPS on mobile
+      
+      // Dramatically reduce ocean size for mobile devices
+      this.config.size.width = Math.min(2000, this.config.size.width);
+      this.config.size.height = Math.min(2000, this.config.size.height);
     }
     
     console.log(`🌊 OceanSystem created: ${this.config.size.width}x${this.config.size.height}, ${this.config.segments.width}x${this.config.segments.height} segments`);
