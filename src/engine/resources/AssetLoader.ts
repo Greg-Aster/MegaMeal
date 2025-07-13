@@ -139,7 +139,7 @@ export class AssetLoader {
       this.loadingProgress.total = itemsTotal;
       this.loadingProgress.loaded = itemsLoaded;
       this.loadingProgress.percentage = 0;
-      console.log(`Started loading: ${itemsTotal} items`);
+      // Started loading assets (reduced logging)
     };
 
     this.loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
@@ -149,13 +149,13 @@ export class AssetLoader {
       this.loadingProgress.currentAsset = url;
 
       this.onProgressCallback?.(this.loadingProgress);
-      console.log(`Loading progress: ${this.loadingProgress.percentage.toFixed(1)}% (${itemsLoaded}/${itemsTotal}) - ${url}`);
+      // Loading progress (reduced logging)
     };
 
     this.loadingManager.onLoad = () => {
       this.loadingProgress.percentage = 100;
       this.onLoadCallback?.();
-      console.log('✅ All assets loaded');
+      // All assets loaded (reduced logging)
     };
 
     this.loadingManager.onError = (url) => {
