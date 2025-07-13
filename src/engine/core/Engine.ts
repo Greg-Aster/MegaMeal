@@ -95,8 +95,9 @@ export class Engine {
     this.scene = new THREE.Scene();
     
     // Mobile-aware camera far plane for better performance
+    // Must be high enough to see stars (990) and skybox (1000)
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const farPlane = isMobile ? 800 : 2000;
+    const farPlane = isMobile ? 1200 : 2000;
     
     this.camera = new THREE.PerspectiveCamera(
       60,
