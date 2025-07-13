@@ -60,23 +60,23 @@ export class FireflySystem extends GameObject {
   
   // Default configuration
   private static readonly DEFAULT_CONFIG: FireflyConfig = {
-    count: 200,
-    maxLights: 50, // Reduce lights for better performance with vector style
-    colors: [0x00ffff, 0x00ff88, 0xffff00, 0xff44ff, 0x88ff44], // More vibrant vector colors
-    emissiveIntensity: 80.0, // Very bright emissive for magical vector effect
-    lightIntensity: 8.0, // Slightly lower but with hard falloff
-    lightRange: 120, // Smaller, more defined light areas
-    cycleDuration: 3.0, // Faster cycling for more magical feel
-    fadeSpeed: 5.0, // Much faster for sharp on/off transitions
-    heightRange: { min: 0.5, max: 2.5 },
-    radius: 180,
-    size: 0.02, // Smaller fireflies
+    count: 20, // Fewer geometric light shapes for minimal atmosphere
+    maxLights: 0, // No actual lights - use geometric shapes instead
+    colors: [0xf4a261, 0xe9c46a, 0xe76f51, 0x2a9d8f, 0x264653], // Keep your existing palette
+    emissiveIntensity: 20.0, // Very subtle glow
+    lightIntensity: 2.0, // Much lower intensity for calm mood
+    lightRange: 40, // Smaller, more intimate light areas
+    cycleDuration: 8.0, // Much slower cycling for peaceful feel
+    fadeSpeed: 1.0, // Very slow, gentle transitions
+    heightRange: { min: 0.8, max: 1.8 }, // Tighter height range
+    radius: 100, // Closer to center for intimate feel
+    size: 0.01, // Tiny for minimal presence
     movement: {
-      speed: 0.8,
-      wanderSpeed: 0.01,
-      wanderRadius: 8,
-      floatAmplitude: { x: 2.5, y: 0.8, z: 2.5 },
-      lerpFactor: 1.5
+      speed: 0.3, // Very slow, meditative movement
+      wanderSpeed: 0.005, // Minimal wandering
+      wanderRadius: 3, // Small movement range
+      floatAmplitude: { x: 1.0, y: 0.3, z: 1.0 }, // Gentle floating
+      lerpFactor: 0.8 // Smooth, slow movements
     }
   };
   
@@ -98,7 +98,7 @@ export class FireflySystem extends GameObject {
     // Auto-detect mobile for better defaults
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     if (isMobile && !config.maxLights) {
-      this.config.maxLights = 8; // More conservative on mobile
+      this.config.maxLights = 4; // Very conservative on mobile for Monument Valley style
     }
     
     console.log(`✨ FireflySystem created: ${this.config.count} fireflies, ${this.config.maxLights} max lights`);
@@ -161,15 +161,36 @@ export class FireflySystem extends GameObject {
     let fireflyGeometry, fireflyMaterial;
     
     if (isVectorMode) {
-      // Vector art style - flat, geometric shapes
-      fireflyGeometry = new this.THREE.SphereGeometry(this.config.size * 3, 6, 4); // Larger, more angular
+      // Monument Valley style - geometric shapes with gradient effect
+      fireflyGeometry = new this.THREE.PlaneGeometry(this.config.size * 8, this.config.size * 8, 1, 1);
+      
+      // Create a radial gradient texture for the geometric light effect
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d')!;
+      
+      // Create radial gradient from bright center to transparent edge
+      const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      const colorObj = new this.THREE.Color(color);
+      gradient.addColorStop(0, `rgba(${Math.floor(colorObj.r * 255)}, ${Math.floor(colorObj.g * 255)}, ${Math.floor(colorObj.b * 255)}, 0.8)`);
+      gradient.addColorStop(0.3, `rgba(${Math.floor(colorObj.r * 255)}, ${Math.floor(colorObj.g * 255)}, ${Math.floor(colorObj.b * 255)}, 0.4)`);
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 64, 64);
+      
+      const gradientTexture = new this.THREE.CanvasTexture(canvas);
+      gradientTexture.needsUpdate = true;
+      
       fireflyMaterial = new this.THREE.MeshBasicMaterial({
-        color: color,
+        map: gradientTexture,
         transparent: true,
-        opacity: 1.0, // Fully opaque for vector look
+        opacity: 0.6,
         toneMapped: false,
         fog: false,
-        // No emission - rely on pure color brightness
+        depthWrite: false,
+        blending: this.THREE.AdditiveBlending
       });
     } else {
       // Realistic style - keep original smooth approach
@@ -193,32 +214,70 @@ export class FireflySystem extends GameObject {
     mesh.position.copy(position);
     mesh.name = `firefly_${index}`;
     
-    // Create light only for the first maxLights fireflies
-    let light: THREE.PointLight | null = null;
-    if (index < this.config.maxLights) {
-      if (isVectorMode) {
-        // Vector mode: hard falloff light for stylized effect
-        light = new this.THREE.PointLight(color, 0, this.config.lightRange, 2.0); // decay=2 for harder falloff
-        light.position.copy(position);
-        light.name = `firefly_light_${index}`;
-        
-        // Vector mode uses geometric fireflies with hard light falloff - no visual discs needed
-      } else {
-        // Realistic mode: keep soft falloff
-        light = new this.THREE.PointLight(color, 0, this.config.lightRange);
-        light.position.copy(position);
-        light.name = `firefly_light_${index}`;
-      }
-      
-      // Add light to active lights array if it was created
-      if (light) {
-        this.activeLights.push(light);
-      }
+    // In vector mode, make planes face the camera (billboard effect)
+    if (isVectorMode) {
+      mesh.lookAt(new this.THREE.Vector3(0, position.y, 0));
     }
     
+    // No actual lights in vector mode - use geometric light pools instead
+    let light: THREE.PointLight | null = null;
+    if (!isVectorMode && this.config.maxLights > 0 && index < this.config.maxLights) {
+      // Only create real lights in non-vector mode
+      light = new this.THREE.PointLight(color, 0, this.config.lightRange);
+      light.position.copy(position);
+      light.name = `firefly_light_${index}`;
+      this.activeLights.push(light);
+    }
+    
+    // Create geometric light pool on ground in vector mode
+    let lightPool: THREE.Mesh | null = null;
+    if (isVectorMode) {
+      const groundY = this.getHeightAt ? this.getHeightAt(x, z) : 0;
+      
+      // Create larger circular geometry for ground light pool
+      const poolGeometry = new this.THREE.PlaneGeometry(this.config.lightRange * 0.4, this.config.lightRange * 0.4, 1, 1);
+      
+      // Create even more subtle radial gradient for ground pool
+      const poolCanvas = document.createElement('canvas');
+      poolCanvas.width = 128;
+      poolCanvas.height = 128;
+      const poolCtx = poolCanvas.getContext('2d')!;
+      
+      const poolGradient = poolCtx.createRadialGradient(64, 64, 0, 64, 64, 64);
+      const poolColor = new this.THREE.Color(color);
+      poolGradient.addColorStop(0, `rgba(${Math.floor(poolColor.r * 255)}, ${Math.floor(poolColor.g * 255)}, ${Math.floor(poolColor.b * 255)}, 0.3)`);
+      poolGradient.addColorStop(0.6, `rgba(${Math.floor(poolColor.r * 255)}, ${Math.floor(poolColor.g * 255)}, ${Math.floor(poolColor.b * 255)}, 0.1)`);
+      poolGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      
+      poolCtx.fillStyle = poolGradient;
+      poolCtx.fillRect(0, 0, 128, 128);
+      
+      const poolTexture = new this.THREE.CanvasTexture(poolCanvas);
+      poolTexture.needsUpdate = true;
+      
+      const poolMaterial = new this.THREE.MeshBasicMaterial({
+        map: poolTexture,
+        transparent: true,
+        opacity: 0.4,
+        toneMapped: false,
+        fog: false,
+        depthWrite: false,
+        blending: this.THREE.AdditiveBlending
+      });
+      
+      lightPool = new this.THREE.Mesh(poolGeometry, poolMaterial);
+      lightPool.position.set(x, groundY + 0.01, z); // Slightly above ground
+      lightPool.rotation.x = -Math.PI / 2; // Lay flat on ground
+      lightPool.name = `firefly_pool_${index}`;
+      
+      // Add pool to firefly group
+      this.fireflyGroup.add(lightPool);
+    }
+
     return {
       mesh,
       light,
+      lightPool, // Add the light pool reference
       targetPosition: position.clone(),
       basePosition: position.clone(),
       animationOffset: Math.random() * Math.PI * 2,

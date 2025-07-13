@@ -59,11 +59,11 @@ export class Renderer {
       toneMapping: THREE.ACESFilmicToneMapping,
       toneMappingExposure: 1.0,
       outputColorSpace: THREE.SRGBColorSpace,
-      enablePostProcessing: true, // Enable by default, let OptimizationManager decide
-      enableBloom: true, // Enable by default
+      enablePostProcessing: !isMobile, // Disable post-processing on mobile for performance
+      enableBloom: false, // Disabled entirely for Monument Valley style and performance
       enableSSAO: false, // Expensive, disabled by default
-      enableFXAA: true, // Enable by default
-      enableToneMapping: true, // Enable by default
+      enableFXAA: !isMobile, // Disable FXAA on mobile
+      enableToneMapping: !isMobile, // Disable tone mapping on mobile
       // Mobile-specific defaults
       isMobile,
       powerPreference: isMobile ? 'default' : 'high-performance',
@@ -376,24 +376,16 @@ export class Renderer {
     
     // Update renderer configuration based on optimization level
     if (level.includes('mobile')) {
-      // Aggressive mobile optimizations - disable expensive effects
-      if (level === 'mobile_low' || level === 'mobile_medium') {
-        this.config.enablePostProcessing = false; // Disable entirely for low/medium mobile
-        this.config.enableBloom = false; // Very expensive on mobile
-        this.config.enableFXAA = false;
-        this.config.enableToneMapping = false;
-      } else {
-        // mobile_high - minimal post-processing
-        this.config.enablePostProcessing = true;
-        this.config.enableBloom = false; // Still disable bloom - too expensive
-        this.config.enableFXAA = false;
-        this.config.enableToneMapping = true;
-      }
-      this.config.enableShadows = true; // Keep shadows for lighting
+      // Aggressive mobile optimizations - disable all expensive effects
+      this.config.enablePostProcessing = false; // Disable entirely for all mobile levels
+      this.config.enableBloom = false; // Very expensive on mobile
+      this.config.enableFXAA = false; // Disable FXAA for performance
+      this.config.enableToneMapping = false; // Disable tone mapping for performance
+      this.config.enableShadows = true; // Keep basic shadows for visual quality
     } else {
-      // Desktop optimizations
+      // Desktop optimizations - disabled bloom for clean Monument Valley style
       this.config.enablePostProcessing = true;
-      this.config.enableBloom = true;
+      this.config.enableBloom = false; // Completely disabled for clean aesthetic
       this.config.enableFXAA = true;
       this.config.enableToneMapping = true;
       this.config.enableShadows = true;
