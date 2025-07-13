@@ -467,9 +467,9 @@ export class ObservatoryEnvironment extends GameObject {
     const canvas = document.createElement('canvas');
     const isToonMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
     
-    // Much lower resolution for toon mode to enhance 2D pixelated look
-    canvas.width = isToonMode ? 256 : 512;  // Improved resolution for toon mode
-    canvas.height = isToonMode ? 256 : 512;
+    // Higher resolution for better texture quality with reduced repetition
+    canvas.width = isToonMode ? 512 : 1024;  // Increased resolution for better detail
+    canvas.height = isToonMode ? 512 : 1024;
     const ctx = canvas.getContext('2d')!;
     
     const centerX = canvas.width / 2;
@@ -505,7 +505,8 @@ export class ObservatoryEnvironment extends GameObject {
     const texture = new this.THREE.CanvasTexture(canvas);
     texture.wrapS = this.THREE.RepeatWrapping;
     texture.wrapT = this.THREE.RepeatWrapping;
-    texture.repeat.set(8, 8); // More repetitions to break up the pattern
+    texture.repeat.set(1, 1); // Single application - no repetition to eliminate patterns
+    texture.offset.set(0, 0); // No offset needed without repetition
     
     // For toon mode, use linear filtering for smoother vector art look
     if (isToonMode) {
@@ -536,16 +537,18 @@ export class ObservatoryEnvironment extends GameObject {
       console.log(`🎯 Terrain Material: Creating for quality level ${optimizationLevel}`);
 
       // ULTRA_LOW: Basic colored material, no textures
-      if (!qualitySettings.enableProceduralTextures && !qualitySettings.enableNormalMaps) {
+      if (!qualitySettings.enableProceduralTextures) {
         return new this.THREE.MeshBasicMaterial({
           color: 0x556633,
           fog: true
         });
       }
 
-      // LOW: Simple Lambert material with basic color variation
+      // LOW: Lambert material with texture but no normal maps
       if (!qualitySettings.enableNormalMaps) {
+        const terrainTexture = this.createTerrainTexture();
         return new this.THREE.MeshLambertMaterial({
+          map: terrainTexture,
           color: 0x556633,
           fog: true
         });
@@ -560,27 +563,27 @@ export class ObservatoryEnvironment extends GameObject {
         material = new this.THREE.MeshStandardMaterial({
           map: terrainTexture,
           color: 0x556633,
-          roughness: 0.8,
-          metalness: 0.02,
+          roughness: 0.95, // Much rougher to reduce reflections
+          metalness: 0.0, // No metallic properties to eliminate reflections
           fog: true,
           
-          // Enable advanced terrain features for ultra quality
-          envMapIntensity: 0.3, // Subtle environment reflections
+          // Disable environment reflections to prevent pattern enhancement
+          envMapIntensity: 0.0,
         });
 
         // Add normal map for ultra quality if available
         if (qualitySettings.enableNormalMaps) {
           const normalTexture = this.createTerrainNormalMap();
           (material as THREE.MeshStandardMaterial).normalMap = normalTexture;
-          (material as THREE.MeshStandardMaterial).normalScale.set(0.5, 0.5);
+          (material as THREE.MeshStandardMaterial).normalScale.set(0.1, 0.1); // Much subtler normal mapping
         }
       } else if (optimizationLevel === 'high') {
         // HIGH: Standard PBR material
         material = new this.THREE.MeshStandardMaterial({
           map: terrainTexture,
           color: 0x556633,
-          roughness: 0.9,
-          metalness: 0.01,
+          roughness: 0.95, // Much rougher to reduce reflections
+          metalness: 0.0, // No metallic properties to eliminate reflections
           fog: true
         });
       } else {
@@ -812,22 +815,33 @@ export class ObservatoryEnvironment extends GameObject {
   }
 
   /**
-   * Add noise overlay to break up repetitive patterns
+   * Add varied noise overlay to create organic, non-repeating patterns
    */
   private addNoiseOverlay(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void {
-    // Enhanced noise with multiple octaves for better pattern breaking
+    // Create large-scale organic variation across the entire texture
     for (let y = 0; y < canvas.height; y += 1) {
       for (let x = 0; x < canvas.width; x += 1) {
-        // Multi-octave noise for more natural variation
-        const noise1 = Math.random() * 0.2 - 0.1; // Base noise
-        const noise2 = Math.random() * 0.1 - 0.05; // Fine detail
-        const noise3 = Math.random() * 0.05 - 0.025; // Very fine detail
-        const combinedNoise = noise1 + noise2 + noise3;
+        // Use position-based noise to create varied but consistent patterns
+        const positionFactor = (x / canvas.width + y / canvas.height) * Math.PI;
+        const distanceFromCenter = Math.sqrt((x - canvas.width/2)**2 + (y - canvas.height/2)**2) / Math.max(canvas.width, canvas.height);
         
-        const alpha = Math.random() * 0.25 + 0.05; // Higher alpha for more visible effect
+        // Multiple noise scales for organic variation
+        const largeNoise = Math.sin(x * 0.02 + positionFactor) * Math.cos(y * 0.015 + positionFactor) * 0.3;
+        const mediumNoise = Math.sin(x * 0.08 + y * 0.06) * 0.15;
+        const fineNoise = (Math.random() - 0.5) * 0.1;
+        const distanceNoise = distanceFromCenter * 0.2; // Variation based on distance from center
         
-        // Apply enhanced noise with better opacity to break patterns
-        ctx.fillStyle = `rgba(${Math.floor(128 + combinedNoise * 200)}, ${Math.floor(128 + combinedNoise * 200)}, ${Math.floor(120 + combinedNoise * 180)}, ${alpha})`;
+        const combinedNoise = largeNoise + mediumNoise + fineNoise + distanceNoise;
+        
+        // Vary alpha based on position to create irregular patches
+        const alpha = 0.1 + Math.abs(combinedNoise) * 0.3 + Math.random() * 0.15;
+        
+        // Create more earth-tone variation
+        const baseR = 120 + combinedNoise * 50 + Math.random() * 30;
+        const baseG = 110 + combinedNoise * 45 + Math.random() * 25;
+        const baseB = 80 + combinedNoise * 35 + Math.random() * 20;
+        
+        ctx.fillStyle = `rgba(${Math.floor(baseR)}, ${Math.floor(baseG)}, ${Math.floor(baseB)}, ${alpha})`;
         ctx.fillRect(x, y, 1, 1);
       }
     }
@@ -1177,28 +1191,32 @@ export class ObservatoryEnvironment extends GameObject {
   
   /**
    * Calculates combined, multi-octave noise for a given position.
-   * Uses coordinate rotation to break up grid-like patterns from sin/cos.
+   * Uses multiple octaves with varied frequencies and pseudo-random phases to break patterns.
    */
   private getSurfaceNoise(x: number, z: number): number {
-    // By rotating all octaves of noise, we avoid the axis-aligned "plaid" effect.
-    // The first octave is the most prominent, so rotating it is critical.
-    const angle1 = Math.PI / 6; // 30 degrees
-    const x1 = x * Math.cos(angle1) - z * Math.sin(angle1);
-    const z1 = x * Math.sin(angle1) + z * Math.cos(angle1);
-    const noise1 = Math.sin(x1 * 0.2) * Math.cos(z1 * 0.2) * 0.3;
-    // Rotate coordinates for the second noise octave to break up grid patterns
-    const angle2 = Math.PI / 4; // 45 degrees
-    const x2 = x * Math.cos(angle2) - z * Math.sin(angle2);
-    const z2 = x * Math.sin(angle2) + z * Math.cos(angle2);
-    const noise2 = Math.sin(x2 * 0.5) * Math.cos(z2 * 0.5) * 0.1;
+    // Use multiple octaves with different frequencies, amplitudes, and phases to create organic variation
+    const octaves = [
+      { freq: 0.08, amp: 0.25, angleX: Math.PI / 7.3, angleZ: Math.PI / 3.7, phaseX: 2.1, phaseZ: 5.8 },
+      { freq: 0.15, amp: 0.15, angleX: Math.PI / 2.8, angleZ: Math.PI / 5.2, phaseX: 1.7, phaseZ: 3.4 },
+      { freq: 0.32, amp: 0.08, angleX: Math.PI / 4.1, angleZ: Math.PI / 6.9, phaseX: 4.2, phaseZ: 1.9 },
+      { freq: 0.67, amp: 0.04, angleX: Math.PI / 1.9, angleZ: Math.PI / 8.3, phaseX: 0.9, phaseZ: 6.1 },
+      { freq: 1.23, amp: 0.02, angleX: Math.PI / 3.4, angleZ: Math.PI / 2.1, phaseX: 3.8, phaseZ: 2.7 }
+    ];
+    
+    let noise = 0;
+    for (const octave of octaves) {
+      // Rotate coordinates to break grid alignment
+      const x1 = x * Math.cos(octave.angleX) - z * Math.sin(octave.angleX);
+      const z1 = x * Math.sin(octave.angleZ) + z * Math.cos(octave.angleZ);
+      
+      // Add phase shifts to break periodicity and create more organic patterns
+      const noiseX = Math.sin((x1 + octave.phaseX) * octave.freq);
+      const noiseZ = Math.cos((z1 + octave.phaseZ) * octave.freq);
+      
+      noise += noiseX * noiseZ * octave.amp;
+    }
 
-    // Use a different rotation for the third octave
-    const angle3 = Math.PI / 2.5; // 72 degrees
-    const x3 = x * Math.cos(angle3) - z * Math.sin(angle3);
-    const z3 = x * Math.sin(angle3) + z * Math.cos(angle3);
-    const noise3 = Math.sin(x3 * 1.0) * Math.cos(z3 * 1.0) * 0.05;
-
-    return noise1 + noise2 + noise3;
+    return noise;
   }
 
   /**

@@ -98,9 +98,9 @@ export class OptimizationManager {
   // Quality settings profiles for intelligent adaptation
   private readonly qualityProfiles: Record<OptimizationLevel, QualitySettings> = {
     [OptimizationLevel.ULTRA_LOW]: {
-      // Minimal settings for very old devices
-      oceanSegments: { width: 8, height: 8 },
-      terrainSegments: { width: 12, height: 12 },
+      // Minimal settings for very old devices - slight improvement
+      oceanSegments: { width: 12, height: 12 },
+      terrainSegments: { width: 16, height: 16 },
       maxFireflyLights: 0,
       enableDynamicLighting: false,
       maxVegetationInstances: 0,
@@ -108,37 +108,37 @@ export class OptimizationManager {
       textureResolution: 256,
       enableProceduralTextures: false,
       enableNormalMaps: false,
-      canvasScale: 0.5,
+      canvasScale: 0.6,
       enablePostProcessing: false,
       enableShadows: false
     },
     [OptimizationLevel.LOW]: {
-      // Budget mobile devices
-      oceanSegments: { width: 12, height: 12 },
-      terrainSegments: { width: 16, height: 16 },
-      maxFireflyLights: 0,
-      enableDynamicLighting: false,
-      maxVegetationInstances: 3,
+      // Budget mobile devices - improved quality with textures
+      oceanSegments: { width: 16, height: 16 },
+      terrainSegments: { width: 20, height: 20 },
+      maxFireflyLights: 1,
+      enableDynamicLighting: true,
+      maxVegetationInstances: 5,
       enableVegetation: true,
       textureResolution: 512,
-      enableProceduralTextures: false,
+      enableProceduralTextures: true, // Enable textures for better visuals
       enableNormalMaps: false,
-      canvasScale: 0.75,
+      canvasScale: 0.8,
       enablePostProcessing: false,
       enableShadows: false
     },
     [OptimizationLevel.MEDIUM]: {
-      // Mid-range devices (phones/tablets)
-      oceanSegments: { width: 16, height: 16 },
-      terrainSegments: { width: 24, height: 24 },
-      maxFireflyLights: 2,
+      // Mid-range devices (phones/tablets) - enhanced quality
+      oceanSegments: { width: 24, height: 24 },
+      terrainSegments: { width: 32, height: 32 },
+      maxFireflyLights: 3,
       enableDynamicLighting: true,
-      maxVegetationInstances: 8,
+      maxVegetationInstances: 10,
       enableVegetation: true,
       textureResolution: 1024,
       enableProceduralTextures: true,
-      enableNormalMaps: false,
-      canvasScale: 0.85,
+      enableNormalMaps: true, // Enable subtle normal maps for better depth
+      canvasScale: 0.9,
       enablePostProcessing: false,
       enableShadows: true
     },
@@ -251,8 +251,10 @@ export class OptimizationManager {
   };
   
   private constructor() {
-    // Initialize with desktop high quality by default
-    this.config = this.configProfiles[OptimizationLevel.DESKTOP_HIGH];
+    // Initialize with medium quality by default
+    this.config = this.configProfiles[OptimizationLevel.MEDIUM];
+    this.currentOptimizationLevel = OptimizationLevel.MEDIUM;
+    this.currentQualitySettings = this.qualityProfiles[OptimizationLevel.MEDIUM];
   }
   
   /**
