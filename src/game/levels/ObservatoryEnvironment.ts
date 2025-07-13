@@ -447,15 +447,21 @@ export class ObservatoryEnvironment extends GameObject {
     groundGeometry.attributes.position.needsUpdate = true;
     groundGeometry.computeVertexNormals();
     
-    // Create terrain texture
-    const groundTexture = this.createTerrainTexture();
-    
-    // Create ground material that responds to lighting
-    // Use the new global material factory to get the correct style
-    const groundMaterial = this.engine.getMaterials().createPBRMaterial({ 
-      map: groundTexture,
-      color: 0x556633
-    }) as THREE.Material;
+    // Create ground material optimized for mobile
+    let groundMaterial;
+    if (isMobile) {
+      // Simple material for mobile - no textures, just color
+      groundMaterial = new this.THREE.MeshLambertMaterial({
+        color: 0x556633 // Basic terrain color
+      });
+    } else {
+      // Full terrain texture for desktop
+      const groundTexture = this.createTerrainTexture();
+      groundMaterial = this.engine.getMaterials().createPBRMaterial({ 
+        map: groundTexture,
+        color: 0x556633
+      }) as THREE.Material;
+    }
     
     // Create ground mesh
     this.groundMesh = new this.THREE.Mesh(groundGeometry, groundMaterial);
@@ -891,6 +897,13 @@ export class ObservatoryEnvironment extends GameObject {
    * Create natural vegetation around the island
    */
   private async createVegetation(): Promise<void> {
+    // Skip vegetation entirely on mobile for better performance
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+      console.log('🌱 Skipping vegetation on mobile for better performance');
+      return;
+    }
+    
     console.log('🌱 Creating natural vegetation...');
     
     this.vegetationGroup = new this.THREE.Group();

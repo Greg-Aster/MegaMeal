@@ -174,36 +174,48 @@ export class OceanSystem extends GameObject {
     // Store original vertices for wave calculations
     const originalVertices = new Float32Array(geometry.attributes.position.array);
     
-    // Generate procedural textures like original system
-    const textureData = this.createProceduralTextures();
-    
-    // Use PBR material factory exactly like original
+    // Mobile-optimized material creation
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     let material;
-    if (this.materialFactory && this.materialFactory.createPBRMaterial) {
-      material = this.materialFactory.createPBRMaterial({
-        map: textureData.map, // Use original naming
-        normalMap: textureData.normalMap,
-        displacementMap: textureData.displacementMap, // Critical for vertex displacement
-        metalness: 0.02, // Very low metalness for water
-        roughness: 0.1, // Very smooth for reflections
+    let textureData = null;
+    
+    if (isMobile) {
+      // Ultra-simple material for mobile - no textures, just basic color
+      material = new this.THREE.MeshBasicMaterial({
+        color: 0x006994, // Deep ocean blue
         transparent: true,
-        opacity: 0.4, // More transparent for realistic ocean depth
-        color: 0x006994, // Deep ocean blue tint
-        side: this.THREE.DoubleSide, // Render both sides for underwater visibility
-      }) as THREE.MeshStandardMaterial;
-    } else {
-      // Fallback to direct material creation
-      material = new this.THREE.MeshStandardMaterial({
-        map: textureData.map,
-        normalMap: textureData.normalMap,
-        displacementMap: textureData.displacementMap,
-        color: this.config.color,
-        transparent: true,
-        opacity: this.config.opacity,
-        metalness: this.config.metalness,
-        roughness: this.config.roughness,
+        opacity: 0.6,
         side: this.THREE.DoubleSide,
       });
+    } else {
+      // Generate procedural textures for desktop
+      textureData = this.createProceduralTextures();
+      
+      if (this.materialFactory && this.materialFactory.createPBRMaterial) {
+        material = this.materialFactory.createPBRMaterial({
+          map: textureData.map,
+          normalMap: textureData.normalMap,
+          displacementMap: textureData.displacementMap,
+          metalness: 0.02,
+          roughness: 0.1,
+          transparent: true,
+          opacity: 0.4,
+          color: 0x006994,
+          side: this.THREE.DoubleSide,
+        }) as THREE.MeshStandardMaterial;
+      } else {
+        material = new this.THREE.MeshStandardMaterial({
+          map: textureData.map,
+          normalMap: textureData.normalMap,
+          displacementMap: textureData.displacementMap,
+          color: this.config.color,
+          transparent: true,
+          opacity: this.config.opacity,
+          metalness: this.config.metalness,
+          roughness: this.config.roughness,
+          side: this.THREE.DoubleSide,
+        });
+      }
     }
     
     // Create mesh
@@ -223,9 +235,9 @@ export class OceanSystem extends GameObject {
       geometry,
       waveTime: 0,
       originalVertices,
-      map: textureData.map,
-      normalMap: textureData.normalMap,
-      displacementMap: textureData.displacementMap
+      map: textureData?.map || null,
+      normalMap: textureData?.normalMap || null,
+      displacementMap: textureData?.displacementMap || null
     };
     
     // Store in mesh userData like original Observatory implementation
