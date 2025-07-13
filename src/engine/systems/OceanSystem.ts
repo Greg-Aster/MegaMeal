@@ -129,9 +129,9 @@ export class OceanSystem extends GameObject {
     // Auto-detect mobile for performance optimization
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     if (isMobile) {
-      // Significantly reduce complexity on mobile for better performance
-      this.config.segments.width = Math.min(this.config.segments.width, 32);
-      this.config.segments.height = Math.min(this.config.segments.height, 32);
+      // Aggressively reduce complexity on mobile for better performance
+      this.config.segments.width = Math.min(this.config.segments.width, 16); // Even simpler geometry
+      this.config.segments.height = Math.min(this.config.segments.height, 16); // 256 vertices instead of 1024
       this.config.waves = this.config.waves.slice(0, 1); // Single wave only
       this.updateInterval = 1000 / 20; // 20 FPS on mobile
       

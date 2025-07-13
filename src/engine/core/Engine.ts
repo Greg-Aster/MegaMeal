@@ -56,11 +56,14 @@ export class Engine {
   private container: HTMLElement;
   
   private constructor(config: EngineConfig) {
+    // Auto-enable performance monitoring on mobile for diagnostics
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
     this.config = {
       enablePhysics: true,
       enableAudio: true,
       enableDebug: false,
-      enablePerformanceMonitoring: false,
+      enablePerformanceMonitoring: isMobile, // Enable on mobile for diagnostics
       targetFPS: 60,
       ...config
     };

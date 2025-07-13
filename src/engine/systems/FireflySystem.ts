@@ -99,10 +99,10 @@ export class FireflySystem extends GameObject {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     if (isMobile) {
       if (!config.maxLights) {
-        this.config.maxLights = 4; // Even more conservative on mobile
+        this.config.maxLights = 0; // No dynamic lights on mobile for best performance
       }
       if (!config.count) {
-        this.config.count = Math.min(this.config.count, 50); // Fewer total fireflies on mobile
+        this.config.count = Math.min(this.config.count, 30); // Fewer total fireflies on mobile
       }
     }
     

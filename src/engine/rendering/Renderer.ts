@@ -130,12 +130,29 @@ export class Renderer {
       throw new Error(`WebGL initialization failed: ${error.message}`);
     }
     
-    // Set size
+    // Set size with mobile resolution scaling
     const width = this.container.clientWidth;
     const height = this.container.clientHeight;
-    console.log('📐 Setting renderer size:', { width, height });
     
-    this.renderer.setSize(width, height);
+    // Scale down render resolution on mobile for better performance
+    const isMobile = this.config.isMobile;
+    const mobileScale = 0.75; // Render at 75% resolution on mobile
+    const renderWidth = isMobile ? Math.floor(width * mobileScale) : width;
+    const renderHeight = isMobile ? Math.floor(height * mobileScale) : height;
+    
+    console.log('📐 Setting renderer size:', { 
+      display: { width, height }, 
+      render: { width: renderWidth, height: renderHeight },
+      mobile: isMobile 
+    });
+    
+    this.renderer.setSize(renderWidth, renderHeight);
+    
+    // Scale canvas to full container size via CSS
+    if (isMobile) {
+      this.renderer.domElement.style.width = width + 'px';
+      this.renderer.domElement.style.height = height + 'px';
+    }
     
     // Use mobile-aware pixel ratio
     const maxPixelRatio = this.config.maxPixelRatio || 2;
@@ -249,10 +266,23 @@ export class Renderer {
   public setSize(width: number, height: number): void {
     if (!this.isInitialized) return;
     
-    this.renderer.setSize(width, height);
+    // Scale down render resolution on mobile for better performance
+    const isMobile = this.config.isMobile;
+    const mobileScale = 0.75; // Render at 75% resolution on mobile
+    const renderWidth = isMobile ? Math.floor(width * mobileScale) : width;
+    const renderHeight = isMobile ? Math.floor(height * mobileScale) : height;
     
+    this.renderer.setSize(renderWidth, renderHeight);
+    
+    // Scale canvas to full container size via CSS
+    if (isMobile) {
+      this.renderer.domElement.style.width = width + 'px';
+      this.renderer.domElement.style.height = height + 'px';
+    }
+    
+    // Update composer if it exists
     if (this.composer) {
-      this.composer.setSize(width, height);
+      this.composer.setSize(renderWidth, renderHeight);
     }
   }
   
@@ -317,6 +347,7 @@ export class Renderer {
     }
   }
   
+
   // Performance monitoring
   public getRenderInfo(): THREE.WebGLInfo {
     return this.renderer.info;
