@@ -14,8 +14,8 @@ export class UniversalInputManager {
   private touchStartTime = 0;
   private touchStartPos = { x: 0, y: 0 };
   private isDragging = false;
-  private dragThreshold = 10; // pixels
-  private tapTimeThreshold = 300; // milliseconds
+  private dragThreshold = 5; // pixels - reduced for more responsive touch
+  private tapTimeThreshold = 500; // milliseconds - increased for more forgiving touch
   
   // Mobile detection
   private isMobile = false;
@@ -29,7 +29,7 @@ export class UniversalInputManager {
   
   // Sensitivity settings
   private mouseSensitivity = 0.002;
-  private touchSensitivity = 0.0005; // Much lower for mobile
+  private touchSensitivity = 0.0012; // Increased for more responsive mobile camera
 
   constructor(gameContainer: HTMLElement, eventBus: EventBus) {
     this.gameContainer = gameContainer;

@@ -71,9 +71,9 @@
     // Update knob position
     joystickKnob.style.transform = `translate(calc(-50% + ${knobX}px), calc(-50% + ${knobY}px))`;
     
-    // Calculate movement vector (-1 to 1)
-    movementVector.x = clampedDistance > 5 ? knobX / joystickRadius : 0;
-    movementVector.z = clampedDistance > 5 ? knobY / joystickRadius : 0;
+    // Calculate movement vector (-1 to 1) - reduced dead zone for better responsiveness
+    movementVector.x = clampedDistance > 2 ? knobX / joystickRadius : 0;
+    movementVector.z = clampedDistance > 2 ? knobY / joystickRadius : 0;
     
     console.log('📱 MobileControls: Joystick movement:', movementVector);
     dispatch('movement', movementVector);

@@ -55,9 +55,9 @@ export class MovementComponent {
     // inputManager removed - using EventBus directly
     this.physicsWorld = physicsWorld;
     
-    // Default configuration
+    // Default configuration - increased moveSpeed for better mobile responsiveness
     this.config = {
-      moveSpeed: 8.0,
+      moveSpeed: 12.0,
       jumpHeight: 4.0,
       gravity: -20.0,
       mouseSensitivity: 0.002,
