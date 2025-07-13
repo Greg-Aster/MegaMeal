@@ -820,18 +820,20 @@ export class OptimizationManager {
       return true;
     }
     
-    // NEVER optimize Groups that contain lights - this is the core fix
+    // NEVER optimize Groups that contain lights as DIRECT children - this is the core fix
     if (object instanceof THREE.Group) {
       let containsLights = false;
-      object.traverse((child) => {
+      // Only check direct children, not entire hierarchy to avoid overly broad protection
+      for (const child of object.children) {
         if (child instanceof THREE.Light || 
             child instanceof THREE.DirectionalLight || 
             child instanceof THREE.AmbientLight ||
             child instanceof THREE.PointLight ||
             child instanceof THREE.SpotLight) {
           containsLights = true;
+          break;
         }
-      });
+      }
       if (containsLights) {
         return true;
       }
