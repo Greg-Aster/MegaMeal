@@ -62,37 +62,37 @@ export class OptimizationManager {
   // Configuration profiles for different optimization levels
   private readonly configProfiles: Record<OptimizationLevel, OptimizationConfig> = {
     [OptimizationLevel.MOBILE_LOW]: {
-      maxRenderDistance: 50,
-      unloadDistance: 60,
-      preloadDistance: 40,
-      lodDistances: [15, 25, 35],
+      maxRenderDistance: 1200, // Increased to ensure stars and skybox are visible
+      unloadDistance: 1400,
+      preloadDistance: 1000,
+      lodDistances: [100, 300, 600], // Adjusted LOD distances
       checkInterval: 200,
       maxObjectsPerFrame: 10,
-      fadeDistance: 10,
+      fadeDistance: 50,
       fadeSpeed: 3.0,
       shadowDistance: 25, // Very close shadows only on low-end mobile
       maxShadowMapSize: 512
     },
     [OptimizationLevel.MOBILE_MEDIUM]: {
-      maxRenderDistance: 100,
-      unloadDistance: 120,
-      preloadDistance: 80,
-      lodDistances: [25, 50, 75],
+      maxRenderDistance: 1200, // Increased to ensure stars and skybox are visible
+      unloadDistance: 1400,
+      preloadDistance: 1000,
+      lodDistances: [150, 400, 700], // Adjusted LOD distances
       checkInterval: 150,
       maxObjectsPerFrame: 20,
-      fadeDistance: 15,
+      fadeDistance: 25,
       fadeSpeed: 2.5,
       shadowDistance: 40, // Medium shadow range
       maxShadowMapSize: 1024
     },
     [OptimizationLevel.MOBILE_HIGH]: {
-      maxRenderDistance: 150,
-      unloadDistance: 180,
-      preloadDistance: 120,
-      lodDistances: [40, 80, 120],
+      maxRenderDistance: 1200, // Increased to ensure stars and skybox are visible
+      unloadDistance: 1400,
+      preloadDistance: 1000,
+      lodDistances: [200, 500, 800], // Adjusted LOD distances
       checkInterval: 120,
       maxObjectsPerFrame: 30,
-      fadeDistance: 20,
+      fadeDistance: 30,
       fadeSpeed: 2.0,
       shadowDistance: 60, // Better shadow range on high-end mobile
       maxShadowMapSize: 1024
