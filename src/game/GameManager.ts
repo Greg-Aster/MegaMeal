@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import { Engine } from '../engine/core/Engine';
 import { LevelManager, type LevelFactory } from './managers/LevelManager';
 import { GameStateManager } from './state/GameStateManager';
@@ -10,7 +9,6 @@ import type { ErrorContext } from '../engine/utils/ErrorHandler';
 // Import data-driven architecture components
 import { LevelSystem } from './systems/LevelSystem';
 import type { LevelConfig } from './systems/LevelSystem';
-import { PlayerLightComponent } from '../engine/components/PlayerLightComponent';
 
 /**
  * Updated GameManager using the new BaseLevel architecture
@@ -26,9 +24,6 @@ export class GameManager {
   
   // Data-driven architecture
   private levelSystem: LevelSystem;
-  
-  // Player lighting system
-  private playerLight: PlayerLightComponent | null = null;
   
   private isInitialized = false;
   private isRunning = false;
@@ -51,9 +46,8 @@ export class GameManager {
     // Detect mobile
     this.isMobile = this.detectMobile();
 
-    // Set a global flag for graphics style optimized for mobile performance
-    // Enable vector/toon mode for Monument Valley/Alto's Adventure aesthetic
-    (window as any).MEGAMEAL_VECTOR_MODE = true;
+    // Set a global flag for graphics style. Can be controlled by UI later.
+    (window as any).MEGAMEAL_VECTOR_MODE = false;
     
     this.setupEventListeners();
   }
@@ -291,11 +285,6 @@ export class GameManager {
         this.levelManager.update(data.deltaTime);
         this.interactionSystem.update(data.deltaTime, this.engine.getCamera().position);
         
-        // Update player light
-        if (this.playerLight) {
-          this.playerLight.update(data.deltaTime);
-        }
-        
         // Update game state
         this.gameStateManager.updatePlayTime(data.deltaTime);
         
@@ -377,9 +366,6 @@ export class GameManager {
         
         // Update game state
         this.gameStateManager.setCurrentLevel(levelId);
-        
-        // Setup player light for new level
-        await this.setupPlayerLight();
         
         // Handle level-specific setup
         await this.handleLevelSpecificSetup(levelId);
@@ -464,63 +450,6 @@ export class GameManager {
   }
   
   /**
-   * Setup player light for the current level
-   */
-  private async setupPlayerLight(): Promise<void> {
-    try {
-      // Dispose existing player light if any
-      if (this.playerLight) {
-        this.playerLight.dispose();
-        this.playerLight = null;
-      }
-      
-      // Get current level to find player object
-      const currentLevel = this.levelManager.getCurrentLevel();
-      if (!currentLevel) {
-        console.warn('No current level - cannot setup player light');
-        return;
-      }
-      
-      // Try to get player object from level
-      let playerObject: THREE.Object3D | null = null;
-      
-      // For data-driven levels, try to get the player from MovementComponent
-      if (typeof (currentLevel as any).getComponent === 'function') {
-        const movementComponent = (currentLevel as any).getComponent('MovementComponent');
-        if (movementComponent && typeof movementComponent.getPlayerObject === 'function') {
-          playerObject = movementComponent.getPlayerObject();
-        }
-      }
-      
-      // If no player object found, attach to camera (fallback)
-      if (!playerObject) {
-        playerObject = this.engine.getCamera();
-        console.log('💡 No player object found - attaching light to camera');
-      }
-      
-      // Create new player light
-      this.playerLight = new PlayerLightComponent(
-        THREE,
-        this.engine.getScene(),
-        playerObject,
-        {
-          // Customize based on level if needed
-          intensity: 6.0,
-          range: 25,
-          color: 0xffa366 // Warm firefly color
-        }
-      );
-      
-      await this.playerLight.initialize();
-      console.log('💡 Player light setup complete');
-      
-    } catch (error) {
-      console.error('Failed to setup player light:', error);
-      // Don't throw - player light is nice to have but not critical
-    }
-  }
-  
-  /**
    * Handle mobile movement - now handled directly through EventBus
    */
   private handleMobileMovement(data: { x: number, z: number }): void {
@@ -565,24 +494,9 @@ export class GameManager {
    */
   public setVectorGraphicsMode(isVector: boolean): void {
     (window as any).MEGAMEAL_VECTOR_MODE = isVector;
-    console.log(`🎨 Graphics mode set to: ${isVector ? 'Toon/Vector' : 'Realistic'}`);
-    
-    // Update outline renderer
-    const outlineRenderer = this.engine.getOutlineRenderer();
-    outlineRenderer.updateConfig({ enabled: isVector });
-    
-    if (isVector) {
-      // Scan scene and add outlines for toon mode
-      outlineRenderer.scanAndOutlineScene();
-      console.log('✨ Toon mode enabled with outlines');
-    } else {
-      // Clear outlines for realistic mode
-      outlineRenderer.clearAllOutlines();
-      console.log('📷 Realistic mode enabled');
-    }
-    
-    // Emit event for other systems to react
-    this.engine.getEventBus().emit('graphics.style.changed', { isVector });
+    console.log(`🎨 Graphics mode set to: ${isVector ? 'Vector' : 'Realistic'}`);
+    // Here you could emit an event to force a level reload or material update.
+    // this.engine.getEventBus().emit('graphics.style.changed', { isVector });
   }
   /**
    * Reset view/camera
@@ -720,7 +634,6 @@ export class GameManager {
     this.isRunning = false;
     
     // Dispose systems in reverse order
-    this.playerLight?.dispose();
     this.levelManager?.dispose();
     this.gameStateManager?.dispose();
     this.interactionSystem?.dispose();

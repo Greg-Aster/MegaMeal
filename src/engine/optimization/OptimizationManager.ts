@@ -28,8 +28,6 @@ interface OptimizationConfig {
   maxObjectsPerFrame: number;
   fadeDistance: number;
   fadeSpeed: number;
-  shadowDistance: number; // Distance beyond which shadows are disabled
-  maxShadowMapSize: number; // Maximum shadow map resolution
 }
 
 interface DeviceCapabilities {
@@ -69,9 +67,7 @@ export class OptimizationManager {
       checkInterval: 200,
       maxObjectsPerFrame: 10,
       fadeDistance: 10,
-      fadeSpeed: 3.0,
-      shadowDistance: 25, // Very close shadows only on low-end mobile
-      maxShadowMapSize: 512
+      fadeSpeed: 3.0
     },
     [OptimizationLevel.MOBILE_MEDIUM]: {
       maxRenderDistance: 100,
@@ -81,9 +77,7 @@ export class OptimizationManager {
       checkInterval: 150,
       maxObjectsPerFrame: 20,
       fadeDistance: 15,
-      fadeSpeed: 2.5,
-      shadowDistance: 40, // Medium shadow range
-      maxShadowMapSize: 1024
+      fadeSpeed: 2.5
     },
     [OptimizationLevel.MOBILE_HIGH]: {
       maxRenderDistance: 150,
@@ -93,9 +87,7 @@ export class OptimizationManager {
       checkInterval: 120,
       maxObjectsPerFrame: 30,
       fadeDistance: 20,
-      fadeSpeed: 2.0,
-      shadowDistance: 60, // Better shadow range on high-end mobile
-      maxShadowMapSize: 1024
+      fadeSpeed: 2.0
     },
     [OptimizationLevel.DESKTOP_MEDIUM]: {
       maxRenderDistance: 200,
@@ -105,9 +97,7 @@ export class OptimizationManager {
       checkInterval: 100,
       maxObjectsPerFrame: 40,
       fadeDistance: 25,
-      fadeSpeed: 2.0,
-      shadowDistance: 100, // Good shadow range on desktop
-      maxShadowMapSize: 2048
+      fadeSpeed: 2.0
     },
     [OptimizationLevel.DESKTOP_HIGH]: {
       maxRenderDistance: 300,
@@ -117,9 +107,7 @@ export class OptimizationManager {
       checkInterval: 80,
       maxObjectsPerFrame: 50,
       fadeDistance: 30,
-      fadeSpeed: 1.5,
-      shadowDistance: 150, // Full shadow range on high-end desktop
-      maxShadowMapSize: 2048
+      fadeSpeed: 1.5
     }
   };
   
@@ -293,166 +281,6 @@ export class OptimizationManager {
         distanceToCamera: obj.distanceToCamera
       }))
     };
-  }
-
-  /**
-   * Optimize texture for mobile devices
-   */
-  public optimizeTexture(texture: THREE.Texture): THREE.Texture {
-    if (!this.deviceCapabilities?.isMobile) return texture;
-    
-    // Enable mipmapping for better performance on mobile
-    texture.generateMipmaps = true;
-    texture.minFilter = THREE.LinearMipmapLinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    
-    // Reduce texture size for low-end mobile devices
-    if (this.deviceCapabilities.isLowEnd || this.currentOptimizationLevel === OptimizationLevel.MOBILE_LOW) {
-      // Reduce texture resolution by half on low-end devices
-      if (texture.image && texture.image.width > 512) {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (ctx && texture.image) {
-          const originalWidth = texture.image.width;
-          const originalHeight = texture.image.height;
-          const newWidth = Math.max(256, originalWidth / 2);
-          const newHeight = Math.max(256, originalHeight / 2);
-          
-          canvas.width = newWidth;
-          canvas.height = newHeight;
-          ctx.drawImage(texture.image, 0, 0, newWidth, newHeight);
-          
-          texture.image = canvas;
-          texture.needsUpdate = true;
-        }
-      }
-    }
-    
-    // Set appropriate wrap modes for performance
-    texture.wrapS = THREE.ClampToEdgeWrapping;
-    texture.wrapT = THREE.ClampToEdgeWrapping;
-    
-    return texture;
-  }
-
-  /**
-   * Optimize material for mobile devices
-   */
-  public optimizeMaterial(material: THREE.Material): THREE.Material {
-    if (!this.deviceCapabilities?.isMobile) return material;
-    
-    // Reduce material complexity on mobile
-    if (material instanceof THREE.MeshStandardMaterial || 
-        material instanceof THREE.MeshPhysicalMaterial) {
-      
-      const stdMaterial = material as THREE.MeshStandardMaterial;
-      
-      // Reduce roughness map resolution on low-end devices
-      if (this.deviceCapabilities.isLowEnd && stdMaterial.roughnessMap) {
-        stdMaterial.roughnessMap = this.optimizeTexture(stdMaterial.roughnessMap);
-      }
-      
-      // Optimize normal maps
-      if (stdMaterial.normalMap) {
-        stdMaterial.normalMap = this.optimizeTexture(stdMaterial.normalMap);
-        // Reduce normal map intensity on low-end devices
-        if (this.deviceCapabilities.isLowEnd && stdMaterial.normalScale) {
-          stdMaterial.normalScale.setScalar(Math.min(stdMaterial.normalScale.x * 0.7, 1.0));
-        }
-      }
-      
-      // Optimize diffuse/albedo textures
-      if (stdMaterial.map) {
-        stdMaterial.map = this.optimizeTexture(stdMaterial.map);
-      }
-      
-      // Disable expensive features on low-end mobile
-      if (this.currentOptimizationLevel === OptimizationLevel.MOBILE_LOW) {
-        if (material instanceof THREE.MeshPhysicalMaterial) {
-          const physMaterial = material as THREE.MeshPhysicalMaterial;
-          physMaterial.clearcoat = 0;
-          physMaterial.clearcoatRoughness = 1;
-          physMaterial.transmission = 0;
-        }
-      }
-    }
-    
-    return material;
-  }
-
-  /**
-   * Create a simplified LOD version of a mesh for distant viewing
-   */
-  public createLODMesh(originalMesh: THREE.Mesh, lodLevel: number = 1): THREE.Mesh {
-    if (!this.deviceCapabilities?.isMobile || lodLevel === 0) return originalMesh;
-    
-    const geometry = originalMesh.geometry;
-    let simplifiedGeometry: THREE.BufferGeometry;
-    
-    // Create simplified geometry based on LOD level
-    if (geometry instanceof THREE.BufferGeometry) {
-      // Simple decimation approach - reduce vertex count
-      const positions = geometry.getAttribute('position');
-      const indices = geometry.getIndex();
-      
-      if (positions && indices) {
-        const decimationFactor = Math.pow(2, lodLevel); // 2x, 4x, 8x reduction
-        const newIndexCount = Math.max(6, Math.floor(indices.count / decimationFactor)); // Minimum triangle count
-        
-        // Create new simplified indices by skipping vertices
-        const newIndices: number[] = [];
-        for (let i = 0; i < newIndexCount && i < indices.count; i += 3) {
-          const stride = Math.floor(indices.count / newIndexCount) * 3;
-          const baseIndex = (i / 3) * stride;
-          
-          if (baseIndex + 2 < indices.count) {
-            newIndices.push(
-              indices.getX(baseIndex),
-              indices.getX(baseIndex + 1), 
-              indices.getX(baseIndex + 2)
-            );
-          }
-        }
-        
-        simplifiedGeometry = new THREE.BufferGeometry();
-        simplifiedGeometry.setAttribute('position', positions);
-        
-        // Copy other attributes if they exist
-        if (geometry.getAttribute('normal')) {
-          simplifiedGeometry.setAttribute('normal', geometry.getAttribute('normal'));
-        }
-        if (geometry.getAttribute('uv')) {
-          simplifiedGeometry.setAttribute('uv', geometry.getAttribute('uv'));
-        }
-        
-        simplifiedGeometry.setIndex(newIndices);
-        simplifiedGeometry.computeBoundingSphere();
-        simplifiedGeometry.computeBoundingBox();
-      } else {
-        // Fallback to original geometry if no indices
-        simplifiedGeometry = geometry;
-      }
-    } else {
-      // Fallback for non-BufferGeometry
-      simplifiedGeometry = geometry;
-    }
-    
-    // Create LOD mesh with optimized material
-    const materialToUse = Array.isArray(originalMesh.material) ? 
-      originalMesh.material[0].clone() : originalMesh.material.clone();
-    
-    const lodMesh = new THREE.Mesh(
-      simplifiedGeometry,
-      this.optimizeMaterial(materialToUse)
-    );
-    
-    // Copy transform properties
-    lodMesh.position.copy(originalMesh.position);
-    lodMesh.rotation.copy(originalMesh.rotation);
-    lodMesh.scale.copy(originalMesh.scale);
-    lodMesh.name = originalMesh.name + '_LOD' + lodLevel;
-    
-    return lodMesh;
   }
 
   /**
@@ -858,61 +686,10 @@ export class OptimizationManager {
     // Check if object is within frustum
     const isInFrustum = this.frustum.intersectsObject(object);
     
-    // Apply shadow optimization based on distance
-    this.optimizeShadows(object, distance);
-    
     // Make optimization decisions
     this.applyOptimization(managedObject, distance, isInFrustum, deltaTime);
   }
   
-  /**
-   * Optimize shadows based on distance to camera
-   */
-  private optimizeShadows(object: THREE.Object3D, distance: number): void {
-    const shouldCastShadows = distance <= this.config.shadowDistance;
-    const shouldReceiveShadows = distance <= this.config.shadowDistance * 1.2; // Slightly larger range for receiving
-    
-    object.traverse((child) => {
-      // Optimize mesh shadows
-      if (child instanceof THREE.Mesh) {
-        if (child.castShadow !== shouldCastShadows) {
-          child.castShadow = shouldCastShadows;
-        }
-        if (child.receiveShadow !== shouldReceiveShadows) {
-          child.receiveShadow = shouldReceiveShadows;
-        }
-      }
-      
-      // Optimize light shadows and shadow map size
-      if (child instanceof THREE.Light) {
-        if (child.castShadow && distance > this.config.shadowDistance) {
-          child.castShadow = false;
-        } else if (!child.castShadow && distance <= this.config.shadowDistance) {
-          // Re-enable shadows if object moved closer
-          if (child instanceof THREE.DirectionalLight || 
-              child instanceof THREE.SpotLight || 
-              child instanceof THREE.PointLight) {
-            child.castShadow = true;
-            
-            // Optimize shadow map size based on distance and device capabilities
-            if (child.shadow) {
-              const optimalSize = Math.min(
-                this.config.maxShadowMapSize,
-                distance < this.config.shadowDistance * 0.5 ? this.config.maxShadowMapSize : 
-                Math.max(512, this.config.maxShadowMapSize / 2)
-              );
-              
-              if (child.shadow.mapSize.width !== optimalSize) {
-                child.shadow.mapSize.setScalar(optimalSize);
-                child.shadow.map = null; // Force regeneration
-              }
-            }
-          }
-        }
-      }
-    });
-  }
-
   /**
    * Apply optimization decisions to an object with smooth fading
    */

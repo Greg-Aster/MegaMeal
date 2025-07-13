@@ -14,7 +14,6 @@ import { Debug } from '../utils/Debug';
 import { Performance } from '../utils/Performance';
 import { OptimizationManager } from '../optimization/OptimizationManager';
 import { EnvironmentalEffectsSystem } from '../systems/EnvironmentalEffectsSystem';
-import { OutlineRenderer } from '../rendering/OutlineRenderer';
 
 export interface EngineConfig {
   canvas?: HTMLCanvasElement;
@@ -42,7 +41,6 @@ export class Engine {
   private performance!: Performance;
   private optimizationManager!: OptimizationManager;
   private environmentalEffects!: EnvironmentalEffectsSystem;
-  private outlineRenderer!: OutlineRenderer;
   
   // Three.js core
   private scene!: THREE.Scene;
@@ -105,13 +103,6 @@ export class Engine {
     this.materials = new Materials(THREE);
     // InputManager removed - now using UniversalInputManager in GameManager
     this.assetLoader = new AssetLoader();
-    
-    // Initialize outline renderer for toon shading
-    this.outlineRenderer = new OutlineRenderer(this.scene, {
-      enabled: (window as any).MEGAMEAL_VECTOR_MODE === true,
-      thickness: 0.025,
-      color: 0x000000
-    });
     
     if (this.config.enablePhysics) {
       this.physicsWorld = new PhysicsWorld();
@@ -177,9 +168,6 @@ export class Engine {
       
       // Initialize environmental effects system
       this.environmentalEffects.initialize(this.camera, this.scene);
-      
-      // OutlineRenderer doesn't need async initialization
-      console.log('🖼️ Outline renderer initialized for toon shading');
       
       if (this.debug) {
         await this.debug.initialize();
@@ -287,9 +275,6 @@ export class Engine {
       // Update environmental effects system
       this.environmentalEffects.update(this.time.deltaTime);
       
-      // Update outline renderer for toon shading
-      this.outlineRenderer.update(this.time.deltaTime);
-      
       // Emit update event for game systems
       this.eventBus.emit('engine.update', {
         deltaTime: this.time.deltaTime,
@@ -366,10 +351,6 @@ export class Engine {
     return this.environmentalEffects;
   }
   
-  public getOutlineRenderer(): OutlineRenderer {
-    return this.outlineRenderer;
-  }
-  
   public getContainer(): HTMLElement {
     return this.container;
   }
@@ -397,7 +378,6 @@ export class Engine {
     this.performance?.dispose();
     this.optimizationManager?.dispose();
     this.environmentalEffects?.dispose();
-    this.outlineRenderer?.dispose();
     
     // Clear references
     this.scene = null as any;

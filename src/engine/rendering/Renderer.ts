@@ -59,15 +59,15 @@ export class Renderer {
       toneMapping: THREE.ACESFilmicToneMapping,
       toneMappingExposure: 1.0,
       outputColorSpace: THREE.SRGBColorSpace,
-      enablePostProcessing: !isMobile, // Disable post-processing on mobile for performance
-      enableBloom: false, // Disabled entirely for Monument Valley style and performance
+      enablePostProcessing: true, // Enable by default, let OptimizationManager decide
+      enableBloom: true, // Enable by default
       enableSSAO: false, // Expensive, disabled by default
-      enableFXAA: !isMobile, // Disable FXAA on mobile
-      enableToneMapping: !isMobile, // Disable tone mapping on mobile
+      enableFXAA: true, // Enable by default
+      enableToneMapping: true, // Enable by default
       // Mobile-specific defaults
       isMobile,
       powerPreference: isMobile ? 'default' : 'high-performance',
-      maxPixelRatio: isMobile ? 1.0 : 2,
+      maxPixelRatio: isMobile ? 1.5 : 2,
       ...config
     };
     
@@ -376,16 +376,17 @@ export class Renderer {
     
     // Update renderer configuration based on optimization level
     if (level.includes('mobile')) {
-      // Aggressive mobile optimizations - disable all expensive effects
-      this.config.enablePostProcessing = false; // Disable entirely for all mobile levels
-      this.config.enableBloom = false; // Very expensive on mobile
-      this.config.enableFXAA = false; // Disable FXAA for performance
-      this.config.enableToneMapping = false; // Disable tone mapping for performance
-      this.config.enableShadows = true; // Keep basic shadows for visual quality
-    } else {
-      // Desktop optimizations - disabled bloom for clean Monument Valley style
+      // Keep post-processing and bloom enabled on all mobile tiers
+      // to allow for effects like firefly glows.
       this.config.enablePostProcessing = true;
-      this.config.enableBloom = false; // Completely disabled for clean aesthetic
+      this.config.enableBloom = true;
+      this.config.enableFXAA = false; // Use native mobile antialiasing
+      this.config.enableToneMapping = true;
+      this.config.enableShadows = true; // Keep shadows enabled for proper ground lighting
+    } else {
+      // Desktop optimizations
+      this.config.enablePostProcessing = true;
+      this.config.enableBloom = true;
       this.config.enableFXAA = true;
       this.config.enableToneMapping = true;
       this.config.enableShadows = true;
