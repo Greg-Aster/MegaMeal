@@ -963,7 +963,7 @@ export class ObservatoryEnvironment extends GameObject {
         
         // Get terrain height and position on ground
         const terrainHeight = this.getHeightAt(x, z);
-        grassInstance.position.set(x, terrainHeight - 5, z);
+        grassInstance.position.set(x, terrainHeight + 0.1, z);
         grassInstance.rotation.y = Math.random() * Math.PI * 2;
         grassInstance.scale.setScalar(0.8 + Math.random() * 0.4); // Vary size
         
@@ -1102,7 +1102,7 @@ export class ObservatoryEnvironment extends GameObject {
         
         // Get terrain height and position on ground
         const terrainHeight = this.getHeightAt(x, z);
-        flowerInstance.position.set(x, terrainHeight - 5, z);
+        flowerInstance.position.set(x, terrainHeight + 0.1, z);
         flowerInstance.rotation.y = Math.random() * Math.PI * 2;
         flowerInstance.scale.setScalar(0.5 + Math.random() * 0.5);
         
