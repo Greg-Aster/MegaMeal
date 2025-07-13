@@ -93,11 +93,16 @@ export class Engine {
     
     // Initialize Three.js
     this.scene = new THREE.Scene();
+    
+    // Mobile-aware camera far plane for better performance
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const farPlane = isMobile ? 800 : 2000;
+    
     this.camera = new THREE.PerspectiveCamera(
       60,
       this.container.clientWidth / this.container.clientHeight,
       0.1,
-      2000
+      farPlane
     );
     
     // Initialize engine systems
