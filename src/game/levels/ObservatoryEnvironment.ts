@@ -320,81 +320,62 @@ export class ObservatoryEnvironment extends GameObject {
     
     this.lightingGroup = new this.THREE.Group();
     
-    const isVectorMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
+    // Determine lighting intensity based on device capabilities and graphics mode
     const optimizationManager = this.engine.getOptimizationManager();
     const isMobile = optimizationManager.getDeviceCapabilities()?.isMobile ?? false;
+    const isToonMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
     
-    if (isVectorMode) {
-      // Monument Valley lighting - minimal lighting with atmospheric depth
-      console.log('🏔️ Creating Monument Valley lighting system...');
-      
-      // Minimal directional light for subtle form definition
-      this.mainLight = new this.THREE.DirectionalLight(0xF0E8D4, 0.6); // Cream light
-      this.mainLight.position.set(0, 10, 5);
-      this.mainLight.castShadow = false; // No shadows for clean look
-      
-      // Soft ambient light in Monument Valley style
-      this.ambientLight = new this.THREE.AmbientLight(0xE8B4B8, 0.8); // Dusty rose ambient
-      
-      // No accent light needed - Monument Valley relies on atmospheric fog for depth
-      this.fillLight = new this.THREE.DirectionalLight(0xD4C5A0, 0.2); // Subtle warm beige fill
-      this.fillLight.position.set(-5, 5, -5);
-      
-      // Add atmospheric perspective fog for Monument Valley depth
-      console.log('🌫️ Adding atmospheric perspective fog...');
-      this.scene.fog = new this.THREE.Fog(
-        0xE8D8C8, // Warm beige fog matching Monument Valley palette
-        80,       // Near distance - fog starts closer for subtle depth
-        350       // Far distance - distant objects fade to atmospheric color
-      );
-      
+    // Toon shading needs stronger, more directional lighting for better cell shading
+    let mainIntensity, fillIntensity, ambientIntensity;
+    
+    if (isToonMode) {
+      // Bright, magical lighting for toon shading - much higher ambient for visibility
+      mainIntensity = isMobile ? 1.0 : 0.8;
+      fillIntensity = isMobile ? 0.5 : 0.4;
+      ambientIntensity = isMobile ? 6.0 : 4.0; // Much higher ambient for toon visibility
     } else {
-      // Standard realistic lighting
-      const mainIntensity = isMobile ? 0.4 : 0.3;
-      const fillIntensity = isMobile ? 0.2 : 0.15;
-      const ambientIntensity = isMobile ? 4.0 : 2.0;
-
-      // Soft moonlight - provides base visibility while fireflies add atmosphere
-      this.mainLight = new this.THREE.DirectionalLight(0x8bb3ff, mainIntensity);
-      this.mainLight.position.set(100, 200, 50);
-      this.mainLight.target.position.set(0, 0, 0);
-      this.mainLight.castShadow = true;
-      
-      // Configure shadow properties for better quality
-      this.mainLight.shadow.mapSize.width = 2048;
-      this.mainLight.shadow.mapSize.height = 2048;
-      this.mainLight.shadow.camera.near = 0.5;
-      this.mainLight.shadow.camera.far = 500;
-      this.mainLight.shadow.camera.left = -300;
-      this.mainLight.shadow.camera.right = 300;
-      this.mainLight.shadow.camera.top = 300;
-      this.mainLight.shadow.camera.bottom = -300;
-      
-      // Soft fill light - helps with shadow contrast
-      this.fillLight = new this.THREE.DirectionalLight(0x6a7db3, fillIntensity);
-      this.fillLight.position.set(-50, 100, -30);
-      this.fillLight.target.position.set(0, 0, 0);
-      
-      // Gentle moonlight ambient
-      this.ambientLight = new this.THREE.AmbientLight(0x404060, ambientIntensity);
+      // Softer lighting for realistic shading
+      mainIntensity = isMobile ? 0.4 : 0.3;
+      fillIntensity = isMobile ? 0.2 : 0.15;
+      ambientIntensity = isMobile ? 4.0 : 2.0;
     }
+
+    // Main light - stronger and more directional for toon mode
+    const mainLightColor = isToonMode ? 0x9ac4ff : 0x8bb3ff; // Slightly brighter blue for toon
+    this.mainLight = new this.THREE.DirectionalLight(mainLightColor, mainIntensity);
+    this.mainLight.position.set(100, 200, 50);
+    this.mainLight.target.position.set(0, 0, 0);
+    this.mainLight.castShadow = true;
     
-    // Add lights to group
+    // Configure shadow properties for better quality
+    this.mainLight.shadow.mapSize.width = 2048;
+    this.mainLight.shadow.mapSize.height = 2048;
+    this.mainLight.shadow.camera.near = 0.5;
+    this.mainLight.shadow.camera.far = 500;
+    this.mainLight.shadow.camera.left = -300;
+    this.mainLight.shadow.camera.right = 300;
+    this.mainLight.shadow.camera.top = 300;
+    this.mainLight.shadow.camera.bottom = -300;
+    
     if (this.lightingGroup && this.mainLight) {
       this.lightingGroup.add(this.mainLight);
-      if (this.mainLight.target) {
-        this.lightingGroup.add(this.mainLight.target);
-      }
+      this.lightingGroup.add(this.mainLight.target);
     }
     
-    if (this.lightingGroup && this.fillLight) {
+    // Fill light - more contrasting for toon mode
+    const fillLightColor = isToonMode ? 0x7a9dc3 : 0x6a7db3; // Slightly different color for toon
+    this.fillLight = new this.THREE.DirectionalLight(fillLightColor, fillIntensity);
+    this.fillLight.position.set(-50, 100, -30);
+    this.fillLight.target.position.set(0, 0, 0);
+    if (this.lightingGroup) {
       this.lightingGroup.add(this.fillLight);
-      if (this.fillLight.target) {
-        this.lightingGroup.add(this.fillLight.target);
-      }
+      this.lightingGroup.add(this.fillLight.target);
     }
     
-    if (this.lightingGroup && this.ambientLight) {
+    // Gentle moonlight ambient - provides base scene visibility.
+    // On mobile, this is higher to compensate for fewer firefly point lights.
+    this.ambientLight = new this.THREE.AmbientLight(0x404060, ambientIntensity);
+    if (this.lightingGroup) {
       this.lightingGroup.add(this.ambientLight);
     }
     
@@ -407,8 +388,20 @@ export class ObservatoryEnvironment extends GameObject {
   private async createGround(): Promise<void> {
     console.log('🏔️ Creating floating island terrain...');
     
-    // Create detailed terrain geometry
-    const groundGeometry = new this.THREE.PlaneGeometry(500, 500, 512, 512);
+    // Check if we're in toon mode for simplified geometry
+    const isToonMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // Create geometry - optimized for mobile performance
+    let groundGeometry;
+    if (isMobile) {
+      // Much simpler geometry for mobile devices
+      groundGeometry = new this.THREE.PlaneGeometry(500, 500, 32, 32); // 1K vertices for mobile
+    } else if (isToonMode) {
+      groundGeometry = new this.THREE.PlaneGeometry(500, 500, 64, 64); // 4K vertices for toon
+    } else {
+      groundGeometry = new this.THREE.PlaneGeometry(500, 500, 128, 128); // 16K vertices for realistic
+    }
     const positions = groundGeometry.attributes.position.array;
     
     // Use shared terrain parameters for consistency with getHeightAt
@@ -439,33 +432,16 @@ export class ObservatoryEnvironment extends GameObject {
       positions[i + 2] = height;
     }
     
-    // Monument Valley style - clean geometric shapes with minimal surface detail
-    const isVectorMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
-    if (!isVectorMode) {
-      // Only add surface detail for realistic mode
-      for (let i = 0; i < positions.length; i += 3) {
-        const x = positions[i];
-        const z = positions[i + 1];
-        
-        const noise1 = Math.sin(x * 0.2) * Math.cos(z * 0.2) * 0.3;
-        const noise2 = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.1;
-        const noise3 = Math.sin(x * 1.0) * Math.cos(z * 1.0) * 0.05;
-        
-        positions[i + 2] += noise1 + noise2 + noise3;
-      }
-    } else {
-      // Monument Valley: add subtle geometric beveled edges
-      for (let i = 0; i < positions.length; i += 3) {
-        const x = positions[i];
-        const z = positions[i + 1];
-        const distanceFromCenter = Math.sqrt(x * x + z * z);
-        
-        // Add subtle geometric terracing for Monument Valley effect
-        if (distanceFromCenter < 150) {
-          const terraceLevel = Math.floor(positions[i + 2] / 2) * 2;
-          positions[i + 2] = terraceLevel + 0.2; // Slight beveled edge
-        }
-      }
+    // Add surface detail
+    for (let i = 0; i < positions.length; i += 3) {
+      const x = positions[i];
+      const z = positions[i + 1];
+      
+      const noise1 = Math.sin(x * 0.2) * Math.cos(z * 0.2) * 0.3;
+      const noise2 = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.1;
+      const noise3 = Math.sin(x * 1.0) * Math.cos(z * 1.0) * 0.05;
+      
+      positions[i + 2] += noise1 + noise2 + noise3;
     }
     
     groundGeometry.attributes.position.needsUpdate = true;
@@ -474,27 +450,12 @@ export class ObservatoryEnvironment extends GameObject {
     // Create terrain texture
     const groundTexture = this.createTerrainTexture();
     
-    // Use vector art materials for stylized look
-    const materials = this.engine.getMaterials();
-    
-    let groundMaterial: THREE.Material;
-    if (isVectorMode) {
-      // Monument Valley style - use clean geometric texture with Monument material
-      groundMaterial = materials.createVectorGroundMaterial();
-      // Apply the Monument Valley texture to the material
-      (groundMaterial as any).map = groundTexture;
-      (groundMaterial as any).needsUpdate = true;
-      console.log('🎨 Applied Monument Valley terrain texture to material');
-      console.log('🎨 Texture size:', groundTexture.image.width, 'x', groundTexture.image.height);
-      console.log('🎨 Material type:', groundMaterial.type);
-      console.log('🎨 Material has map:', !!(groundMaterial as any).map);
-    } else {
-      // Standard PBR material
-      groundMaterial = materials.createPBRMaterial({ 
-        map: groundTexture,
-        color: 0x556633
-      });
-    }
+    // Create ground material that responds to lighting
+    // Use the new global material factory to get the correct style
+    const groundMaterial = this.engine.getMaterials().createPBRMaterial({ 
+      map: groundTexture,
+      color: 0x556633
+    }) as THREE.Material;
     
     // Create ground mesh
     this.groundMesh = new this.THREE.Mesh(groundGeometry, groundMaterial);
@@ -504,133 +465,40 @@ export class ObservatoryEnvironment extends GameObject {
       this.groundMesh.receiveShadow = true;
       
       this.levelGroup.add(this.groundMesh);
-      
-      // Monument Valley style doesn't use wireframes - relies on clean geometry
     }
     console.log('✅ Terrain created');
   }
   
   private createTerrainTexture(): THREE.CanvasTexture {
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
+    const isToonMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
+    
+    // Much lower resolution for toon mode to enhance 2D pixelated look
+    canvas.width = isToonMode ? 256 : 512;  // Improved resolution for toon mode
+    canvas.height = isToonMode ? 256 : 512;
     const ctx = canvas.getContext('2d')!;
-    
-    const isVectorMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
-    
-    if (isVectorMode) {
-      // Vector art style - geometric patterns and bold colors
-      this.createVectorTerrainTexture(ctx, canvas);
-    } else {
-      // Standard realistic terrain texture
-      this.createRealisticTerrainTexture(ctx, canvas);
-    }
-    
-    const texture = new this.THREE.CanvasTexture(canvas);
-    texture.wrapS = this.THREE.RepeatWrapping;
-    texture.wrapT = this.THREE.RepeatWrapping;
-    texture.repeat.set(isVectorMode ? 1 : 3, isVectorMode ? 1 : 3);
-    
-    return texture;
-  }
-
-  private createVectorTerrainTexture(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void {
-    // Monument Valley style - clean geometric patterns with soft pastels
-    console.log('🎨 Creating Monument Valley terrain texture...');
     
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
+    const maxRadius = Math.min(centerX, centerY) * 0.98;
     
-    // Monument Valley soft pastel colors (converted from hex)
-    const monumentColors = [
-      '#E8B4B8', // Dusty rose pink
-      '#B8C5A0', // Muted sage green
-      '#D4C5A0', // Warm sandy beige
-      '#A8C4D4', // Soft powder blue
-      '#C4B5D4', // Gentle lavender
-      '#C47A5C', // Warm terracotta accent
-      '#F0E8D4'  // Clean cream white
-    ];
-    
-    // Create clean geometric terrain pattern
-    const regionSize = 64; // Larger regions for cleaner look
-    
-    for (let y = 0; y < canvas.height; y += regionSize) {
-      for (let x = 0; x < canvas.width; x += regionSize) {
-        // Calculate region center distance for color selection
-        const regionCenterX = x + regionSize / 2;
-        const regionCenterY = y + regionSize / 2;
-        const dist = Math.sqrt((regionCenterX - centerX) ** 2 + (regionCenterY - centerY) ** 2);
-        
-        // Select Monument Valley color based on distance (creates natural gradient)
-        let colorIndex;
-        if (dist < 60) {
-          colorIndex = Math.floor(Math.random() * 2); // Warm colors for center
-        } else if (dist < 120) {
-          colorIndex = 2 + Math.floor(Math.random() * 2); // Earth tones for middle
-        } else if (dist < 180) {
-          colorIndex = 4 + Math.floor(Math.random() * 2); // Cool colors for edges
-        } else {
-          colorIndex = 6; // Cream for outer areas
-        }
-        
-        const regionColor = monumentColors[colorIndex];
-        
-        // Fill clean rectangular region (no cell borders for Monument Valley)
-        ctx.fillStyle = regionColor;
-        ctx.fillRect(x, y, regionSize, regionSize);
-        
-        // Add subtle geometric beveled edge detail
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.fillRect(x, y, regionSize, 2); // Top highlight
-        ctx.fillRect(x, y, 2, regionSize); // Left highlight
-        
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-        ctx.fillRect(x, y + regionSize - 2, regionSize, 2); // Bottom shadow
-        ctx.fillRect(x + regionSize - 2, y, 2, regionSize); // Right shadow
-      }
+    let gradient;
+    if (isToonMode) {
+      // Bold, flat colors for strong 2D cartoon look
+      gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxRadius);
+      gradient.addColorStop(0, '#7dd321');    // Vibrant cartoon grass green
+      gradient.addColorStop(0.4, '#6bb81f');  // Slightly darker green
+      gradient.addColorStop(0.7, '#ffeb3b');  // Bright cartoon sand yellow
+      gradient.addColorStop(1, '#ffc107');    // Golden sand edge
+    } else {
+      // Detailed gradient for realistic shading
+      gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxRadius);
+      gradient.addColorStop(0, '#3d6017');    // Grass center
+      gradient.addColorStop(0.4, '#2d5016');  // Medium green
+      gradient.addColorStop(0.7, '#c2b280');  // Sandy beach color
+      gradient.addColorStop(0.85, '#a19060'); // Darker sand
+      gradient.addColorStop(1, '#8b7355');    // Wet sand at the edge
     }
-    
-    console.log('✅ Monument Valley terrain texture created with clean geometric regions');
-  }
-
-  /**
-   * Add wireframe outline for vector art definition
-   */
-  private addWireframeOutline(mesh: THREE.Mesh, geometry: THREE.BufferGeometry): void {
-    console.log('🔲 Adding wireframe outline for vector definition...');
-    
-    try {
-      // Create wireframe material for outline effect
-      const wireframeMaterial = new this.THREE.MeshBasicMaterial({
-        color: 0x000000, // Black wireframe
-        wireframe: true,
-        transparent: true,
-        opacity: 0.3,
-        depthTest: false // Render on top
-      });
-      
-      // Create wireframe mesh
-      const wireframeMesh = new this.THREE.Mesh(geometry, wireframeMaterial);
-      wireframeMesh.rotation.x = -Math.PI / 2;
-      wireframeMesh.position.copy(mesh.position);
-      wireframeMesh.position.y += 0.01; // Slightly above the surface
-      
-      this.levelGroup.add(wireframeMesh);
-      console.log('✅ Wireframe outline added for enhanced definition');
-    } catch (error) {
-      console.warn('⚠️ Failed to add wireframe outline:', error);
-    }
-  }
-
-  private createRealisticTerrainTexture(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void {
-    // Create base gradient
-    const gradient = ctx.createRadialGradient(256, 256, 0, 256, 256, 250);
-    gradient.addColorStop(0, '#3d6017');    // Grass center
-    gradient.addColorStop(0.4, '#2d5016');  // Medium green
-    gradient.addColorStop(0.7, '#c2b280');  // Sandy beach color
-    gradient.addColorStop(0.85, '#a19060'); // Darker sand
-    gradient.addColorStop(1, '#8b7355');    // Wet sand at the edge
     
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -638,68 +506,20 @@ export class ObservatoryEnvironment extends GameObject {
     // Add texture details
     this.addGrassTexture(ctx, canvas);
     this.addSandTexture(ctx, canvas);
-  }
-
-  private addStainedGlassPatterns(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void {
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
     
-    // Add radial lead lines (like stained glass)
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 3;
+    const texture = new this.THREE.CanvasTexture(canvas);
+    texture.wrapS = this.THREE.RepeatWrapping;
+    texture.wrapT = this.THREE.RepeatWrapping;
+    texture.repeat.set(3, 3);
     
-    // Radial lines from center
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2;
-      const endX = centerX + Math.cos(angle) * 200;
-      const endY = centerY + Math.sin(angle) * 200;
-      
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.lineTo(endX, endY);
-      ctx.stroke();
+    // For toon mode, use linear filtering for smoother vector art look
+    if (isToonMode) {
+      texture.magFilter = this.THREE.LinearFilter;
+      texture.minFilter = this.THREE.LinearFilter;
+      texture.generateMipmaps = true; // Enable mipmaps for better performance
     }
     
-    // Concentric circles for zone divisions
-    const circles = [80, 140, 200];
-    circles.forEach(radius => {
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-      ctx.stroke();
-    });
-    
-    // Add decorative stained glass motifs
-    ctx.strokeStyle = '#FFD700'; // Gold accent lines
-    ctx.lineWidth = 2;
-    
-    // Central star pattern
-    for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2;
-      const x1 = centerX + Math.cos(angle) * 15;
-      const y1 = centerY + Math.sin(angle) * 15;
-      const x2 = centerX + Math.cos(angle + Math.PI) * 15;
-      const y2 = centerY + Math.sin(angle + Math.PI) * 15;
-      
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-    }
-    
-    // Add some curved elements for organic stained glass feel
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.lineWidth = 1;
-    
-    for (let i = 0; i < 12; i++) {
-      const angle = (i / 12) * Math.PI * 2;
-      const x = centerX + Math.cos(angle) * 100;
-      const y = centerY + Math.sin(angle) * 100;
-      const size = 10;
-      
-      ctx.beginPath();
-      ctx.arc(x, y, size, 0, Math.PI * 2);
-      ctx.stroke();
-    }
+    return texture;
   }
   
   private addGrassTexture(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void {
@@ -888,75 +708,13 @@ export class ObservatoryEnvironment extends GameObject {
     this.oceanSystem = new OceanSystem(this.THREE, this.scene, oceanConfig, this.engine.getMaterials());
     await this.oceanSystem.initialize();
     
-    // Apply vector materials if in vector mode
-    const isVectorMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
-    if (isVectorMode) {
-      this.updateOceanForVectorMode();
-    }
-    
     // Initialize current water level
     this.currentWaterLevel = this.initialWaterLevel;
     
-    console.log('✅ Ocean system created with wave simulation');
-  }
-
-  /**
-   * Update ocean material for vector art mode
-   */
-  private updateOceanForVectorMode(): void {
-    if (!this.oceanSystem) return;
+    // Get the ocean mesh for compatibility with existing code
+    this.waterPool = this.oceanSystem.getOceanMesh();
     
-    console.log('🎨 Updating ocean for vector art mode...');
-    
-    try {
-      // Get the ocean mesh
-      const oceanMesh = this.oceanSystem.getOceanMesh();
-      if (oceanMesh) {
-        // Create vector water material with stained glass texture
-        const materials = this.engine.getMaterials();
-        const vectorWaterMaterial = materials.createVectorWaterMaterial();
-        
-        // Apply the new material
-        oceanMesh.material = vectorWaterMaterial;
-        oceanMesh.material.needsUpdate = true;
-        
-        // Add wireframe outline for definition
-        this.addOceanWireframe(oceanMesh);
-        
-        console.log('✅ Ocean updated with vector art material and stained glass texture');
-      }
-    } catch (error) {
-      console.warn('⚠️ Failed to update ocean for vector mode:', error);
-    }
-  }
-
-  /**
-   * Add wireframe outline to ocean for vector art definition
-   */
-  private addOceanWireframe(oceanMesh: THREE.Mesh): void {
-    console.log('🌊 Adding ocean wireframe for vector definition...');
-    
-    try {
-      // Create wireframe material for water outline
-      const wireframeMaterial = new this.THREE.MeshBasicMaterial({
-        color: 0x003366, // Dark blue wireframe for water
-        wireframe: true,
-        transparent: true,
-        opacity: 0.4,
-        depthTest: false // Render on top
-      });
-      
-      // Create wireframe mesh using ocean geometry
-      const wireframeMesh = new this.THREE.Mesh(oceanMesh.geometry, wireframeMaterial);
-      wireframeMesh.position.copy(oceanMesh.position);
-      wireframeMesh.rotation.copy(oceanMesh.rotation);
-      wireframeMesh.position.y += 0.05; // Slightly above the water surface
-      
-      this.levelGroup.add(wireframeMesh);
-      console.log('✅ Ocean wireframe outline added for enhanced water definition');
-    } catch (error) {
-      console.warn('⚠️ Failed to add ocean wireframe outline:', error);
-    }
+    console.log('✅ Ocean system created with realistic wave simulation');
   }
 
   /**
@@ -1443,14 +1201,14 @@ export class ObservatoryEnvironment extends GameObject {
       count: 80, // Keep all 200 fireflies for visual richness
       maxLights: 80, // Full firefly lighting on desktop (FireflySystem auto-detects mobile and reduces to 8)
       colors: [
-        0xE8B4B8, // Dusty rose pink
-        0xB8C5A0, // Muted sage green
-        0xD4C5A0, // Warm sandy beige
-        0xA8C4D4, // Soft powder blue
-        0xC4B5D4, // Gentle lavender
-        0xC47A5C, // Warm terracotta
-        0xF0E8D4, // Clean cream white
-        0xA8C4D4  // Soft powder blue (duplicate for variation)
+        0x87CEEB, // Sky blue
+        0x98FB98, // Pale green
+        0xFFFFE0, // Light yellow
+        0xDDA0DD, // Plum
+        0xF0E68C, // Khaki
+        0xFFA07A, // Light salmon
+        0x20B2AA, // Light sea green
+        0x9370DB  // Medium purple
       ],
       emissiveIntensity: 15.0, // A softer, more subtle glow
       lightIntensity: 15.0, // Less intense light cast on the environment
