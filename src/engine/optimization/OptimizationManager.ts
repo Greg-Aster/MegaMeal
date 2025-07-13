@@ -514,8 +514,11 @@ export class OptimizationManager {
       // Skip system objects (cameras, etc.)
       if (object.type === 'Camera') return;
       
-      // Skip level groups and high-level containers
-      if (object.name.includes('Level_') || object.name.includes('Group')) return;
+      // Skip only top-level containers, but allow traversal into child objects
+      if (object.name.includes('Level_') && object.type === 'Group') {
+        // Don't register the level group itself, but continue traversing its children
+        return;
+      }
       
       // NEVER optimize essential objects - double check here
       if (this.isEssentialObject(object)) {
