@@ -4,6 +4,7 @@ import { Engine } from '../../engine/core/Engine';
 import { AssetLoader } from '../../engine/resources/AssetLoader';
 import { FireflySystem } from '../../engine/systems/FireflySystem';
 import { OceanSystem } from '../../engine/systems/OceanSystem';
+import { OptimizationManager } from '../../engine/optimization/OptimizationManager';
 
 /**
  * Handles the physical environment of the Star Observatory
@@ -27,6 +28,9 @@ export class ObservatoryEnvironment extends GameObject {
   private fireflySystem: FireflySystem | null = null;
   private oceanSystem: OceanSystem | null = null;
   
+  // Level of Detail (LOD) system for intelligent performance optimization
+  private lodObjects: THREE.LOD[] = [];
+  
   // Lighting elements
   private lightingGroup: THREE.Group | null = null;
   private mainLight: THREE.DirectionalLight | null = null;
@@ -39,7 +43,7 @@ export class ObservatoryEnvironment extends GameObject {
   
   // Rising water effect
   private initialWaterLevel = -10;
-  private waterRiseRate = 0.02; // Much slower, more gradual rise
+  private waterRiseRate = 0.04; // Much slower, more gradual rise
   private maxWaterLevel = 4; // Stop rising at this level
   private currentWaterLevel = -6;
   
@@ -127,6 +131,14 @@ export class ObservatoryEnvironment extends GameObject {
     // Update ocean system (now manages its own time)
     if (this.oceanSystem) {
       this.oceanSystem.update(deltaTime);
+    }
+    
+    // Update all LOD objects for intelligent performance optimization
+    if (this.lodObjects.length > 0) {
+      const camera = this.engine.getCamera();
+      for (const lod of this.lodObjects) {
+        lod.update(camera);
+      }
     }
     
     // Update rising water effect
@@ -392,16 +404,10 @@ export class ObservatoryEnvironment extends GameObject {
     const isToonMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
-    // Create geometry - optimized for mobile performance
+    // Create geometry with intelligent optimization
     let groundGeometry;
-    if (isMobile) {
-      // Aggressively simplified geometry for mobile devices
-      groundGeometry = new this.THREE.PlaneGeometry(500, 500, 20, 20); // 400 vertices for mobile
-    } else if (isToonMode) {
-      groundGeometry = new this.THREE.PlaneGeometry(500, 500, 64, 64); // 4K vertices for toon
-    } else {
-      groundGeometry = new this.THREE.PlaneGeometry(500, 500, 128, 128); // 16K vertices for realistic
-    }
+    const terrainSegments = this.getIntelligentTerrainSettings(isToonMode);
+    groundGeometry = new this.THREE.PlaneGeometry(500, 500, terrainSegments.width, terrainSegments.height);
     const positions = groundGeometry.attributes.position.array;
     
     // Use shared terrain parameters for consistency with getHeightAt
@@ -447,21 +453,8 @@ export class ObservatoryEnvironment extends GameObject {
     groundGeometry.attributes.position.needsUpdate = true;
     groundGeometry.computeVertexNormals();
     
-    // Create ground material optimized for mobile
-    let groundMaterial;
-    if (isMobile) {
-      // Simple material for mobile - no textures, just color
-      groundMaterial = new this.THREE.MeshLambertMaterial({
-        color: 0x556633 // Basic terrain color
-      });
-    } else {
-      // Full terrain texture for desktop
-      const groundTexture = this.createTerrainTexture();
-      groundMaterial = this.engine.getMaterials().createPBRMaterial({ 
-        map: groundTexture,
-        color: 0x556633
-      }) as THREE.Material;
-    }
+    // Create intelligent terrain material based on device capabilities
+    const groundMaterial = this.createIntelligentTerrainMaterial();
     
     // Create ground mesh
     this.groundMesh = new this.THREE.Mesh(groundGeometry, groundMaterial);
@@ -509,14 +502,15 @@ export class ObservatoryEnvironment extends GameObject {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Add texture details
+    // Add organic texture details with noise to break up patterns
     this.addGrassTexture(ctx, canvas);
     this.addSandTexture(ctx, canvas);
+    this.addNoiseOverlay(ctx, canvas);
     
     const texture = new this.THREE.CanvasTexture(canvas);
     texture.wrapS = this.THREE.RepeatWrapping;
     texture.wrapT = this.THREE.RepeatWrapping;
-    texture.repeat.set(3, 3);
+    texture.repeat.set(8, 8); // More repetitions to break up the pattern
     
     // For toon mode, use linear filtering for smoother vector art look
     if (isToonMode) {
@@ -526,6 +520,176 @@ export class ObservatoryEnvironment extends GameObject {
     }
     
     return texture;
+  }
+
+  /**
+   * Create intelligent terrain material based on device capabilities
+   */
+  private createIntelligentTerrainMaterial(): THREE.Material {
+    try {
+      const optimizationManager = OptimizationManager.getInstance();
+      const qualitySettings = optimizationManager.getQualitySettings();
+      const optimizationLevel = optimizationManager.getOptimizationLevel();
+      
+      if (!qualitySettings) {
+        // Fallback to basic material
+        return new this.THREE.MeshLambertMaterial({
+          color: 0x556633
+        });
+      }
+
+      console.log(`🎯 Terrain Material: Creating for quality level ${optimizationLevel}`);
+
+      // ULTRA_LOW: Basic colored material, no textures
+      if (!qualitySettings.enableProceduralTextures && !qualitySettings.enableNormalMaps) {
+        return new this.THREE.MeshBasicMaterial({
+          color: 0x556633,
+          fog: true
+        });
+      }
+
+      // LOW: Simple Lambert material with basic color variation
+      if (!qualitySettings.enableNormalMaps) {
+        return new this.THREE.MeshLambertMaterial({
+          color: 0x556633,
+          fog: true
+        });
+      }
+
+      // MEDIUM/HIGH/ULTRA: Full PBR terrain with textures and effects
+      const terrainTexture = this.createTerrainTexture();
+      let material: THREE.Material;
+
+      if (optimizationLevel === 'ultra') {
+        // ULTRA: Full PBR material with advanced features
+        material = new this.THREE.MeshStandardMaterial({
+          map: terrainTexture,
+          color: 0x556633,
+          roughness: 0.8,
+          metalness: 0.02,
+          fog: true,
+          
+          // Enable advanced terrain features for ultra quality
+          envMapIntensity: 0.3, // Subtle environment reflections
+        });
+
+        // Add normal map for ultra quality if available
+        if (qualitySettings.enableNormalMaps) {
+          const normalTexture = this.createTerrainNormalMap();
+          (material as THREE.MeshStandardMaterial).normalMap = normalTexture;
+          (material as THREE.MeshStandardMaterial).normalScale.set(0.5, 0.5);
+        }
+      } else if (optimizationLevel === 'high') {
+        // HIGH: Standard PBR material
+        material = new this.THREE.MeshStandardMaterial({
+          map: terrainTexture,
+          color: 0x556633,
+          roughness: 0.9,
+          metalness: 0.01,
+          fog: true
+        });
+      } else {
+        // MEDIUM: Lambert material with texture
+        material = new this.THREE.MeshLambertMaterial({
+          map: terrainTexture,
+          color: 0x556633,
+          fog: true
+        });
+      }
+
+      console.log(`✅ Terrain Material: Created ${material.type} for ${optimizationLevel} quality`);
+      return material;
+
+    } catch (error) {
+      // Fallback to simple mobile detection
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        return new this.THREE.MeshLambertMaterial({
+          color: 0x556633
+        });
+      } else {
+        // Fallback: create standard material with texture
+        const groundTexture = this.createTerrainTexture();
+        return new this.THREE.MeshStandardMaterial({
+          map: groundTexture,
+          color: 0x556633,
+          roughness: 0.9,
+          metalness: 0.01,
+          fog: true
+        });
+      }
+    }
+  }
+
+  /**
+   * Create normal map for terrain detail (ULTRA quality only)
+   */
+  private createTerrainNormalMap(): THREE.CanvasTexture {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d')!;
+
+    // Generate a normal map from height data
+    for (let y = 0; y < canvas.height; y++) {
+      for (let x = 0; x < canvas.width; x++) {
+        // Sample height at current position and neighbors
+        const heightC = this.sampleTerrainHeight(x / canvas.width, y / canvas.height);
+        const heightR = this.sampleTerrainHeight((x + 1) / canvas.width, y / canvas.height);
+        const heightU = this.sampleTerrainHeight(x / canvas.width, (y + 1) / canvas.height);
+        
+        // Calculate normal vector
+        const normalX = (heightC - heightR) * 10; // Scale factor for visibility
+        const normalY = (heightC - heightU) * 10;
+        const normalZ = 1; // Base normal pointing up
+        
+        // Normalize and convert to color values
+        const length = Math.sqrt(normalX * normalX + normalY * normalY + normalZ * normalZ);
+        const r = Math.floor(((normalX / length) + 1) * 127.5);
+        const g = Math.floor(((normalY / length) + 1) * 127.5);
+        const b = Math.floor(((normalZ / length) + 1) * 127.5);
+        
+        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+
+    const normalTexture = new this.THREE.CanvasTexture(canvas);
+    normalTexture.wrapS = this.THREE.RepeatWrapping;
+    normalTexture.wrapT = this.THREE.RepeatWrapping;
+    normalTexture.repeat.set(8, 8); // Match the main texture repeat
+
+    return normalTexture;
+  }
+
+  /**
+   * Sample terrain height for normal map generation
+   */
+  private sampleTerrainHeight(u: number, v: number): number {
+    // Convert UV coordinates to world coordinates
+    const x = (u - 0.5) * 500;
+    const z = (v - 0.5) * 500;
+    
+    // Use the same height calculation as the actual terrain
+    const distanceFromCenter = Math.sqrt(x * x + z * z);
+    const { hillHeight, hillRadius, baseGroundLevel } = this.terrainParams;
+    
+    let height = 0;
+    
+    if (distanceFromCenter < hillRadius) {
+      const heightMultiplier = Math.cos((distanceFromCenter / hillRadius) * Math.PI * 0.5);
+      height = baseGroundLevel + (hillHeight * heightMultiplier * heightMultiplier);
+    } else {
+      height = baseGroundLevel;
+    }
+    
+    // Add noise
+    const noise1 = Math.sin(x * 0.2) * Math.cos(z * 0.2) * 0.3;
+    const noise2 = Math.sin(x * 0.5) * Math.cos(z * 0.5) * 0.1;
+    height += noise1 + noise2;
+    
+    return height;
   }
   
   private addGrassTexture(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void {
@@ -560,6 +724,132 @@ export class ObservatoryEnvironment extends GameObject {
         ctx.arc(x, y, size, 0, Math.PI * 2);
         ctx.fill();
       }
+    }
+  }
+
+  /**
+   * Create intelligent LOD vegetation based on device capabilities
+   */
+  private createLODVegetation(instance: THREE.Object3D, position: THREE.Vector3): THREE.LOD | THREE.Object3D {
+    try {
+      const optimizationManager = OptimizationManager.getInstance();
+      const optimizationLevel = optimizationManager.getOptimizationLevel();
+      
+      // Only use LOD on devices that can benefit from it (MEDIUM+ quality)
+      if (optimizationLevel === 'ultra_low' || optimizationLevel === 'low') {
+        // Simple placement for low-end devices
+        instance.position.copy(position);
+        return instance;
+      }
+      
+      // Create LOD system for better performance on capable devices
+      const lod = new this.THREE.LOD();
+      
+      // Level 0: Full detail (close up)
+      const highDetailInstance = instance.clone();
+      highDetailInstance.position.copy(position);
+      lod.addLevel(highDetailInstance, 0);
+      
+      // Level 1: Reduced detail (medium distance) - only for HIGH/ULTRA
+      if (optimizationLevel === 'high' || optimizationLevel === 'ultra') {
+        const mediumDetailInstance = this.createReducedDetailVegetation(instance);
+        mediumDetailInstance.position.copy(position);
+        lod.addLevel(mediumDetailInstance, 50);
+      }
+      
+      // Level 2: Very low detail (far distance) - only for ULTRA
+      if (optimizationLevel === 'ultra') {
+        const lowDetailInstance = this.createLowDetailVegetation(instance);
+        lowDetailInstance.position.copy(position);
+        lod.addLevel(lowDetailInstance, 150);
+      }
+      
+      lod.position.copy(position);
+      this.lodObjects.push(lod);
+      
+      return lod;
+    } catch (error) {
+      // Fallback to simple placement
+      instance.position.copy(position);
+      return instance;
+    }
+  }
+
+  /**
+   * Create reduced detail version of vegetation for medium distance LOD
+   */
+  private createReducedDetailVegetation(original: THREE.Object3D): THREE.Object3D {
+    const reduced = original.clone();
+    
+    // Reduce complexity by simplifying materials and removing some geometry
+    reduced.traverse((child) => {
+      if (child instanceof this.THREE.Mesh) {
+        // Use simpler material for medium distance
+        if (child.material && child.material.map) {
+          child.material = new this.THREE.MeshLambertMaterial({
+            map: child.material.map,
+            transparent: child.material.transparent,
+            alphaTest: 0.5 // Higher alpha test for faster rendering
+          });
+        }
+      }
+    });
+    
+    // Slightly smaller scale for less visual impact
+    reduced.scale.setScalar(0.8);
+    
+    return reduced;
+  }
+
+  /**
+   * Create low detail version of vegetation for far distance LOD
+   */
+  private createLowDetailVegetation(original: THREE.Object3D): THREE.Object3D {
+    // For very far distances, use a simple billboard or basic geometry
+    const geometry = new this.THREE.PlaneGeometry(1, 1);
+    const material = new this.THREE.MeshBasicMaterial({
+      color: 0x4a7c3a, // Simple green color
+      transparent: true,
+      alphaTest: 0.5
+    });
+    
+    const billboard = new this.THREE.Mesh(geometry, material);
+    billboard.scale.setScalar(1.5);
+    
+    return billboard;
+  }
+
+  /**
+   * Add noise overlay to break up repetitive patterns
+   */
+  private addNoiseOverlay(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void {
+    // Create noise to break up the repeating pattern
+    for (let y = 0; y < canvas.height; y += 2) {
+      for (let x = 0; x < canvas.width; x += 2) {
+        const noise = Math.random() * 0.15 - 0.075; // Small random variation
+        const alpha = Math.random() * 0.1; // Very subtle
+        
+        // Apply noise with very low opacity to break patterns without being obvious
+        ctx.fillStyle = `rgba(${Math.floor(128 + noise * 255)}, ${Math.floor(128 + noise * 255)}, ${Math.floor(128 + noise * 255)}, ${alpha})`;
+        ctx.fillRect(x, y, 2, 2);
+      }
+    }
+    
+    // Add some organic streaks to further break up the pattern
+    for (let i = 0; i < 50; i++) {
+      const startX = Math.random() * canvas.width;
+      const startY = Math.random() * canvas.height;
+      const length = Math.random() * 20 + 5;
+      const angle = Math.random() * Math.PI * 2;
+      const endX = startX + Math.cos(angle) * length;
+      const endY = startY + Math.sin(angle) * length;
+      
+      ctx.strokeStyle = `rgba(${Math.floor(Math.random() * 50 + 50)}, ${Math.floor(Math.random() * 50 + 80)}, ${Math.floor(Math.random() * 30 + 30)}, 0.1)`;
+      ctx.lineWidth = Math.random() * 1.5 + 0.5;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
     }
   }
   
@@ -719,6 +1009,19 @@ export class ObservatoryEnvironment extends GameObject {
     
     // Get the ocean mesh for compatibility with existing code
     this.waterPool = this.oceanSystem.getOceanMesh();
+    
+    // CRITICAL FIX: Register the new ocean system with the global environmental effects manager
+    // This was missed during the OceanSystem refactor and is required for underwater effects.
+    const environmentalEffects = this.engine.getEnvironmentalEffects();
+    if (environmentalEffects) {
+      environmentalEffects.registerWaterSource({
+        id: 'observatory_water',
+        mesh: this.waterPool,
+        getCurrentLevel: () => this.currentWaterLevel,
+        isActive: true,
+      });
+      console.log('✅ Registered observatory water with EnvironmentalEffectsSystem');
+    }
     
     console.log('✅ Ocean system created with realistic wave simulation');
   }
@@ -894,17 +1197,78 @@ export class ObservatoryEnvironment extends GameObject {
   }
   
   /**
+   * Get intelligent terrain settings based on device capabilities
+   */
+  private getIntelligentTerrainSettings(isToonMode: boolean): { width: number; height: number } {
+    try {
+      const optimizationManager = OptimizationManager.getInstance();
+      const qualitySettings = optimizationManager.getQualitySettings();
+      
+      if (qualitySettings) {
+        console.log(`🎯 Terrain: Using intelligent optimization`, {
+          segments: qualitySettings.terrainSegments,
+          qualityLevel: optimizationManager.getOptimizationLevel()
+        });
+        return qualitySettings.terrainSegments;
+      }
+    } catch (error) {
+      // Fallback to original logic
+    }
+    
+    // Fallback to original mobile/toon detection
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+      return { width: 20, height: 20 };
+    } else if (isToonMode) {
+      return { width: 64, height: 64 };
+    } else {
+      return { width: 128, height: 128 };
+    }
+  }
+
+  /**
+   * Get intelligent vegetation settings based on device capabilities
+   */
+  private getIntelligentVegetationSettings(): { enableVegetation: boolean; maxInstances: number } {
+    try {
+      const optimizationManager = OptimizationManager.getInstance();
+      const qualitySettings = optimizationManager.getQualitySettings();
+      
+      if (qualitySettings) {
+        console.log(`🎯 Vegetation: Using intelligent optimization`, {
+          enabled: qualitySettings.enableVegetation,
+          maxInstances: qualitySettings.maxVegetationInstances,
+          qualityLevel: optimizationManager.getOptimizationLevel()
+        });
+        return {
+          enableVegetation: qualitySettings.enableVegetation,
+          maxInstances: qualitySettings.maxVegetationInstances
+        };
+      }
+    } catch (error) {
+      // Fallback to original logic
+    }
+    
+    // Fallback to simple mobile detection
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    return {
+      enableVegetation: !isMobile,
+      maxInstances: isMobile ? 0 : 15
+    };
+  }
+
+  /**
    * Create natural vegetation around the island
    */
   private async createVegetation(): Promise<void> {
-    // Skip vegetation entirely on mobile for better performance
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    if (isMobile) {
-      console.log('🌱 Skipping vegetation on mobile for better performance');
+    // Use intelligent vegetation settings
+    const vegetationSettings = this.getIntelligentVegetationSettings();
+    if (!vegetationSettings.enableVegetation) {
+      console.log('🌱 Skipping vegetation for better performance');
       return;
     }
     
-    console.log('🌱 Creating natural vegetation...');
+    console.log(`🌱 Creating natural vegetation (${vegetationSettings.maxInstances} max instances)...`);
     
     this.vegetationGroup = new this.THREE.Group();
     
@@ -976,11 +1340,14 @@ export class ObservatoryEnvironment extends GameObject {
         
         // Get terrain height and position on ground
         const terrainHeight = this.getHeightAt(x, z);
-        grassInstance.position.set(x, terrainHeight + 0.1, z);
         grassInstance.rotation.y = Math.random() * Math.PI * 2;
         grassInstance.scale.setScalar(0.8 + Math.random() * 0.4); // Vary size
         
-        this.vegetationGroup!.add(grassInstance);
+        // Use intelligent LOD system for better performance
+        const position = new this.THREE.Vector3(x, terrainHeight + 0.1, z);
+        const lodObject = this.createLODVegetation(grassInstance, position);
+        
+        this.vegetationGroup!.add(lodObject);
       }
       
       // Created grass instances (reduced logging)
@@ -1115,11 +1482,14 @@ export class ObservatoryEnvironment extends GameObject {
         
         // Get terrain height and position on ground
         const terrainHeight = this.getHeightAt(x, z);
-        flowerInstance.position.set(x, terrainHeight + 0.1, z);
         flowerInstance.rotation.y = Math.random() * Math.PI * 2;
         flowerInstance.scale.setScalar(0.5 + Math.random() * 0.5);
         
-        this.vegetationGroup!.add(flowerInstance);
+        // Use intelligent LOD system for better performance
+        const position = new this.THREE.Vector3(x, terrainHeight + 0.1, z);
+        const lodObject = this.createLODVegetation(flowerInstance, position);
+        
+        this.vegetationGroup!.add(lodObject);
       }
       
       // Created flower instances (reduced logging)
@@ -1277,9 +1647,11 @@ export class ObservatoryEnvironment extends GameObject {
     this.skyboxMesh = null;
     this.groundMesh = null;
     this.waterfallGroup = null;
-    this.waterPool = null;
     this.vegetationGroup = null;
     this.treesGroup = null;
+    
+    // Clear LOD objects
+    this.lodObjects = [];
     
     // Dispose firefly system
     if (this.fireflySystem) {

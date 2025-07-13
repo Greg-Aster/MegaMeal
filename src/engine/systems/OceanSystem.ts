@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GameObject } from '../core/GameObject';
+import { OptimizationManager } from '../optimization/OptimizationManager';
 
 export interface WaveConfig {
   amplitude: number;
@@ -41,14 +42,14 @@ export interface OceanConfig {
 
 export interface OceanData {
   mesh: THREE.Mesh;
-  material: THREE.MeshStandardMaterial;
+  material: THREE.Material;
   geometry: THREE.PlaneGeometry;
   waveTime: number;
   originalVertices: Float32Array;
   // Procedural textures like original system
-  map: THREE.DataTexture;
-  normalMap: THREE.DataTexture;
-  displacementMap: THREE.DataTexture;
+  map: THREE.DataTexture | THREE.CanvasTexture | null;
+  normalMap: THREE.DataTexture | THREE.CanvasTexture | null;
+  displacementMap: THREE.DataTexture | THREE.CanvasTexture | null;
 }
 
 /**
@@ -126,21 +127,67 @@ export class OceanSystem extends GameObject {
     this.oceanGroup = new this.THREE.Group();
     this.oceanGroup.name = 'ocean_system';
     
-    // Auto-detect mobile for performance optimization
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    if (isMobile) {
-      // Aggressively reduce complexity on mobile for better performance
-      this.config.segments.width = Math.min(this.config.segments.width, 16); // Even simpler geometry
-      this.config.segments.height = Math.min(this.config.segments.height, 16); // 256 vertices instead of 1024
-      this.config.waves = this.config.waves.slice(0, 1); // Single wave only
-      this.updateInterval = 1000 / 20; // 20 FPS on mobile
-      
-      // Dramatically reduce ocean size for mobile devices
-      this.config.size.width = Math.min(2000, this.config.size.width);
-      this.config.size.height = Math.min(2000, this.config.size.height);
-    }
+    // Note: Intelligent optimization will be applied during initialize()
+    // when OptimizationManager is guaranteed to be ready
     
     console.log(`🌊 OceanSystem created: ${this.config.size.width}x${this.config.size.height}, ${this.config.segments.width}x${this.config.segments.height} segments`);
+  }
+
+  /**
+   * Apply intelligent optimization based on device capabilities
+   */
+  private applyIntelligentOptimization(): void {
+    try {
+      // Get optimization manager for intelligent settings
+      const optimizationManager = OptimizationManager.getInstance();
+      const qualitySettings = optimizationManager.getQualitySettings();
+      const optimizationLevel = optimizationManager.getOptimizationLevel();
+      
+      console.log(`🎯 OceanSystem: Applying intelligent optimization`, {
+        level: optimizationLevel,
+        hasQualitySettings: !!qualitySettings,
+        qualitySettings: qualitySettings ? {
+          oceanSegments: qualitySettings.oceanSegments,
+          enableProceduralTextures: qualitySettings.enableProceduralTextures,
+          enableNormalMaps: qualitySettings.enableNormalMaps
+        } : 'null'
+      });
+      
+      if (qualitySettings) {
+        // Apply ocean geometry based on quality settings
+        this.config.segments.width = qualitySettings.oceanSegments.width;
+        this.config.segments.height = qualitySettings.oceanSegments.height;
+        
+        // Reduce update frequency on lower quality settings
+        if (qualitySettings.maxFireflyLights === 0) {
+          this.updateInterval = 1000 / 15; // 15 FPS for ultra-low
+        } else if (qualitySettings.maxFireflyLights <= 2) {
+          this.updateInterval = 1000 / 20; // 20 FPS for low/medium
+        } else {
+          this.updateInterval = 1000 / 30; // 30 FPS for high/ultra
+        }
+        
+        console.log(`✅ OceanSystem: Applied intelligent optimization for ${optimizationLevel}`, {
+          segments: qualitySettings.oceanSegments,
+          proceduralTextures: qualitySettings.enableProceduralTextures,
+          normalMaps: qualitySettings.enableNormalMaps
+        });
+      } else {
+        console.warn(`🌊 OceanSystem: No quality settings available for level ${optimizationLevel}`);
+      }
+    } catch (error) {
+      console.error('🌊 OceanSystem: Failed to apply intelligent optimization:', error);
+      // Fallback to simple mobile detection
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      if (isMobile) {
+        this.config.segments.width = Math.min(this.config.segments.width, 16);
+        this.config.segments.height = Math.min(this.config.segments.height, 16);
+        this.updateInterval = 1000 / 20;
+        
+        this.config.size.width = Math.min(2000, this.config.size.width);
+        this.config.size.height = Math.min(2000, this.config.size.height);
+      }
+    }
   }
   
   public async initialize(): Promise<void> {
@@ -152,6 +199,9 @@ export class OceanSystem extends GameObject {
     }
     
     console.log('🌊 Initializing OceanSystem...');
+    
+    // Apply intelligent optimization now that OptimizationManager is ready
+    this.applyIntelligentOptimization();
     
     this.createOcean();
     this.setupEnvironmentalEffects();
@@ -174,48 +224,19 @@ export class OceanSystem extends GameObject {
     // Store original vertices for wave calculations
     const originalVertices = new Float32Array(geometry.attributes.position.array);
     
-    // Mobile-optimized material creation
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    let material;
+    // Intelligent material creation based on device capabilities
+    const material = this.createIntelligentWaterMaterial();
     let textureData = null;
     
-    if (isMobile) {
-      // Ultra-simple material for mobile - no textures, just basic color
-      material = new this.THREE.MeshBasicMaterial({
-        color: 0x006994, // Deep ocean blue
-        transparent: true,
-        opacity: 0.6,
-        side: this.THREE.DoubleSide,
-      });
-    } else {
-      // Generate procedural textures for desktop
+    // Generate procedural textures based on quality settings
+    const qualitySettings = this.getQualitySettings();
+    if (qualitySettings?.enableProceduralTextures) {
+      console.log('🌊 Ocean: Generating procedural textures for high quality');
       textureData = this.createProceduralTextures();
-      
-      if (this.materialFactory && this.materialFactory.createPBRMaterial) {
-        material = this.materialFactory.createPBRMaterial({
-          map: textureData.map,
-          normalMap: textureData.normalMap,
-          displacementMap: textureData.displacementMap,
-          metalness: 0.02,
-          roughness: 0.1,
-          transparent: true,
-          opacity: 0.4,
-          color: 0x006994,
-          side: this.THREE.DoubleSide,
-        }) as THREE.MeshStandardMaterial;
-      } else {
-        material = new this.THREE.MeshStandardMaterial({
-          map: textureData.map,
-          normalMap: textureData.normalMap,
-          displacementMap: textureData.displacementMap,
-          color: this.config.color,
-          transparent: true,
-          opacity: this.config.opacity,
-          metalness: this.config.metalness,
-          roughness: this.config.roughness,
-          side: this.THREE.DoubleSide,
-        });
-      }
+      this.applyTexturesToMaterial(material, textureData);
+      console.log('🌊 Ocean: Applied procedural textures to material');
+    } else {
+      console.log('🌊 Ocean: Skipping procedural textures (quality settings disabled)');
     }
     
     // Create mesh
@@ -246,7 +267,143 @@ export class OceanSystem extends GameObject {
     this.oceanData = waterData;
     
     this.oceanGroup.add(mesh);
-    console.log('✅ Ocean surface created with procedural textures');
+    console.log('✅ Ocean surface created with intelligent optimization');
+  }
+
+  /**
+   * Get current quality settings from optimization manager
+   */
+  private getQualitySettings() {
+    try {
+      const optimizationManager = OptimizationManager.getInstance();
+      const qualitySettings = optimizationManager.getQualitySettings();
+      console.log('🌊 OceanSystem: Retrieved quality settings:', qualitySettings);
+      return qualitySettings;
+    } catch (error) {
+      console.error('🌊 OceanSystem: Failed to get quality settings:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Create intelligent water material based on device capabilities
+   */
+  private createIntelligentWaterMaterial(): THREE.Material {
+    const qualitySettings = this.getQualitySettings();
+    const optimizationManager = this.getOptimizationManager();
+    const optimizationLevel = optimizationManager?.getOptimizationLevel() || 'medium';
+    
+    console.log(`🌊 Water Material: Creating for quality level ${optimizationLevel}`, {
+      qualitySettings: qualitySettings ? {
+        enableProceduralTextures: qualitySettings.enableProceduralTextures,
+        enableNormalMaps: qualitySettings.enableNormalMaps
+      } : 'null'
+    });
+    
+    if (!qualitySettings) {
+      // Fallback to simple material
+      console.log('🌊 Water Material: Using fallback basic material (no quality settings)');
+      return new this.THREE.MeshBasicMaterial({
+        color: 0x006994,
+        transparent: true,
+        opacity: 0.6,
+        side: this.THREE.DoubleSide,
+      });
+    }
+
+    // ULTRA_LOW: Basic material, no effects
+    if (!qualitySettings.enableProceduralTextures && !qualitySettings.enableNormalMaps) {
+      console.log('🌊 Water Material: Using ULTRA_LOW basic material');
+      return new this.THREE.MeshBasicMaterial({
+        color: 0x006994,
+        transparent: true,
+        opacity: 0.7,
+        side: this.THREE.DoubleSide,
+      });
+    }
+
+    // LOW: Simple standard material
+    if (!qualitySettings.enableNormalMaps) {
+      console.log('🌊 Water Material: Using LOW Lambert material');
+      return new this.THREE.MeshLambertMaterial({
+        color: 0x006994,
+        transparent: true,
+        opacity: 0.6,
+        side: this.THREE.DoubleSide,
+      });
+    }
+
+    // MEDIUM/HIGH/ULTRA: Full PBR material with stunning water effects
+    console.log('🌊 Water Material: Using HIGH/ULTRA PBR material with procedural textures');
+    const waterMaterial = new this.THREE.MeshStandardMaterial({
+      color: 0x006994,
+      transparent: true,
+      opacity: 0.3, // More transparent for realistic depth
+      metalness: 0.05, // Slight metallic reflection
+      roughness: 0.05, // Very smooth for mirror-like reflections
+      side: this.THREE.DoubleSide,
+      
+      // Enable advanced water effects for capable devices
+      envMapIntensity: qualitySettings.enableNormalMaps ? 1.5 : 0.5,
+    });
+
+    // ULTRA quality gets the most advanced effects
+    if (optimizationManager?.getOptimizationLevel() === 'ultra') {
+      // Enable advanced reflections and refractions
+      waterMaterial.transparent = true;
+      waterMaterial.opacity = 0.25; // Even more transparent
+      waterMaterial.metalness = 0.1; // More metallic
+      waterMaterial.roughness = 0.02; // Mirror-smooth
+      
+      // Add subtle iridescence effect
+      waterMaterial.iridescence = 0.3;
+      waterMaterial.iridescenceIOR = 1.3;
+    }
+
+    return waterMaterial;
+  }
+
+  /**
+   * Apply textures to water material based on quality settings
+   */
+  private applyTexturesToMaterial(material: THREE.Material, textureData: any): void {
+    const qualitySettings = this.getQualitySettings();
+    if (!qualitySettings) return;
+
+    console.log('🌊 Applying textures to material:', material.type, textureData ? 'with textures' : 'no textures');
+
+    // Apply diffuse map to any material that supports it
+    if (textureData.map && ('map' in material)) {
+      (material as any).map = textureData.map;
+      console.log('🌊 Applied diffuse map to material');
+    }
+
+    // Apply normal map for surface detail (MEDIUM+ quality) - only for MeshStandardMaterial
+    if (material instanceof this.THREE.MeshStandardMaterial && qualitySettings.enableNormalMaps && textureData.normalMap) {
+      material.normalMap = textureData.normalMap;
+      material.normalScale.set(0.5, 0.5); // Subtle normal effect
+      console.log('🌊 Applied normal map to MeshStandardMaterial');
+    }
+
+    // Apply displacement map for vertex animation (HIGH+ quality) - only for MeshStandardMaterial
+    if (material instanceof this.THREE.MeshStandardMaterial && qualitySettings.enableNormalMaps && textureData.displacementMap) {
+      material.displacementMap = textureData.displacementMap;
+      material.displacementScale = 0.2; // Subtle displacement
+      console.log('🌊 Applied displacement map to MeshStandardMaterial');
+    }
+
+    material.needsUpdate = true;
+  }
+
+  /**
+   * Get optimization manager instance
+   */
+  private getOptimizationManager() {
+    try {
+      return OptimizationManager.getInstance();
+    } catch (error) {
+      return null;
+    }
   }
   
   /**

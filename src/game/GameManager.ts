@@ -446,8 +446,10 @@ export class GameManager {
     
     switch (levelId) {
       case 'observatory':
-        camera.position.set(0, -3.4, 50);
-        camera.rotation.x = -Math.PI / 12;
+        // Set initial position and rotation for the observatory
+        camera.position.set(0, -3.4, 50); // Start at the edge of the island
+        camera.rotation.x = -Math.PI / 12; // Look slightly down
+        camera.rotation.y = Math.PI; // Rotate 180 degrees to face the ocean
         break;
         
       case 'miranda':

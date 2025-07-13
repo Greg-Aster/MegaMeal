@@ -315,8 +315,9 @@ export class OptimizationManager {
     const supportsWebGL2 = !!gl2;
     
     let maxTextureSize = 2048; // Conservative default
-    if (gl) {
-      maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+    if (gl && 'getParameter' in gl) {
+      const webglContext = gl as WebGLRenderingContext;
+      maxTextureSize = webglContext.getParameter(webglContext.MAX_TEXTURE_SIZE);
     }
     
     // Advanced GPU tier estimation
@@ -451,13 +452,22 @@ export class OptimizationManager {
   public setOptimizationLevel(level: OptimizationLevel): void {
     this.currentOptimizationLevel = level;
     this.config = this.configProfiles[level];
+    this.currentQualitySettings = this.qualityProfiles[level];
     
-    console.log(`🎛️ Optimization level set to: ${level}`, this.config);
+    console.log(`🎛️ Optimization level set to: ${level}`, {
+      config: this.config,
+      qualitySettings: this.currentQualitySettings
+    });
     
     // Emit event for other systems to react to quality changes
     if (typeof window !== 'undefined' && window.dispatchEvent) {
       window.dispatchEvent(new CustomEvent('optimizationLevelChanged', { 
-        detail: { level, config: this.config, deviceCapabilities: this.deviceCapabilities }
+        detail: { 
+          level, 
+          config: this.config, 
+          qualitySettings: this.currentQualitySettings,
+          deviceCapabilities: this.deviceCapabilities 
+        }
       }));
     }
   }
@@ -467,6 +477,20 @@ export class OptimizationManager {
    */
   public getOptimizationLevel(): OptimizationLevel {
     return this.currentOptimizationLevel;
+  }
+
+  /**
+   * Get current quality settings for dynamic system configuration
+   */
+  public getQualitySettings(): QualitySettings {
+    return this.currentQualitySettings || this.qualityProfiles[this.currentOptimizationLevel];
+  }
+
+  /**
+   * Get device capabilities for system-specific optimizations
+   */
+  public getDeviceCapabilities(): DeviceCapabilities | null {
+    return this.deviceCapabilities;
   }
 
   /**
@@ -515,7 +539,7 @@ export class OptimizationManager {
     texture.magFilter = THREE.LinearFilter;
     
     // Reduce texture size for low-end mobile devices
-    if (this.deviceCapabilities.isLowEnd || this.currentOptimizationLevel === OptimizationLevel.MOBILE_LOW) {
+    if (this.deviceCapabilities.isLowEnd || this.currentOptimizationLevel === OptimizationLevel.ULTRA_LOW || this.currentOptimizationLevel === OptimizationLevel.LOW) {
       // Reduce texture resolution by half on low-end devices
       if (texture.image && texture.image.width > 512) {
         const canvas = document.createElement('canvas');
@@ -575,7 +599,7 @@ export class OptimizationManager {
       }
       
       // Disable expensive features on low-end mobile
-      if (this.currentOptimizationLevel === OptimizationLevel.MOBILE_LOW) {
+      if (this.currentOptimizationLevel === OptimizationLevel.ULTRA_LOW) {
         if (material instanceof THREE.MeshPhysicalMaterial) {
           const physMaterial = material as THREE.MeshPhysicalMaterial;
           physMaterial.clearcoat = 0;
