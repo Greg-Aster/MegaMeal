@@ -113,40 +113,40 @@ export class OptimizationManager {
       enableShadows: false
     },
     [OptimizationLevel.LOW]: {
-      // Budget mobile devices - performance optimized with textures
-      oceanSegments: { width: 12, height: 12 }, // Reduced geometry for better performance
-      terrainSegments: { width: 16, height: 16 }, // Reduced geometry for better performance
-      maxFireflyLights: 0, // Remove lights - biggest performance drain on mobile
-      enableDynamicLighting: false, // Disable dynamic lighting calculations
-      maxVegetationInstances: 3, // Reduce vegetation instances
+      // Budget mobile devices - with camera-aware lighting
+      oceanSegments: { width: 12, height: 12 },
+      terrainSegments: { width: 16, height: 16 },
+      maxFireflyLights: 4, // Moderate lights with camera-aware culling for rich visuals
+      enableDynamicLighting: true, // Enable for firefly lighting
+      maxVegetationInstances: 3,
       enableVegetation: true,
       textureResolution: 512,
-      enableProceduralTextures: true, // Keep textures for visual quality
+      enableProceduralTextures: true,
       enableNormalMaps: false,
-      canvasScale: 0.75, // Slightly lower resolution for performance
+      canvasScale: 0.75,
       enablePostProcessing: false,
       enableShadows: false
     },
     [OptimizationLevel.MEDIUM]: {
-      // Mid-range devices (phones/tablets) - enhanced quality
+      // Mid-range devices (phones/tablets) - enhanced with camera-aware lighting
       oceanSegments: { width: 24, height: 24 },
       terrainSegments: { width: 32, height: 32 },
-      maxFireflyLights: 3,
+      maxFireflyLights: 8, // More lights with camera-aware culling
       enableDynamicLighting: true,
       maxVegetationInstances: 10,
       enableVegetation: true,
       textureResolution: 1024,
       enableProceduralTextures: true,
-      enableNormalMaps: true, // Enable subtle normal maps for better depth
+      enableNormalMaps: true,
       canvasScale: 0.9,
       enablePostProcessing: false,
       enableShadows: true
     },
     [OptimizationLevel.HIGH]: {
-      // Flagship mobile/entry desktop
+      // Flagship mobile/entry desktop - enhanced with camera-aware lighting
       oceanSegments: { width: 32, height: 32 },
       terrainSegments: { width: 48, height: 48 },
-      maxFireflyLights: 4,
+      maxFireflyLights: 15, // Higher limit with camera-aware culling
       enableDynamicLighting: true,
       maxVegetationInstances: 15,
       enableVegetation: true,
@@ -158,10 +158,10 @@ export class OptimizationManager {
       enableShadows: true
     },
     [OptimizationLevel.ULTRA]: {
-      // High-end desktop/gaming devices
+      // High-end desktop/gaming devices - full quality with camera-aware lighting
       oceanSegments: { width: 64, height: 64 },
       terrainSegments: { width: 96, height: 96 },
-      maxFireflyLights: 8,
+      maxFireflyLights: 25, // High limit for rich lighting with camera-aware culling
       enableDynamicLighting: true,
       maxVegetationInstances: 30,
       enableVegetation: true,
