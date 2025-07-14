@@ -152,8 +152,11 @@ export class ObservatoryEnvironment extends GameObject {
   private updateFireflies(deltaTime: number): void {
     if (!this.fireflySystem) return;
     
-    // FireflySystem handles all animation internally
-    this.fireflySystem.update(deltaTime);
+    // Get camera for camera-aware lighting system
+    const camera = this.engine.getCamera();
+    
+    // FireflySystem handles all animation internally with camera-aware lighting
+    this.fireflySystem.update(deltaTime, camera);
   }
 
 
@@ -1630,6 +1633,8 @@ export class ObservatoryEnvironment extends GameObject {
     
     // Configure firefly system for Observatory environment
     const fireflyConfig = {
+      count: 80, // Keep all fireflies for visual richness
+      // maxLights removed - let OptimizationManager control based on device capabilities
       colors: [
         0x87CEEB, // Sky blue
         0x98FB98, // Pale green
