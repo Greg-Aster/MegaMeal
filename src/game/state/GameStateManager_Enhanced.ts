@@ -111,6 +111,15 @@ export class GameStateManager {
       // Track performance
       this.trackActionPerformance(processedAction.type, performance.now() - startTime);
       
+      // Emit debug events for reactive stores
+      this.eventBus.emit('debug.action.dispatched', { action: processedAction });
+      
+      // Emit performance update events periodically
+      if (this.actionHistory.length % 10 === 0) {
+        this.eventBus.emit('performance.metrics.updated', this.getPerformanceMetrics());
+        this.eventBus.emit('debug.performance.updated', this.getPerformanceMetrics());
+      }
+      
     } catch (error) {
       console.error('Action dispatch failed:', error);
       
@@ -132,6 +141,14 @@ export class GameStateManager {
    */
   public getState(): GameState {
     return this.gameState.clone();
+  }
+  
+  /**
+   * Get current state as read-only reference (no cloning overhead)
+   * Use this when you only need to read values, not modify them
+   */
+  public getStateReadonly(): Readonly<GameState> {
+    return this.gameState;
   }
   
   /**

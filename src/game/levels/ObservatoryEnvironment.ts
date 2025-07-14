@@ -1006,11 +1006,15 @@ export class ObservatoryEnvironment extends GameObject {
   private async createWaterPool(): Promise<void> {
     console.log('🌊 Creating ocean system...');
     
+    // Get intelligent ocean settings from OptimizationManager
+    const optimizationManager = this.engine.getOptimizationManager();
+    const qualitySettings = optimizationManager.getQualitySettings();
+    
     // Configure ocean system to match original Observatory water system exactly
     const oceanConfig = {
       // Exact dimensions and segments from original
       size: { width: 10000, height: 10000 }, 
-      segments: { width: 128, height: 128 },
+      segments: qualitySettings.oceanSegments || { width: 32, height: 32 }, // Use adaptive settings with a fallback
       position: new this.THREE.Vector3(0, this.initialWaterLevel, 0),
       waterLevel: this.initialWaterLevel,
       
