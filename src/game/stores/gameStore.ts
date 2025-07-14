@@ -163,15 +163,25 @@ export const showDebugInfo: Readable<boolean> = derived(
   ($gameSettings) => $gameSettings.showDebugInfo
 );
 
-// Performance stores
+// Performance stores - event-driven
 export const performanceMetrics: Readable<any> = readable(null, (set) => {
-  if (!gameStateManager) return;
+  if (!gameStateManager || !eventBus) return;
   
-  const interval = setInterval(() => {
-    set(gameStateManager!.getPerformanceMetrics());
-  }, 1000);
+  // Listen for performance update events instead of polling
+  const callback = (metrics: any) => {
+    set(metrics);
+  };
   
-  return () => clearInterval(interval);
+  eventBus.on('performance.metrics.updated', callback);
+  
+  // Initial value
+  set(gameStateManager.getPerformanceMetrics());
+  
+  return () => {
+    if (eventBus) {
+      eventBus.off('performance.metrics.updated', callback);
+    }
+  };
 });
 
 // Save/Load stores
@@ -339,26 +349,46 @@ export const storeUtils = {
   }
 };
 
-// Debug store for development
+// Debug store for development - event-driven
 export const debugStore = {
-  actionHistory: readable([], (set) => {
-    if (!gameStateManager) return;
+  actionHistory: readable([] as GameAction[], (set) => {
+    if (!gameStateManager || !eventBus) return;
     
-    const interval = setInterval(() => {
+    // Listen for action dispatch events instead of polling
+    const callback = () => {
       set(gameStateManager!.getActionHistory());
-    }, 1000);
+    };
     
-    return () => clearInterval(interval);
+    eventBus.on('debug.action.dispatched', callback);
+    
+    // Initial value
+    set(gameStateManager.getActionHistory());
+    
+    return () => {
+      if (eventBus) {
+        eventBus.off('debug.action.dispatched', callback);
+      }
+    };
   }),
   
-  performanceMetrics: readable(null, (set) => {
-    if (!gameStateManager) return;
+  performanceMetrics: readable(null as any, (set) => {
+    if (!gameStateManager || !eventBus) return;
     
-    const interval = setInterval(() => {
-      set(gameStateManager!.getPerformanceMetrics());
-    }, 1000);
+    // Listen for performance update events instead of polling
+    const callback = (metrics: any) => {
+      set(metrics);
+    };
     
-    return () => clearInterval(interval);
+    eventBus.on('debug.performance.updated', callback);
+    
+    // Initial value
+    set(gameStateManager.getPerformanceMetrics());
+    
+    return () => {
+      if (eventBus) {
+        eventBus.off('debug.performance.updated', callback);
+      }
+    };
   })
 };
 

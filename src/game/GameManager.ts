@@ -11,6 +11,7 @@ import type { ErrorContext } from '../engine/utils/ErrorHandler';
 import { LevelSystem } from './systems/LevelSystem';
 import type { LevelConfig } from './systems/LevelSystem';
 import { PlayerLightComponent } from '../engine/components/PlayerLightComponent';
+import { TimeTracker } from './systems/TimeTracker';
 
 /**
  * Updated GameManager using the new BaseLevel architecture
@@ -30,6 +31,9 @@ export class GameManager {
   // Player lighting system
   private playerLight: PlayerLightComponent | null = null;
   
+  // High-performance time tracking
+  private timeTracker: TimeTracker;
+  
   private isInitialized = false;
   private isRunning = false;
   private isMobile = false;
@@ -46,6 +50,7 @@ export class GameManager {
     
     // Initialize managers
     this.gameStateManager = new GameStateManager(this.engine.getEventBus());
+    this.timeTracker = new TimeTracker(this.engine.getEventBus());
     // Note: LevelManager initialization moved to initialize() method after InteractionSystem is created
     
     // Detect mobile
@@ -107,6 +112,13 @@ export class GameManager {
       
       // Try to load saved game
       this.gameStateManager.loadGame();
+      
+      // Sync time tracker with loaded game state
+      const gameState = this.gameStateManager.getState();
+      this.timeTracker.setTime(
+        gameState.sessionData.totalPlayTime,
+        gameState.gameStats.timeExplored
+      );
       
       // Start with the current level from game state
       const currentLevel = this.gameStateManager.getCurrentLevel();
@@ -295,8 +307,8 @@ export class GameManager {
           this.playerLight.update(data.deltaTime);
         }
         
-        // Update game state
-        this.gameStateManager.updatePlayTime(data.deltaTime);
+        // Update time tracking (high-frequency, optimized)
+        this.timeTracker.update(data.deltaTime);
         
       } catch (error) {
         console.error('Error in game update loop:', error);
@@ -654,6 +666,13 @@ export class GameManager {
    */
   public getLevelSystem(): LevelSystem {
     return this.levelSystem;
+  }
+  
+  /**
+   * Get time tracker
+   */
+  public getTimeTracker(): TimeTracker {
+    return this.timeTracker;
   }
   
   /**

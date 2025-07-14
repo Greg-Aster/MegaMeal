@@ -173,19 +173,16 @@ export class GameStateManager {
   }
   
   /**
-   * Update play time
+   * Update play time from TimeTracker events
    */
-  public updatePlayTime(deltaTime: number): void {
-    this.gameState.gameStats.timeExplored += deltaTime;
-    this.gameState.sessionData.totalPlayTime += deltaTime;
+  public updatePlayTime(timeData: { totalPlayTime: number; timeExplored: number }): void {
+    this.gameState.gameStats.timeExplored = timeData.timeExplored;
+    this.gameState.sessionData.totalPlayTime = timeData.totalPlayTime;
     
-    // Emit periodic time updates (every 5 seconds)
-    if (Math.floor(this.gameState.gameStats.timeExplored) % 5 === 0) {
-      this.emitStateChange('time.updated', {
-        timeExplored: this.gameState.gameStats.timeExplored,
-        totalPlayTime: this.gameState.sessionData.totalPlayTime
-      });
-    }
+    this.emitStateChange('time.updated', {
+      timeExplored: timeData.timeExplored,
+      totalPlayTime: timeData.totalPlayTime
+    });
   }
   
   /**
@@ -304,6 +301,11 @@ export class GameStateManager {
     // Listen for interactions
     this.eventBus.on('interaction.performed', (data: any) => {
       this.recordInteraction(data.interactionType, data);
+    });
+    
+    // Listen for time updates from TimeTracker
+    this.eventBus.on('time.updated', (timeData: any) => {
+      this.updatePlayTime(timeData);
     });
     
     // Listen for level cleanup

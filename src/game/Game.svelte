@@ -116,8 +116,9 @@
     // Initial state update
     updateGameState();
     
-    // Set up periodic updates
-    setInterval(updateGameState, 1000); // Update every second
+    // Set up event-driven updates instead of polling
+    eventBus.on('time.updated', updateGameState);
+    eventBus.on('gamestate.time.updated', updateGameState);
   }
   
   /**
