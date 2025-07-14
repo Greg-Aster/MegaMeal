@@ -1,5 +1,6 @@
-import { StarData, GameStats, GameSettings } from './GameState';
-import { ErrorContext } from '../../engine/utils/ErrorHandler';
+import { GameState } from './GameState';
+import type { StarData, GameStats, GameSettings } from './GameState';
+import type { ErrorContext } from '../../engine/utils/ErrorHandler';
 
 /**
  * Redux-like action system for game state management
@@ -37,6 +38,7 @@ export const GameActionTypes = {
   SESSION_START: 'SESSION_START',
   SESSION_UPDATE: 'SESSION_UPDATE',
   TIME_UPDATE: 'TIME_UPDATE',
+  TIMELINE_EVENTS_SET: 'TIMELINE_EVENTS_SET',
   
   // Save/Load actions
   SAVE_GAME_START: 'SAVE_GAME_START',
@@ -200,6 +202,13 @@ export interface TimeUpdateAction extends GameAction {
   };
 }
 
+export interface TimelineEventsSetAction extends GameAction {
+  type: typeof GameActionTypes.TIMELINE_EVENTS_SET;
+  payload: {
+    events: any[];
+  };
+}
+
 // Save/Load Actions
 export interface SaveGameStartAction extends GameAction {
   type: typeof GameActionTypes.SAVE_GAME_START;
@@ -225,12 +234,24 @@ export interface SaveGameFailureAction extends GameAction {
   };
 }
 
+export interface LoadGameStartAction extends GameAction {
+  type: typeof GameActionTypes.LOAD_GAME_START;
+  payload: {};
+}
+
 export interface LoadGameSuccessAction extends GameAction {
   type: typeof GameActionTypes.LOAD_GAME_SUCCESS;
   payload: {
     loadTime: number;
     saveVersion: string;
     migrationRequired?: boolean;
+  };
+}
+
+export interface LoadGameFailureAction extends GameAction {
+  type: typeof GameActionTypes.LOAD_GAME_FAILURE;
+  payload: {
+    error: Error;
   };
 }
 
@@ -304,10 +325,13 @@ export type GameActionUnion =
   | InteractionRecordedAction
   | SessionStartAction
   | TimeUpdateAction
+  | TimelineEventsSetAction
   | SaveGameStartAction
   | SaveGameSuccessAction
   | SaveGameFailureAction
+  | LoadGameStartAction
   | LoadGameSuccessAction
+  | LoadGameFailureAction
   | ErrorOccurredAction
   | ErrorRecoveredAction
   | GameInitializedAction
@@ -415,6 +439,12 @@ export const GameActions = {
     meta: { timestamp: Date.now(), source: 'GameManager' }
   }),
   
+  timelineEventsSet: (events: any[]): TimelineEventsSetAction => ({
+    type: GameActionTypes.TIMELINE_EVENTS_SET,
+    payload: { events },
+    meta: { timestamp: Date.now(), source: 'GameManager' }
+  }),
+  
   // Save/Load actions
   saveGameStart: (saveType: 'manual' | 'auto' | 'checkpoint' = 'manual'): SaveGameStartAction => ({
     type: GameActionTypes.SAVE_GAME_START,
@@ -434,9 +464,21 @@ export const GameActions = {
     meta: { timestamp: Date.now(), source: 'GameStateManager' }
   }),
   
+  loadGameStart: (): LoadGameStartAction => ({
+    type: GameActionTypes.LOAD_GAME_START,
+    payload: {},
+    meta: { timestamp: Date.now(), source: 'GameStateManager' }
+  }),
+  
   loadGameSuccess: (loadTime: number, saveVersion: string, migrationRequired?: boolean): LoadGameSuccessAction => ({
     type: GameActionTypes.LOAD_GAME_SUCCESS,
     payload: { loadTime, saveVersion, migrationRequired },
+    meta: { timestamp: Date.now(), source: 'GameStateManager' }
+  }),
+  
+  loadGameFailure: (error: Error): LoadGameFailureAction => ({
+    type: GameActionTypes.LOAD_GAME_FAILURE,
+    payload: { error },
     meta: { timestamp: Date.now(), source: 'GameStateManager' }
   }),
   
