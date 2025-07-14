@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Engine } from '../engine/core/Engine';
 import { LevelManager, type LevelFactory } from './managers/LevelManager';
 import { GameStateManager } from './state/GameStateManager';
+import { GameActions } from './state/GameActions';
 import { InteractionSystem } from '../engine/systems/InteractionSystem';
 import { UniversalInputManager } from '../engine/input/UniversalInputManager';
 import { ErrorHandler } from '../engine/utils/ErrorHandler';
@@ -111,7 +112,7 @@ export class GameManager {
       this.loadTimelineEvents(timelineEvents);
       
       // Try to load saved game
-      this.gameStateManager.loadGame();
+      await this.gameStateManager.loadGame();
       
       // Sync time tracker with loaded game state
       const gameState = this.gameStateManager.getState();
@@ -121,7 +122,7 @@ export class GameManager {
       );
       
       // Start with the current level from game state
-      const currentLevel = this.gameStateManager.getCurrentLevel();
+      const currentLevel = this.gameStateManager.getState().currentLevel;
       await this.transitionToLevel(currentLevel);
       
       // Start engine
@@ -270,8 +271,8 @@ export class GameManager {
       
       events.push(...levelEvents);
       
-      // Store in game state
-      this.gameStateManager.getState().timelineEvents = events;
+      // Store in game state using action dispatch
+      this.gameStateManager.dispatch(GameActions.timelineEventsSet(events));
       
       // Pass to current level if it's the observatory (generic approach)
       const currentLevel = this.levelManager.getCurrentLevel();
@@ -346,12 +347,12 @@ export class GameManager {
     
     // Star selection events
     eventBus.on('star.selected', (data) => {
-      this.gameStateManager.setSelectedStar(data.star);
+      this.gameStateManager.dispatch(GameActions.starSelected(data.star, data.selectionMethod || 'click'));
     });
     
     // Interaction events
     eventBus.on('interaction.performed', (data) => {
-      this.gameStateManager.recordInteraction(data.interactionType, data);
+      this.gameStateManager.dispatch(GameActions.interactionRecorded(data.interactionType, data.objectId, data.position, data));
     });
     
     // Mobile control events
@@ -377,8 +378,11 @@ export class GameManager {
       console.log(`🔄 Transitioning to level: ${levelId}`);
       
       // Clear selected star when leaving StarObservatory to prevent stuck timeline card
-      if (this.gameStateManager.getCurrentLevel() === 'observatory' && levelId !== 'observatory') {
-        this.gameStateManager.setSelectedStar(null);
+      if (this.gameStateManager.getState().currentLevel === 'observatory' && levelId !== 'observatory') {
+        const currentStar = this.gameStateManager.getState().selectedStar;
+        if (currentStar) {
+          this.gameStateManager.dispatch(GameActions.starDeselected(currentStar));
+        }
       }
       
       const success = await this.levelManager.transitionToLevel(levelId);
@@ -387,7 +391,11 @@ export class GameManager {
         this.updateCameraForLevel(levelId);
         
         // Update game state
-        this.gameStateManager.setCurrentLevel(levelId);
+        this.gameStateManager.dispatch(GameActions.levelTransitionSuccess(
+          this.gameStateManager.getState().currentLevel,
+          levelId,
+          performance.now()
+        ));
         
         // Setup player light for new level
         await this.setupPlayerLight();
@@ -431,7 +439,7 @@ export class GameManager {
         
         // Set up star selection callback (generic approach)
         (currentLevel as any).callComponentMethod?.('StarNavigationSystem', 'onStarSelected', (star: any) => {
-          this.gameStateManager.setSelectedStar(star);
+          this.gameStateManager.dispatch(GameActions.starSelected(star, 'click'));
         });
         
         break;
@@ -601,11 +609,14 @@ export class GameManager {
    * Reset view/camera
    */
   public resetView(): void {
-    const currentLevel = this.gameStateManager.getCurrentLevel();
+    const currentLevel = this.gameStateManager.getState().currentLevel;
     this.updateCameraForLevel(currentLevel);
     
     // Clear selected star
-    this.gameStateManager.setSelectedStar(null);
+    const currentStar = this.gameStateManager.getState().selectedStar;
+    if (currentStar) {
+      this.gameStateManager.dispatch(GameActions.starDeselected(currentStar));
+    }
   }
   
   /**

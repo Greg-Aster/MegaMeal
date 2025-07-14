@@ -1,5 +1,7 @@
-import { GameState, GameStats, GameSettings } from './GameState';
-import { GameAction, GameActionTypes, GameActionUnion } from './GameActions';
+import { GameState } from './GameState';
+import type { GameStats, GameSettings } from './GameState';
+import { GameActionTypes } from './GameActions';
+import type { GameAction, GameActionUnion } from './GameActions';
 
 /**
  * Redux-like reducer for game state management
@@ -70,6 +72,9 @@ export class GameReducer {
       
       case GameActionTypes.TIME_UPDATE:
         return GameReducer.handleTimeUpdate(newState, action);
+      
+      case GameActionTypes.TIMELINE_EVENTS_SET:
+        return GameReducer.handleTimelineEventsSet(newState, action);
       
       // Save/Load actions
       case GameActionTypes.SAVE_GAME_START:
@@ -437,6 +442,14 @@ export class GameReducer {
     // Record reset info
     state.sessionData.resetReason = resetReason;
     state.sessionData.resetTime = Date.now();
+    
+    return state;
+  }
+  
+  private static handleTimelineEventsSet(state: GameState, action: GameAction): GameState {
+    const { events } = action.payload;
+    
+    state.timelineEvents = events;
     
     return state;
   }

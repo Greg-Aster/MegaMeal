@@ -1,5 +1,6 @@
-import { GameState, GameStats, GameSettings } from './GameState';
-import { GameAction } from './GameActions';
+import { GameState } from './GameState';
+import type { GameStats, GameSettings } from './GameState';
+import type { GameAction } from './GameActions';
 
 /**
  * Comprehensive state validation system

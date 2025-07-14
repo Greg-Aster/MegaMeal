@@ -1,8 +1,8 @@
 import { writable, derived, readable, type Readable, type Writable } from 'svelte/store';
 import { GameState } from '../state/GameState';
 import type { GameStats, GameSettings, StarData } from '../state/GameState';
-import { GameStateManager } from '../state/GameStateManager_Enhanced';
-import { GameAction } from '../state/GameActions';
+import { GameStateManager } from '../state/GameStateManager';
+import type { GameAction } from '../state/GameActions';
 import { GameEvents } from '../events/GameEvents';
 import { EventBus } from '../../engine/core/EventBus';
 
