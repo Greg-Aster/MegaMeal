@@ -454,7 +454,7 @@ export class FireflySystem extends GameObject {
   }
 
   /**
-   * Camera-aware lighting system that only activates lights within camera frustum + buffer zone
+   * Camera-aware lighting system that only activates lights within camera view
    */
   private updateCameraAwareLighting(deltaTime: number, camera: THREE.Camera): void {
     // Create frustum from camera
@@ -463,121 +463,46 @@ export class FireflySystem extends GameObject {
     cameraMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
     frustum.setFromProjectionMatrix(cameraMatrix);
 
-    // Buffer distance scales with quality level for richer high-end experience
-    const baseBufferDistance = 50;
-    const bufferMultiplier = Math.max(1.0, this.config.maxLights / 8); // Scale with max lights capability
-    const bufferDistance = baseBufferDistance * bufferMultiplier;
+    // Find fireflies in view with distance priority
+    const inViewFireflies: Array<{index: number, distance: number}> = [];
 
-    // Debug log (remove after testing)
-    if (Math.random() < 0.02) { // Log occasionally to avoid spam
-      console.log(`🎥 Camera-aware firefly lighting active!`, {
-        maxLights: this.config.maxLights,
-        totalFireflies: this.fireflies.length,
-        fireflyLights: this.fireflies.filter(f => f.light !== null).length,
-        bufferDistance: bufferDistance,
-        cameraPosition: camera.position.clone()
-      });
-    }
-    
-    // Track which lights should be active based on camera view
-    const shouldBeActive: boolean[] = new Array(this.fireflies.length).fill(false);
-    let inViewCount = 0;
-
-    // Check each firefly against camera frustum + buffer
     this.fireflies.forEach((firefly, index) => {
       if (!firefly.light) return;
 
-      const position = firefly.mesh.position;
+      // Use intersectsObject for proper frustum testing
+      const inFrustum = frustum.intersectsObject(firefly.mesh);
       
-      // Check if firefly is in camera frustum or within buffer distance
-      const inFrustum = frustum.containsPoint(position);
-      
-      let inBuffer = false;
-      if (!inFrustum) {
-        // Check if it's within buffer distance of frustum
-        const cameraDistance = camera.position.distanceTo(position);
-        const cameraForward = new THREE.Vector3(0, 0, -1);
-        cameraForward.applyQuaternion(camera.quaternion);
-        
-        // Simple distance-based buffer check
-        const dotProduct = cameraForward.dot(
-          position.clone().sub(camera.position).normalize()
-        );
-        
-        // Include if it's facing roughly toward camera and within buffer distance
-        inBuffer = dotProduct > -0.5 && cameraDistance < bufferDistance;
-      }
-
-      if (inFrustum || inBuffer) {
-        shouldBeActive[index] = true;
-        inViewCount++;
+      if (inFrustum) {
+        const distance = camera.position.distanceTo(firefly.mesh.position);
+        inViewFireflies.push({ index, distance });
       }
     });
 
-    // Limit total active lights to maxLights (performance constraint)
-    if (inViewCount > this.config.maxLights) {
-      // Prioritize lights closer to camera center
-      const fireflyDistances = this.fireflies.map((firefly, index) => ({
-        index,
-        distance: camera.position.distanceTo(firefly.mesh.position),
-        shouldBeActive: shouldBeActive[index]
-      }));
+    // Sort by distance and take only the closest ones up to maxLights
+    inViewFireflies.sort((a, b) => a.distance - b.distance);
+    const activeIndices = new Set(
+      inViewFireflies.slice(0, this.config.maxLights).map(f => f.index)
+    );
 
-      // Sort by distance, keep only the closest ones
-      fireflyDistances
-        .filter(f => f.shouldBeActive)
-        .sort((a, b) => a.distance - b.distance)
-        .forEach((f, sortedIndex) => {
-          shouldBeActive[f.index] = sortedIndex < this.config.maxLights;
-        });
-    }
-
-    // Update light states with smooth fading
+    // Simple on/off activation - no complex fading
     this.fireflies.forEach((firefly, index) => {
       if (!firefly.light) return;
 
-      const targetActive = shouldBeActive[index];
+      const shouldBeActive = activeIndices.has(index);
       
-      // Smooth transition logic (reuse existing fade system)
-      if (targetActive && !firefly.isLightActive) {
-        // Activate light
+      if (shouldBeActive) {
+        firefly.light.intensity = this.config.lightIntensity;
         firefly.isLightActive = true;
-        firefly.lightCycleTime = 0;
-        firefly.lightFadeProgress = 0;
-      } else if (!targetActive && firefly.isLightActive) {
-        // Begin deactivation (fade will complete in existing update logic)
-        firefly.lightCycleTime = this.config.cycleDuration; // Force fade out
-      }
-
-      // Update fade progress and intensity (reuse existing logic)
-      if (firefly.isLightActive) {
-        const halfCycle = this.config.cycleDuration * 0.5;
-        
-        if (firefly.lightCycleTime < halfCycle) {
-          // Fade in
-          firefly.lightFadeProgress = Math.min(1.0, firefly.lightCycleTime / (halfCycle * this.config.fadeSpeed));
-        } else {
-          // Fade out
-          const fadeOutProgress = (firefly.lightCycleTime - halfCycle) / (halfCycle * this.config.fadeSpeed);
-          firefly.lightFadeProgress = Math.max(0.0, 1.0 - fadeOutProgress);
-          
-          if (firefly.lightFadeProgress <= 0.01) {
-            firefly.isLightActive = false;
-            firefly.lightCycleTime = 0;
-          }
-        }
-
-        firefly.light.intensity = this.config.lightIntensity * firefly.lightFadeProgress;
-        firefly.lightCycleTime += deltaTime;
       } else {
         firefly.light.intensity = 0;
+        firefly.isLightActive = false;
       }
     });
 
-    // Debug log active lights count (remove after testing)
-    if (Math.random() < 0.01) { // Log occasionally to avoid spam
-      const activeLights = this.fireflies.filter(f => f.isLightActive && f.light && f.light.intensity > 0).length;
-      console.log(`💡 Active firefly lights: ${activeLights}/${this.config.maxLights}`);
+    // Debug log occasionally
+    if (Math.random() < 0.02) {
+      const activeLights = this.fireflies.filter(f => f.isLightActive).length;
+      console.log(`🎥 Camera-aware: ${activeLights}/${this.config.maxLights} lights active from ${inViewFireflies.length} in view`);
     }
   }
   
