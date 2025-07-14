@@ -463,15 +463,21 @@ export class FireflySystem extends GameObject {
     cameraMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
     frustum.setFromProjectionMatrix(cameraMatrix);
 
-    // Debug log (remove after testing)
-    if (Math.random() < 0.01) { // Log occasionally to avoid spam
-      console.log(`🎥 Camera-aware firefly lighting active: maxLights=${this.config.maxLights}, bufferMultiplier=${Math.max(1.0, this.config.maxLights / 8)}`);
-    }
-
     // Buffer distance scales with quality level for richer high-end experience
     const baseBufferDistance = 50;
     const bufferMultiplier = Math.max(1.0, this.config.maxLights / 8); // Scale with max lights capability
     const bufferDistance = baseBufferDistance * bufferMultiplier;
+
+    // Debug log (remove after testing)
+    if (Math.random() < 0.02) { // Log occasionally to avoid spam
+      console.log(`🎥 Camera-aware firefly lighting active!`, {
+        maxLights: this.config.maxLights,
+        totalFireflies: this.fireflies.length,
+        fireflyLights: this.fireflies.filter(f => f.light !== null).length,
+        bufferDistance: bufferDistance,
+        cameraPosition: camera.position.clone()
+      });
+    }
     
     // Track which lights should be active based on camera view
     const shouldBeActive: boolean[] = new Array(this.fireflies.length).fill(false);

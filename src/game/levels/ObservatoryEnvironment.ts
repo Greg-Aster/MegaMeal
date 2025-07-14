@@ -155,6 +155,13 @@ export class ObservatoryEnvironment extends GameObject {
     // Get camera for camera-aware lighting system
     const camera = this.engine.getCamera();
     
+    // Debug: Verify camera is available
+    if (!camera) {
+      console.warn('⚠️ Camera not available for firefly system - falling back to non-camera-aware lighting');
+      this.fireflySystem.update(deltaTime);
+      return;
+    }
+    
     // FireflySystem handles all animation internally with camera-aware lighting
     this.fireflySystem.update(deltaTime, camera);
   }
