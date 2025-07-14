@@ -1630,8 +1630,6 @@ export class ObservatoryEnvironment extends GameObject {
     
     // Configure firefly system for Observatory environment
     const fireflyConfig = {
-      count: 80, // Keep all 200 fireflies for visual richness
-      maxLights: 80, // Full firefly lighting on desktop (FireflySystem auto-detects mobile and reduces to 8)
       colors: [
         0x87CEEB, // Sky blue
         0x98FB98, // Pale green
