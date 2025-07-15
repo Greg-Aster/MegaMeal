@@ -491,8 +491,8 @@ export class GameStateManager {
       this.dispatch(GameActions.levelTransitionSuccess(data.from, data.to, data.transitionTime));
     });
     
-    this.eventBus.on(GameEvents.STAR_SELECTED, (data) => {
-      this.dispatch(GameActions.starSelected(data.star, data.selectionMethod));
+    this.eventBus.on(GameEvents.STAR_DESELECTED, (data) => {
+      this.dispatch(GameActions.starDeselected(data.previousStar));
     });
     
     this.eventBus.on(GameEvents.PLAYER_INTERACTION, (data) => {
@@ -636,4 +636,3 @@ export interface PerformanceMetrics {
   stateSize: number;
   subscriberCount: number;
 }
-

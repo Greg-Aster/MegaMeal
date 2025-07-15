@@ -175,6 +175,12 @@ export class GameReducer {
   private static handleStarSelected(state: GameState, action: GameAction): GameState {
     const { star, selectionMethod } = action.payload;
     
+    // Defensive programming: Handle null/invalid star data
+    if (!star || !star.uniqueId) {
+      console.warn('⚠️ Reducer: Attempted to select invalid star data. This may indicate an issue with an event listener. Star deselection should use STAR_DESELECTED action.', star);
+      return state; // Return state unchanged
+    }
+    
     state.selectedStar = star;
     
     // Track star discovery
@@ -187,7 +193,9 @@ export class GameReducer {
     if (!state.sessionData.selectionMethods) {
       state.sessionData.selectionMethods = { click: 0, touch: 0, keyboard: 0 };
     }
-    state.sessionData.selectionMethods[selectionMethod]++;
+    if (selectionMethod && selectionMethod in state.sessionData.selectionMethods) {
+      state.sessionData.selectionMethods[selectionMethod as keyof typeof state.sessionData.selectionMethods]++;
+    }
     
     return state;
   }
