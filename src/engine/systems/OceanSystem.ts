@@ -231,8 +231,7 @@ export class OceanSystem extends GameObject {
     // Generate procedural textures based on quality settings
     const qualitySettings = this.getQualitySettings();
     if (qualitySettings?.enableProceduralTextures) {
-      const qualityLevel = this.optimizationManager?.getOptimizationLevel() || 'unknown';
-      console.log(`🌊 Ocean: Generating procedural textures for ${qualityLevel} quality`);
+      console.log('🌊 Ocean: Generating procedural textures for high quality');
       textureData = this.createProceduralTextures();
       this.applyTexturesToMaterial(material, textureData);
       console.log('🌊 Ocean: Applied procedural textures to material');
@@ -307,7 +306,7 @@ export class OceanSystem extends GameObject {
       return new this.THREE.MeshBasicMaterial({
         color: 0x006994,
         transparent: true,
-        opacity: 0.98,
+        opacity: 0.6,
         side: this.THREE.DoubleSide,
       });
     }
@@ -318,7 +317,7 @@ export class OceanSystem extends GameObject {
       return new this.THREE.MeshBasicMaterial({
         color: 0x006994,
         transparent: true,
-        opacity: 0.98,
+        opacity: 0.9,
         side: this.THREE.DoubleSide,
       });
     }
@@ -329,7 +328,7 @@ export class OceanSystem extends GameObject {
       return new this.THREE.MeshLambertMaterial({
         color: 0x006994,
         transparent: true,
-        opacity: 0.98,
+        opacity: 0.95,
         side: this.THREE.DoubleSide,
       });
     }
@@ -339,7 +338,7 @@ export class OceanSystem extends GameObject {
     const waterMaterial = new this.THREE.MeshStandardMaterial({
       color: 0x006994,
       transparent: true,
-      opacity: 0.98, // Nearly opaque as requested
+      opacity: 0.95, // Nearly opaque as requested
       metalness: 0.05, // Slight metallic reflection
       roughness: 0.05, // Very smooth for mirror-like reflections
       side: this.THREE.DoubleSide,
@@ -409,10 +408,7 @@ export class OceanSystem extends GameObject {
    * Generate procedural textures exactly matching original Observatory water system
    */
   private createProceduralTextures() {
-    // Adaptive texture size based on quality level
-    const qualitySettings = this.getQualitySettings();
-    const textureResolution = qualitySettings?.textureResolution || 512;
-    const size = Math.min(1024, textureResolution); // Cap at 1024, use quality setting
+    const size = 1024;
     
     // Create color map canvas
     const canvas = document.createElement('canvas');
