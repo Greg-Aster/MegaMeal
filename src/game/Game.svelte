@@ -43,6 +43,21 @@
   $: selectedStar = gameState.selectedStar;
   $: gameStats = gameState.gameStats;
   
+  // Convert StarData to TimelineEvent for the TimelineCard
+  $: selectedEvent = selectedStar ? {
+    id: selectedStar.uniqueId,
+    title: selectedStar.title,
+    description: selectedStar.description,
+    year: selectedStar.timelineYear,
+    era: selectedStar.timelineEra,
+    location: selectedStar.timelineLocation,
+    isKeyEvent: selectedStar.isKeyEvent,
+    tags: selectedStar.tags,
+    category: selectedStar.category,
+    unlocked: true,
+    screenPosition: selectedStar.screenPosition
+  } : null;
+  
   /**
    * Initialize the game
    */
@@ -95,11 +110,8 @@
       gameState = gameManager.getGameState();
     };
     
-    // Listen for state changes
-    eventBus.on('gamestate.level.changed', updateGameState);
-    eventBus.on('gamestate.star.selected', updateGameState);
-    eventBus.on('gamestate.stats.updated', updateGameState);
-    eventBus.on('gamestate.settings.updated', updateGameState);
+    // Listen for the unified game state change event
+    eventBus.on('game.state.changed', updateGameState);
     
     // Listen for dialogue events
     eventBus.on('dialogue.show', (data: any) => {
@@ -244,15 +256,15 @@
     
     <!-- Debug Panel -->
     {#if showDebugPanel}
-      <DebugPanel engine={gameManager.getEngine()} />
+      <DebugPanel {gameManager} />
     {/if}
 
     <!-- Star Information Card -->
-    {#if selectedStar}
+    {#if selectedEvent}
       <TimelineCard 
-        event={selectedStar}
+        event={selectedEvent}
         isSelected={true}
-        position={selectedStar.screenPosition?.cardClass || 'bottom'}
+        position={selectedEvent.screenPosition?.cardClass || 'bottom'}
         {isMobile}
         on:levelTransition={handleLevelTransition}
       />

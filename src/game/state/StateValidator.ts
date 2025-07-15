@@ -420,15 +420,29 @@ export class StateValidator {
   private validateStarSelection(action: GameAction, currentState: GameState): ValidationResult {
     const { star } = action.payload;
     
-    if (!star || !star.uniqueId) {
+    if (!star) {
       return {
         isValid: false,
         errors: [{
-          code: 'INVALID_STAR_DATA',
-          message: 'Star data is missing or invalid',
+          code: 'NULL_STAR_DATA',
+          message: 'Star data is null - cannot select star',
           field: 'star',
-          severity: 'medium',
-          recoverable: true
+          severity: 'high',
+          recoverable: false
+        }],
+        warnings: []
+      };
+    }
+    
+    if (!star.uniqueId) {
+      return {
+        isValid: false,
+        errors: [{
+          code: 'MISSING_STAR_ID',
+          message: 'Star data is missing required uniqueId property',
+          field: 'star.uniqueId',
+          severity: 'high',
+          recoverable: false
         }],
         warnings: []
       };

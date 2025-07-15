@@ -345,11 +345,6 @@ export class GameManager {
       });
     });
     
-    // Star selection events
-    eventBus.on('star.selected', (data) => {
-      this.gameStateManager.dispatch(GameActions.starSelected(data.star, data.selectionMethod || 'click'));
-    });
-    
     // Interaction events
     eventBus.on('interaction.performed', (data) => {
       this.gameStateManager.dispatch(GameActions.interactionRecorded(data.interactionType, data.objectId, data.position, data));
@@ -439,7 +434,19 @@ export class GameManager {
         
         // Set up star selection callback (generic approach)
         (currentLevel as any).callComponentMethod?.('StarNavigationSystem', 'onStarSelected', (star: any) => {
-          this.gameStateManager.dispatch(GameActions.starSelected(star, 'click'));
+          if (star && star.uniqueId) {
+            // Valid star data - dispatch star selection
+            this.gameStateManager.dispatch(GameActions.starSelected(star, 'click'));
+          } else if (star === null) {
+            // Null star means deselection (clicking empty space)
+            const currentStar = this.gameStateManager.getState().selectedStar;
+            if (currentStar) {
+              this.gameStateManager.dispatch(GameActions.starDeselected(currentStar));
+            }
+          } else {
+            // Invalid star data - log warning and don't dispatch
+            console.warn('⚠️ Invalid star data received in selection callback:', star);
+          }
         });
         
         break;

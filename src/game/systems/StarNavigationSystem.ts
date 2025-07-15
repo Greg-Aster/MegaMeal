@@ -566,8 +566,6 @@ export class StarNavigationSystem extends GameObject {
       this.onStarSelectedCallback(this.selectedStar);
     }
     
-    // Emit event
-    this.eventBus.emit('star.selected', { star: this.selectedStar });
   }
   
   private updateSelectedStarPosition(): void {
