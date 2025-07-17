@@ -115,9 +115,9 @@ export class Engine {
     // InputManager removed - now using UniversalInputManager in GameManager
     this.assetLoader = new AssetLoader();
     
-    // Initialize outline renderer for toon shading
+    // Initialize outline renderer - disabled by default for realistic mode
     this.outlineRenderer = new OutlineRenderer(this.scene, {
-      enabled: (window as any).MEGAMEAL_VECTOR_MODE === true,
+      enabled: false,
       thickness: 0.025,
       color: 0x000000
     });

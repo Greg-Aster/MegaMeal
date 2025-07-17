@@ -13,6 +13,7 @@ import { LevelSystem } from './systems/LevelSystem';
 import type { LevelConfig } from './systems/LevelSystem';
 import { PlayerLightComponent } from '../engine/components/PlayerLightComponent';
 import { TimeTracker } from './systems/TimeTracker';
+import { EnvironmentalEffectsSystem } from '../engine/systems/EnvironmentalEffectsSystem';
 
 /**
  * Updated GameManager using the new BaseLevel architecture
@@ -35,6 +36,9 @@ export class GameManager {
   // High-performance time tracking
   private timeTracker: TimeTracker;
   
+  // Environmental effects system
+  private environmentalEffects: EnvironmentalEffectsSystem | null = null;
+  
   private isInitialized = false;
   private isRunning = false;
   private isMobile = false;
@@ -56,9 +60,6 @@ export class GameManager {
     
     // Detect mobile
     this.isMobile = this.detectMobile();
-
-    // Set a global flag for graphics style. Can be controlled by UI later.
-    (window as any).MEGAMEAL_VECTOR_MODE = true;
     
     this.setupEventListeners();
   }
@@ -103,13 +104,17 @@ export class GameManager {
       // Wait for component registration to complete
       await this.levelSystem.waitForInitialization();
       
+      // Initialize environmental effects system
+      this.environmentalEffects = EnvironmentalEffectsSystem.getInstance(this.engine.getEventBus());
+      this.environmentalEffects.initialize(this.engine.getCamera(), this.engine.getScene());
+      
       // Movement now handled by MovementComponent in BaseLevel
       
       // Register migrated levels
-      this.registerMigratedLevels();
+      await this.registerMigratedLevels();
       
-      // Load timeline events
-      this.loadTimelineEvents(timelineEvents);
+      // Parse and dispatch timeline events from Astro to GameStateManager
+      await this.processTimelineEvents(timelineEvents);
       
       // Try to load saved game
       await this.gameStateManager.loadGame();
@@ -143,15 +148,29 @@ export class GameManager {
   }
   
   /**
-   * Register levels - fully data-driven architecture
+   * Register levels from manifest - fully data-driven architecture
    */
-  private registerMigratedLevels(): void {
-    // 🆕 Data-driven levels (NEW ARCHITECTURE)
-    this.levelManager.registerLevel('observatory', this.createDataDrivenLevel);
-    this.levelManager.registerLevel('miranda', this.createDataDrivenLevel);
-    this.levelManager.registerLevel('restaurant', this.createDataDrivenLevel);
-    
-    console.log('📦 Levels registered: observatory, miranda, restaurant (all data-driven)');
+  private async registerMigratedLevels(): Promise<void> {
+    try {
+      // Load level manifest
+      const manifestModule = await import('./levels/level-manifest.json');
+      const manifest = manifestModule.default || manifestModule;
+      
+      // Register all levels from manifest
+      const levelIds = Object.keys(manifest.levels);
+      for (const levelId of levelIds) {
+        this.levelManager.registerLevel(levelId, this.createDataDrivenLevel);
+      }
+      
+      console.log(`📦 Levels registered from manifest: ${levelIds.join(', ')}`);
+    } catch (error) {
+      console.error('Failed to load level manifest:', error);
+      // Fallback to manual registration if manifest fails
+      this.levelManager.registerLevel('observatory', this.createDataDrivenLevel);
+      this.levelManager.registerLevel('miranda', this.createDataDrivenLevel);
+      this.levelManager.registerLevel('restaurant', this.createDataDrivenLevel);
+      this.levelManager.registerLevel('infinite_library', this.createDataDrivenLevel);
+    }
   }
   
   /**
@@ -211,77 +230,24 @@ export class GameManager {
   }
   
   /**
-   * Load timeline events and pass them to the appropriate level
+   * Process timeline events from Astro and dispatch to GameStateManager
    */
-  private loadTimelineEvents(timelineEvents: string): void {
+  private async processTimelineEvents(timelineEventsJson: string): Promise<void> {
     try {
-      const events = JSON.parse(timelineEvents);
-      const normalizedEvents = events.map((event: any) => ({
-        ...event,
-        id: event.id || event.uniqueId || event.slug,
-        uniqueId: event.uniqueId || event.id || event.slug,
-        year: event.year || event.timelineYear || 0,
-        timelineYear: event.timelineYear || event.year || 0,
-        era: event.era || event.timelineEra || '',
-        timelineEra: event.timelineEra || event.era || '',
-        location: event.location || event.timelineLocation || '',
-        timelineLocation: event.timelineLocation || event.location || '',
-        unlocked: event.unlocked !== undefined ? event.unlocked : true
-      }));
+      console.log('📚 Processing timeline events from Astro...');
       
-      // Add level events
-      const levelEvents = [
-        {
-          id: "miranda-incident-level",
-          title: "The Miranda Incident",
-          description: "Investigate the mysterious debris field and uncover the secrets of the Perfect Mary recipe.",
-          slug: "miranda-ship-level",
-          uniqueId: "miranda-incident-level",
-          year: 28042,
-          timelineYear: 28042,
-          era: "singularity-conflict",
-          timelineEra: "singularity-conflict",
-          location: "Miranda Star System Debris Field",
-          timelineLocation: "Miranda Star System Debris Field",
-          isKeyEvent: true,
-          isLevel: true,
-          tags: ["Level", "Investigation", "Mystery"],
-          category: "GAME_LEVEL",
-          unlocked: true
-        },
-        {
-          id: "restaurant-backroom-level",
-          title: "The Hamburgler's Kitchen",
-          description: "Investigate the cosmic horror backroom of a SciFi restaurant.",
-          slug: "restaurant-backroom-level",
-          uniqueId: "restaurant-backroom-level",
-          year: 28045,
-          timelineYear: 28045,
-          era: "singularity-conflict",
-          timelineEra: "singularity-conflict",
-          location: "Restaurant Backroom",
-          timelineLocation: "Restaurant Backroom",
-          isKeyEvent: true,
-          isLevel: true,
-          tags: ["Level", "Horror", "Investigation"],
-          category: "GAME_LEVEL",
-          unlocked: true
-        }
-      ];
+      // Parse timeline events from Astro (already processed by TimelineService)
+      const timelineEvents = JSON.parse(timelineEventsJson || '[]');
       
-      events.push(...levelEvents);
+      console.log(`✅ Processed ${timelineEvents.length} timeline events from Astro`);
       
-      // Store in game state using action dispatch
-      this.gameStateManager.dispatch(GameActions.timelineEventsSet(events));
-      
-      // Pass to current level if it's the observatory (generic approach)
-      const currentLevel = this.levelManager.getCurrentLevel();
-      if (currentLevel && currentLevel.getLevelId() === 'observatory') {
-        (currentLevel as any).callComponentMethod?.('StarNavigationSystem', 'setTimelineEvents', events);
-      }
+      // Dispatch to GameStateManager for centralized state management
+      this.gameStateManager.dispatch(GameActions.timelineEventsSet(timelineEvents));
       
     } catch (error) {
-      console.warn('Failed to parse timeline events:', error);
+      console.error('❌ Failed to process timeline events:', error);
+      // Dispatch empty array as fallback
+      this.gameStateManager.dispatch(GameActions.timelineEventsSet([]));
     }
   }
   
@@ -310,6 +276,11 @@ export class GameManager {
         
         // Update time tracking (high-frequency, optimized)
         this.timeTracker.update(data.deltaTime);
+        
+        // Update environmental effects system
+        if (this.environmentalEffects) {
+          this.environmentalEffects.update(data.deltaTime);
+        }
         
       } catch (error) {
         console.error('Error in game update loop:', error);
@@ -359,6 +330,22 @@ export class GameManager {
       this.handleMobileAction(data);
     });
     
+    // Star selection events
+    eventBus.on('starmap.star.selected', (data) => {
+      console.log('🌟 GameManager: Star selected:', data.eventData.title);
+      // Include screenPosition in the star data
+      const starWithPosition = {
+        ...data.eventData,
+        screenPosition: data.screenPosition
+      };
+      this.gameStateManager.dispatch(GameActions.starSelected(starWithPosition));
+    });
+
+    eventBus.on('starmap.star.deselected', (data) => {
+      console.log('🌟 GameManager: Star deselected:', data.eventData.title);
+      this.gameStateManager.dispatch(GameActions.starDeselected(data.eventData));
+    });
+    
     // Error handling
     eventBus.on('game.error', (data) => {
       this.handleGameError(data);
@@ -380,10 +367,19 @@ export class GameManager {
         }
       }
       
+      // Clean up current level's water systems before transition
+      const currentLevel = this.gameStateManager.getState().currentLevel;
+      if (this.environmentalEffects) {
+        this.environmentalEffects.cleanupLevel(currentLevel);
+      }
+
       const success = await this.levelManager.transitionToLevel(levelId);
       if (success) {
         // Set camera position for level
-        this.updateCameraForLevel(levelId);
+        await this.updateCameraForLevel(levelId);
+        
+        // Setup water systems for new level
+        await this.setupLevelWaterSystems(levelId);
         
         // Update game state
         this.gameStateManager.dispatch(GameActions.levelTransitionSuccess(
@@ -393,10 +389,9 @@ export class GameManager {
         ));
         
         // Setup player light for new level
-        await this.setupPlayerLight();
+        // await this.setupPlayerLight(); // Disabled - conflicts with level-specific lighting
         
-        // Handle level-specific setup
-        await this.handleLevelSpecificSetup(levelId);
+        // Level-specific setup is now handled by self-sufficient components
         
         console.log(`✅ Successfully transitioned to level: ${levelId}`);
       } else {
@@ -417,77 +412,75 @@ export class GameManager {
     }
   }
   
-  /**
-   * Handle level-specific setup after transition
-   */
-  private async handleLevelSpecificSetup(levelId: string): Promise<void> {
-    const currentLevel = this.levelManager.getCurrentLevel();
-    if (!currentLevel) return;
-    
-    switch (levelId) {
-      case 'observatory':
-        // Set up timeline events for StarNavigationSystem (generic approach)
-        const events = this.gameStateManager.getState().timelineEvents;
-        if (events && events.length > 0) {
-          (currentLevel as any).callComponentMethod?.('StarNavigationSystem', 'setTimelineEvents', events);
-        }
-        
-        // Set up star selection callback (generic approach)
-        (currentLevel as any).callComponentMethod?.('StarNavigationSystem', 'onStarSelected', (star: any) => {
-          if (star && star.uniqueId) {
-            // Valid star data - dispatch star selection
-            this.gameStateManager.dispatch(GameActions.starSelected(star, 'click'));
-          } else if (star === null) {
-            // Null star means deselection (clicking empty space)
-            const currentStar = this.gameStateManager.getState().selectedStar;
-            if (currentStar) {
-              this.gameStateManager.dispatch(GameActions.starDeselected(currentStar));
-            }
-          } else {
-            // Invalid star data - log warning and don't dispatch
-            console.warn('⚠️ Invalid star data received in selection callback:', star);
-          }
-        });
-        
-        break;
-        
-      case 'miranda':
-        // Story event listeners are handled by EventBus in data-driven architecture
-        console.log('🚀 Miranda level ready - story events handled by components');
-        
-        break;
-        
-      case 'restaurant':
-        // Dialogue events are handled by EventBus in data-driven architecture
-        console.log('🍴 Restaurant level ready - dialogue events handled by components');
-        
-        break;
-    }
-  }
   
   /**
-   * Set camera position for specific level
+   * Setup water systems for the specified level
    */
-  private updateCameraForLevel(levelId: string): void {
+  private async setupLevelWaterSystems(levelId: string): Promise<void> {
+    if (!this.environmentalEffects) {
+      console.warn('⚠️ EnvironmentalEffectsSystem not available for water setup');
+      return;
+    }
+
+    try {
+      // Load the level configuration
+      const levelConfig = await this.loadLevelConfig(levelId);
+      
+      // Get the current level's group for adding water systems
+      const currentLevel = this.levelManager.getCurrentLevel();
+      if (currentLevel && typeof currentLevel.getLevelGroup === 'function') {
+        const levelGroup = currentLevel.getLevelGroup();
+        if (levelGroup) {
+          // Process water configuration if present
+          this.environmentalEffects.processLevelConfiguration(levelConfig, levelGroup);
+        }
+      }
+      
+      console.log(`🌊 Water systems setup complete for level: ${levelId}`);
+    } catch (error) {
+      console.error(`❌ Failed to setup water systems for level ${levelId}:`, error);
+    }
+  }
+
+  /**
+   * Set camera position for specific level using manifest data
+   * Enforces manifest as single source of truth - no fallbacks
+   */
+  private async updateCameraForLevel(levelId: string): Promise<void> {
     const camera = this.engine.getCamera();
     
-    switch (levelId) {
-      case 'observatory':
-        // Set initial position and rotation for the observatory
-        camera.position.set(0, -3.4, 50); // Start at the edge of the island
-        camera.rotation.x = -Math.PI / 12; // Look slightly down
-        camera.rotation.y = Math.PI; // Rotate 180 degrees to face the ocean
-        break;
-        
-      case 'miranda':
-        camera.position.set(40, 8, 15);
-        camera.lookAt(0, 0, 0);
-        break;
-        
-      case 'restaurant':
-        camera.position.set(0, 1.7, 8);
-        camera.lookAt(0, 1.7, 0);
-        break;
+    try {
+      const manifestModule = await import('./levels/level-manifest.json');
+      const manifest = manifestModule.default || manifestModule;
+      
+      const levelData = manifest.levels[levelId];
+      if (!levelData) {
+        throw new Error(`Level '${levelId}' not found in manifest`);
+      }
+      
+      if (!levelData.camera) {
+        throw new Error(`Camera configuration missing for level '${levelId}' in manifest`);
+      }
+      
+      const { initialPosition, initialRotation, lookAt } = levelData.camera;
+      
+      // Set position
+      if (initialPosition) {
+        camera.position.set(initialPosition[0], initialPosition[1], initialPosition[2]);
+      }
+      
+      // Set rotation or lookAt
+      if (initialRotation) {
+        camera.rotation.set(initialRotation[0], initialRotation[1], initialRotation[2]);
+      } else if (lookAt) {
+        camera.lookAt(lookAt[0], lookAt[1], lookAt[2]);
+      }
+      
+      console.log(`📷 Camera positioned for ${levelId} from manifest`);
+      
+    } catch (error) {
+      console.error(`❌ Failed to load camera settings for ${levelId}:`, error);
+      throw new Error(`Invalid level configuration: ${levelId}. All levels must have complete camera settings in manifest.`);
     }
   }
   
@@ -588,36 +581,16 @@ export class GameManager {
   }
   
   /**
-   * Sets the global graphics style for the game.
-   * @param isVector - True for stylized vector graphics, false for realistic.
+   * Graphics mode is now controlled per-level via configuration - no global flag needed
    */
-  public setVectorGraphicsMode(isVector: boolean): void {
-    (window as any).MEGAMEAL_VECTOR_MODE = isVector;
-    console.log(`🎨 Graphics mode set to: ${isVector ? 'Toon/Vector' : 'Realistic'}`);
-    
-    // Update outline renderer
-    const outlineRenderer = this.engine.getOutlineRenderer();
-    outlineRenderer.updateConfig({ enabled: isVector });
-    
-    if (isVector) {
-      // Scan scene and add outlines for toon mode
-      outlineRenderer.scanAndOutlineScene();
-      console.log('✨ Toon mode enabled with outlines');
-    } else {
-      // Clear outlines for realistic mode
-      outlineRenderer.clearAllOutlines();
-      console.log('📷 Realistic mode enabled');
-    }
-    
-    // Emit event for other systems to react
-    this.engine.getEventBus().emit('graphics.style.changed', { isVector });
-  }
   /**
    * Reset view/camera
    */
   public resetView(): void {
     const currentLevel = this.gameStateManager.getState().currentLevel;
-    this.updateCameraForLevel(currentLevel);
+    this.updateCameraForLevel(currentLevel).catch(error => {
+      console.error('Failed to reset camera view:', error);
+    });
     
     // Clear selected star
     const currentStar = this.gameStateManager.getState().selectedStar;

@@ -81,12 +81,12 @@ export class OceanSystem extends GameObject {
   // Wave animation optimization (integrated with OptimizationManager)
   private shouldUpdateWaves = true;
   
-  // Default configuration exactly matching original Observatory water system
+  // Default configuration for generic water system
   private static readonly DEFAULT_CONFIG: OceanConfig = {
-    size: { width: 10000, height: 10000 }, // Exact match: 10,000 x 10,000 units
-    segments: { width: 128, height: 128 }, // Exact match: 128 x 128 segments
-    position: new THREE.Vector3(0, -6, 0),
-    waterLevel: -6,
+    size: { width: 1000, height: 1000 }, // Generic default size
+    segments: { width: 64, height: 64 }, // Balanced performance/quality
+    position: new THREE.Vector3(0, 0, 0),
+    waterLevel: 0,
     
     // Visual properties with improved realism
     color: 0x006994, // Deep ocean blue from original
@@ -261,7 +261,7 @@ export class OceanSystem extends GameObject {
       displacementMap: textureData?.displacementMap || null
     };
     
-    // Store in mesh userData like original Observatory implementation
+    // Store in mesh userData for level identification
     mesh.userData.waterData = waterData;
     
     this.oceanData = waterData;
@@ -405,7 +405,7 @@ export class OceanSystem extends GameObject {
   }
   
   /**
-   * Generate procedural textures exactly matching original Observatory water system
+   * Generate procedural textures for realistic water appearance
    */
   private createProceduralTextures() {
     const size = 1024;
@@ -707,6 +707,10 @@ export class OceanSystem extends GameObject {
    */
   public getOceanMesh(): THREE.Mesh | null {
     return this.oceanData?.mesh || null;
+  }
+
+  public getOceanGroup(): THREE.Group {
+    return this.oceanGroup;
   }
   
   /**

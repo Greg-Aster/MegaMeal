@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { EventBus } from '../core/EventBus';
 import { OptimizationManager, OptimizationLevel } from '../optimization/OptimizationManager';
+import { OceanSystem } from './OceanSystem';
+import type { OceanConfig } from './OceanSystem';
 
 /**
  * Global environmental effects system that handles immersive environmental feedback
@@ -32,6 +34,17 @@ export interface EnvironmentalState {
   effectsActive: boolean;
 }
 
+export interface WaterConfiguration {
+  id: string;
+  oceanConfig: Partial<OceanConfig>;
+  dynamics?: {
+    enableRising: boolean;
+    initialLevel: number;
+    targetLevel: number;
+    riseRate: number;
+  };
+}
+
 export class EnvironmentalEffectsSystem {
   private static instance: EnvironmentalEffectsSystem | null = null;
   
@@ -41,6 +54,10 @@ export class EnvironmentalEffectsSystem {
   
   // Water sources management
   private registeredWaterSources: Map<string, WaterSource> = new Map();
+  
+  // Global water management
+  private managedOceans: Map<string, OceanSystem> = new Map();
+  private waterConfigurations: Map<string, WaterConfiguration> = new Map();
   
   // Underwater effect state
   private currentState: EnvironmentalState = {
@@ -105,6 +122,116 @@ export class EnvironmentalEffectsSystem {
   }
   
   /**
+   * Create and manage water systems for levels
+   */
+  public createWaterSystem(waterConfig: WaterConfiguration, levelGroup: THREE.Group): void {
+    if (this.managedOceans.has(waterConfig.id)) {
+      console.warn(`🌊 Water system ${waterConfig.id} already exists`);
+      return;
+    }
+
+    if (!this.scene) {
+      console.error('🌊 Cannot create water system - scene not initialized');
+      return;
+    }
+
+    // Create OceanSystem with provided configuration
+    const oceanSystem = new OceanSystem(
+      THREE,
+      this.scene,
+      {
+        size: { width: 10000, height: 10000 }, // Default large size
+        segments: { width: 128, height: 128 },
+        position: new THREE.Vector3(0, waterConfig.dynamics?.initialLevel || 0, 0),
+        waterLevel: waterConfig.dynamics?.initialLevel || 0,
+        color: 0x006994,
+        opacity: 0.95,
+        metalness: 0.02,
+        roughness: 0.1,
+        waves: [],
+        enableReflection: true,
+        enableRefraction: true,
+        enableAnimation: true,
+        animationSpeed: 1.0,
+        enableFog: false,
+        fogColor: 0x87CEEB,
+        fogDensity: 0.01,
+        enableLOD: true,
+        maxDetailDistance: 500,
+        ...waterConfig.oceanConfig // Override with provided config
+      }
+    );
+
+    // Initialize the ocean system
+    oceanSystem.initialize();
+
+    // Store the systems
+    this.managedOceans.set(waterConfig.id, oceanSystem);
+    this.waterConfigurations.set(waterConfig.id, waterConfig);
+
+    // Auto-register as water source for underwater detection
+    const oceanMesh = oceanSystem.getOceanMesh();
+    if (oceanMesh) {
+      this.registerWaterSource({
+        id: waterConfig.id,
+        mesh: oceanMesh,
+        getCurrentLevel: () => {
+          const config = this.waterConfigurations.get(waterConfig.id);
+          return config?.dynamics?.initialLevel || waterConfig.dynamics?.initialLevel || 0;
+        },
+        isActive: true
+      });
+    }
+
+    // Add to scene/level group
+    const oceanGroup = oceanSystem.getOceanGroup();
+    if (oceanGroup) {
+      levelGroup.add(oceanGroup);
+    }
+
+    console.log(`🌊 Created global water system: ${waterConfig.id}`);
+  }
+
+  /**
+   * Remove a water system
+   */
+  public removeWaterSystem(id: string): void {
+    const oceanSystem = this.managedOceans.get(id);
+    if (oceanSystem) {
+      oceanSystem.dispose();
+      this.managedOceans.delete(id);
+      this.waterConfigurations.delete(id);
+      this.unregisterWaterSource(id);
+      console.log(`🌊 Removed water system: ${id}`);
+    }
+  }
+
+  /**
+   * Process level configuration and create water systems if needed
+   */
+  public processLevelConfiguration(levelConfig: any, levelGroup: THREE.Group): void {
+    // Look for water configuration in level
+    if (levelConfig.water) {
+      const waterConfig: WaterConfiguration = {
+        id: `${levelConfig.id}_water`,
+        oceanConfig: levelConfig.water.oceanConfig || {},
+        dynamics: levelConfig.water.dynamics
+      };
+      
+      this.createWaterSystem(waterConfig, levelGroup);
+      console.log(`🌊 Auto-created water system for level: ${levelConfig.id}`);
+    }
+  }
+
+  /**
+   * Clean up all water systems for level transition
+   */
+  public cleanupLevel(levelId: string): void {
+    const waterSystemId = `${levelId}_water`;
+    this.removeWaterSystem(waterSystemId);
+  }
+
+  /**
    * Register a water source for underwater detection
    */
   public registerWaterSource(waterSource: WaterSource): void {
@@ -134,10 +261,47 @@ export class EnvironmentalEffectsSystem {
     
     this.lastCheck += deltaTime * 1000;
     
+    // Update dynamic water levels (rising water effect)
+    this.updateDynamicWaterLevels(deltaTime);
+    
     // Throttle underwater checks based on optimization level
     if (this.lastCheck >= this.checkInterval) {
       this.checkUnderwaterState();
       this.lastCheck = 0;
+    }
+  }
+
+  /**
+   * Update dynamic water levels for all managed water systems
+   */
+  private updateDynamicWaterLevels(deltaTime: number): void {
+    for (const [id, oceanSystem] of this.managedOceans) {
+      const config = this.waterConfigurations.get(id);
+      if (!config?.dynamics?.enableRising) continue;
+
+      const dynamics = config.dynamics;
+      
+      // Check if water should still be rising
+      if (dynamics.initialLevel < dynamics.targetLevel) {
+        // Update the water level
+        dynamics.initialLevel = Math.min(
+          dynamics.initialLevel + dynamics.riseRate * deltaTime,
+          dynamics.targetLevel
+        );
+
+        // Update the ocean system position
+        const oceanMesh = oceanSystem.getOceanMesh();
+        if (oceanMesh) {
+          oceanMesh.position.y = dynamics.initialLevel;
+          
+          // Update the water source for underwater detection
+          const waterSource = this.registeredWaterSources.get(id);
+          if (waterSource) {
+            // The getCurrentLevel function will now return the updated level
+            // because it reads from config.dynamics.initialLevel
+          }
+        }
+      }
     }
   }
   

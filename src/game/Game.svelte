@@ -43,15 +43,31 @@
   $: selectedStar = gameState.selectedStar;
   $: gameStats = gameState.gameStats;
   
+  /**
+   * Convert cardClass string to position type
+   */
+  function getPositionFromCardClass(cardClass?: string): 'top' | 'bottom' | 'left' | 'right' | undefined {
+    if (!cardClass) return undefined;
+    
+    if (cardClass.includes('top')) return 'top';
+    if (cardClass.includes('bottom')) return 'bottom';
+    if (cardClass.includes('left')) return 'left';
+    if (cardClass.includes('right')) return 'right';
+    
+    return undefined;
+  }
+  
   // Convert StarData to TimelineEvent for the TimelineCard
   $: selectedEvent = selectedStar ? {
     id: selectedStar.uniqueId,
     title: selectedStar.title,
     description: selectedStar.description,
+    slug: selectedStar.slug,
     year: selectedStar.timelineYear,
     era: selectedStar.timelineEra,
     location: selectedStar.timelineLocation,
     isKeyEvent: selectedStar.isKeyEvent,
+    isLevel: selectedStar.isLevel,
     tags: selectedStar.tags,
     category: selectedStar.category,
     unlocked: true,
@@ -160,7 +176,8 @@
     // Map level types to level IDs
     const levelMap = {
       'miranda-ship-level': 'miranda',
-      'restaurant-backroom-level': 'restaurant'
+      'restaurant-backroom-level': 'restaurant',
+      'infinite-library-level': 'infinite_library'
     };
     
     const levelId = levelMap[levelType as keyof typeof levelMap];
@@ -264,7 +281,7 @@
       <TimelineCard 
         event={selectedEvent}
         isSelected={true}
-        position={selectedEvent.screenPosition?.cardClass || 'bottom'}
+        position={getPositionFromCardClass(selectedEvent.screenPosition?.cardClass) || 'bottom'}
         {isMobile}
         on:levelTransition={handleLevelTransition}
       />

@@ -86,8 +86,14 @@ export class GameReducer {
       case GameActionTypes.SAVE_GAME_FAILURE:
         return GameReducer.handleSaveGameFailure(newState, action);
       
+      case GameActionTypes.LOAD_GAME_START:
+        return GameReducer.handleLoadGameStart(newState, action);
+      
       case GameActionTypes.LOAD_GAME_SUCCESS:
         return GameReducer.handleLoadGameSuccess(newState, action);
+      
+      case GameActionTypes.LOAD_GAME_FAILURE:
+        return GameReducer.handleLoadGameFailure(newState, action);
       
       // Game lifecycle actions
       case GameActionTypes.GAME_INITIALIZED:
@@ -391,6 +397,11 @@ export class GameReducer {
     return state;
   }
   
+  private static handleLoadGameStart(state: GameState, action: GameAction): GameState {
+    // Mark that loading is in progress
+    return state;
+  }
+  
   private static handleLoadGameSuccess(state: GameState, action: GameAction): GameState {
     const { loadTime, saveVersion, migrationRequired } = action.payload;
     
@@ -400,6 +411,15 @@ export class GameReducer {
     if (migrationRequired) {
       state.sessionData.migrationPerformed = true;
     }
+    
+    return state;
+  }
+  
+  private static handleLoadGameFailure(state: GameState, action: GameAction): GameState {
+    const { error } = action.payload;
+    
+    // Log the load failure but don't modify state significantly
+    console.warn('Load game failed:', error);
     
     return state;
   }

@@ -218,6 +218,15 @@ export class InteractionSystem {
       });
       
       console.log(`🎯 Interaction performed: ${result.interactable.id}`);
+    } else {
+      // No interactable was hit - emit background click event
+      this.eventBus.emit('interaction.background.click', {
+        clientX,
+        clientY,
+        inputType,
+        timestamp: now
+      });
+      console.log('🎯 Background click detected');
     }
   }
   

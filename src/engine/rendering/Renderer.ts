@@ -205,7 +205,7 @@ export class Renderer {
     if (this.config.enableBloom) {
       this.effects.bloom = new BloomEffect({
         intensity: 1.0, // Balanced intensity
-        luminanceThreshold: 0.3, // Lower threshold to catch firefly emissive
+        luminanceThreshold: 0.1, // Much lower threshold for firefly visibility
         luminanceSmoothing: 0.25, // Higher smoothing to prevent hard edges
         mipmapBlur: true
       });

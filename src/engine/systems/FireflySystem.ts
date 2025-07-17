@@ -58,6 +58,7 @@ export class FireflySystem extends GameObject {
   private animationTime = 0;
   private lightCycleTimer = 0;
   private nextLightIndex = 0;
+  private globalIntensityMultiplier = 1.0;
   
   // Default configuration
   private static readonly DEFAULT_CONFIG: FireflyConfig = {
@@ -71,7 +72,7 @@ export class FireflySystem extends GameObject {
     fadeSpeed: 5.0, // Much faster for sharp on/off transitions
     heightRange: { min: 0.5, max: 2.5 },
     radius: 180,
-    size: 0.02, // Smaller fireflies
+    size: 0.025, // Visible fireflies
     movement: {
       speed: 0.8,
       wanderSpeed: 0.01,
@@ -118,10 +119,9 @@ export class FireflySystem extends GameObject {
         }
         
         if (!config.count) {
-          // Scale firefly count based on quality settings
-          const baseCount = this.config.count;
-          const scaleFactor = qualitySettings.maxFireflyLights / 4; // Scale relative to max lights
-          this.config.count = Math.max(10, Math.floor(baseCount * scaleFactor));
+          // Keep the original count - optimization should control lights, not firefly count
+          // The camera-aware culling will handle performance by showing only nearby fireflies
+          this.config.count = Math.min(this.config.count, 200); // Cap at reasonable limit
         }
         
         console.log(`🎯 FireflySystem: Applied intelligent optimization`, {
@@ -192,39 +192,24 @@ export class FireflySystem extends GameObject {
     
     // Debug color assignment (reduced logging)
     
-    // Check if we're in vector mode for stylized fireflies
-    const isVectorMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
-    
+    // Always use realistic fireflies - no global mode dependency
     let fireflyGeometry, fireflyMaterial;
     
-    if (isVectorMode) {
-      // Vector art style - flat, geometric shapes
-      fireflyGeometry = new this.THREE.SphereGeometry(this.config.size * 3, 6, 4); // Larger, more angular
-      fireflyMaterial = new this.THREE.MeshBasicMaterial({
-        color: color,
-        transparent: true,
-        opacity: 1.0, // Fully opaque for vector look
-        toneMapped: false,
-        fog: false,
-        // No emission - rely on pure color brightness
-      });
-    } else {
-      // Realistic style - keep original smooth approach
-      fireflyGeometry = new this.THREE.SphereGeometry(this.config.size, 8, 6);
-      fireflyMaterial = new this.THREE.MeshStandardMaterial({
-        color: new this.THREE.Color(color).multiplyScalar(0.1),
-        emissive: color,
-        emissiveIntensity: this.config.emissiveIntensity,
-        transparent: true,
-        opacity: 0.8,
-        toneMapped: false,
-        fog: false,
-        metalness: 0.0,
-        roughness: 1.0,
-        alphaTest: 0.01,
-        side: this.THREE.DoubleSide
-      });
-    }
+    // Realistic style - organic, glowing particles
+    fireflyGeometry = new this.THREE.SphereGeometry(this.config.size, 8, 6);
+    fireflyMaterial = new this.THREE.MeshStandardMaterial({
+      color: new this.THREE.Color(color).multiplyScalar(0.1),
+      emissive: color,
+      emissiveIntensity: this.config.emissiveIntensity,
+      transparent: true,
+      opacity: 0.8,
+      toneMapped: false,
+      fog: false,
+      metalness: 0.0,
+      roughness: 1.0,
+      alphaTest: 0.01,
+      side: this.THREE.DoubleSide
+    });
     
     const mesh = new this.THREE.Mesh(fireflyGeometry, fireflyMaterial);
     mesh.position.copy(position);
@@ -234,19 +219,10 @@ export class FireflySystem extends GameObject {
     let light: THREE.PointLight | null = null;
     // Always create lights for camera-aware culling (maxLights controls activation, not creation)
     if (true) {
-      if (isVectorMode) {
-        // Vector mode: hard falloff light for stylized effect
-        light = new this.THREE.PointLight(color, 0, this.config.lightRange, 2.0); // decay=2 for harder falloff
-        light.position.copy(position);
-        light.name = `firefly_light_${index}`;
-        
-        // Vector mode uses geometric fireflies with hard light falloff - no visual discs needed
-      } else {
-        // Realistic mode: keep soft falloff
-        light = new this.THREE.PointLight(color, 0, this.config.lightRange);
-        light.position.copy(position);
-        light.name = `firefly_light_${index}`;
-      }
+      // Always use realistic mode: soft falloff light
+      light = new this.THREE.PointLight(color, 0, this.config.lightRange);
+      light.position.copy(position);
+      light.name = `firefly_light_${index}`;
       
       // Add light to active lights array if it was created
       if (light) {
@@ -300,6 +276,9 @@ export class FireflySystem extends GameObject {
     } else {
       this.updateLightCycling(deltaTime);
     }
+    
+    // Apply smooth fading animation for all lights
+    this.updateLightFading(deltaTime);
   }
   
   private updateFireflyPositions(deltaTime: number): void {
@@ -332,24 +311,11 @@ export class FireflySystem extends GameObject {
   }
   
   private updateLightCycling(deltaTime: number): void {
-    // Update each light's fade state with dramatic effects
+    // Update each light's cycle time
     this.fireflies.forEach(firefly => {
       if (!firefly.light) return;
       
       firefly.lightCycleTime += deltaTime;
-      
-      // Enhanced fade in/out with easing for more dramatic effect
-      if (firefly.isLightActive) {
-        // Smooth ease-in curve for fade in
-        firefly.lightFadeProgress = Math.min(1.0, firefly.lightFadeProgress + deltaTime * this.config.fadeSpeed);
-        const easedProgress = 1 - Math.pow(1 - firefly.lightFadeProgress, 3); // Cubic ease-in
-        firefly.light.intensity = this.config.lightIntensity * easedProgress;
-      } else {
-        // Sharp fade out for dramatic effect
-        firefly.lightFadeProgress = Math.max(0.0, firefly.lightFadeProgress - deltaTime * this.config.fadeSpeed * 1.5);
-        const easedProgress = Math.pow(firefly.lightFadeProgress, 2); // Quadratic ease-out
-        firefly.light.intensity = this.config.lightIntensity * easedProgress;
-      }
     });
     
     // More frequent light cycling for dynamic movement
@@ -484,19 +450,14 @@ export class FireflySystem extends GameObject {
       inViewFireflies.slice(0, this.config.maxLights).map(f => f.index)
     );
 
-    // Simple on/off activation - no complex fading
+    // State management only - no direct intensity setting
     this.fireflies.forEach((firefly, index) => {
       if (!firefly.light) return;
 
       const shouldBeActive = activeIndices.has(index);
       
-      if (shouldBeActive) {
-        firefly.light.intensity = this.config.lightIntensity;
-        firefly.isLightActive = true;
-      } else {
-        firefly.light.intensity = 0;
-        firefly.isLightActive = false;
-      }
+      // Only set the flag - let the fading system handle intensity
+      firefly.isLightActive = shouldBeActive;
     });
 
     // Debug log occasionally
@@ -504,6 +465,34 @@ export class FireflySystem extends GameObject {
       const activeLights = this.fireflies.filter(f => f.isLightActive).length;
       console.log(`🎥 Camera-aware: ${activeLights}/${this.config.maxLights} lights active from ${inViewFireflies.length} in view`);
     }
+  }
+
+  /**
+   * Smoothly fade lights in and out based on their isLightActive state
+   * This creates a polished transition instead of sudden on/off effects
+   */
+  private updateLightFading(deltaTime: number): void {
+    this.fireflies.forEach((firefly) => {
+      if (!firefly.light) return;
+
+      // Determine target fade progress based on desired state
+      const targetFadeProgress = firefly.isLightActive ? 1.0 : 0.0;
+      
+      // Smooth interpolation toward target using fadeSpeed
+      const fadeSpeed = this.config.fadeSpeed;
+      const fadeDirection = targetFadeProgress - firefly.lightFadeProgress;
+      
+      if (Math.abs(fadeDirection) > 0.001) {
+        // Apply smooth fading
+        firefly.lightFadeProgress += fadeDirection * fadeSpeed * deltaTime;
+        
+        // Clamp to valid range
+        firefly.lightFadeProgress = Math.max(0.0, Math.min(1.0, firefly.lightFadeProgress));
+      }
+      
+      // Apply the fade progress to actual light intensity with global multiplier
+      firefly.light.intensity = this.config.lightIntensity * firefly.lightFadeProgress * this.globalIntensityMultiplier;
+    });
   }
   
   /**
@@ -537,15 +526,13 @@ export class FireflySystem extends GameObject {
   public setIntensity(intensity: number): void {
     const clampedIntensity = Math.max(0, Math.min(1, intensity));
     
+    // Store the global intensity multiplier - the fading system will apply it
+    this.globalIntensityMultiplier = clampedIntensity;
+    
+    // Update mesh opacity
     this.fireflies.forEach(firefly => {
-      // Update mesh opacity
       if (firefly.mesh.material instanceof THREE.Material) {
         firefly.mesh.material.opacity = 0.9 * clampedIntensity;
-      }
-      
-      // Update light intensity
-      if (firefly.light && firefly.isLightActive) {
-        firefly.light.intensity = this.config.lightIntensity * firefly.lightFadeProgress * clampedIntensity;
       }
     });
   }
