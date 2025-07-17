@@ -4,7 +4,7 @@
   "description": "Central navigation hub with star timeline",
   "terrain": {
     "type": "procedural_island", 
-    "generator": "ObservatoryEnvironment",
+    "generator": "ObservatoryEnvironmentSystem",
     "parameters": {
       "baseGroundLevel": 5,
       "hillHeight": 15,
@@ -17,15 +17,7 @@
     }
   },
   "environment": {
-    "lighting": {
-      "type": "atmospheric",
-      "config": {
-        "moonlight": { "intensity": 0.4, "color": "#b3d9ff" },
-        "ambient": { "intensity": 0.2 }
-      }
-    },
     "effects": [
-      { "type": "fireflies", "config": { "count": 80, "radius": 200 } },
       { "type": "particles", "config": { "type": "cosmic_dust" } },
       {
         "type": "fog",
@@ -35,6 +27,37 @@
         }
       }
     ]
+  },
+  "lighting": {
+    "style": "realistic",
+    "mainIntensity": 0.5,
+    "fillIntensity": 0.25,
+    "ambientIntensity": 0.5,
+    "mainColor": "#8bb3ff",
+    "fillColor": "#6a7db3",
+    "ambientColor": "#404060"
+  },
+  "water": {
+    "oceanConfig": {
+      "size": { "width": 10000, "height": 10000 },
+      "segments": { "width": 128, "height": 128 },
+      "color": 25492,
+      "opacity": 0.95,
+      "metalness": 0.02,
+      "roughness": 0.1,
+      "enableReflection": true,
+      "enableRefraction": true,
+      "enableAnimation": true,
+      "animationSpeed": 1.0,
+      "enableLOD": true,
+      "maxDetailDistance": 500
+    },
+    "dynamics": {
+      "enableRising": true,
+      "initialLevel": -6,
+      "targetLevel": 4,
+      "riseRate": 0.04
+    }
   },
   "movement": {
     "terrainFollowing": true,
@@ -50,12 +73,11 @@
   },
   "systems": [
     {
-      "type": "StarNavigationSystem",
+      "type": "StarNavigationSystemModern",
       "config": {
         "starRadius": 990,
-        "starCount": 41,
         "constellationMode": true,
-        "timelineIntegration": true
+        "timelineDataSource": "/assets/data/observatory-timeline.json"
       }
     }
   ],

@@ -191,7 +191,7 @@ export class StateValidator {
       name: 'valid_current_level',
       description: 'Current level must be a valid level ID',
       validate: (state) => {
-        const validLevels = ['observatory', 'miranda', 'restaurant'];
+        const validLevels = ['observatory', 'miranda', 'restaurant', 'infinite_library'];
         const isValid = validLevels.includes(state.currentLevel);
         
         return {
@@ -207,7 +207,7 @@ export class StateValidator {
         };
       },
       autoFix: (state) => {
-        const validLevels = ['observatory', 'miranda', 'restaurant'];
+        const validLevels = ['observatory', 'miranda', 'restaurant', 'infinite_library'];
         if (!validLevels.includes(state.currentLevel)) {
           state.currentLevel = 'observatory';
         }

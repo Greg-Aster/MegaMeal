@@ -101,72 +101,42 @@ export class Materials {
   
   // Create PBR material with physically-based properties
   public createPBRMaterial(options: PBRMaterialOptions = {}): THREE.MeshStandardMaterial {
-    const isVectorMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
-
-    if (isVectorMode) {
-      // Return a ToonMaterial for the stylized vector graphic look
-      const toonMaterial = new this.THREE.MeshToonMaterial({
-        color: options.color || 0x808080,
-        emissive: options.emissive || 0x000000,
-        emissiveIntensity: options.emissiveIntensity || 1.0,
-        map: (options as any).map, // Pass through texture map if it exists
-        normalMap: options.normalMap,
-        side: options.side || THREE.FrontSide,
-        gradientMap: this.toonGradientTexture, // Use custom toon gradient
-      });
-      
-      return toonMaterial;
-    } else {
-      // Return a standard PBR material for a realistic look - only set defined properties
-      const materialConfig: any = {
-        color: options.color || 0xffffff,
-        metalness: options.metalness || 0.1,
-        roughness: options.roughness || 0.8,
-        envMap: options.envMap || this.environmentMap,
-        envMapIntensity: options.envMapIntensity || 1.0,
-        emissive: options.emissive || 0x000000,
-        emissiveIntensity: options.emissiveIntensity || 0.0,
-        transparent: options.transparent || false,
-        opacity: options.opacity || 1.0,
-        side: options.side || THREE.FrontSide,
-        displacementScale: options.displacementScale || 1.0
-      };
-      
-      // Only add optional maps if they're actually defined
-      if (options.map) materialConfig.map = options.map;
-      if (options.normalMap) materialConfig.normalMap = options.normalMap;
-      if (options.roughnessMap) materialConfig.roughnessMap = options.roughnessMap;
-      if (options.metalnessMap) materialConfig.metalnessMap = options.metalnessMap;
-      if (options.displacementMap) materialConfig.displacementMap = options.displacementMap;
-      
-      const material = new this.THREE.MeshStandardMaterial(materialConfig);
-      
-      return material;
-    }
+    // Always use realistic PBR materials - no more global mode dependency
+    const materialConfig: any = {
+      color: options.color || 0xffffff,
+      metalness: options.metalness || 0.1,
+      roughness: options.roughness || 0.8,
+      envMap: options.envMap || this.environmentMap,
+      envMapIntensity: options.envMapIntensity || 1.0,
+      emissive: options.emissive || 0x000000,
+      emissiveIntensity: options.emissiveIntensity || 0.0,
+      transparent: options.transparent || false,
+      opacity: options.opacity || 1.0,
+      side: options.side || THREE.FrontSide,
+      displacementScale: options.displacementScale || 1.0
+    };
+    
+    // Only add optional maps if they're actually defined
+    if (options.map) materialConfig.map = options.map;
+    if (options.normalMap) materialConfig.normalMap = options.normalMap;
+    if (options.roughnessMap) materialConfig.roughnessMap = options.roughnessMap;
+    if (options.metalnessMap) materialConfig.metalnessMap = options.metalnessMap;
+    if (options.displacementMap) materialConfig.displacementMap = options.displacementMap;
+    
+    const material = new this.THREE.MeshStandardMaterial(materialConfig);
+    
+    return material;
   }
   
   // Preset PBR materials for common use cases
   public createGroundMaterial(): THREE.MeshStandardMaterial {
-    const isVectorMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
-    
-    if (isVectorMode) {
-      // Vibrant cartoon colors for toon mode
-      return this.createPBRMaterial({
-        color: 0x88bb44, // Bright cartoon green
-        metalness: 0.0,
-        roughness: 0.9,
-        emissive: 0x334411, // Bright emissive glow
-        emissiveIntensity: 0.4,
-        envMapIntensity: 0.2
-      });
-    } else {
-      return this.createPBRMaterial({
-        color: 0x2a2a2a,
-        metalness: 0.1,
-        roughness: 0.9,
-        envMapIntensity: 0.5
-      });
-    }
+    // Always use realistic ground material - no more global mode dependency
+    return this.createPBRMaterial({
+      color: 0x2a2a2a,
+      metalness: 0.1,
+      roughness: 0.9,
+      envMapIntensity: 0.5
+    });
   }
   
   public createMetalMaterial(color: number = 0x888888): THREE.MeshStandardMaterial {

@@ -89,24 +89,12 @@ export class PlayerLightComponent extends GameObject {
   }
   
   private createLight(): void {
-    const isVectorMode = (window as any).MEGAMEAL_VECTOR_MODE === true;
-    
-    if (isVectorMode) {
-      // Vector mode: hard falloff for stylized lighting
-      this.light = new this.THREE.PointLight(
-        this.config.color, 
-        this.baseIntensity, 
-        this.config.range, 
-        2.0 // Hard falloff like fireflies
-      );
-    } else {
-      // Realistic mode: soft falloff
-      this.light = new this.THREE.PointLight(
+    // Always use realistic mode: soft falloff lighting
+    this.light = new this.THREE.PointLight(
         this.config.color, 
         this.baseIntensity, 
         this.config.range
       );
-    }
     
     this.light.name = 'player_light';
     this.light.position.set(this.config.offset.x, this.config.offset.y, this.config.offset.z);
@@ -114,7 +102,7 @@ export class PlayerLightComponent extends GameObject {
     // Add light to group
     this.lightGroup.add(this.light);
     
-    console.log(`💡 Player light created (${isVectorMode ? 'vector' : 'realistic'} mode)`);
+    console.log('💡 Player light created (realistic mode)');
     console.log('💡 Light details:', {
       color: this.light.color.getHex(),
       intensity: this.light.intensity,

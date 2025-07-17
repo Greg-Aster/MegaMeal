@@ -391,9 +391,9 @@ environmentalEffects.registerWaterSource({
 ##### **Rising Water Mechanics**
 ```typescript
 // Dynamic water level system
-private currentWaterLevel = -6;           // Base level
+private currentWaterLevel = 0;           // Base level
 private waterRiseRate = 0.05;            // Units per second
-private maxWaterLevel = 2;               // Rising limit
+private maxWaterLevel = 4;               // Rising limit
 
 // Professional implementation separates concerns:
 this.waterPool.position.y = this.currentWaterLevel;  // Mesh position for water level

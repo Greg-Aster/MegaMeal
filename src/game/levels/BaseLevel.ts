@@ -124,7 +124,7 @@ export abstract class BaseLevel extends GameObject {
         }
         
         // Update level-specific logic
-        this.updateLevel(deltaTime);
+        this.updateLevel(deltaTime, this.camera);
       },
       { component: 'Level', operation: 'update', details: { levelId: this.levelId } }
     );
@@ -205,7 +205,7 @@ export abstract class BaseLevel extends GameObject {
    * Update level-specific logic each frame
    * Must be implemented by subclasses
    */
-  protected abstract updateLevel(deltaTime: number): void;
+  protected abstract updateLevel(deltaTime: number, camera: THREE.Camera): void;
   
   // Optional methods that can be overridden
   

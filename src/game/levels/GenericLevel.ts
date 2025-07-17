@@ -4,6 +4,7 @@ import { Engine } from '../../engine/core/Engine';
 import { InteractionSystem } from '../../engine/systems/InteractionSystem';
 import type { LevelConfig } from '../systems/LevelSystem';
 import type { LevelMovementConfig } from '../../engine/components/MovementTypes';
+import type { ILevelGenerator, LevelGeneratorDependencies } from '../interfaces/ILevelGenerator';
 
 /**
  * GenericLevel - Data-Driven Level Implementation
@@ -51,6 +52,9 @@ export class GenericLevel extends BaseLevel {
     } else {
       console.warn('No terrain generator specified in level config.');
     }
+
+    // Water configuration now processed globally by GameManager
+    // This ensures proper order and prevents conflicts
   }
   
   /**
@@ -169,11 +173,11 @@ export class GenericLevel extends BaseLevel {
   /**
    * Update - call update on all loaded components
    */
-  protected updateLevel(deltaTime: number): void {
-    // Update all loaded components
+  protected updateLevel(deltaTime: number, camera: THREE.Camera): void {
+    // Update all loaded components, passing camera for systems that need it
     this.loadedComponents.forEach((component, type) => {
       if (component && typeof component.update === 'function') {
-        component.update(deltaTime);
+        component.update(deltaTime, camera);
       }
     });
   }
@@ -183,6 +187,9 @@ export class GenericLevel extends BaseLevel {
    */
   protected onDispose(): void {
     console.log('🧹 Disposing GenericLevel');
+    
+    // Water cleanup now handled globally by GameManager
+    // This ensures proper cleanup order during level transitions
   }
   
   // PRIVATE HELPER METHODS - Component Management Only
@@ -190,7 +197,7 @@ export class GenericLevel extends BaseLevel {
   
 
   /**
-   * Create system from configuration - truly generic approach
+   * Create system from configuration - now fully standardized
    */
   private async createSystem(systemConfig: any, isTerrainGenerator: boolean = false): Promise<void> {
     console.log(`🎯 Creating system: ${systemConfig.type}`);
@@ -203,57 +210,39 @@ export class GenericLevel extends BaseLevel {
         return;
       }
       
-      // Create component instance with appropriate constructor pattern
-      let component;
-      if (systemConfig.type === 'ObservatoryEnvironment') {
-        // ObservatoryEnvironment expects the full engine instance
-        component = new componentClass(
-          this.THREE,
-          this.engine,
-          this.levelGroup,
-          this.assetLoader
-        );
-      } else if (systemConfig.type === 'RoomFactory') {
-        // RoomFactory has its own specific constructor signature
-        component = new componentClass(
-          this.THREE,
-          this.assetLoader,
-          this.engine.getMaterials() // It needs the Materials factory from the engine
-        );
-      } else if (systemConfig.type === 'StarNavigationSystem') {
-        // StarNavigationSystem has a specific constructor signature with the full engine
-        component = new componentClass(
-          this.THREE,
-          this.engine,
-          this.scene,
-          this.levelGroup,
-          this.interactionSystem,
-          this.engine.getEventBus(),
-          this.camera,
-          this.gameContainer
-        );
-      } else if (systemConfig.type === 'OutlineRenderer') {
-        // OutlineRenderer has a simple constructor signature
-        component = new componentClass(
-          this.THREE,
-          this.scene
-        );
-      } else {
-        // Standard component constructor pattern
-        component = new componentClass(
-          this.THREE,
-          this.scene,
-          this.levelGroup,
-          this.interactionSystem,
-          this.engine.getEventBus(),
-          this.camera,
-          this.gameContainer
-        );
-      }
+      // Config is passed directly to components - timeline events come from GameStateManager
+      let config = { ...systemConfig.config };
       
-      // Initialize component with its config
-      if (typeof component.initialize === 'function') {
-        await component.initialize(systemConfig.config);
+      // Create standardized dependencies object
+      const dependencies: LevelGeneratorDependencies = {
+        THREE: this.THREE,
+        scene: this.scene,
+        levelGroup: this.levelGroup,
+        interactionSystem: this.interactionSystem,
+        eventBus: this.engine.getEventBus(),
+        camera: this.camera,
+        gameContainer: this.gameContainer,
+        assetLoader: this.assetLoader, // This should be populated from BaseLevel
+        engine: this.engine,
+        materialsFactory: this.engine.getMaterials?.()
+      };
+      
+      // Debug logging to check dependencies
+      console.log('🔧 Dependencies check:', {
+        assetLoader: !!dependencies.assetLoader,
+        engine: !!dependencies.engine,
+        scene: !!dependencies.scene,
+        levelGroup: !!dependencies.levelGroup
+      });
+      
+      // All components now use the standardized interface (either directly or through adapters)
+      const component: ILevelGenerator = new componentClass(dependencies);
+      
+      // Initialize component with its config (now including loaded data)
+      if (component && typeof component.initialize === 'function') {
+        await Promise.resolve(component.initialize(config));
+      } else {
+        console.warn(`Component ${systemConfig.type} is missing the initialize method.`);
       }
       
       // Store component for lifecycle management
@@ -263,65 +252,26 @@ export class GenericLevel extends BaseLevel {
       // Always store by type for direct access
       this.storeComponent(systemConfig.type, component);
       
-      // System created successfully (reduced logging)
-      
     } catch (error) {
       console.error(`Failed to create system ${systemConfig.type}:`, error);
+      // Throw the error to make it clear that level generation has failed
+      throw new Error(`Critical error creating system: ${systemConfig.type}. Check component name and dependencies.`);
     }
   }
 
+
   /**
-   * Load component class dynamically - no hardcoded dependencies
+   * Load component class dynamically - using convention over configuration
+   * All components must be in /src/game/systems/ directory
    */
   private async loadComponentClass(componentType: string): Promise<any> {
-    // Level-specific components (like ObservatoryEnvironment) should be in /levels/
-    const levelSpecificComponents = ['ObservatoryEnvironment'];
-    
-    // System-specific components should be in /systems/
-    const systemSpecificComponents = ['MirandaShipSystem'];
-    
-    if (levelSpecificComponents.includes(componentType)) {
-      try {
-        // Try loading from levels directory for level-specific components
-        const levelModule = await import(`../levels/${componentType}.ts`);
-        return levelModule[componentType];
-      } catch (error) {
-        console.warn(`Could not load level-specific component ${componentType}:`, error);
-        return null;
-      }
-    }
-    
-    if (systemSpecificComponents.includes(componentType)) {
-      try {
-        // Try loading from systems directory for system-specific components
-        const systemModule = await import(`../systems/${componentType}.ts`);
-        return systemModule[componentType];
-      } catch (error) {
-        console.warn(`Could not load system-specific component ${componentType}:`, error);
-        return null;
-      }
-    }
-    
-    // General-purpose components should be in /systems/ or /components/
     try {
-      // Try loading from systems directory first
+      // Convention: All level generator components are in /systems/ directory
       const systemModule = await import(`../systems/${componentType}.ts`);
       return systemModule[componentType];
-    } catch {
-      try {
-        // Try loading from components directory
-        const componentModule = await import(`../components/${componentType}.ts`);
-        return componentModule[componentType];
-      } catch {
-        try {
-          // Fallback: try loading from levels directory
-          const levelModule = await import(`../levels/${componentType}.ts`);
-          return levelModule[componentType];
-        } catch (error) {
-          console.warn(`Could not load component ${componentType}:`, error);
-          return null;
-        }
-      }
+    } catch (error) {
+      console.warn(`Could not load component ${componentType} from systems directory:`, error);
+      return null;
     }
   }
 
@@ -348,15 +298,30 @@ export class GenericLevel extends BaseLevel {
 
   /**
    * Call a method on a component if it exists - generic API
+   * Works with both new standardized components and legacy components through adapters
    */
   public callComponentMethod(componentType: string, methodName: string, ...args: any[]): any {
     const component = this.getComponent(componentType);
-    if (component && typeof component[methodName] === 'function') {
-      return component[methodName](...args);
-    } else {
-      console.warn(`⚠️ Component '${componentType}' not found or method '${methodName}' not available`);
+    if (!component) {
+      console.warn(`⚠️ Component '${componentType}' not found`);
       return null;
     }
+
+    // Try calling the method on the component directly first
+    if (typeof component[methodName] === 'function') {
+      return component[methodName](...args);
+    }
+
+    // If not found and component has getLegacyComponent, try the legacy component
+    if (typeof component.getLegacyComponent === 'function') {
+      const legacyComponent = component.getLegacyComponent();
+      if (legacyComponent && typeof legacyComponent[methodName] === 'function') {
+        return legacyComponent[methodName](...args);
+      }
+    }
+
+    console.warn(`⚠️ Method '${methodName}' not available on component '${componentType}'`);
+    return null;
   }
 
 }

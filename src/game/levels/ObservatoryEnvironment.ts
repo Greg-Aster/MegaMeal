@@ -42,10 +42,10 @@ export class ObservatoryEnvironment extends GameObject {
   
   
   // Rising water effect
-  private initialWaterLevel = -10;
+  private initialWaterLevel = 0;
   private waterRiseRate = 0.04; // Much slower, more gradual rise
-  private maxWaterLevel = 4; // Stop rising at this level
-  private currentWaterLevel = -6;
+  private maxWaterLevel = 6; // Stop rising at this level
+  private currentWaterLevel = -0;
   
   // Configuration for level-specific effects
   private readonly bloomConfig = {

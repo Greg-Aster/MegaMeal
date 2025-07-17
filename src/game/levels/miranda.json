@@ -4,7 +4,7 @@
   "description": "Bridge of Captain Zhao's salvage vessel investigating the Miranda incident. Examine temporal anomalies, captain's logs, and the Perfect Bloody Mary sample that defied causality.",
   "terrain": {
     "type": "spaceship_interior", 
-    "generator": "MirandaShipSystem",
+    "generator": "MirandaShipSystemModern",
     "parameters": {
       "type": "bridge",
       "size": { "width": 20, "height": 4, "length": 20 },
