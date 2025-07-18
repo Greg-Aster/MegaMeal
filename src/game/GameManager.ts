@@ -309,12 +309,7 @@ export class GameManager {
       });
     });
     
-    eventBus.on('level.transition', (data) => {
-      this.transitionToLevel(data.targetLevel).catch(error => {
-        console.error('Failed to transition to level:', error);
-        eventBus.emit('game.error', { error, context: 'level_transition' });
-      });
-    });
+    // Removed orphaned 'level.transition' listener - was causing double loads
     
     // Interaction events
     eventBus.on('interaction.performed', (data) => {
@@ -381,6 +376,9 @@ export class GameManager {
         // Setup water systems for new level
         await this.setupLevelWaterSystems(levelId);
         
+        // PHASE 2: Apply automated optimization clustering
+        await this.applyLevelOptimization(levelId);
+        
         // Update game state
         this.gameStateManager.dispatch(GameActions.levelTransitionSuccess(
           this.gameStateManager.getState().currentLevel,
@@ -413,6 +411,44 @@ export class GameManager {
   }
   
   
+  /**
+   * PHASE 2: Apply global automated optimization to the level
+   * Data-driven approach - reads optimization settings from level JSON
+   */
+  private async applyLevelOptimization(levelId: string): Promise<void> {
+    try {
+      // Load the level configuration to get optimization settings
+      const levelConfig = await this.loadLevelConfig(levelId);
+      
+      // Check if level has optimization configuration
+      const optimizationConfig = (levelConfig as any).optimization;
+      if (!optimizationConfig) {
+        console.log(`🎛️ No optimization config found for level: ${levelId}`);
+        return;
+      }
+
+      // Get the current level's group for optimization
+      const currentLevel = this.levelManager.getCurrentLevel();
+      if (currentLevel && typeof currentLevel.getLevelGroup === 'function') {
+        const levelGroup = currentLevel.getLevelGroup();
+        if (levelGroup) {
+          // Apply automated clustering via OptimizationManager
+          const optimizationManager = this.engine.getOptimizationManager();
+          optimizationManager.optimizeLevel(levelGroup, optimizationConfig);
+          
+          console.log(`✅ Applied automated optimization to level: ${levelId}`);
+        } else {
+          console.warn(`⚠️ Could not get level group for optimization: ${levelId}`);
+        }
+      } else {
+        console.warn(`⚠️ Current level does not support automated optimization: ${levelId}`);
+      }
+    } catch (error) {
+      console.error(`❌ Failed to apply optimization to level ${levelId}:`, error);
+      // Don't throw - optimization is optional
+    }
+  }
+
   /**
    * Setup water systems for the specified level
    */

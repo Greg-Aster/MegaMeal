@@ -36,9 +36,9 @@ A cinematic exploration experience that combines the accessibility of web games 
 - **Atmospheric Pacing**: Slow, contemplative exploration encouraging discovery
 
 #### **Star Navigation System**
-- **Interactive Timeline Stars**: 41 timeline events represented as clickable 3D sprites positioned at radius 990
+- **Dynamic Star Population**: The star map is now populated dynamically from a central TimelineService. This service processes all of the website's content (blog posts, lore entries) at build time, ensuring the star map is always a perfect 1:1 reflection of the game's universe.
 - **Advanced Star Textures**: Dynamic star textures with multiple types (classic, sparkle, refraction, halo)
-- **Constellation Network**: Hardcoded constellation patterns with era-based connections
+- **Centralized Constellation Configuration**: All visual data for constellations—their shapes, connection patterns, and era colors—is now managed in a single, authoritative configuration file. This allows for easy sitewide updates to the star map's appearance.
 - **Smart Era Grouping**: Stars organized by historical periods using predefined constellation configurations
 - **TimelineCard Integration**: Original TimelineCard component with dark theme overlay for optimal visibility
 - **Level Portal System**: Level-type stars (magenta color) serve as interactive portals between game areas
@@ -94,7 +94,7 @@ A cinematic exploration experience that combines the accessibility of web games 
 ├── physics/        # Collision detection and movement
 ├── audio/          # 3D spatial audio system (disabled for performance)
 ├── resources/      # Asset loading and management
-├── systems/        # Engine subsystems (InteractionSystem, EnvironmentalEffectsSystem)
+├── systems/        # Engine subsystems (InteractionSystem, EnvironmentalEffectsSystem: The global authority for all environmental effects. It now reads level configurations and is responsible for creating, managing, and animating water systems for any level that requests one.)
 ├── optimization/   # Performance scaling and device adaptation (OptimizationManager)
 └── utils/          # Shared utilities and tools (ErrorHandler)
 ```
@@ -113,9 +113,9 @@ A cinematic exploration experience that combines the accessibility of web games 
 │   ├── BaseLevel.ts               # Abstract base class with physics helpers
 │   ├── StarObservatory.ts         # Hub level with star navigation
 │   ├── GenericLevel.ts            # Data-driven level implementation
-│   └── ObservatoryEnvironment.ts  # Observatory-specific environment
+│   └── ObservatoryEnvironmentSystem.ts # A procedural generator responsible only for creating the static environment of the Observatory (terrain, vegetation). It no longer manages water or lighting.
 ├── systems/
-│   ├── StarNavigationSystem.ts    # Complete star interaction & rendering system
+│   ├── StarNavigationSystemModern.ts # The modern, self-sufficient star navigation system that reads data directly from the global game state
 │   ├── FireflySystem.ts           # Camera-aware lighting system
 │   ├── OceanSystem.ts             # Advanced water effects
 │   └── AtmosphericEffects.ts      # Environmental effects
@@ -219,6 +219,11 @@ private updateCameraAwareLighting(deltaTime: number, camera: THREE.Camera): void
 - **Desktop**: Rich 25-light experience that follows camera movement
 - **Dynamic**: Lights activate/deactivate as you look around
 - **Seamless**: All 80 fireflies remain visually present without performance cost
+
+#### **✅ Isolated Lighting Effects (COMPLETED)**
+**Issue**: The firefly point lights were incorrectly illuminating the entire environment (trees, rocks), causing visual clutter.
+
+**Solution**: The lighting system was refactored to use rendering layers. Firefly lights now exist on a dedicated "Effects Layer," ensuring they only illuminate the firefly sprites themselves. This creates the intended subtle glow effect and prevents any "light leakage" onto the main environment.
 
 #### **✅ Fixed Culling System Bug (COMPLETED)**
 **Resolved optimization system that was blocking all mobile optimizations**
@@ -380,7 +385,7 @@ environmentalEffects.registerWaterSource({
 - **Performance Scaling**: Effect quality adapts to device capabilities
 - **Event System**: Other systems can respond to underwater state changes
 
-#### **Advanced Water Animation (Observatory Level)**
+#### **Advanced Water Animation (Data-Driven)**
 
 ##### **3D Wave Displacement**
 - **Vertex Shader Animation**: Real displacement mapping on water geometry
@@ -400,15 +405,21 @@ this.waterPool.position.y = this.currentWaterLevel;  // Mesh position for water 
 positions[i + 2] = waveDisplacement;                 // Vertex displacement for waves
 ```
 
+**Note**: This logic now resides within the global EnvironmentalEffectsSystem and is activated based on a level's JSON configuration.
+
 ---
 
 ## 📱 **Development Guidelines**
 
 ### **Creating New Levels**
-1. **Inherit from BaseLevel**: Always extend BaseLevel class
-2. **Use OptimizationManager**: Leverage automated performance system
-3. **Follow Naming**: `src/game/levels/YourLevelName.ts`
-4. **Register in GameManager**: Add to level registration
+1. **Create a Configuration File**: Create a new JSON file in `/src/game/levels/` (e.g., `my_new_level.json`).
+2. **Define the Level**: In the JSON file, define all aspects of the level:
+   - Specify the `terrain.generator` (e.g., `ObservatoryEnvironmentSystem`).
+   - Define the lighting style (e.g., `"style": "toon"` or `"realistic"`).
+   - If needed, add a `water` block with `dynamics` to enable a dynamic ocean.
+   - Add any other required systems (like `PortalSystem`) to the `systems` array.
+3. **Register in Manifest**: Add an entry for your new level in `/src/game/levels/level-manifest.json`, providing a name, config path, and camera settings.
+4. **No New Class Needed**: The `GenericLevel.ts` system will automatically build and run the level based on your configuration. There is no need to write a new level class in TypeScript.
 
 ### **Performance Best Practices**
 - **Use OptimizationManager**: Automatic performance scaling

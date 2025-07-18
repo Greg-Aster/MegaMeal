@@ -149,14 +149,20 @@ export class OceanSystem extends GameObject {
         qualitySettings: qualitySettings ? {
           oceanSegments: qualitySettings.oceanSegments,
           enableProceduralTextures: qualitySettings.enableProceduralTextures,
-          enableNormalMaps: qualitySettings.enableNormalMaps
+          enableNormalMaps: qualitySettings.enableNormalMaps,
+          enableReflections: qualitySettings.enableReflections,
+          enableRefractions: qualitySettings.enableRefractions
         } : 'null'
       });
       
       if (qualitySettings) {
-        // Apply ocean geometry based on quality settings
+        // Apply ocean geometry based on quality settings (CRITICAL for performance)
         this.config.segments.width = qualitySettings.oceanSegments.width;
         this.config.segments.height = qualitySettings.oceanSegments.height;
+        
+        // Apply reflection/refraction settings from quality profile
+        this.config.enableReflection = qualitySettings.enableReflections;
+        this.config.enableRefraction = qualitySettings.enableRefractions;
         
         // Reduce update frequency on lower quality settings
         if (qualitySettings.maxFireflyLights === 0) {
@@ -167,21 +173,32 @@ export class OceanSystem extends GameObject {
           this.updateInterval = 1000 / 30; // 30 FPS for high/ultra
         }
         
+        // Reduce ocean size for mobile devices (ultra_low/low quality)
+        if (optimizationLevel === 'ultra_low' || optimizationLevel === 'low') {
+          this.config.size.width = Math.min(5000, this.config.size.width);
+          this.config.size.height = Math.min(5000, this.config.size.height);
+        }
+        
         console.log(`✅ OceanSystem: Applied intelligent optimization for ${optimizationLevel}`, {
           segments: qualitySettings.oceanSegments,
           proceduralTextures: qualitySettings.enableProceduralTextures,
-          normalMaps: qualitySettings.enableNormalMaps
+          normalMaps: qualitySettings.enableNormalMaps,
+          reflections: qualitySettings.enableReflections,
+          refractions: qualitySettings.enableRefractions,
+          oceanSize: `${this.config.size.width}x${this.config.size.height}`
         });
       } else {
         console.warn(`🌊 OceanSystem: No quality settings available for level ${optimizationLevel}`);
       }
     } catch (error) {
       console.error('🌊 OceanSystem: Failed to apply intelligent optimization:', error);
-      // Fallback to simple mobile detection
+      // Fallback to simple mobile detection with disabled reflections/refractions
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       if (isMobile) {
         this.config.segments.width = Math.min(this.config.segments.width, 16);
         this.config.segments.height = Math.min(this.config.segments.height, 16);
+        this.config.enableReflection = false;
+        this.config.enableRefraction = false;
         this.updateInterval = 1000 / 20;
         
         this.config.size.width = Math.min(2000, this.config.size.width);
@@ -286,7 +303,7 @@ export class OceanSystem extends GameObject {
   }
 
   /**
-   * Create intelligent water material based on device capabilities
+   * Create intelligent water material based on device capabilities and optimization tiers
    */
   private createIntelligentWaterMaterial(): THREE.Material {
     const qualitySettings = this.getQualitySettings();
@@ -296,7 +313,9 @@ export class OceanSystem extends GameObject {
     console.log(`🌊 Water Material: Creating for quality level ${optimizationLevel}`, {
       qualitySettings: qualitySettings ? {
         enableProceduralTextures: qualitySettings.enableProceduralTextures,
-        enableNormalMaps: qualitySettings.enableNormalMaps
+        enableNormalMaps: qualitySettings.enableNormalMaps,
+        enableReflections: qualitySettings.enableReflections,
+        enableRefractions: qualitySettings.enableRefractions
       } : 'null'
     });
     
@@ -311,9 +330,9 @@ export class OceanSystem extends GameObject {
       });
     }
 
-    // ULTRA_LOW: Basic material, no effects
+    // ULTRA_LOW: Basic material, no effects at all (fastest performance)
     if (!qualitySettings.enableProceduralTextures && !qualitySettings.enableNormalMaps) {
-      console.log('🌊 Water Material: Using ULTRA_LOW basic material');
+      console.log('🌊 Water Material: Using ULTRA_LOW basic material (no reflections/refractions)');
       return new this.THREE.MeshBasicMaterial({
         color: 0x006994,
         transparent: true,
@@ -322,9 +341,9 @@ export class OceanSystem extends GameObject {
       });
     }
 
-    // LOW: Simple standard material
-    if (!qualitySettings.enableNormalMaps) {
-      console.log('🌊 Water Material: Using LOW Lambert material');
+    // LOW: Simple Lambert material, no reflections/refractions (good performance)
+    if (!qualitySettings.enableNormalMaps || (!qualitySettings.enableReflections && !qualitySettings.enableRefractions)) {
+      console.log('🌊 Water Material: Using LOW Lambert material (no reflections/refractions)');
       return new this.THREE.MeshLambertMaterial({
         color: 0x006994,
         transparent: true,
@@ -333,19 +352,36 @@ export class OceanSystem extends GameObject {
       });
     }
 
-    // MEDIUM/HIGH/ULTRA: Full PBR material with stunning water effects
-    console.log('🌊 Water Material: Using HIGH/ULTRA PBR material with procedural textures');
+    // MEDIUM/HIGH/ULTRA: PBR material with quality-based reflection/refraction control
+    console.log(`🌊 Water Material: Using ${optimizationLevel.toUpperCase()} PBR material`, {
+      reflections: qualitySettings.enableReflections,
+      refractions: qualitySettings.enableRefractions
+    });
+    
     const waterMaterial = new this.THREE.MeshStandardMaterial({
       color: 0x006994,
       transparent: true,
       opacity: 0.95, // Nearly opaque as requested
-      metalness: 0.05, // Slight metallic reflection
-      roughness: 0.05, // Very smooth for mirror-like reflections
+      metalness: qualitySettings.enableReflections ? 0.05 : 0.0, // Only metallic if reflections enabled
+      roughness: qualitySettings.enableReflections ? 0.05 : 0.3, // Smoother for reflections
       side: this.THREE.DoubleSide,
       
-      // Enable advanced water effects for capable devices
-      envMapIntensity: qualitySettings.enableNormalMaps ? 1.5 : 0.5,
+      // Environment map intensity based on reflection capability
+      envMapIntensity: qualitySettings.enableReflections ? 1.5 : 0.0,
     });
+    
+    // Configure reflection/refraction settings based on quality tiers
+    if (qualitySettings.enableReflections) {
+      console.log('🌊 Water Material: Enabling reflections');
+      // Reflections are handled by envMapIntensity and metalness/roughness
+    }
+    
+    if (qualitySettings.enableRefractions) {
+      console.log('🌊 Water Material: Enabling refractions (ultra quality only)');
+      // Refractions would require more complex shader setup
+      // For now, we indicate support through opacity and transparency
+      waterMaterial.opacity = 0.8; // More transparent for refraction effect
+    }
 
     // ULTRA quality gets the most advanced effects
     if (optimizationManager?.getOptimizationLevel() === 'ultra') {

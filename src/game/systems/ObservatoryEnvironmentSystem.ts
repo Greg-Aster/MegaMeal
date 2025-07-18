@@ -689,10 +689,11 @@ export class ObservatoryEnvironmentSystem extends BaseLevelGenerator {
   }
   
   /**
-   * Create realistic grass patches on the main hill using efficient instancing
+   * Create realistic grass patches using CLUSTERING to prevent optimization bottlenecks
+   * PERFORMANCE FIX: Groups multiple grass instances into clusters instead of individual objects
    */
   private async createGrassPatches(): Promise<void> {
-    console.log('🌱 Loading grass assets (instancing approach)...');
+    console.log('🌱 Loading grass assets (CLUSTERED approach for performance)...');
     
     const grassTypes = ['Grass_Small.gltf', 'Grass_Large.gltf'];
     
@@ -712,14 +713,6 @@ export class ObservatoryEnvironmentSystem extends BaseLevelGenerator {
               child.castShadow = true;
               child.receiveShadow = true;
               if (child.material) {
-                // DEBUG: Log original material properties
-                console.log('🔍 Original material:', {
-                  type: child.material.constructor.name,
-                  emissive: child.material.emissive,
-                  emissiveIntensity: child.material.emissiveIntensity,
-                  color: child.material.color
-                });
-                
                 // Use working material replacement pattern from original ObservatoryEnvironment.ts
                 if (child.material && child.material.map) {
                   const newMaterial = new this.dependencies.THREE.MeshLambertMaterial({
@@ -729,8 +722,6 @@ export class ObservatoryEnvironmentSystem extends BaseLevelGenerator {
                   });
                   child.material = newMaterial;
                 }
-                
-                console.log('✅ Replaced with non-emissive LambertMaterial');
               }
             }
           });
@@ -739,16 +730,19 @@ export class ObservatoryEnvironmentSystem extends BaseLevelGenerator {
         })
       );
       
-      // Create instances using the loaded templates
+      // Create individual grass objects - OptimizationManager will handle clustering automatically
       const vegetationSettings = this.getIntelligentVegetationSettings();
       const grassCount = Math.min(vegetationSettings.maxInstances, 25);
+      
+      console.log(`🌱 Creating ${grassCount} individual grass objects (will be auto-clustered by OptimizationManager)`);
       
       for (let i = 0; i < grassCount; i++) {
         // Pick a random grass type
         const grassTemplate = grassAssets[Math.floor(Math.random() * grassAssets.length)];
         const grassInstance = grassTemplate.clone();
+        grassInstance.name = `grass_${i}`; // Name for clustering identification
         
-        // Position on the hill with natural clustering
+        // Position on the hill with natural distribution
         const angle = Math.random() * Math.PI * 2;
         const radius = Math.random() * this.terrainParams.hillRadius * 0.9;
         const x = Math.cos(angle) * radius;
@@ -756,16 +750,15 @@ export class ObservatoryEnvironmentSystem extends BaseLevelGenerator {
         const y = this.getHeightAt(x, z);
         
         // Add natural variation
+        grassInstance.position.set(x, y, z);
         grassInstance.rotation.y = Math.random() * Math.PI * 2;
         grassInstance.scale.multiplyScalar(0.8 + Math.random() * 0.4);
         
-        const position = new this.dependencies.THREE.Vector3(x, y, z);
-        const lodObject = this.createLODVegetation(grassInstance, position);
-        
-        this.vegetationGroup!.add(lodObject);
+        // Add individual objects - global optimization will cluster them
+        this.vegetationGroup!.add(grassInstance);
       }
       
-      console.log(`🌱 Created ${grassCount} grass patches`);
+      console.log(`✅ Created ${grassCount} individual grass objects for automated clustering`);
       
     } catch (error) {
       console.error('Failed to create grass patches:', error);
@@ -804,14 +797,6 @@ export class ObservatoryEnvironmentSystem extends BaseLevelGenerator {
               child.castShadow = true;
               child.receiveShadow = true;
               if (child.material) {
-                // DEBUG: Log original material properties
-                console.log('🔍 Original material:', {
-                  type: child.material.constructor.name,
-                  emissive: child.material.emissive,
-                  emissiveIntensity: child.material.emissiveIntensity,
-                  color: child.material.color
-                });
-                
                 // Use working material replacement pattern from original ObservatoryEnvironment.ts
                 if (child.material && child.material.map) {
                   const newMaterial = new this.dependencies.THREE.MeshLambertMaterial({
@@ -821,8 +806,6 @@ export class ObservatoryEnvironmentSystem extends BaseLevelGenerator {
                   });
                   child.material = newMaterial;
                 }
-                
-                console.log('✅ Replaced with non-emissive LambertMaterial');
               }
             }
           });
@@ -854,10 +837,13 @@ export class ObservatoryEnvironmentSystem extends BaseLevelGenerator {
         const position = new this.dependencies.THREE.Vector3(x, y, z);
         const lodObject = this.createLODVegetation(flowerInstance, position);
         
+        // Register with OptimizationManager for runtime culling
+        this.registerObjectForOptimization(lodObject, 'vegetation', 'medium');
+        
         this.vegetationGroup!.add(lodObject);
       }
       
-      console.log(`🌸 Created ${flowerCount} flower clusters`);
+      // Flower creation completed
       
     } catch (error) {
       console.error('Failed to create flower clusters:', error);
@@ -921,10 +907,13 @@ export class ObservatoryEnvironmentSystem extends BaseLevelGenerator {
         const position = new this.dependencies.THREE.Vector3(x, y, z);
         const lodObject = this.createLODVegetation(asset.scene, position);
         
+        // Register with OptimizationManager for runtime culling
+        this.registerObjectForOptimization(lodObject, 'vegetation', 'medium');
+        
         this.vegetationGroup!.add(lodObject);
       }
       
-      console.log(`🌿 Created ${bushCount} bushes`);
+      // Bush creation completed
       
     } catch (error) {
       console.error('Failed to create bushes:', error);
@@ -989,10 +978,13 @@ export class ObservatoryEnvironmentSystem extends BaseLevelGenerator {
         const position = new this.dependencies.THREE.Vector3(x, y, z);
         const lodObject = this.createLODVegetation(asset.scene, position);
         
+        // Register with OptimizationManager for runtime culling
+        this.registerObjectForOptimization(lodObject, 'vegetation', 'high');
+        
         this.vegetationGroup!.add(lodObject);
       }
       
-      console.log(`🌳 Created ${treeCount} trees`);
+      // Tree creation completed
       
     } catch (error) {
       console.error('Failed to create trees:', error);
@@ -1049,10 +1041,13 @@ export class ObservatoryEnvironmentSystem extends BaseLevelGenerator {
         const position = new this.dependencies.THREE.Vector3(x, y, z);
         const lodObject = this.createLODVegetation(rockMesh, position);
         
+        // Register with OptimizationManager for runtime culling
+        this.registerObjectForOptimization(lodObject, 'decoration', 'low');
+        
         this.vegetationGroup!.add(lodObject);
       }
       
-      console.log(`🪨 Created ${rockCount} stones and rocks`);
+      // Rock creation completed
       
     } catch (error) {
       console.error('Failed to create stones and rocks:', error);
@@ -1172,6 +1167,27 @@ export class ObservatoryEnvironmentSystem extends BaseLevelGenerator {
     }
   }
   
+  /**
+   * Register an object with OptimizationManager for runtime culling and LOD
+   */
+  private registerObjectForOptimization(object: THREE.Object3D, type: 'vegetation' | 'decoration' | 'structure' | 'effect', priority: 'low' | 'medium' | 'high'): void {
+    try {
+      const optimizationManager = this.dependencies.engine.getOptimizationManager();
+      if (optimizationManager && typeof optimizationManager.registerObject === 'function') {
+        // Mark object as optimizable for the OptimizationManager
+        object.userData.allowOptimization = true;
+        object.userData.optimizationType = type;
+        object.userData.optimizationPriority = priority;
+        
+        // The OptimizationManager will automatically detect and register this object
+        // during its scene scanning process
+        console.log(`🎯 Marked object for optimization: ${object.name || 'unnamed'} (${type}, ${priority})`);
+      }
+    } catch (error) {
+      console.warn('Failed to register object for optimization:', error);
+    }
+  }
+
   private async createFireflies(): Promise<void> {
     if (!this.dependencies.engine) {
       console.warn('Engine not available, skipping fireflies');

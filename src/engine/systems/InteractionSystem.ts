@@ -80,7 +80,7 @@ export class InteractionSystem {
     }
     
     this.interactables.set(interactable.id, interactable);
-    console.log(`📝 Registered interactable: ${interactable.id}`);
+    // Interactable registered (logging disabled for performance)
     
     // Emit registration event
     this.eventBus.emit('interaction.registered', {

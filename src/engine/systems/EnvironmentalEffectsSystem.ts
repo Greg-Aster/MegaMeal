@@ -122,7 +122,7 @@ export class EnvironmentalEffectsSystem {
   }
   
   /**
-   * Create and manage water systems for levels
+   * Create and manage water systems for levels - PHASE 2: Quality-based configuration
    */
   public createWaterSystem(waterConfig: WaterConfiguration, levelGroup: THREE.Group): void {
     if (this.managedOceans.has(waterConfig.id)) {
@@ -135,7 +135,20 @@ export class EnvironmentalEffectsSystem {
       return;
     }
 
-    // Create OceanSystem with provided configuration
+    // PHASE 2: Treat level JSON as "maximum quality" - OptimizationManager decides final quality
+    const maxQualityConfig = waterConfig.oceanConfig;
+    const requestedReflections = maxQualityConfig?.enableReflection ?? true;
+    const requestedRefractions = maxQualityConfig?.enableRefraction ?? true;
+    
+    console.log(`🌊 EnvironmentalEffectsSystem: Creating water system with quality-based config`, {
+      levelRequests: {
+        reflections: requestedReflections,
+        refractions: requestedRefractions
+      },
+      note: 'OptimizationManager will override based on device capabilities'
+    });
+
+    // Create OceanSystem with provided configuration (OptimizationManager will override expensive effects)
     const oceanSystem = new OceanSystem(
       THREE,
       this.scene,
@@ -149,8 +162,9 @@ export class EnvironmentalEffectsSystem {
         metalness: 0.02,
         roughness: 0.1,
         waves: [],
-        enableReflection: true,
-        enableRefraction: true,
+        // PHASE 2: Pass level's maximum quality requests - OceanSystem will apply device-appropriate limits
+        enableReflection: requestedReflections,
+        enableRefraction: requestedRefractions,
         enableAnimation: true,
         animationSpeed: 1.0,
         enableFog: false,
@@ -158,7 +172,7 @@ export class EnvironmentalEffectsSystem {
         fogDensity: 0.01,
         enableLOD: true,
         maxDetailDistance: 500,
-        ...waterConfig.oceanConfig // Override with provided config
+        ...maxQualityConfig // Override with provided config
       }
     );
 
@@ -207,11 +221,19 @@ export class EnvironmentalEffectsSystem {
   }
 
   /**
-   * Process level configuration and create water systems if needed
+   * Process level configuration and create water systems if needed - PHASE 2: Quality-aware processing
    */
   public processLevelConfiguration(levelConfig: any, levelGroup: THREE.Group): void {
     // Look for water configuration in level
     if (levelConfig.water) {
+      console.log(`🌊 EnvironmentalEffectsSystem: Processing water config for level ${levelConfig.id}`, {
+        requestedEffects: {
+          reflections: levelConfig.water.oceanConfig?.enableReflection,
+          refractions: levelConfig.water.oceanConfig?.enableRefraction
+        },
+        approach: 'Level JSON specifies maximum quality - OptimizationManager will apply device limits'
+      });
+      
       const waterConfig: WaterConfiguration = {
         id: `${levelConfig.id}_water`,
         oceanConfig: levelConfig.water.oceanConfig || {},
