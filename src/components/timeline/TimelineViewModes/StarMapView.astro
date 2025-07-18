@@ -746,14 +746,34 @@ const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera
           const mainColor = getStarColor(uniqueStarId, event.era, useEraColors);
           const starType = getStarType(uniqueStarId, event.isKeyEvent);
           
-          // Create advanced star sprite texture with initial state
-          const starTexture = createAdvancedStarTexture(mainColor, starType, event.isKeyEvent, false, false, animationStartTime);
+          // Add brightness/saturation variance within constellation color theme
+          let finalColor = mainColor;
+          if (starAtlasTexture) {
+            const color = new THREE.Color(mainColor);
+            const hash = hashCode(uniqueStarId);
+            // Keep same hue but vary brightness and saturation for constellation unity
+            const brightnessVariation = ((hash % 60) - 30) * 0.004; // ±0.12 brightness variation
+            const saturationVariation = ((hash % 40) - 20) * 0.005; // ±0.1 saturation variation
+            color.offsetHSL(0, saturationVariation, brightnessVariation); // No hue change
+            finalColor = color;
+          }
+          
+          // TIER 2: Use shared texture atlas instead of individual texture generation
           const spriteMaterial = new THREE.SpriteMaterial({ 
-            map: starTexture, 
+            map: starAtlasTexture || createAdvancedStarTexture(mainColor, starType, event.isKeyEvent, false, false, animationStartTime), 
             transparent: true,
             alphaTest: 0.01,
-            blending: THREE.AdditiveBlending
+            blending: THREE.AdditiveBlending,
+            // Apply star color as tint when using atlas
+            color: starAtlasTexture ? finalColor : 0xffffff
           });
+          
+          // Set initial UV coordinates for first frame if using atlas
+          if (starAtlasTexture && spriteMaterial.map) {
+            const initialFrame = starTextureAtlas.getFrameUV(0);
+            spriteMaterial.map.repeat.set(initialFrame.width, initialFrame.height);
+            spriteMaterial.map.offset.set(initialFrame.u, initialFrame.v);
+          }
           
           const sprite = new THREE.Sprite(spriteMaterial);
           
@@ -767,6 +787,7 @@ const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera
           sprite.scale.setScalar(baseScale * scaleVariation);
           
           // Store event data and animation state on the sprite for interaction
+          const hash = hashCode(uniqueStarId);
           sprite.userData = {
             ...event,
             mainColor,
@@ -777,7 +798,9 @@ const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera
             isSelected: false,
             isHovered: false,
             animationStartTime: Date.now(),
-            lastUpdateTime: Date.now()
+            lastUpdateTime: Date.now(),
+            // Add unique animation offset to stagger animations
+            animationOffset: (hash % 1000) / 1000.0 // 0.0 to 1.0 offset
           };
           
           starsGroup.add(sprite);
@@ -855,39 +878,59 @@ const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera
     });
   }
 
-  // Update star animations and states
+  // TIER 2 PERFORMANCE OPTIMIZATION: Texture Atlas Animation System
+  let starTextureAtlas = null;
+  let starAtlasTexture = null;
+  
+  // Import the texture atlas system
+  async function initializeStarAtlas() {
+    try {
+      // Dynamic import to avoid module loading issues in Astro
+      const { getSharedStarAtlas } = await import('/src/utils/StarTextureAtlas.ts');
+      starTextureAtlas = getSharedStarAtlas();
+      starAtlasTexture = starTextureAtlas.generateAtlas();
+      console.log('✅ Star texture atlas initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize star texture atlas:', error);
+      return false;
+    }
+    return true;
+  }
+
+  // TIER 2: Lightweight UV animation instead of texture regeneration
   function updateStarAnimations() {
+    if (!starTextureAtlas || !starAtlasTexture) {
+      // Fallback to orbital rings only if atlas not available
+      updateOrbitalRings();
+      return;
+    }
+
     const currentTime = Date.now();
     
-    starSprites.forEach((sprite, slug) => {
+    // Update UV coordinates for each star sprite (very lightweight)
+    starSprites.forEach((sprite, uniqueId) => {
       const userData = sprite.userData;
-      if (!userData) return;
+      if (!userData || !sprite.material) return;
+
+      // Calculate animation frame with staggered timing for each star
+      const baseTime = currentTime * 0.001; // Convert to seconds
+      const animationSpeed = userData.isKeyEvent ? 1.2 : 0.8; // Key events twinkle faster
+      const staggerOffset = userData.animationOffset || 0; // Unique offset per star
+      const adjustedTime = baseTime + (staggerOffset * 8); // Spread animations across 8 second range
       
-      const timeSinceCreation = currentTime - userData.animationStartTime;
-      
-      // Regenerate texture with current animation state (less frequently for performance)
-      if (currentTime - userData.lastUpdateTime > 150) { // Update every 150ms instead of 100ms
-        const newTexture = createAdvancedStarTexture(
-          userData.mainColor,
-          userData.starType,
-          userData.isKeyEvent,
-          userData.isSelected,
-          userData.isHovered,
-          timeSinceCreation
-        );
-        
-        // Update material
-        if (sprite.material && sprite.material.map) {
-          sprite.material.map.dispose();
-          sprite.material.map = newTexture;
-          sprite.material.needsUpdate = true;
-        }
-        
-        userData.lastUpdateTime = currentTime;
+      // Get current frame (0-15) from texture atlas
+      const frameIndex = starTextureAtlas.getFrameForTime(adjustedTime, animationSpeed);
+      const frameUV = starTextureAtlas.getFrameUV(frameIndex);
+
+      // Update UV coordinates (no texture regeneration - just offset changes)
+      if (sprite.material.map && sprite.material.map.repeat && sprite.material.map.offset) {
+        sprite.material.map.repeat.set(frameUV.width, frameUV.height);
+        sprite.material.map.offset.set(frameUV.u, frameUV.v);
+        sprite.material.map.needsUpdate = true;
       }
     });
     
-    // Update orbital rings
+    // Still update orbital rings (lightweight)
     updateOrbitalRings();
   }
 
@@ -1065,7 +1108,7 @@ const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera
   }
 
   // Initialize scene and objects
-  function initSceneAndObjects() {
+  async function initSceneAndObjects() {
     console.log('[DEBUG] Is Mobile Portrait:', isMobilePortrait()); // Added for mobile portrait detection
     const container = document.getElementById(mapId);
     if (!container || !THREE) return;
@@ -1109,6 +1152,10 @@ const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera
     scene.add(gridGroup);
     
     createGrid();
+    
+    // TIER 2: Initialize texture atlas before creating stars
+    await initializeStarAtlas();
+    
     createOrUpdateStars();
 
     // Setup controls
@@ -1293,11 +1340,11 @@ const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera
       renderer.render(scene, camera);
       updateCardPosition();
       
-      // Update star animations every few frames for performance
+      // TIER 2 PERFORMANCE OPTIMIZATION: Smooth UV animation
+      // Lightweight UV coordinate updates can run more frequently without performance impact
       const currentTime = Date.now();
-      // Original logic for throttling updateStarAnimations:
-      if (currentTime % 150 < 16) { // Update approximately every 150ms (slower)
-        updateStarAnimations();
+      if (currentTime % 300 < 16) { // 300ms updates for slower, more subtle animation
+        updateStarAnimations(); // Now uses texture atlas UV animation (very lightweight)
       }
     } catch (e) {
       console.error('Starmap: Error in animate loop:', e);
@@ -1438,7 +1485,7 @@ const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera
       }
       
       console.log('Starmap: Three.js and OrbitControls ready.');
-      initSceneAndObjects();
+      await initSceneAndObjects();
 
     } catch (error) {
       console.error('Starmap: Error during Three.js or OrbitControls initialization:', error);

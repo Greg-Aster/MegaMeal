@@ -64,6 +64,10 @@ interface QualitySettings {
   enableProceduralTextures: boolean;
   enableNormalMaps: boolean;
   
+  // Water Effects (Critical for performance)
+  enableReflections: boolean;
+  enableRefractions: boolean;
+  
   // Rendering
   canvasScale: number; // Render resolution multiplier
   enablePostProcessing: boolean;
@@ -108,6 +112,9 @@ export class OptimizationManager {
       textureResolution: 256,
       enableProceduralTextures: false,
       enableNormalMaps: false,
+      // Water Effects - DISABLE ALL expensive effects for ultra_low
+      enableReflections: false,
+      enableRefractions: false,
       canvasScale: 0.6,
       enablePostProcessing: false,
       enableShadows: false
@@ -123,6 +130,9 @@ export class OptimizationManager {
       textureResolution: 512,
       enableProceduralTextures: true,
       enableNormalMaps: false,
+      // Water Effects - DISABLE ALL expensive effects for low
+      enableReflections: false,
+      enableRefractions: false,
       canvasScale: 0.75,
       enablePostProcessing: false,
       enableShadows: false
@@ -138,6 +148,9 @@ export class OptimizationManager {
       textureResolution: 1024,
       enableProceduralTextures: true,
       enableNormalMaps: true,
+      // Water Effects - DISABLE refractions but allow reflections for medium
+      enableReflections: false,
+      enableRefractions: false,
       canvasScale: 0.9,
       enablePostProcessing: false,
       enableShadows: true
@@ -153,6 +166,9 @@ export class OptimizationManager {
       textureResolution: 1024,
       enableProceduralTextures: true,
       enableNormalMaps: true,
+      // Water Effects - Enable reflections but DISABLE refractions for high
+      enableReflections: true,
+      enableRefractions: false,
       canvasScale: 1.0,
       enablePostProcessing: true,
       enableShadows: true
@@ -168,6 +184,9 @@ export class OptimizationManager {
       textureResolution: 2048,
       enableProceduralTextures: true,
       enableNormalMaps: true,
+      // Water Effects - Enable ALL effects for ultra (only for high-end desktop)
+      enableReflections: true,
+      enableRefractions: true,
       canvasScale: 1.0,
       enablePostProcessing: true,
       enableShadows: true
@@ -283,6 +302,177 @@ export class OptimizationManager {
   }
 
   /**
+   * PHASE 2: Global Automated Clustering System
+   * Automatically optimizes any level's environment by clustering small objects
+   */
+  public optimizeLevel(levelGroup: THREE.Group, optimizationConfig?: {
+    clusterVegetation?: boolean;
+    clusterDensity?: 'low' | 'medium' | 'high';
+  }): void {
+    if (!optimizationConfig?.clusterVegetation) {
+      console.log('🎛️ Vegetation clustering disabled for this level');
+      return;
+    }
+
+    console.log('🎛️ OptimizationManager: Starting automated level optimization...');
+    
+    // STEP 1: Scene Analysis - Find all vegetation objects
+    const vegetationObjects = this.analyzeSceneForVegetation(levelGroup);
+    
+    if (vegetationObjects.length === 0) {
+      console.log('🎛️ No vegetation found to cluster');
+      return;
+    }
+
+    console.log(`🎛️ Found ${vegetationObjects.length} vegetation objects to cluster`);
+    
+    // STEP 2: Automated Clustering Logic
+    const clusters = this.createAutomatedClusters(vegetationObjects, optimizationConfig.clusterDensity || 'medium');
+    
+    // STEP 3: Replace individual objects with clusters
+    this.replaceIndividualObjectsWithClusters(levelGroup, vegetationObjects, clusters);
+    
+    console.log(`✅ OptimizationManager: Created ${clusters.length} clusters from ${vegetationObjects.length} objects`);
+  }
+
+  /**
+   * STEP 1: Analyze scene to identify small vegetation objects that should be clustered
+   */
+  private analyzeSceneForVegetation(levelGroup: THREE.Group): THREE.Object3D[] {
+    const vegetationObjects: THREE.Object3D[] = [];
+    
+    levelGroup.traverse((object) => {
+      // Identify vegetation by name patterns and size
+      const name = object.name.toLowerCase();
+      const isVegetation = name.includes('grass') || 
+                          name.includes('flower') || 
+                          name.includes('bush') ||
+                          name.includes('vegetation') ||
+                          (object instanceof THREE.Mesh && this.isSmallMesh(object));
+      
+      // Only cluster objects that aren't already clusters
+      if (isVegetation && !name.includes('cluster') && object.parent === levelGroup) {
+        vegetationObjects.push(object);
+      }
+    });
+    
+    return vegetationObjects;
+  }
+
+  /**
+   * Check if a mesh is small enough to be considered for clustering
+   */
+  private isSmallMesh(mesh: THREE.Mesh): boolean {
+    const bbox = new THREE.Box3().setFromObject(mesh);
+    const size = bbox.getSize(new THREE.Vector3());
+    const maxDimension = Math.max(size.x, size.y, size.z);
+    
+    // Objects smaller than 10 units are candidates for clustering
+    return maxDimension < 10;
+  }
+
+  /**
+   * STEP 2: Create spatial clusters from vegetation objects
+   */
+  private createAutomatedClusters(objects: THREE.Object3D[], density: 'low' | 'medium' | 'high'): THREE.Group[] {
+    // Determine cluster parameters based on density setting
+    const clusterParams = {
+      low: { maxClusters: 8, clusterRadius: 25 },
+      medium: { maxClusters: 12, clusterRadius: 20 },
+      high: { maxClusters: 16, clusterRadius: 15 }
+    }[density];
+
+    const clusters: THREE.Group[] = [];
+    const unassigned = [...objects];
+
+    // Use spatial clustering algorithm
+    while (unassigned.length > 0 && clusters.length < clusterParams.maxClusters) {
+      const cluster = new THREE.Group();
+      cluster.name = `auto_vegetation_cluster_${clusters.length}`;
+      
+      // Start with the first unassigned object
+      const seedObject = unassigned.shift()!;
+      cluster.add(seedObject.clone());
+      
+      // Find nearby objects to add to this cluster
+      const clusterCenter = seedObject.position.clone();
+      const objectsInCluster = [seedObject];
+      
+      // Find objects within cluster radius
+      for (let i = unassigned.length - 1; i >= 0; i--) {
+        const object = unassigned[i];
+        const distance = object.position.distanceTo(clusterCenter);
+        
+        if (distance <= clusterParams.clusterRadius) {
+          cluster.add(object.clone());
+          objectsInCluster.push(object);
+          unassigned.splice(i, 1);
+        }
+      }
+      
+      // Position cluster at the centroid of its objects
+      const centroid = new THREE.Vector3();
+      objectsInCluster.forEach(obj => centroid.add(obj.position));
+      centroid.divideScalar(objectsInCluster.length);
+      cluster.position.copy(centroid);
+      
+      // Adjust child positions to be relative to cluster center
+      cluster.children.forEach((child, index) => {
+        const originalPos = objectsInCluster[index].position;
+        child.position.copy(originalPos.clone().sub(centroid));
+      });
+      
+      clusters.push(cluster);
+    }
+    
+    // Handle any remaining objects by adding them to the nearest cluster
+    unassigned.forEach(object => {
+      let nearestCluster = clusters[0];
+      let nearestDistance = object.position.distanceTo(nearestCluster.position);
+      
+      clusters.forEach(cluster => {
+        const distance = object.position.distanceTo(cluster.position);
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestCluster = cluster;
+        }
+      });
+      
+      if (nearestCluster) {
+        const clonedObject = object.clone();
+        clonedObject.position.copy(object.position.clone().sub(nearestCluster.position));
+        nearestCluster.add(clonedObject);
+      }
+    });
+    
+    return clusters;
+  }
+
+  /**
+   * STEP 3: Replace individual objects with clusters in the scene
+   */
+  private replaceIndividualObjectsWithClusters(
+    levelGroup: THREE.Group, 
+    originalObjects: THREE.Object3D[], 
+    clusters: THREE.Group[]
+  ): void {
+    // Remove original individual objects
+    originalObjects.forEach(object => {
+      if (object.parent) {
+        object.parent.remove(object);
+      }
+    });
+    
+    // Add clusters to the level
+    clusters.forEach(cluster => {
+      levelGroup.add(cluster);
+      
+      // Register the cluster (not individual objects) for optimization
+      this.autoRegisterObject(cluster);
+    });
+  }
+
+  /**
    * Intelligent device capability detection with detailed analysis
    */
   private detectDeviceCapabilities(): void {
@@ -322,6 +512,12 @@ export class OptimizationManager {
       maxTextureSize = webglContext.getParameter(webglContext.MAX_TEXTURE_SIZE);
     }
     
+    // Detect device memory if available (needed for GPU tier estimation)
+    let deviceMemory: number | undefined;
+    if ('deviceMemory' in navigator) {
+      deviceMemory = (navigator as any).deviceMemory;
+    }
+    
     // Advanced GPU tier estimation
     let estimatedGPUTier: 'low' | 'medium' | 'high' | 'ultra' = 'medium';
     
@@ -340,9 +536,10 @@ export class OptimizationManager {
         estimatedGPUTier = 'low'; // Budget/old phones
       }
     } else {
-      // Desktop GPU estimation
-      if (maxTextureSize >= 16384 && hardwareConcurrency >= 16) {
-        estimatedGPUTier = 'ultra'; // High-end gaming PCs
+      // Desktop GPU estimation - MUCH more conservative for ULTRA quality
+      // Only assign ULTRA to devices that can definitely handle expensive refractions
+      if (maxTextureSize >= 16384 && hardwareConcurrency >= 24 && (deviceMemory && deviceMemory >= 16)) {
+        estimatedGPUTier = 'ultra'; // True high-end gaming PCs with dedicated GPU
       } else if (maxTextureSize >= 8192 && hardwareConcurrency >= 8) {
         estimatedGPUTier = 'high'; // Mid-high end desktops
       } else if (maxTextureSize >= 4096) {
@@ -350,12 +547,6 @@ export class OptimizationManager {
       } else {
         estimatedGPUTier = 'low'; // Old or integrated graphics
       }
-    }
-    
-    // Detect device memory if available
-    let deviceMemory: number | undefined;
-    if ('deviceMemory' in navigator) {
-      deviceMemory = (navigator as any).deviceMemory;
     }
     
     // Enhanced low-end detection
@@ -734,16 +925,6 @@ export class OptimizationManager {
       // Skip if already managed
       if (this.objectsToCheck.includes(object)) return;
       
-      // NEVER scan lighting objects - they are essential for scene visibility
-      if (object instanceof THREE.Light || 
-          object instanceof THREE.DirectionalLight || 
-          object instanceof THREE.AmbientLight ||
-          object instanceof THREE.PointLight ||
-          object instanceof THREE.SpotLight ||
-          object.isLight ||
-          object.type === 'Light') {
-        return;
-      }
       
       // Skip system objects (cameras, etc.)
       if (object.type === 'Camera') return;
@@ -754,53 +935,87 @@ export class OptimizationManager {
       }
     });
   }
+
+  /**
+   * Perform light culling for performance - separate from material optimization
+   */
+  private performLightCulling(): void {
+    if (!this.scene || !this.camera) return;
+    
+    // Find and cull lights based on distance and frustum
+    this.scene.traverse((object) => {
+      if (object instanceof THREE.Light || 
+          object instanceof THREE.DirectionalLight || 
+          object instanceof THREE.AmbientLight ||
+          object instanceof THREE.PointLight ||
+          object instanceof THREE.SpotLight) {
+        
+        const distance = this.camera!.position.distanceTo(object.position);
+        
+        // Safe frustum check - some lights don't have proper geometry/boundingSphere
+        let isInFrustum = true; // Default to visible if frustum check fails
+        try {
+          // Only do frustum culling for PointLight and SpotLight which have defined ranges
+          if (object instanceof THREE.PointLight || object instanceof THREE.SpotLight) {
+            // Create a simple sphere for frustum testing
+            const sphere = new THREE.Sphere(object.position, object.distance || 50);
+            isInFrustum = this.frustum.intersectsSphere(sphere);
+          }
+          // DirectionalLight and AmbientLight affect the entire scene, so don't cull them by frustum
+        } catch (error) {
+          // If frustum check fails, assume light is visible
+          isInFrustum = true;
+        }
+        
+        // Cull lights that are too far away or outside frustum for performance
+        const shouldBeActive = isInFrustum && distance <= this.config.maxRenderDistance * 1.5;
+        
+        // Only modify light visibility, never materials of other objects
+        if (object.visible !== shouldBeActive) {
+          object.visible = shouldBeActive;
+        }
+      }
+    });
+  }
   
   /**
    * Determine if an object should be optimized
    */
   private shouldOptimizeObject(object: THREE.Object3D): boolean {
-    // NEVER optimize lighting objects - critical for scene visibility
-    if (object instanceof THREE.Light || 
-        object instanceof THREE.DirectionalLight || 
-        object instanceof THREE.AmbientLight ||
-        object instanceof THREE.PointLight ||
-        object instanceof THREE.SpotLight ||
-        object.isLight ||
-        object.type === 'Light') {
-      return false;
-    }
+    // SEPARATE CONCERNS: Light culling vs Material modification
+    // Light culling is handled separately and is always allowed for performance
+    // This method only determines if we should do distance-based material fading
     
-    // NEVER optimize essential game objects
+    // NEVER optimize essential game objects for material fading
     if (this.isEssentialObject(object)) {
       return false;
     }
     
-    // Objects with many children (like grass/vegetation instances) - but NEVER fireflies
-    if (object instanceof THREE.Points && object.name.match(/(grass|flower|particle)/i) && !object.name.match(/fireflies/i)) {
+    // Only allow material optimization on objects that explicitly opt-in
+    // This prevents accidental modification of objects owned by other systems
+    const name = object.name.toLowerCase();
+    
+    // Only optimize objects with explicit optimization markers
+    if (name.includes('_optimizable') || 
+        object.userData.allowOptimization === true) {
       return true;
     }
     
-    // Groups with vegetation/decoration naming patterns - but NEVER fireflies
-    if (object.name.match(/(grass|flower|tree|bush|vegetation|decoration)/i) && !object.name.match(/fireflies/i)) {
+    // Legacy support: Only specific vegetation types that are safe to modify
+    if (object instanceof THREE.Points && name.match(/(grass|flower|particle)/i) && !name.match(/fireflies/i)) {
       return true;
     }
     
-    // Optimize most meshes that are far from origin (but not essential objects)
-    const distance = object.position.length();
-    if (distance > 30 && object instanceof THREE.Mesh) {
-      return this.isDecorationMesh(object);
-    }
-    
-    // Also optimize Groups that contain meshes and are far away (but not essential groups)
-    if (distance > 50 && object instanceof THREE.Group && object.children.length > 0) {
-      // Check if this group contains any meshes
-      let containsMeshes = false;
-      object.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          containsMeshes = true;
-        }
-      });
-      return containsMeshes;
+    // Very conservative approach: Only modify objects that are clearly decorative and small
+    if (object instanceof THREE.Mesh) {
+      const bbox = new THREE.Box3().setFromObject(object);
+      const size = bbox.getSize(new THREE.Vector3());
+      const maxDimension = Math.max(size.x, size.y, size.z);
+      
+      // Only very small decorative objects and only if they have safe naming
+      if (maxDimension < 5 && name.match(/(small|tiny|decoration|ornament)/i)) {
+        return true;
+      }
     }
     
     return false;
@@ -913,7 +1128,7 @@ export class OptimizationManager {
         object instanceof THREE.AmbientLight ||
         object instanceof THREE.PointLight ||
         object instanceof THREE.SpotLight ||
-        object.isLight ||
+        (object as any).isLight ||
         object.type === 'Light') {
       console.warn(`🚨 Attempted to register lighting object for optimization: "${object.name}" - BLOCKED`);
       return;
@@ -1034,22 +1249,28 @@ export class OptimizationManager {
     // Periodically scan the scene for new objects to manage
     if (this.lastOptimizationCheck > this.config.checkInterval) {
       this.scanSceneForOptimization();
+      this.performLightCulling(); // Separate light culling for performance
       this.lastOptimizationCheck = 0;
     }
 
     // Update the camera frustum for culling checks
     this.updateFrustum();
 
-    // Process a batch of objects each frame to avoid performance spikes
+    // PERFORMANCE FIX: Drastically reduce batch processing to prevent frame spikes
     const objectsToProcess = Array.from(this.managedObjects.values());
-    const batchSize = Math.min(objectsToProcess.length, this.config.maxObjectsPerFrame);
+    // Only process a few objects per frame, regardless of config
+    const maxBatchSize = Math.min(5, this.config.maxObjectsPerFrame); // Never more than 5 per frame
+    const batchSize = Math.min(objectsToProcess.length, maxBatchSize);
 
-    for (let i = 0; i < batchSize; i++) {
-      // Cycle through objects to ensure all get updated over time
-      const objectIndex = (Math.floor(this.lastOptimizationCheck / 10) + i) % objectsToProcess.length;
-      const managedObject = objectsToProcess[objectIndex];
-      if (managedObject) {
-        this.optimizeObject(managedObject.object, deltaTime);
+    // Only process if we have objects and it's time to do optimization work
+    if (batchSize > 0 && this.lastOptimizationCheck % 100 < 50) { // Only 50% of frames
+      for (let i = 0; i < batchSize; i++) {
+        // Cycle through objects to ensure all get updated over time
+        const objectIndex = (Math.floor(this.lastOptimizationCheck / 10) + i) % objectsToProcess.length;
+        const managedObject = objectsToProcess[objectIndex];
+        if (managedObject) {
+          this.optimizeObject(managedObject.object, deltaTime);
+        }
       }
     }
   }
@@ -1225,26 +1446,52 @@ export class OptimizationManager {
   }
   
   /**
-   * Apply opacity to all materials in an object hierarchy
+   * Apply opacity to all materials in an object hierarchy with ownership enforcement
+   * PERFORMANCE OPTIMIZED: Cache materials and avoid redundant traverse operations
    */
   private applyOpacityToObject(object: THREE.Object3D, opacity: number): void {
-    object.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        const materials = Array.isArray(child.material) ? child.material : [child.material];
-        
-        materials.forEach((material) => {
-          if (material) {
-            // Store original opacity if not stored
-            if (material.userData.originalOpacity === undefined) {
-              material.userData.originalOpacity = material.opacity || 1.0;
+    // PERFORMANCE FIX: Cache materials to avoid expensive traverse operations
+    if (!object.userData.cachedMaterials) {
+      object.userData.cachedMaterials = [];
+      
+      // Only traverse ONCE to build the cache
+      object.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          const materials = Array.isArray(child.material) ? child.material : [child.material];
+          materials.forEach((material) => {
+            if (material && !object.userData.cachedMaterials.includes(material)) {
+              object.userData.cachedMaterials.push(material);
             }
-            
-            // Apply faded opacity
+          });
+        }
+      });
+    }
+    
+    // Use cached materials - NO expensive traverse operations
+    object.userData.cachedMaterials.forEach((material: any) => {
+      if (material) {
+        // SYSTEM BOUNDARY ENFORCEMENT: Only modify materials we explicitly own
+        if (material.userData.optimizationSystemOwner && 
+            material.userData.optimizationSystemOwner !== 'OptimizationManager') {
+          return; // Skip materials owned by other systems
+        }
+        
+        // Claim ownership on first access
+        if (!material.userData.optimizationSystemOwner) {
+          material.userData.optimizationSystemOwner = 'OptimizationManager';
+          material.userData.originalOpacity = material.opacity || 1.0;
+        }
+        
+        // Only modify materials we own
+        if (material.userData.optimizationSystemOwner === 'OptimizationManager') {
+          // PERFORMANCE: Only update if opacity actually changed
+          const targetOpacity = material.userData.originalOpacity * opacity;
+          if (Math.abs(material.opacity - targetOpacity) > 0.01) {
             material.transparent = opacity < 1.0;
-            material.opacity = material.userData.originalOpacity * opacity;
+            material.opacity = targetOpacity;
             material.needsUpdate = true;
           }
-        });
+        }
       }
     });
   }

@@ -9,6 +9,7 @@ import {
   colorSpectrum, 
   starTypes 
 } from '../../config/timelineconfig';
+import { getSharedStarAtlas } from '../../utils/StarTextureAtlas';
 
 // Load star map config asynchronously (kept for compatibility)
 const loadStarMapConfig = async () => {
@@ -223,6 +224,10 @@ export class StarNavigationSystemModern extends BaseLevelGenerator {
   private starSprites: Map<string, THREE.Sprite> = new Map();
   private timelineEvents: any[] = [];
   
+  // TIER 2: Texture Atlas System
+  private starTextureAtlas: any = null;
+  private starAtlasTexture: THREE.Texture | null = null;
+  
   // Selection state
   private selectedStar: StarData | null = null;
   private hoveredStarSprite: THREE.Sprite | null = null;
@@ -264,6 +269,15 @@ export class StarNavigationSystemModern extends BaseLevelGenerator {
       
       // Load star map configuration
       await loadStarMapConfig();
+      
+      // TIER 2: Initialize shared texture atlas
+      try {
+        this.starTextureAtlas = getSharedStarAtlas();
+        this.starAtlasTexture = this.starTextureAtlas.generateAtlas();
+        console.log('⭐ StarNavigationSystem: Texture atlas initialized');
+      } catch (error) {
+        console.warn('⭐ StarNavigationSystem: Failed to initialize texture atlas, falling back to individual textures:', error);
+      }
       
       // Set up simple event listeners (only background clicks)
       this.setupEventListeners();
@@ -388,18 +402,10 @@ export class StarNavigationSystemModern extends BaseLevelGenerator {
   }
   
   private async createStars(): Promise<void> {
-    // Debug: Check what timeline events we have
-    console.log(`🔍 DEBUG: Total timeline events available: ${this.timelineEvents.length}`);
-    console.log(`🔍 DEBUG: First few events:`, this.timelineEvents.slice(0, 3));
-    
     // Group events by era for constellation-based positioning
     const eventsByEra: Record<string, any[]> = {};
     // Use ALL timeline events, not just key events, to create a complete star map
     const starEvents = this.timelineEvents;
-    
-    console.log(`🔍 DEBUG: All events used for stars: ${starEvents.length}`);
-    console.log(`🔍 DEBUG: Key events in dataset: ${starEvents.filter(e => e.isKeyEvent).length}`);
-    console.log(`🔍 DEBUG: Regular events in dataset: ${starEvents.filter(e => !e.isKeyEvent).length}`);
     
     starEvents.forEach(event => {
       const era = event.era || 'unknown';
@@ -409,11 +415,8 @@ export class StarNavigationSystemModern extends BaseLevelGenerator {
       eventsByEra[era].push(event);
     });
     
-    console.log(`🔍 DEBUG: Events grouped by era:`, Object.entries(eventsByEra).map(([era, events]) => `${era}: ${events.length}`));
-    
     // Create stars using constellation positioning
     for (const [era, eraEvents] of Object.entries(eventsByEra)) {
-      console.log(`🔍 DEBUG: Creating constellation for era: ${era} with ${eraEvents.length} events`);
       await this.createConstellationForEra(era, eraEvents);
     }
     
@@ -458,20 +461,48 @@ export class StarNavigationSystemModern extends BaseLevelGenerator {
       // Create unique star ID
       const uniqueStarId = `${event.slug || event.id}-${event.year}-${eventIndex}`;
       
-      // Create star sprite using the advanced texture system
-      const starTexture = await loadStarTexture(
-        this.dependencies.THREE,
-        event.era || 'unknown',
-        uniqueStarId,
-        event.isKeyEvent || false
-      );
+      // TIER 2: Use shared texture atlas instead of individual texture generation
+      let starTexture = this.starAtlasTexture;
+      if (!starTexture) {
+        // Fallback to individual texture generation if atlas not available
+        starTexture = await loadStarTexture(
+          this.dependencies.THREE,
+          event.era || 'unknown',
+          uniqueStarId,
+          event.isKeyEvent || false
+        );
+      }
+      
+      // Get star color for tinting when using atlas
+      const starColor = getStarColor(uniqueStarId, event.era, true);
+      
+      // Add brightness/saturation variance within constellation color theme
+      let finalColor: any = starColor;
+      if (this.starAtlasTexture) {
+        const color = new this.dependencies.THREE.Color(starColor);
+        const hash = hashCode(uniqueStarId);
+        // Keep same hue but vary brightness and saturation for constellation unity
+        const brightnessVariation = ((hash % 60) - 30) * 0.004; // ±0.12 brightness variation
+        const saturationVariation = ((hash % 40) - 20) * 0.005; // ±0.1 saturation variation
+        color.offsetHSL(0, saturationVariation, brightnessVariation); // No hue change
+        finalColor = color;
+      }
       
       const starMaterial = new this.dependencies.THREE.SpriteMaterial({
         map: starTexture,
         transparent: true,
         alphaTest: 0.01,
-        blending: this.dependencies.THREE.AdditiveBlending
+        blending: this.dependencies.THREE.AdditiveBlending,
+        // Apply star color as tint when using atlas
+        color: this.starAtlasTexture ? finalColor : 0xffffff
       });
+      
+      // Set initial UV coordinates for first frame if using atlas
+      if (this.starAtlasTexture && this.starTextureAtlas && starMaterial.map) {
+        const initialFrame = this.starTextureAtlas.getFrameUV(0);
+        starMaterial.map.repeat.set(initialFrame.width, initialFrame.height);
+        starMaterial.map.offset.set(initialFrame.u, initialFrame.v);
+      }
       
       const star = new this.dependencies.THREE.Sprite(starMaterial);
       
@@ -485,6 +516,7 @@ export class StarNavigationSystemModern extends BaseLevelGenerator {
       star.scale.setScalar(baseScale * scaleVariation);
       
       // Store comprehensive event data for interaction
+      const hash = hashCode(uniqueStarId);
       star.userData = {
         eventData: event,
         starId: uniqueStarId,
@@ -493,7 +525,9 @@ export class StarNavigationSystemModern extends BaseLevelGenerator {
         isSelected: false,
         isHovered: false,
         animationStartTime: Date.now(),
-        lastUpdateTime: Date.now()
+        lastUpdateTime: Date.now(),
+        // Add unique animation offset to stagger animations
+        animationOffset: (hash % 1000) / 1000.0 // 0.0 to 1.0 offset
       };
       
       this.starSprites.set(uniqueStarId, star);
@@ -677,21 +711,52 @@ export class StarNavigationSystemModern extends BaseLevelGenerator {
       return;
     }
     
-    // Add subtle twinkling or pulsing effects
-    const time = Date.now() * 0.001;
-    
-    this.starSprites.forEach((star, starId) => {
-      try {
-        // Subtle twinkling effect - use safe starId access
-        const idLength = typeof starId === 'string' ? starId.length : 1;
-        const twinkle = Math.sin(time * 2 + idLength) * 0.1 + 0.9;
-        if (star && star.material) {
-          star.material.opacity = twinkle;
+    // TIER 2: Use texture atlas UV animation if available
+    if (this.starTextureAtlas && this.starAtlasTexture) {
+      const currentTime = Date.now();
+      
+      this.starSprites.forEach((star, starId) => {
+        try {
+          const userData = star.userData;
+          if (!userData || !star.material) return;
+
+          // Calculate animation frame with staggered timing for each star
+          const baseTime = currentTime * 0.001; // Convert to seconds
+          const animationSpeed = userData.eventData?.isKeyEvent ? 1.2 : 0.8; // Key events twinkle faster
+          const staggerOffset = userData.animationOffset || 0; // Unique offset per star
+          const adjustedTime = baseTime + (staggerOffset * 8); // Spread animations across 8 second range
+          
+          // Get current frame (0-15) from texture atlas
+          const frameIndex = this.starTextureAtlas.getFrameForTime(adjustedTime, animationSpeed);
+          const frameUV = this.starTextureAtlas.getFrameUV(frameIndex);
+
+          // Update UV coordinates (no texture regeneration - just offset changes)
+          if (star.material.map && star.material.map.repeat && star.material.map.offset) {
+            star.material.map.repeat.set(frameUV.width, frameUV.height);
+            star.material.map.offset.set(frameUV.u, frameUV.v);
+            star.material.map.needsUpdate = true;
+          }
+        } catch (error) {
+          console.warn('Error updating star atlas animation:', error);
         }
-      } catch (error) {
-        console.warn('Error updating star effect:', error);
-      }
-    });
+      });
+    } else {
+      // Fallback to opacity-based twinkling if atlas not available
+      const time = Date.now() * 0.001;
+      
+      this.starSprites.forEach((star, starId) => {
+        try {
+          // Subtle twinkling effect - use safe starId access
+          const idLength = typeof starId === 'string' ? starId.length : 1;
+          const twinkle = Math.sin(time * 2 + idLength) * 0.1 + 0.9;
+          if (star && star.material) {
+            star.material.opacity = twinkle;
+          }
+        } catch (error) {
+          console.warn('Error updating star effect:', error);
+        }
+      });
+    }
   }
   
   private updateSelectionHighlight(deltaTime: number): void {

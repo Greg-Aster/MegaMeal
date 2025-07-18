@@ -211,6 +211,9 @@ export class FireflySystem extends GameObject {
       side: this.THREE.DoubleSide
     });
     
+    // SYSTEM BOUNDARY ENFORCEMENT: Claim ownership of firefly materials
+    fireflyMaterial.userData.optimizationSystemOwner = 'FireflySystem';
+    
     const mesh = new this.THREE.Mesh(fireflyGeometry, fireflyMaterial);
     mesh.position.copy(position);
     mesh.name = `firefly_${index}`;
@@ -463,7 +466,7 @@ export class FireflySystem extends GameObject {
     // Debug log occasionally
     if (Math.random() < 0.02) {
       const activeLights = this.fireflies.filter(f => f.isLightActive).length;
-      console.log(`🎥 Camera-aware: ${activeLights}/${this.config.maxLights} lights active from ${inViewFireflies.length} in view`);
+      // Removed per-frame logging - was causing performance issues
     }
   }
 
