@@ -449,7 +449,8 @@ export class OptimizationManager {
   }
 
   /**
-   * STEP 3: Replace individual objects with clusters in the scene
+   * STEP 3: Replace individual objects with MERGED GEOMETRY clusters
+   * CRITICAL: This performs geometry merging to eliminate draw call bottlenecks
    */
   private replaceIndividualObjectsWithClusters(
     levelGroup: THREE.Group, 
@@ -463,13 +464,145 @@ export class OptimizationManager {
       }
     });
     
-    // Add clusters to the level
+    // Add MERGED clusters to the level
     clusters.forEach(cluster => {
-      levelGroup.add(cluster);
+      // PERFORMANCE CRITICAL: Merge geometries within each cluster
+      const mergedCluster = this.createMergedGeometryCluster(cluster);
+      levelGroup.add(mergedCluster);
       
-      // Register the cluster (not individual objects) for optimization
-      this.autoRegisterObject(cluster);
+      // Register the merged cluster for optimization
+      this.autoRegisterObject(mergedCluster);
     });
+    
+    console.log(`🚀 GPU Optimization: Converted ${originalObjects.length} draw calls into ${clusters.length} merged meshes`);
+  }
+
+  /**
+   * GEOMETRY MERGING: Convert a cluster of individual objects into a single merged mesh
+   * This is the key optimization that eliminates GPU draw call bottlenecks
+   */
+  private createMergedGeometryCluster(cluster: THREE.Group): THREE.Mesh | THREE.Group {
+    try {
+      const meshesToMerge: { geometry: THREE.BufferGeometry; material: THREE.Material; matrix: THREE.Matrix4 }[] = [];
+      let sharedMaterial: THREE.Material | null = null;
+
+      // Collect all meshes and their transforms from the cluster
+      cluster.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.geometry && child.material) {
+          // Update world matrix to get correct transforms
+          child.updateWorldMatrix(true, false);
+          
+          // Clone geometry and apply transforms
+          const geometry = child.geometry.clone();
+          geometry.applyMatrix4(child.matrixWorld);
+          
+          // Use the first material as shared material (assumes similar vegetation uses same material)
+          if (!sharedMaterial) {
+            sharedMaterial = Array.isArray(child.material) ? child.material[0] : child.material;
+          }
+          
+          meshesToMerge.push({
+            geometry,
+            material: Array.isArray(child.material) ? child.material[0] : child.material,
+            matrix: child.matrixWorld.clone()
+          });
+        }
+      });
+
+      if (meshesToMerge.length === 0) {
+        console.warn('No meshes found to merge in cluster');
+        return cluster; // Return original cluster if no meshes to merge
+      }
+
+      // Ensure we have a material
+      if (!sharedMaterial) {
+        console.warn('No material found for merging, using default');
+        sharedMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
+      }
+
+      // Merge geometries using Three.js BufferGeometryUtils
+      const geometriesToMerge = meshesToMerge.map(item => item.geometry);
+      
+      // Use Three.js built-in merging (available in newer versions)
+      let mergedGeometry: THREE.BufferGeometry;
+      
+      if (geometriesToMerge.length === 1) {
+        mergedGeometry = geometriesToMerge[0];
+      } else {
+        // Manual geometry merging for compatibility
+        mergedGeometry = this.manualMergeGeometries(geometriesToMerge);
+      }
+
+      // Create single merged mesh
+      const mergedMesh = new THREE.Mesh(mergedGeometry, sharedMaterial);
+      mergedMesh.name = `${cluster.name}_merged`;
+      mergedMesh.castShadow = true;
+      mergedMesh.receiveShadow = true;
+
+      // Position at cluster center
+      mergedMesh.position.copy(cluster.position);
+
+      console.log(`🔧 Merged ${meshesToMerge.length} objects into 1 mesh: ${mergedMesh.name}`);
+      return mergedMesh;
+
+    } catch (error) {
+      console.error('Failed to merge cluster geometry:', error);
+      return cluster; // Return original cluster if merging fails
+    }
+  }
+
+  /**
+   * Manual geometry merging for compatibility with all Three.js versions
+   */
+  private manualMergeGeometries(geometries: THREE.BufferGeometry[]): THREE.BufferGeometry {
+    const mergedGeometry = new THREE.BufferGeometry();
+    
+    let positionArray: number[] = [];
+    let normalArray: number[] = [];
+    let uvArray: number[] = [];
+    let indexArray: number[] = [];
+    let currentIndexOffset = 0;
+
+    geometries.forEach(geometry => {
+      const positions = geometry.attributes.position;
+      const normals = geometry.attributes.normal;
+      const uvs = geometry.attributes.uv;
+      const indices = geometry.index;
+
+      if (positions) {
+        positionArray.push(...Array.from(positions.array));
+      }
+      if (normals) {
+        normalArray.push(...Array.from(normals.array));
+      }
+      if (uvs) {
+        uvArray.push(...Array.from(uvs.array));
+      }
+      if (indices) {
+        const offsetIndices = Array.from(indices.array).map(i => i + currentIndexOffset);
+        indexArray.push(...offsetIndices);
+        currentIndexOffset += positions.count;
+      }
+    });
+
+    // Set merged attributes
+    if (positionArray.length > 0) {
+      mergedGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positionArray, 3));
+    }
+    if (normalArray.length > 0) {
+      mergedGeometry.setAttribute('normal', new THREE.Float32BufferAttribute(normalArray, 3));
+    }
+    if (uvArray.length > 0) {
+      mergedGeometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvArray, 2));
+    }
+    if (indexArray.length > 0) {
+      mergedGeometry.setIndex(indexArray);
+    }
+
+    // Compute bounding sphere for frustum culling
+    mergedGeometry.computeBoundingSphere();
+    
+    return mergedGeometry;
   }
 
   /**
