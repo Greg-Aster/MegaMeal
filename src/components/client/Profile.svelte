@@ -1,294 +1,310 @@
 <!-- Profile.svelte - Enhanced with video playback controls -->
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+import { onDestroy, onMount } from 'svelte'
 
-  // Props
-  export let slug = '';
-  export let customAvatar = '';
-  export let customName = '';
-  export let customBio = '';
-  export let customLink = ''; 
-  export let isHomePage = false;
-  export let profileConfig: any;
-  export let avatarConfig: any;
+// Props
+export const slug = ''
+export const customAvatar = ''
+export const customName = ''
+export const customBio = ''
+export const customLink = ''
+export const isHomePage = false
+export let profileConfig: any
+export let avatarConfig: any
 
-  // 🎬 NEW: Extended HTMLVideoElement type to support custom properties
-  interface ExtendedHTMLVideoElement extends HTMLVideoElement {
-    endedHandler?: () => void;
+// 🎬 NEW: Extended HTMLVideoElement type to support custom properties
+interface ExtendedHTMLVideoElement extends HTMLVideoElement {
+  endedHandler?: () => void
+}
+
+// State
+let currentAvatarIndex = 0
+let animationDirection = 1
+let animationTimer: number | null = null
+let videoElements: ExtendedHTMLVideoElement[] = [] // 🎬 NEW: Track video elements
+let videoElement: ExtendedHTMLVideoElement // 🎬 NEW: Single video element binding
+
+// 🎬 NEW: Video configuration from avatarConfig
+$: videoConfig = avatarConfig?.videoConfig || {}
+$: playbackRate = videoConfig.playbackRate || 0.5 // Default to 50% speed
+$: shouldLoop = videoConfig.loop ?? true // Default to true, can be disabled
+$: loopDelay = videoConfig.loopDelay || 5000 // Delay between loops in ms
+$: playOnce = videoConfig.playOnce || false // Play once then stop
+
+// 🎬 NEW: Animated file detection
+function isAnimatedFile(src: string): boolean {
+  if (!src) return false
+  const lowercaseSrc = src.toLowerCase()
+  return (
+    lowercaseSrc.includes('.gif') ||
+    lowercaseSrc.includes('.webp') ||
+    lowercaseSrc.includes('.apng') ||
+    lowercaseSrc.match(/\.(gif|webp|apng)(\?|$)/)
+  )
+}
+
+// 🎬 NEW: Video file detection
+function isVideoFile(src: string): boolean {
+  if (!src) return false
+  const lowercaseSrc = src.toLowerCase()
+  return (
+    lowercaseSrc.includes('.mp4') ||
+    lowercaseSrc.includes('.webm') ||
+    lowercaseSrc.includes('.mov') ||
+    lowercaseSrc.match(/\.(mp4|webm|mov|avi)(\?|$)/)
+  )
+}
+
+// Computed values
+$: useDefaultAvatars = !customAvatar
+$: displayName = customName || profileConfig?.name || 'Author'
+$: displayBio = customBio || profileConfig?.bio || ''
+$: displayLink = customLink || '/about/'
+$: socialLinks = profileConfig?.links || []
+
+// Avatar selection logic
+$: activeAvatarIndex = (() => {
+  if (isHomePage || !useDefaultAvatars) return 0
+  return getAvatarIndexFromSlug(slug, avatarConfig?.avatarList?.length || 1)
+})()
+
+$: selectedAvatar = (() => {
+  if (!useDefaultAvatars) return customAvatar
+  if (isHomePage && avatarConfig?.homeAvatar) {
+    return typeof avatarConfig.homeAvatar === 'string'
+      ? avatarConfig.homeAvatar
+      : avatarConfig.homeAvatar.src || avatarConfig.homeAvatar
+  }
+  if (avatarConfig?.avatarList?.length > 0) {
+    const avatar = avatarConfig.avatarList[activeAvatarIndex]
+    return typeof avatar === 'string' ? avatar : avatar.src || avatar
+  }
+  return ''
+})()
+
+$: avatarList = (() => {
+  if (!avatarConfig?.avatarList) return []
+  return avatarConfig.avatarList.map(avatar =>
+    typeof avatar === 'string' ? avatar : avatar.src || avatar,
+  )
+})()
+
+$: hasAnimatedAvatar = useDefaultAvatars
+  ? isHomePage
+    ? isAnimatedFile(selectedAvatar)
+    : avatarList.some(src => isAnimatedFile(src))
+  : isAnimatedFile(customAvatar)
+
+$: hasMultipleAvatars =
+  useDefaultAvatars &&
+  avatarList.length > 1 &&
+  !isHomePage &&
+  !hasAnimatedAvatar
+
+function getAvatarIndexFromSlug(slug: string, arrayLength: number): number {
+  if (!slug || arrayLength === 0) return 0
+
+  let hash = 0
+  for (let i = 0; i < slug.length; i++) {
+    const char = slug.charCodeAt(i)
+    hash = (hash << 5) - hash + char
+    hash = hash & hash
+  }
+  return Math.abs(hash) % arrayLength
+}
+
+// 🎬 NEW: Configure video element with custom settings
+function configureVideoElement(video: HTMLVideoElement) {
+  if (!video) return
+
+  console.log('🎬 Configuring video element:', {
+    playbackRate,
+    shouldLoop,
+    loopDelay,
+    playOnce,
+    videoSrc: video.src,
+  })
+
+  // Set playback rate
+  video.playbackRate = playbackRate
+  console.log('🎬 Video playback rate set to:', video.playbackRate)
+
+  // Remove any existing event listeners to prevent duplicates
+  if (video.endedHandler) {
+    video.removeEventListener('ended', video.endedHandler)
   }
 
-  // State
-  let currentAvatarIndex = 0;
-  let animationDirection = 1;
-  let animationTimer: number | null = null;
-  let videoElements: ExtendedHTMLVideoElement[] = []; // 🎬 NEW: Track video elements
-  let videoElement: ExtendedHTMLVideoElement; // 🎬 NEW: Single video element binding
-
-  // 🎬 NEW: Video configuration from avatarConfig
-  $: videoConfig = avatarConfig?.videoConfig || {};
-  $: playbackRate = videoConfig.playbackRate || 0.5; // Default to 50% speed
-  $: shouldLoop = videoConfig.loop ?? true; // Default to true, can be disabled
-  $: loopDelay = videoConfig.loopDelay || 5000; // Delay between loops in ms
-  $: playOnce = videoConfig.playOnce || false; // Play once then stop
-
-  // 🎬 NEW: Animated file detection
-  function isAnimatedFile(src: string): boolean {
-    if (!src) return false;
-    const lowercaseSrc = src.toLowerCase();
-    return lowercaseSrc.includes('.gif') || 
-           lowercaseSrc.includes('.webp') || 
-           lowercaseSrc.includes('.apng') ||
-           lowercaseSrc.match(/\.(gif|webp|apng)(\?|$)/);
-  }
-
-  // 🎬 NEW: Video file detection
-  function isVideoFile(src: string): boolean {
-    if (!src) return false;
-    const lowercaseSrc = src.toLowerCase();
-    return lowercaseSrc.includes('.mp4') || 
-           lowercaseSrc.includes('.webm') || 
-           lowercaseSrc.includes('.mov') ||
-           lowercaseSrc.match(/\.(mp4|webm|mov|avi)(\?|$)/);
-  }
-
-  // Computed values
-  $: useDefaultAvatars = !customAvatar;
-  $: displayName = customName || profileConfig?.name || 'Author';
-  $: displayBio = customBio || profileConfig?.bio || '';
-  $: displayLink = customLink || '/about/';
-  $: socialLinks = profileConfig?.links || [];
-
-  // Avatar selection logic
-  $: activeAvatarIndex = (() => {
-    if (isHomePage || !useDefaultAvatars) return 0;
-    return getAvatarIndexFromSlug(slug, avatarConfig?.avatarList?.length || 1);
-  })();
-
-  $: selectedAvatar = (() => {
-    if (!useDefaultAvatars) return customAvatar;
-    if (isHomePage && avatarConfig?.homeAvatar) {
-      return typeof avatarConfig.homeAvatar === 'string' 
-        ? avatarConfig.homeAvatar 
-        : avatarConfig.homeAvatar.src || avatarConfig.homeAvatar;
+  // Handle loop behavior
+  if (playOnce) {
+    video.loop = false
+    video.endedHandler = () => {
+      video.pause()
     }
-    if (avatarConfig?.avatarList?.length > 0) {
-      const avatar = avatarConfig.avatarList[activeAvatarIndex];
-      return typeof avatar === 'string' ? avatar : avatar.src || avatar;
+    video.addEventListener('ended', video.endedHandler)
+  } else if (loopDelay > 0) {
+    video.loop = false
+    video.endedHandler = () => {
+      setTimeout(() => {
+        if (video && video.paused) {
+          video.currentTime = 0
+          video.play().catch(e => console.log('Video play failed:', e))
+        }
+      }, loopDelay)
     }
-    return '';
-  })();
-
-  $: avatarList = (() => {
-    if (!avatarConfig?.avatarList) return [];
-    return avatarConfig.avatarList.map(avatar => 
-      typeof avatar === 'string' ? avatar : avatar.src || avatar
-    );
-  })();
-
-  $: hasAnimatedAvatar = useDefaultAvatars ? 
-    (isHomePage ? isAnimatedFile(selectedAvatar) : avatarList.some(src => isAnimatedFile(src))) :
-    isAnimatedFile(customAvatar);
-
-  $: hasMultipleAvatars = useDefaultAvatars && 
-                         avatarList.length > 1 && 
-                         !isHomePage &&
-                         !hasAnimatedAvatar;
-
-  function getAvatarIndexFromSlug(slug: string, arrayLength: number): number {
-    if (!slug || arrayLength === 0) return 0;
-    
-    let hash = 0;
-    for (let i = 0; i < slug.length; i++) {
-      const char = slug.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash) % arrayLength;
+    video.addEventListener('ended', video.endedHandler)
+  } else {
+    video.loop = shouldLoop
+    video.endedHandler = null
   }
 
-  // 🎬 NEW: Configure video element with custom settings
-  function configureVideoElement(video: HTMLVideoElement) {
-    if (!video) return;
-    
-    console.log('🎬 Configuring video element:', {
+  // Add to tracking array if not already present
+  if (!videoElements.includes(video)) {
+    videoElements.push(video)
+    console.log(
+      '🎬 Added video to tracking array. Total videos:',
+      videoElements.length,
+    )
+  }
+}
+
+// 🎬 NEW: Update all video elements when config changes
+function updateVideoSettings() {
+  console.log('🎬 Updating video settings for', videoElements.length, 'videos')
+  videoElements.forEach((video: ExtendedHTMLVideoElement) => {
+    if (video && !video.paused) {
+      console.log('🎬 Updating video:', video.src, 'to rate:', playbackRate)
+      video.playbackRate = playbackRate
+      video.loop = shouldLoop && loopDelay === 0 && !playOnce
+    }
+  })
+}
+
+// Watch for config changes and update videos
+$: {
+  if (playbackRate || shouldLoop || loopDelay || playOnce) {
+    console.log('🎬 Video config changed:', {
       playbackRate,
       shouldLoop,
       loopDelay,
       playOnce,
-      videoSrc: video.src
-    });
-    
-    // Set playback rate
-    video.playbackRate = playbackRate;
-    console.log('🎬 Video playback rate set to:', video.playbackRate);
-    
-    // Remove any existing event listeners to prevent duplicates
-    if (video.endedHandler) {
-      video.removeEventListener('ended', video.endedHandler);
-    }
-    
-    // Handle loop behavior
-    if (playOnce) {
-      video.loop = false;
-      video.endedHandler = () => {
-        video.pause();
-      };
-      video.addEventListener('ended', video.endedHandler);
-    } else if (loopDelay > 0) {
-      video.loop = false;
-      video.endedHandler = () => {
-        setTimeout(() => {
-          if (video && video.paused) {
-            video.currentTime = 0;
-            video.play().catch(e => console.log('Video play failed:', e));
-          }
-        }, loopDelay);
-      };
-      video.addEventListener('ended', video.endedHandler);
-    } else {
-      video.loop = shouldLoop;
-      video.endedHandler = null;
-    }
+      videoElementsCount: videoElements.length,
+    })
+    updateVideoSettings()
+  }
+}
 
-    // Add to tracking array if not already present
-    if (!videoElements.includes(video)) {
-      videoElements.push(video);
-      console.log('🎬 Added video to tracking array. Total videos:', videoElements.length);
+function startAvatarAnimation() {
+  if (!hasMultipleAvatars || !avatarList.length) return
+
+  currentAvatarIndex = activeAvatarIndex
+
+  animationTimer = setInterval(() => {
+    currentAvatarIndex += animationDirection
+
+    if (currentAvatarIndex >= avatarList.length) {
+      currentAvatarIndex = avatarList.length - 1
+      animationDirection = -1
+    }
+    if (currentAvatarIndex < 0) {
+      currentAvatarIndex = 0
+      animationDirection = 1
+    }
+  }, avatarConfig?.animationInterval || 3500)
+}
+
+function stopAvatarAnimation() {
+  if (animationTimer) {
+    clearInterval(animationTimer)
+    animationTimer = null
+  }
+}
+
+// 🎬 NEW: Render media component with video configuration
+function renderMediaElement(
+  src: string,
+  alt: string,
+  className: string,
+  loading = 'eager',
+) {
+  if (isVideoFile(src)) {
+    return {
+      type: 'video',
+      src,
+      alt,
+      className,
+      loading,
+      playbackRate,
+      shouldLoop: shouldLoop && loopDelay === 0 && !playOnce,
+      playOnce,
+      loopDelay,
     }
   }
+  return { type: 'image', src, alt, className, loading }
+}
 
-  // 🎬 NEW: Update all video elements when config changes
-  function updateVideoSettings() {
-    console.log('🎬 Updating video settings for', videoElements.length, 'videos');
-    videoElements.forEach((video: ExtendedHTMLVideoElement) => {
-      if (video && !video.paused) {
-        console.log('🎬 Updating video:', video.src, 'to rate:', playbackRate);
-        video.playbackRate = playbackRate;
-        video.loop = shouldLoop && loopDelay === 0 && !playOnce;
-      }
-    });
-  }
+onMount(() => {
+  // Initialize currentAvatarIndex to the selected avatar
+  currentAvatarIndex = activeAvatarIndex
 
-  // Watch for config changes and update videos
-  $: {
-    if (playbackRate || shouldLoop || loopDelay || playOnce) {
-      console.log('🎬 Video config changed:', {
+  // Debug logging (only if we have valid config)
+  if (avatarConfig || profileConfig) {
+    console.log('Profile component mounted:', {
+      slug,
+      useDefaultAvatars,
+      hasMultipleAvatars,
+      hasAnimatedAvatar,
+      avatarListLength: avatarList.length,
+      selectedAvatar: selectedAvatar || 'none',
+      activeAvatarIndex,
+      currentAvatarIndex,
+      profileName: displayName,
+      customLink: displayLink,
+      videoConfig: {
+        // 🎬 NEW: Log video configuration
         playbackRate,
         shouldLoop,
         loopDelay,
         playOnce,
-        videoElementsCount: videoElements.length
-      });
-      updateVideoSettings();
-    }
+      },
+    })
   }
 
-  function startAvatarAnimation() {
-    if (!hasMultipleAvatars || !avatarList.length) return;
+  if (hasMultipleAvatars) {
+    startAvatarAnimation()
+  }
+})
 
-    currentAvatarIndex = activeAvatarIndex;
-
-    animationTimer = setInterval(() => {
-      currentAvatarIndex += animationDirection;
-
-      if (currentAvatarIndex >= avatarList.length) {
-        currentAvatarIndex = avatarList.length - 1;
-        animationDirection = -1;
+onDestroy(() => {
+  stopAvatarAnimation()
+  // 🎬 NEW: Clean up video elements properly
+  videoElements.forEach((video: ExtendedHTMLVideoElement) => {
+    if (video) {
+      video.pause()
+      // Remove custom event listeners
+      if (video.endedHandler) {
+        video.removeEventListener('ended', video.endedHandler)
       }
-      if (currentAvatarIndex < 0) {
-        currentAvatarIndex = 0;
-        animationDirection = 1;
-      }
-    }, avatarConfig?.animationInterval || 3500);
-  }
-
-  function stopAvatarAnimation() {
-    if (animationTimer) {
-      clearInterval(animationTimer);
-      animationTimer = null;
+      video.removeAttribute('src')
+      video.load()
     }
-  }
+  })
+  videoElements = []
+})
 
-  // 🎬 NEW: Render media component with video configuration
-  function renderMediaElement(src: string, alt: string, className: string, loading: string = 'eager') {
-    if (isVideoFile(src)) {
-      return { 
-        type: 'video', 
-        src, 
-        alt, 
-        className, 
-        loading,
-        playbackRate,
-        shouldLoop: shouldLoop && loopDelay === 0 && !playOnce,
-        playOnce,
-        loopDelay
-      };
-    }
-    return { type: 'image', src, alt, className, loading };
-  }
-
-  onMount(() => {
-    // Initialize currentAvatarIndex to the selected avatar
-    currentAvatarIndex = activeAvatarIndex;
-    
-    // Debug logging (only if we have valid config)
-    if (avatarConfig || profileConfig) {
-      console.log('Profile component mounted:', {
-        slug,
-        useDefaultAvatars,
-        hasMultipleAvatars,
-        hasAnimatedAvatar,
-        avatarListLength: avatarList.length,
-        selectedAvatar: selectedAvatar || 'none',
-        activeAvatarIndex,
-        currentAvatarIndex,
-        profileName: displayName,
-        customLink: displayLink,
-        videoConfig: { // 🎬 NEW: Log video configuration
-          playbackRate,
-          shouldLoop,
-          loopDelay,
-          playOnce
-        }
-      });
-    }
-
+// Handle navigation changes (Astro page transitions)
+onMount(() => {
+  const handlePageLoad = () => {
+    stopAvatarAnimation()
     if (hasMultipleAvatars) {
-      startAvatarAnimation();
+      setTimeout(startAvatarAnimation, 100)
     }
-  });
+  }
 
-  onDestroy(() => {
-    stopAvatarAnimation();
-    // 🎬 NEW: Clean up video elements properly
-    videoElements.forEach((video: ExtendedHTMLVideoElement) => {
-      if (video) {
-        video.pause();
-        // Remove custom event listeners
-        if (video.endedHandler) {
-          video.removeEventListener('ended', video.endedHandler);
-        }
-        video.removeAttribute('src');
-        video.load();
-      }
-    });
-    videoElements = [];
-  });
-
-  // Handle navigation changes (Astro page transitions)
-  onMount(() => {
-    const handlePageLoad = () => {
-      stopAvatarAnimation();
-      if (hasMultipleAvatars) {
-        setTimeout(startAvatarAnimation, 100);
-      }
-    };
-
-    document.addEventListener('astro:page-load', handlePageLoad);
-    return () => {
-      document.removeEventListener('astro:page-load', handlePageLoad);
-    };
-  });
+  document.addEventListener('astro:page-load', handlePageLoad)
+  return () => {
+    document.removeEventListener('astro:page-load', handlePageLoad)
+  }
+})
 </script>
 
 <div class="card-base p-3">

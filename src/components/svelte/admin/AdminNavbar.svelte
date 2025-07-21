@@ -1,62 +1,62 @@
 <script>
-  import { onMount } from 'svelte';
-  import { slide } from 'svelte/transition';
-  import LoginForm from './LoginForm.svelte';
+import { onMount } from 'svelte'
+import { slide } from 'svelte/transition'
+import LoginForm from './LoginForm.svelte'
 
-  // Props
-  export let siteTitle = 'Blog';
-  
-  // State
-  let isAuthenticatedState = false;
-  let showAdminDropdown = false;
-  let loginFormRef;
-  
-  // Check authentication status on mount
-  onMount(() => {
-    isAuthenticatedState = localStorage.getItem('isAuthenticated') === 'true';
-  });
-  
-  // Handle button click
-  function handleButtonClick(event) {
-    if (!isAuthenticatedState) {
-      // When not logged in, show login form
-      event.preventDefault();
-      loginFormRef.toggle();
-    } else {
-      // When logged in, toggle dropdown
-      event.preventDefault();
-      toggleAdminDropdown();
-    }
+// Props
+export const siteTitle = 'Blog'
+
+// State
+let isAuthenticatedState = false
+let showAdminDropdown = false
+let loginFormRef
+
+// Check authentication status on mount
+onMount(() => {
+  isAuthenticatedState = localStorage.getItem('isAuthenticated') === 'true'
+})
+
+// Handle button click
+function handleButtonClick(event) {
+  if (!isAuthenticatedState) {
+    // When not logged in, show login form
+    event.preventDefault()
+    loginFormRef.toggle()
+  } else {
+    // When logged in, toggle dropdown
+    event.preventDefault()
+    toggleAdminDropdown()
   }
-  
-  // Handle successful login
-  function handleLogin() {
-    isAuthenticatedState = true;
+}
+
+// Handle successful login
+function handleLogin() {
+  isAuthenticatedState = true
+}
+
+// Handle successful setup
+function handleSetup() {
+  isAuthenticatedState = true
+}
+
+// Handle logout
+function handleLogout() {
+  localStorage.removeItem('isAuthenticated')
+  isAuthenticatedState = false
+  window.location.href = '/'
+}
+
+// Toggle admin dropdown
+function toggleAdminDropdown() {
+  showAdminDropdown = !showAdminDropdown
+}
+
+// Close dropdown when clicking outside
+function handleClickOutside(event) {
+  if (showAdminDropdown && !event.target.closest('.admin-dropdown')) {
+    showAdminDropdown = false
   }
-  
-  // Handle successful setup
-  function handleSetup() {
-    isAuthenticatedState = true;
-  }
-  
-  // Handle logout
-  function handleLogout() {
-    localStorage.removeItem('isAuthenticated');
-    isAuthenticatedState = false;
-    window.location.href = '/';
-  }
-  
-  // Toggle admin dropdown
-  function toggleAdminDropdown() {
-    showAdminDropdown = !showAdminDropdown;
-  }
-  
-  // Close dropdown when clicking outside
-  function handleClickOutside(event) {
-    if (showAdminDropdown && !event.target.closest('.admin-dropdown')) {
-      showAdminDropdown = false;
-    }
-  }
+}
 </script>
 
 <svelte:window on:click={handleClickOutside} />

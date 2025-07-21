@@ -1,89 +1,89 @@
 <!-- Mobile Virtual Controls -->
 <script lang="ts">
-  import { createEventDispatcher, onMount } from 'svelte';
-  
-  export let visible = false;
-  
-  onMount(() => {
-    console.log('📱 MobileControls mounted, visible:', visible);
-  });
-  
-  $: {
-    console.log('📱 MobileControls visibility changed:', visible);
+import { createEventDispatcher, onMount } from 'svelte'
+
+export const visible = false
+
+onMount(() => {
+  console.log('📱 MobileControls mounted, visible:', visible)
+})
+
+$: {
+  console.log('📱 MobileControls visibility changed:', visible)
+}
+
+const dispatch = createEventDispatcher()
+
+let joystickContainer: HTMLElement
+let joystickKnob: HTMLElement
+let isDragging = false
+const joystickCenter = { x: 0, y: 0 }
+const joystickRadius = 50
+
+// Movement state
+let movementVector = { x: 0, z: 0 }
+
+function handleJoystickStart(event: TouchEvent) {
+  event.preventDefault()
+  isDragging = true
+
+  const rect = joystickContainer.getBoundingClientRect()
+  joystickCenter.x = rect.left + rect.width / 2
+  joystickCenter.y = rect.top + rect.height / 2
+
+  updateJoystick(event.touches[0])
+}
+
+function handleJoystickMove(event: TouchEvent) {
+  if (!isDragging) return
+  event.preventDefault()
+  updateJoystick(event.touches[0])
+}
+
+function handleJoystickEnd(event: TouchEvent) {
+  event.preventDefault()
+  isDragging = false
+
+  // Reset joystick
+  if (joystickKnob) {
+    joystickKnob.style.transform = 'translate(-50%, -50%)'
   }
-  
-  const dispatch = createEventDispatcher();
-  
-  let joystickContainer: HTMLElement;
-  let joystickKnob: HTMLElement;
-  let isDragging = false;
-  let joystickCenter = { x: 0, y: 0 };
-  let joystickRadius = 50;
-  
-  // Movement state
-  let movementVector = { x: 0, z: 0 };
-  
-  function handleJoystickStart(event: TouchEvent) {
-    event.preventDefault();
-    isDragging = true;
-    
-    const rect = joystickContainer.getBoundingClientRect();
-    joystickCenter.x = rect.left + rect.width / 2;
-    joystickCenter.y = rect.top + rect.height / 2;
-    
-    updateJoystick(event.touches[0]);
-  }
-  
-  function handleJoystickMove(event: TouchEvent) {
-    if (!isDragging) return;
-    event.preventDefault();
-    updateJoystick(event.touches[0]);
-  }
-  
-  function handleJoystickEnd(event: TouchEvent) {
-    event.preventDefault();
-    isDragging = false;
-    
-    // Reset joystick
-    if (joystickKnob) {
-      joystickKnob.style.transform = 'translate(-50%, -50%)';
-    }
-    
-    // Stop movement
-    movementVector = { x: 0, z: 0 };
-    dispatch('movement', movementVector);
-  }
-  
-  function updateJoystick(touch: Touch) {
-    if (!joystickKnob) return;
-    
-    const deltaX = touch.clientX - joystickCenter.x;
-    const deltaY = touch.clientY - joystickCenter.y;
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    
-    // Clamp to joystick radius
-    const clampedDistance = Math.min(distance, joystickRadius);
-    const angle = Math.atan2(deltaY, deltaX);
-    
-    const knobX = Math.cos(angle) * clampedDistance;
-    const knobY = Math.sin(angle) * clampedDistance;
-    
-    // Update knob position
-    joystickKnob.style.transform = `translate(calc(-50% + ${knobX}px), calc(-50% + ${knobY}px))`;
-    
-    // Calculate movement vector (-1 to 1) - reduced dead zone for better responsiveness
-    movementVector.x = clampedDistance > 2 ? knobX / joystickRadius : 0;
-    movementVector.z = clampedDistance > 2 ? knobY / joystickRadius : 0;
-    
-    console.log('📱 MobileControls: Joystick movement:', movementVector);
-    dispatch('movement', movementVector);
-  }
-  
-  // Action buttons
-  function handleActionPress(action: string) {
-    console.log('📱 MobileControls: Action pressed:', action);
-    dispatch('action', action);
-  }
+
+  // Stop movement
+  movementVector = { x: 0, z: 0 }
+  dispatch('movement', movementVector)
+}
+
+function updateJoystick(touch: Touch) {
+  if (!joystickKnob) return
+
+  const deltaX = touch.clientX - joystickCenter.x
+  const deltaY = touch.clientY - joystickCenter.y
+  const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+
+  // Clamp to joystick radius
+  const clampedDistance = Math.min(distance, joystickRadius)
+  const angle = Math.atan2(deltaY, deltaX)
+
+  const knobX = Math.cos(angle) * clampedDistance
+  const knobY = Math.sin(angle) * clampedDistance
+
+  // Update knob position
+  joystickKnob.style.transform = `translate(calc(-50% + ${knobX}px), calc(-50% + ${knobY}px))`
+
+  // Calculate movement vector (-1 to 1) - reduced dead zone for better responsiveness
+  movementVector.x = clampedDistance > 2 ? knobX / joystickRadius : 0
+  movementVector.z = clampedDistance > 2 ? knobY / joystickRadius : 0
+
+  console.log('📱 MobileControls: Joystick movement:', movementVector)
+  dispatch('movement', movementVector)
+}
+
+// Action buttons
+function handleActionPress(action: string) {
+  console.log('📱 MobileControls: Action pressed:', action)
+  dispatch('action', action)
+}
 </script>
 
 {#if visible}

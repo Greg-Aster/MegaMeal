@@ -1,10 +1,10 @@
 ---
-import type { CollectionEntry } from 'astro:content';
+import type { CollectionEntry } from 'astro:content'
 import { getPostUrlBySlug } from '@utils/url-utils'
+import { postCardConfig } from '../config/postcard.config'
+import { formatDateToYYYYMMDD } from '../utils/date-utils'
 import PostCard from './PostCard.astro'
 import FriendContentIntegrator from './svelte/friends/FriendContentIntegrator.svelte'
-import { formatDateToYYYYMMDD } from '../utils/date-utils'
-import { postCardConfig } from '../config/postcard.config'
 
 const { page } = Astro.props
 
@@ -13,7 +13,7 @@ let delay = 0
 const interval = 50
 
 // Get animation config
-const animationEnabled = postCardConfig.localPosts.styling.animationEnabled;
+const animationEnabled = postCardConfig.localPosts.styling.animationEnabled
 ---
 
 <div id="posts-container" class="transition flex flex-col rounded-[var(--radius-large)] py-1 md:py-0 gap-3 sm:gap-5 md:gap-5 lg:gap-6 mb-4">

@@ -1,186 +1,197 @@
 <script>
-    import { createEventDispatcher, onMount } from 'svelte';
-    
-    // Props
-    export let navBarConfig;
-    
-    // Local state
-    let editingLink = null;
-    let showLinkEditor = false;
-    let addingDropdownItem = false;
-    let linkPresets = {};
-    let reordering = false;
-    
-    // Variables for adding dropdown items
-    let addDropdownName = '';
-    let addDropdownUrl = '';
-    let addDropdownExternal = false;
-    
-    // Event dispatcher
-    const dispatch = createEventDispatcher();
-    
-    // Link presets (from your LinkPreset enum)
-    onMount(() => {
-      // In a real implementation, this would be imported from your config
-      linkPresets = {
-        0: { name: 'Home', url: '/' },
-        1: { name: 'Archive', url: '/archive/' },
-        2: { name: 'About', url: '/about/' },
-        3: { name: 'Community', url: '/community/' },
-        4: { name: 'Projects', url: '/projects/' },
-        5: { name: 'Configs', url: '/configs/' },
-        6: { name: 'Friends', url: '/friends/' },
-        7: { name: 'New Post', url: '/new-post/' }
-      };
-    });
-    
-    // Function to add a new link
-    function addNewLink() {
-      editingLink = {
-        isNew: true,
-        data: {
-          name: '',
-          url: '',
-          external: false,
-          dropdown: []
-        },
-        isPreset: false,
-        presetIndex: null
-      };
-      showLinkEditor = true;
+import { createEventDispatcher, onMount } from 'svelte'
+
+// Props
+export let navBarConfig
+
+// Local state
+let editingLink = null
+let showLinkEditor = false
+let addingDropdownItem = false
+let linkPresets = {}
+const reordering = false
+
+// Variables for adding dropdown items
+let addDropdownName = ''
+let addDropdownUrl = ''
+let addDropdownExternal = false
+
+// Event dispatcher
+const dispatch = createEventDispatcher()
+
+// Link presets (from your LinkPreset enum)
+onMount(() => {
+  // In a real implementation, this would be imported from your config
+  linkPresets = {
+    0: { name: 'Home', url: '/' },
+    1: { name: 'Archive', url: '/archive/' },
+    2: { name: 'About', url: '/about/' },
+    3: { name: 'Community', url: '/community/' },
+    4: { name: 'Projects', url: '/projects/' },
+    5: { name: 'Configs', url: '/configs/' },
+    6: { name: 'Friends', url: '/friends/' },
+    7: { name: 'New Post', url: '/new-post/' },
+  }
+})
+
+// Function to add a new link
+function addNewLink() {
+  editingLink = {
+    isNew: true,
+    data: {
+      name: '',
+      url: '',
+      external: false,
+      dropdown: [],
+    },
+    isPreset: false,
+    presetIndex: null,
+  }
+  showLinkEditor = true
+}
+
+// Function to edit a link
+function editLink(index) {
+  const link = navBarConfig.links[index]
+
+  if (typeof link === 'number') {
+    // It's a preset
+    editingLink = {
+      isNew: false,
+      index: index,
+      data: { ...linkPresets[link] },
+      isPreset: true,
+      presetIndex: link,
     }
-    
-    // Function to edit a link
-    function editLink(index) {
-      const link = navBarConfig.links[index];
-      
-      if (typeof link === 'number') {
-        // It's a preset
-        editingLink = {
-          isNew: false,
-          index: index,
-          data: { ...linkPresets[link] },
-          isPreset: true,
-          presetIndex: link
-        };
-      } else {
-        // It's a custom link
-        editingLink = {
-          isNew: false,
-          index: index,
-          data: { ...link },
-          isPreset: false,
-          presetIndex: null
-        };
-      }
-      
-      showLinkEditor = true;
+  } else {
+    // It's a custom link
+    editingLink = {
+      isNew: false,
+      index: index,
+      data: { ...link },
+      isPreset: false,
+      presetIndex: null,
     }
-    
-    // Function to save link
-    function saveLink(link) {
-      if (link.isNew) {
-        // Add new link
-        if (link.isPreset) {
-          navBarConfig.links = [...navBarConfig.links, link.presetIndex];
-        } else {
-          navBarConfig.links = [...navBarConfig.links, link.data];
-        }
-      } else {
-        // Update existing link
-        const newLinks = [...navBarConfig.links];
-        if (link.isPreset) {
-          newLinks[link.index] = link.presetIndex;
-        } else {
-          newLinks[link.index] = link.data;
-        }
-        navBarConfig.links = newLinks;
-      }
-      
-      showLinkEditor = false;
-      dispatch('change', navBarConfig);
+  }
+
+  showLinkEditor = true
+}
+
+// Function to save link
+function saveLink(link) {
+  if (link.isNew) {
+    // Add new link
+    if (link.isPreset) {
+      navBarConfig.links = [...navBarConfig.links, link.presetIndex]
+    } else {
+      navBarConfig.links = [...navBarConfig.links, link.data]
     }
-    
-    // Function to delete a link
-    function deleteLink(index) {
-      const link = navBarConfig.links[index];
-      const linkName = typeof link === 'number' ? linkPresets[link].name : link.name;
-      
-      if (confirm(`Are you sure you want to delete the "${linkName}" navigation link?`)) {
-        navBarConfig.links = navBarConfig.links.filter((_, i) => i !== index);
-        dispatch('change', navBarConfig);
-      }
+  } else {
+    // Update existing link
+    const newLinks = [...navBarConfig.links]
+    if (link.isPreset) {
+      newLinks[link.index] = link.presetIndex
+    } else {
+      newLinks[link.index] = link.data
     }
-    
-    // Function to move a link up or down
-    function moveLink(index, direction) {
-      if ((direction === 'up' && index === 0) || 
-          (direction === 'down' && index === navBarConfig.links.length - 1)) {
-        return; // Can't move beyond the start or end
-      }
-      
-      const newLinks = [...navBarConfig.links];
-      const targetIndex = direction === 'up' ? index - 1 : index + 1;
-      
-      // Swap links
-      [newLinks[index], newLinks[targetIndex]] = [newLinks[targetIndex], newLinks[index]];
-      
-      navBarConfig.links = newLinks;
-      dispatch('change', navBarConfig);
-    }
-    
-    // Helper function to get link name
-    function getLinkName(link) {
-      return typeof link === 'number' ? linkPresets[link]?.name || `Preset ${link}` : link.name;
-    }
-    
-    // Helper function to get link URL
-    function getLinkUrl(link) {
-      return typeof link === 'number' ? linkPresets[link]?.url || '/' : link.url;
-    }
-    
-    // Function to toggle a dropdown editor
-    function toggleDropdownEditor(index) {
-      addingDropdownItem = addingDropdownItem === index ? null : index;
-      
-      // Reset form values when showing the form
-      if (addingDropdownItem !== null) {
-        addDropdownName = '';
-        addDropdownUrl = '';
-        addDropdownExternal = false;
-      }
-    }
-    
-    // Function to add a dropdown item
-    function addDropdownItem(index, item) {
-      const link = navBarConfig.links[index];
-      
-      if (typeof link === 'number') {
-        // Can't add dropdown to preset
-        return;
-      }
-      
-      if (!link.dropdown) {
-        link.dropdown = [];
-      }
-      
-      link.dropdown.push(item);
-      addingDropdownItem = null;
-      dispatch('change', navBarConfig);
-    }
-    
-    // Function to remove a dropdown item
-    function removeDropdownItem(linkIndex, itemIndex) {
-      const link = navBarConfig.links[linkIndex];
-      
-      if (typeof link === 'number' || !link.dropdown) {
-        return;
-      }
-      
-      link.dropdown = link.dropdown.filter((_, i) => i !== itemIndex);
-      dispatch('change', navBarConfig);
-    }
-  </script>
+    navBarConfig.links = newLinks
+  }
+
+  showLinkEditor = false
+  dispatch('change', navBarConfig)
+}
+
+// Function to delete a link
+function deleteLink(index) {
+  const link = navBarConfig.links[index]
+  const linkName = typeof link === 'number' ? linkPresets[link].name : link.name
+
+  if (
+    confirm(
+      `Are you sure you want to delete the "${linkName}" navigation link?`,
+    )
+  ) {
+    navBarConfig.links = navBarConfig.links.filter((_, i) => i !== index)
+    dispatch('change', navBarConfig)
+  }
+}
+
+// Function to move a link up or down
+function moveLink(index, direction) {
+  if (
+    (direction === 'up' && index === 0) ||
+    (direction === 'down' && index === navBarConfig.links.length - 1)
+  ) {
+    return // Can't move beyond the start or end
+  }
+
+  const newLinks = [...navBarConfig.links]
+  const targetIndex = direction === 'up' ? index - 1 : index + 1
+
+  // Swap links
+  ;[newLinks[index], newLinks[targetIndex]] = [
+    newLinks[targetIndex],
+    newLinks[index],
+  ]
+
+  navBarConfig.links = newLinks
+  dispatch('change', navBarConfig)
+}
+
+// Helper function to get link name
+function getLinkName(link) {
+  return typeof link === 'number'
+    ? linkPresets[link]?.name || `Preset ${link}`
+    : link.name
+}
+
+// Helper function to get link URL
+function getLinkUrl(link) {
+  return typeof link === 'number' ? linkPresets[link]?.url || '/' : link.url
+}
+
+// Function to toggle a dropdown editor
+function toggleDropdownEditor(index) {
+  addingDropdownItem = addingDropdownItem === index ? null : index
+
+  // Reset form values when showing the form
+  if (addingDropdownItem !== null) {
+    addDropdownName = ''
+    addDropdownUrl = ''
+    addDropdownExternal = false
+  }
+}
+
+// Function to add a dropdown item
+function addDropdownItem(index, item) {
+  const link = navBarConfig.links[index]
+
+  if (typeof link === 'number') {
+    // Can't add dropdown to preset
+    return
+  }
+
+  if (!link.dropdown) {
+    link.dropdown = []
+  }
+
+  link.dropdown.push(item)
+  addingDropdownItem = null
+  dispatch('change', navBarConfig)
+}
+
+// Function to remove a dropdown item
+function removeDropdownItem(linkIndex, itemIndex) {
+  const link = navBarConfig.links[linkIndex]
+
+  if (typeof link === 'number' || !link.dropdown) {
+    return
+  }
+
+  link.dropdown = link.dropdown.filter((_, i) => i !== itemIndex)
+  dispatch('change', navBarConfig)
+}
+</script>
   
   <div class="navigation-config-tab">
     <div class="mb-6">

@@ -1,189 +1,199 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from 'svelte';
-  import GithubAuthForm from '../../admin/GithubAuthForm.svelte';
-  
-  // Import from .ts files without extension
-  import { savePostToGitHub, triggerSiteRebuild } from '../utils/githubUtils';
-  
-  // Use the types correctly with import type
-  import type { GitHubService, Post } from '../types';
-  
-  // Initialize event dispatcher
-  const dispatch = createEventDispatcher<{
-    'auth-success': void;
-    'auth-logout': void;
-    'save-success': { post: Post, isDraft: boolean };
-    'save-error': { error: string };
-    'rebuild-success': void;
-    'rebuild-error': { error: string };
-  }>();
-  
-  // Props
-  export let githubService: GitHubService;
-  export let isGitHubAuthenticated = false;
-  export let showGitHubAuthForm = false;
-  export let isCommitting = false;
-  export let commitStatus: { success: boolean, error: string | null } = { success: false, error: null };
-  export let showDeployOptions = false;
-  export let githubToken = '';
-  export let githubFolder = 'src/content/posts';
-  export let subfolderPath = '';
-  
-  // Methods
-  function showGitHubAuth() {
-    showGitHubAuthForm = true;
+import { createEventDispatcher, onMount } from 'svelte'
+import GithubAuthForm from '../../admin/GithubAuthForm.svelte'
+
+// Import from .ts files without extension
+import { savePostToGitHub, triggerSiteRebuild } from '../utils/githubUtils'
+
+// Use the types correctly with import type
+import type { GitHubService, Post } from '../types'
+
+// Initialize event dispatcher
+const dispatch = createEventDispatcher<{
+  'auth-success': void
+  'auth-logout': void
+  'save-success': { post: Post; isDraft: boolean }
+  'save-error': { error: string }
+  'rebuild-success': void
+  'rebuild-error': { error: string }
+}>()
+
+// Props
+export let githubService: GitHubService
+export let isGitHubAuthenticated = false
+export let showGitHubAuthForm = false
+export let isCommitting = false
+export let commitStatus: { success: boolean; error: string | null } = {
+  success: false,
+  error: null,
+}
+export let showDeployOptions = false
+export let githubToken = ''
+export let githubFolder = 'src/content/posts'
+export let subfolderPath = ''
+
+// Methods
+function showGitHubAuth() {
+  showGitHubAuthForm = true
+}
+
+async function handleGitHubAuth(event: CustomEvent<string> | null) {
+  // Get token from event if provided, otherwise use the bound value
+  const token = event && event.detail ? event.detail : githubToken
+
+  if (!token) {
+    commitStatus.error = 'Please enter a valid token'
+    return
   }
-  
-  async function handleGitHubAuth(event: CustomEvent<string> | null) {
-    // Get token from event if provided, otherwise use the bound value
-    const token = event && event.detail ? event.detail : githubToken;
-    
-    if (!token) {
-      commitStatus.error = 'Please enter a valid token';
-      return;
-    }
-    
-    try {
-      isCommitting = true;
-      commitStatus.error = null;
-      
-      // Authenticate with GitHub
-      const success = githubService.authenticate(token);
-      
-      if (success) {
-        // Test the token with a simple API call
-        try {
-          await githubService.getFile('README.md');
-          isGitHubAuthenticated = true;
-          showGitHubAuthForm = false;
-          commitStatus.success = true;
-          
-          // Show success message
-          setTimeout(() => {
-            commitStatus.success = false;
-          }, 3000);
-          
-          dispatch('auth-success');
-        } catch (error: any) {
-          console.error('Token validation error:', error);
-          if (error.message && error.message.includes('401')) {
-            commitStatus.error = 'Authentication failed. Please check your token permissions.';
-          } else if (error.message && error.message.includes('404')) {
-            commitStatus.error = 'Repository or README.md not found. Check your repository settings.';
-          } else {
-            commitStatus.error = `Token validation error: ${error.message}`;
-          }
-          githubService.logout(); // Clear the invalid token
-        }
-      } else {
-        commitStatus.error = 'Failed to authenticate';
-      }
-    } catch (error: any) {
-      console.error('Authentication error:', error);
-      commitStatus.error = error.message || 'Failed to authenticate';
-    } finally {
-      isCommitting = false;
-    }
-  }
-  
-  function handleGitHubLogout() {
-    githubService.logout();
-    isGitHubAuthenticated = false;
-    showDeployOptions = false;
-    dispatch('auth-logout');
-  }
-  
-  async function handleSaveToGitHub(event: CustomEvent<{ post: Post, isDraft: boolean }>) {
-    const { post, isDraft } = event.detail;
-    
-    try {
-      isCommitting = true;
-      commitStatus.error = null;
-      
-      const result = await savePostToGitHub(
-        post, 
-        isDraft, 
-        githubService, 
-        githubFolder, 
-        subfolderPath
-      );
-      
-      if (result.success) {
-        // Update filepath in post if provided
-        if (result.filepath) {
-          post.filepath = result.filepath;
-        }
-        
-        // Update UI status
-        commitStatus.success = true;
-        showDeployOptions = true;
-        
-        // Notify parent
-        dispatch('save-success', { post, isDraft });
-        
+
+  try {
+    isCommitting = true
+    commitStatus.error = null
+
+    // Authenticate with GitHub
+    const success = githubService.authenticate(token)
+
+    if (success) {
+      // Test the token with a simple API call
+      try {
+        await githubService.getFile('README.md')
+        isGitHubAuthenticated = true
+        showGitHubAuthForm = false
+        commitStatus.success = true
+
+        // Show success message
         setTimeout(() => {
-          commitStatus.success = false;
-        }, 3000);
-      } else {
-        commitStatus.error = result.error;
-        dispatch('save-error', { error: result.error || 'Unknown error' });
+          commitStatus.success = false
+        }, 3000)
+
+        dispatch('auth-success')
+      } catch (error: any) {
+        console.error('Token validation error:', error)
+        if (error.message && error.message.includes('401')) {
+          commitStatus.error =
+            'Authentication failed. Please check your token permissions.'
+        } else if (error.message && error.message.includes('404')) {
+          commitStatus.error =
+            'Repository or README.md not found. Check your repository settings.'
+        } else {
+          commitStatus.error = `Token validation error: ${error.message}`
+        }
+        githubService.logout() // Clear the invalid token
       }
-    } catch (error: any) {
-      console.error('Error in handleSaveToGitHub:', error);
-      commitStatus.error = error.message || 'Unknown error occurred';
-      dispatch('save-error', { error: commitStatus.error });
-    } finally {
-      isCommitting = false;
+    } else {
+      commitStatus.error = 'Failed to authenticate'
     }
+  } catch (error: any) {
+    console.error('Authentication error:', error)
+    commitStatus.error = error.message || 'Failed to authenticate'
+  } finally {
+    isCommitting = false
   }
-  
-  async function handleTriggerRebuild() {
-    try {
-      isCommitting = true;
-      commitStatus.error = null;
-      
-      const result = await triggerSiteRebuild(githubService);
-      
-      if (result.success) {
-        // Update UI status
-        commitStatus.success = true;
-        showDeployOptions = false;
-        
-        // Notify parent
-        dispatch('rebuild-success');
-        
-        setTimeout(() => {
-          commitStatus.success = false;
-        }, 3000);
-      } else {
-        commitStatus.error = result.error;
-        dispatch('rebuild-error', { error: result.error || 'Unknown error' });
+}
+
+function handleGitHubLogout() {
+  githubService.logout()
+  isGitHubAuthenticated = false
+  showDeployOptions = false
+  dispatch('auth-logout')
+}
+
+async function handleSaveToGitHub(
+  event: CustomEvent<{ post: Post; isDraft: boolean }>,
+) {
+  const { post, isDraft } = event.detail
+
+  try {
+    isCommitting = true
+    commitStatus.error = null
+
+    const result = await savePostToGitHub(
+      post,
+      isDraft,
+      githubService,
+      githubFolder,
+      subfolderPath,
+    )
+
+    if (result.success) {
+      // Update filepath in post if provided
+      if (result.filepath) {
+        post.filepath = result.filepath
       }
-    } catch (error: any) {
-      console.error('Error in handleTriggerRebuild:', error);
-      commitStatus.error = error.message || 'Unknown error occurred';
-      dispatch('rebuild-error', { error: commitStatus.error });
-    } finally {
-      isCommitting = false;
+
+      // Update UI status
+      commitStatus.success = true
+      showDeployOptions = true
+
+      // Notify parent
+      dispatch('save-success', { post, isDraft })
+
+      setTimeout(() => {
+        commitStatus.success = false
+      }, 3000)
+    } else {
+      commitStatus.error = result.error
+      dispatch('save-error', { error: result.error || 'Unknown error' })
     }
+  } catch (error: any) {
+    console.error('Error in handleSaveToGitHub:', error)
+    commitStatus.error = error.message || 'Unknown error occurred'
+    dispatch('save-error', { error: commitStatus.error })
+  } finally {
+    isCommitting = false
   }
-  
-  // Setup event listener for window events
-  onMount(() => {
-    // Add window event listener for save-to-github
-    window.addEventListener('save-to-github', (e: Event) => {
-      // TypeScript safe cast
-      const customEvent = e as CustomEvent<{ post: Post, isDraft: boolean }>;
-      if (customEvent.detail) {
-        handleSaveToGitHub(customEvent);
-      }
-    });
-    
-    return () => {
-      // Remove event listener on component unmount
-      window.removeEventListener('save-to-github', handleSaveToGitHub as EventListener);
-    };
-  });
+}
+
+async function handleTriggerRebuild() {
+  try {
+    isCommitting = true
+    commitStatus.error = null
+
+    const result = await triggerSiteRebuild(githubService)
+
+    if (result.success) {
+      // Update UI status
+      commitStatus.success = true
+      showDeployOptions = false
+
+      // Notify parent
+      dispatch('rebuild-success')
+
+      setTimeout(() => {
+        commitStatus.success = false
+      }, 3000)
+    } else {
+      commitStatus.error = result.error
+      dispatch('rebuild-error', { error: result.error || 'Unknown error' })
+    }
+  } catch (error: any) {
+    console.error('Error in handleTriggerRebuild:', error)
+    commitStatus.error = error.message || 'Unknown error occurred'
+    dispatch('rebuild-error', { error: commitStatus.error })
+  } finally {
+    isCommitting = false
+  }
+}
+
+// Setup event listener for window events
+onMount(() => {
+  // Add window event listener for save-to-github
+  window.addEventListener('save-to-github', (e: Event) => {
+    // TypeScript safe cast
+    const customEvent = e as CustomEvent<{ post: Post; isDraft: boolean }>
+    if (customEvent.detail) {
+      handleSaveToGitHub(customEvent)
+    }
+  })
+
+  return () => {
+    // Remove event listener on component unmount
+    window.removeEventListener(
+      'save-to-github',
+      handleSaveToGitHub as EventListener,
+    )
+  }
+})
 </script>
 
 <div class="mb-6">

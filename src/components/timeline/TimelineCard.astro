@@ -1,16 +1,16 @@
 ---
 // src/components/timeline/TimelineCard.astro
-import type { TimelineEvent } from '../../services/TimelineService.client';
+import type { TimelineEvent } from '../../services/TimelineService.client'
 // Assuming getEraDisplayName might be needed if era badges display names, but it's not used in the Svelte template directly for class generation.
 // import { getEraDisplayName } from '../../services/TimelineService.client';
 
 export interface Props {
-  event: TimelineEvent;
-  isSelected?: boolean;
-  compact?: boolean;
-  position?: 'top' | 'bottom' | 'left' | 'right';
-  isMobile?: boolean;
-  isVisible?: boolean; // Added to control rendering and transitions
+  event: TimelineEvent
+  isSelected?: boolean
+  compact?: boolean
+  position?: 'top' | 'bottom' | 'left' | 'right'
+  isMobile?: boolean
+  isVisible?: boolean // Added to control rendering and transitions
 }
 
 const {
@@ -20,40 +20,41 @@ const {
   position = 'bottom',
   isMobile = false,
   isVisible = true, // Default to visible if not specified
-} = Astro.props;
+} = Astro.props
 
 // Helper function to get CSS classes for era badges (moved from Svelte script)
 function getEraBadgeClass(era?: string): string {
-  if (!era) return "bg-[oklch(0.9_0.05_var(--hue))/0.1] dark:bg-[oklch(0.3_0.05_var(--hue))/0.2] text-[oklch(0.4_0.05_var(--hue))] dark:text-[oklch(0.9_0.05_var(--hue))]";
-  switch(era) {
+  if (!era)
+    return 'bg-[oklch(0.9_0.05_var(--hue))/0.1] dark:bg-[oklch(0.3_0.05_var(--hue))/0.2] text-[oklch(0.4_0.05_var(--hue))] dark:text-[oklch(0.9_0.05_var(--hue))]'
+  switch (era) {
     case 'pre-spork':
-      return "bg-[oklch(0.8_0.1_var(--hue))/0.1] dark:bg-[oklch(0.8_0.1_var(--hue))/0.2] text-[oklch(0.3_0.1_var(--hue))] dark:text-[oklch(0.8_0.1_var(--hue))]";
+      return 'bg-[oklch(0.8_0.1_var(--hue))/0.1] dark:bg-[oklch(0.8_0.1_var(--hue))/0.2] text-[oklch(0.3_0.1_var(--hue))] dark:text-[oklch(0.8_0.1_var(--hue))]'
     case 'spork-uprising':
-      return "bg-[oklch(0.7_0.2_var(--hue))/0.1] dark:bg-[oklch(0.7_0.2_var(--hue))/0.2] text-[oklch(0.3_0.2_var(--hue))] dark:text-[oklch(0.7_0.2_var(--hue))]";
+      return 'bg-[oklch(0.7_0.2_var(--hue))/0.1] dark:bg-[oklch(0.7_0.2_var(--hue))/0.2] text-[oklch(0.3_0.2_var(--hue))] dark:text-[oklch(0.7_0.2_var(--hue))]'
     case 'snuggaloid':
-      return "bg-[oklch(0.6_0.3_var(--hue))/0.1] dark:bg-[oklch(0.6_0.3_var(--hue))/0.2] text-[oklch(0.3_0.3_var(--hue))] dark:text-[oklch(0.6_0.3_var(--hue))]";
+      return 'bg-[oklch(0.6_0.3_var(--hue))/0.1] dark:bg-[oklch(0.6_0.3_var(--hue))/0.2] text-[oklch(0.3_0.3_var(--hue))] dark:text-[oklch(0.6_0.3_var(--hue))]'
     case 'post-extinction':
-      return "bg-[oklch(0.5_0.1_var(--hue))/0.1] dark:bg-[oklch(0.5_0.1_var(--hue))/0.2] text-[oklch(0.2_0.1_var(--hue))] dark:text-[oklch(0.5_0.1_var(--hue))]";
+      return 'bg-[oklch(0.5_0.1_var(--hue))/0.1] dark:bg-[oklch(0.5_0.1_var(--hue))/0.2] text-[oklch(0.2_0.1_var(--hue))] dark:text-[oklch(0.5_0.1_var(--hue))]'
     default:
-      return "bg-[oklch(0.9_0.05_var(--hue))/0.1] dark:bg-[oklch(0.3_0.05_var(--hue))/0.2] text-[oklch(0.4_0.05_var(--hue))] dark:text-[oklch(0.9_0.05_var(--hue))]";
+      return 'bg-[oklch(0.9_0.05_var(--hue))/0.1] dark:bg-[oklch(0.3_0.05_var(--hue))/0.2] text-[oklch(0.4_0.05_var(--hue))] dark:text-[oklch(0.9_0.05_var(--hue))]'
   }
 }
 
-const cardId = `timeline-card-${event.slug}-${Math.random().toString(36).substring(2,9)}`;
+const cardId = `timeline-card-${event.slug}-${Math.random().toString(36).substring(2, 9)}`
 
-let initialX = 0;
-let initialY = 0;
+let initialX = 0
+let initialY = 0
 
 if (isMobile) {
-  initialY = 20;
+  initialY = 20
 } else {
-  if (position === 'top') initialY = 10;
-  else if (position === 'bottom') initialY = -10;
-  else if (position === 'left') initialX = 10;
-  else if (position === 'right') initialX = -10;
+  if (position === 'top') initialY = 10
+  else if (position === 'bottom') initialY = -10
+  else if (position === 'left') initialX = 10
+  else if (position === 'right') initialX = -10
 }
 
-const initialStyles = `opacity: 0; transform: translate(${initialX}px, ${initialY}px);`;
+const initialStyles = `opacity: 0; transform: translate(${initialX}px, ${initialY}px);`
 ---
 
 {isVisible && (

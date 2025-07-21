@@ -1,10 +1,6 @@
-import type { LIGHT_DARK_MODE } from '@/types/config'
-import {
-  AUTO_MODE,
-  DARK_MODE,
-  LIGHT_MODE,
-} from '@constants/constants.ts'
 import { siteConfig } from '@/config/config.ts'
+import type { LIGHT_DARK_MODE } from '@/types/config'
+import { AUTO_MODE, DARK_MODE, LIGHT_MODE } from '@constants/constants.ts'
 
 export function getDefaultHue(): number {
   const fallback = '250'

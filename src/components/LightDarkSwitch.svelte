@@ -1,4 +1,5 @@
 <script lang="ts">
+import { siteConfig } from '@/config/config.ts'
 import type { LIGHT_DARK_MODE } from '@/types/config.ts'
 import { AUTO_MODE, DARK_MODE, LIGHT_MODE } from '@constants/constants.ts'
 import I18nKey from '@i18n/i18nKey'
@@ -10,8 +11,6 @@ import {
   setTheme,
 } from '@utils/setting-utils.ts'
 import { onMount } from 'svelte'
-import { siteConfig } from '@/config/config.ts'
-
 
 const seq: LIGHT_DARK_MODE[] = [LIGHT_MODE, DARK_MODE, AUTO_MODE]
 let mode: LIGHT_DARK_MODE = siteConfig.defaultTheme

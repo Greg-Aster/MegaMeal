@@ -1,0 +1,80 @@
+---
+// GLTF Test Page
+const title = "GLTF Loader Test"
+---
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width" />
+  <meta name="generator" content={Astro.generator} />
+  <title>{title}</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #1a1a1a;
+      color: white;
+      font-family: monospace;
+    }
+    .test-results {
+      margin: 20px 0;
+      padding: 10px;
+      background: #2a2a2a;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>GLTF Loader Diagnostic Test</h1>
+  
+  <div class="test-results">
+    <p><strong>Instructions:</strong></p>
+    <ol>
+      <li>Open browser DevTools Console</li>
+      <li>Look for "✅ Official test model loaded" or "❌ Official test model failed"</li>
+      <li>Look for "✅ Your observatory model loaded" or "❌ Your observatory model failed"</li>
+    </ol>
+  </div>
+
+  <div id="test-mount" style="width: 400px; height: 300px; border: 1px solid #444; background: #000;"></div>
+</body>
+
+<script is:inline>
+  console.log('🧪 GLTF Test page loaded');
+  console.log('📝 Check console for GLTF loading results');
+  
+  // Simple test without Svelte component
+  setTimeout(() => {
+    const testDiv = document.getElementById('test-mount');
+    testDiv.innerHTML = `
+      <div style="padding: 20px; color: white; text-align: center;">
+        <p>🧪 GLTF Test Running...</p>
+        <p>Check browser Console (F12) for results</p>
+        <p>Look for ✅ success or ❌ error messages</p>
+      </div>
+    `;
+    
+    // Test direct GLTF access
+    fetch('/models/levels/observatory-environment.glb')
+      .then(response => {
+        if (response.ok) {
+          console.log('✅ Direct fetch of observatory-environment.glb successful');
+          console.log('📊 File size:', response.headers.get('content-length'), 'bytes');
+          return response.blob();
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      })
+      .then(blob => {
+        console.log('✅ GLTF file blob loaded:', blob.size, 'bytes');
+        testDiv.innerHTML += '<p style="color: green;">✅ GLTF file accessible</p>';
+      })
+      .catch(error => {
+        console.error('❌ Direct fetch failed:', error);
+        testDiv.innerHTML += '<p style="color: red;">❌ GLTF file NOT accessible</p>';
+      });
+  }, 1000);
+</script>
+</html>

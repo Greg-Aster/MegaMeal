@@ -1,65 +1,74 @@
 ---
 // src/components/timeline/TimelineViewModes/MapView.astro
 // Complete overhaul - Interactive Universe Map with proper selection and navigation
-import type { TimelineEvent } from '../../../services/TimelineService.client';
-import { getEraDisplayName, getEraClasses } from '../../../services/TimelineService.client';
+import type { TimelineEvent } from '../../../services/TimelineService.client'
+import {
+  getEraClasses,
+  getEraDisplayName,
+} from '../../../services/TimelineService.client'
 
 export interface Props {
-  events?: TimelineEvent[];
-  background?: string;
-  selectedEventSlug?: string | null;
+  events?: TimelineEvent[]
+  background?: string
+  selectedEventSlug?: string | null
 }
 
 const {
   events = [],
   background = '/assets/banner/0001.png',
   selectedEventSlug = null,
-} = Astro.props;
+} = Astro.props
 
-const eventsWithLocations = events.filter(event => event.location);
+const eventsWithLocations = events.filter(event => event.location)
 
 // Enhanced coordinate generation for better cosmic distribution
-function getUniverseCoordinates(location: string | undefined, era: string = 'unknown') {
-  if (!location) return { x: 50, y: 50, sector: 'unknown' };
-  
+function getUniverseCoordinates(location: string | undefined, era = 'unknown') {
+  if (!location) return { x: 50, y: 50, sector: 'unknown' }
+
   // Create hash from location for consistent positioning
-  const locationHash = [...location].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 1000, 0);
-  const eraHash = [...era].reduce((h, c) => (h * 17 + c.charCodeAt(0)) % 100, 0);
-  
+  const locationHash = [...location].reduce(
+    (h, c) => (h * 31 + c.charCodeAt(0)) % 1000,
+    0,
+  )
+  const eraHash = [...era].reduce((h, c) => (h * 17 + c.charCodeAt(0)) % 100, 0)
+
   // Create sectors based on era names instead of years
   const eraToSector: Record<string, string> = {
     'pre-war': 'inner-core',
-    'war': 'mid-rim',
+    war: 'mid-rim',
     'post-war': 'outer-rim',
-    'reconstruction': 'frontier',
-    'unknown': 'unknown'
-  };
-  
-  const sector = eraToSector[era.toLowerCase()] || 'frontier';
-  
+    reconstruction: 'frontier',
+    unknown: 'unknown',
+  }
+
+  const sector = eraToSector[era.toLowerCase()] || 'frontier'
+
   // Distribute coordinates in cosmic spiral pattern
-  const angle = (locationHash + eraHash) * 0.1;
-  const radius = 20 + (locationHash % 60); // 20-80% from center
-  
-  const x = 50 + (Math.cos(angle) * radius * 0.8);
-  const y = 50 + (Math.sin(angle) * radius * 0.6);
-  
-  return { 
-    x: Math.max(5, Math.min(95, x)), 
-    y: Math.max(5, Math.min(95, y)), 
-    sector 
-  };
+  const angle = (locationHash + eraHash) * 0.1
+  const radius = 20 + (locationHash % 60) // 20-80% from center
+
+  const x = 50 + Math.cos(angle) * radius * 0.8
+  const y = 50 + Math.sin(angle) * radius * 0.6
+
+  return {
+    x: Math.max(5, Math.min(95, x)),
+    y: Math.max(5, Math.min(95, y)),
+    sector,
+  }
 }
 
 // Group events by era for constellation connections
-const eraGroups = eventsWithLocations.reduce((acc, event) => {
-  const era = event.era || 'unknown';
-  if (!acc[era]) acc[era] = [];
-  acc[era].push(event);
-  return acc;
-}, {} as Record<string, TimelineEvent[]>);
+const eraGroups = eventsWithLocations.reduce(
+  (acc, event) => {
+    const era = event.era || 'unknown'
+    if (!acc[era]) acc[era] = []
+    acc[era].push(event)
+    return acc
+  },
+  {} as Record<string, TimelineEvent[]>,
+)
 
-const mapViewId = `universe-map-${Math.random().toString(36).substring(2,9)}`;
+const mapViewId = `universe-map-${Math.random().toString(36).substring(2, 9)}`
 ---
 
 <div class="universe-map relative" id={mapViewId} data-ready="false">

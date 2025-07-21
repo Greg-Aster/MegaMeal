@@ -1,209 +1,223 @@
 <!-- SidenavPanels.svelte -->
 <script lang="ts">
-  import { onMount } from 'svelte';
+import { onMount } from 'svelte'
 
-  export let siteConfig: any;
+export let siteConfig: any
 
-  let currentHue = 230;
-  let showInlineHueSlider = false;
-  let showMenuPanel = false;
-  let showSettingsPanel = false;
-  let isFullscreen = false;
-  let menuPanel: HTMLElement;
-  let settingsPanel: HTMLElement;
+let currentHue = 230
+let showInlineHueSlider = false
+let showMenuPanel = false
+let showSettingsPanel = false
+let isFullscreen = false
+let menuPanel: HTMLElement
+let settingsPanel: HTMLElement
 
-  onMount(() => {
-    // Add a small delay to ensure DOM is fully ready
-    const initialize = () => {
-      try {
-        // Initialize hue from localStorage
-        currentHue = parseInt(localStorage.getItem('hue') || '230');
-        setHue(currentHue);
-
-        // Initialize theme
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-          document.documentElement.classList.add('dark');
-        }
-
-        // Fullscreen listener
-        const updateFullscreenState = () => {
-          isFullscreen = !!document.fullscreenElement;
-        };
-        document.addEventListener('fullscreenchange', updateFullscreenState);
-        updateFullscreenState();
-
-        // Connect to SideNavbar buttons
-        connectToSideNavbarButtons();
-
-        return () => {
-          document.removeEventListener('fullscreenchange', updateFullscreenState);
-        };
-      } catch (error) {
-        console.warn('Error initializing SidenavPanels:', error);
-        return () => {};
-      }
-    };
-
-    const timeoutId = setTimeout(initialize, 100);
-    
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  });
-
-  // Reactive positioning when panels open
-  $: if (showMenuPanel && menuPanel) {
-    const menuToggleBtn = document.getElementById('sidenav-menu-toggle');
-    if (menuToggleBtn) {
-      setTimeout(() => positionPanelRelativeToButton('menu', menuToggleBtn), 10);
-    }
-  }
-
-  $: if (showSettingsPanel && settingsPanel) {
-    const settingsToggleBtn = document.getElementById('sidenav-settings-toggle');
-    if (settingsToggleBtn) {
-      setTimeout(() => positionPanelRelativeToButton('settings', settingsToggleBtn), 10);
-    }
-  }
-
-  function setHue(newHue: number) {
-    currentHue = newHue;
-    localStorage.setItem('hue', newHue.toString());
-    document.documentElement.style.setProperty('--hue', newHue.toString());
-  }
-
-  function resetHue() {
-    setHue(230);
-  }
-
-  function toggleTheme() {
-    const isDark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  }
-
-  function toggleFullscreen() {
+onMount(() => {
+  // Add a small delay to ensure DOM is fully ready
+  const initialize = () => {
     try {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-      } else {
-        document.exitFullscreen();
+      // Initialize hue from localStorage
+      currentHue = Number.parseInt(localStorage.getItem('hue') || '230')
+      setHue(currentHue)
+
+      // Initialize theme
+      const savedTheme = localStorage.getItem('theme')
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark')
+      }
+
+      // Fullscreen listener
+      const updateFullscreenState = () => {
+        isFullscreen = !!document.fullscreenElement
+      }
+      document.addEventListener('fullscreenchange', updateFullscreenState)
+      updateFullscreenState()
+
+      // Connect to SideNavbar buttons
+      connectToSideNavbarButtons()
+
+      return () => {
+        document.removeEventListener('fullscreenchange', updateFullscreenState)
       }
     } catch (error) {
-      console.warn('Fullscreen toggle failed:', error);
+      console.warn('Error initializing SidenavPanels:', error)
+      return () => {}
     }
   }
 
-  function openSearch() {
-    try {
-      const searchPanel = document.getElementById('search-panel');
-      if (searchPanel) {
-        closeAllPanels();
-        searchPanel.classList.toggle('float-panel-closed');
-        
-        const searchInput = searchPanel.querySelector('input[type="search"]');
-        if (searchInput && !searchPanel.classList.contains('float-panel-closed')) {
-          setTimeout(() => (searchInput as HTMLInputElement).focus(), 100);
-        }
+  const timeoutId = setTimeout(initialize, 100)
+
+  return () => {
+    clearTimeout(timeoutId)
+  }
+})
+
+// Reactive positioning when panels open
+$: if (showMenuPanel && menuPanel) {
+  const menuToggleBtn = document.getElementById('sidenav-menu-toggle')
+  if (menuToggleBtn) {
+    setTimeout(() => positionPanelRelativeToButton('menu', menuToggleBtn), 10)
+  }
+}
+
+$: if (showSettingsPanel && settingsPanel) {
+  const settingsToggleBtn = document.getElementById('sidenav-settings-toggle')
+  if (settingsToggleBtn) {
+    setTimeout(
+      () => positionPanelRelativeToButton('settings', settingsToggleBtn),
+      10,
+    )
+  }
+}
+
+function setHue(newHue: number) {
+  currentHue = newHue
+  localStorage.setItem('hue', newHue.toString())
+  document.documentElement.style.setProperty('--hue', newHue.toString())
+}
+
+function resetHue() {
+  setHue(230)
+}
+
+function toggleTheme() {
+  const isDark = document.documentElement.classList.toggle('dark')
+  localStorage.setItem('theme', isDark ? 'dark' : 'light')
+}
+
+function toggleFullscreen() {
+  try {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen()
+    } else {
+      document.exitFullscreen()
+    }
+  } catch (error) {
+    console.warn('Fullscreen toggle failed:', error)
+  }
+}
+
+function openSearch() {
+  try {
+    const searchPanel = document.getElementById('search-panel')
+    if (searchPanel) {
+      closeAllPanels()
+      searchPanel.classList.toggle('float-panel-closed')
+
+      const searchInput = searchPanel.querySelector('input[type="search"]')
+      if (
+        searchInput &&
+        !searchPanel.classList.contains('float-panel-closed')
+      ) {
+        setTimeout(() => (searchInput as HTMLInputElement).focus(), 100)
       }
-    } catch (error) {
-      console.warn('Search panel toggle failed:', error);
     }
+  } catch (error) {
+    console.warn('Search panel toggle failed:', error)
+  }
+}
+
+function closeAllPanels() {
+  showMenuPanel = false
+  showSettingsPanel = false
+  showInlineHueSlider = false
+}
+
+function handleClickOutside(event: MouseEvent) {
+  const target = event.target as Element
+  if (
+    !target.closest('.sidenav-panel') &&
+    !target.closest('#sidenav-menu-toggle') &&
+    !target.closest('#sidenav-settings-toggle') &&
+    !target.closest('[data-panel-trigger]')
+  ) {
+    closeAllPanels()
+  }
+}
+
+function handleKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    closeAllPanels()
+  }
+}
+
+// Timeline toggle function
+function toggleTimelineBanner() {
+  const current = localStorage.getItem('defaultBannerType') || 'standard'
+  localStorage.setItem(
+    'defaultBannerType',
+    current === 'timeline' ? 'standard' : 'timeline',
+  )
+  window.location.reload()
+}
+
+// Connect to the actual SideNavbar buttons
+function connectToSideNavbarButtons() {
+  const menuToggleBtn = document.getElementById('sidenav-menu-toggle')
+  const settingsToggleBtn = document.getElementById('sidenav-settings-toggle')
+  const timelineBtn = document.getElementById('sidenav-timeline-btn')
+
+  if (menuToggleBtn) {
+    menuToggleBtn.addEventListener('click', e => {
+      e.stopPropagation()
+      showSettingsPanel = false
+      showMenuPanel = !showMenuPanel
+    })
   }
 
-  function closeAllPanels() {
-    showMenuPanel = false;
-    showSettingsPanel = false;
-    showInlineHueSlider = false;
+  if (settingsToggleBtn) {
+    settingsToggleBtn.addEventListener('click', e => {
+      e.stopPropagation()
+      showMenuPanel = false
+      showSettingsPanel = !showSettingsPanel
+    })
   }
 
-  function handleClickOutside(event: MouseEvent) {
-    const target = event.target as Element;
-    if (!target.closest('.sidenav-panel') && 
-        !target.closest('#sidenav-menu-toggle') && 
-        !target.closest('#sidenav-settings-toggle') && 
-        !target.closest('[data-panel-trigger]')) {
-      closeAllPanels();
-    }
+  if (timelineBtn) {
+    timelineBtn.addEventListener('click', e => {
+      e.stopPropagation()
+      toggleTimelineBanner()
+    })
+  }
+}
+
+// Position panels relative to their trigger buttons
+function positionPanelRelativeToButton(
+  panelType: 'menu' | 'settings',
+  button: HTMLElement,
+) {
+  const panel = panelType === 'menu' ? menuPanel : settingsPanel
+
+  if (!panel || !button) return
+
+  const buttonRect = button.getBoundingClientRect()
+  const panelWidth = panel.offsetWidth
+  const screenWidth = window.innerWidth
+  const screenHeight = window.innerHeight
+
+  let left = buttonRect.right + 8 // Start to the right of the button
+  let top = buttonRect.top
+
+  // Adjust if panel goes off screen
+  if (left + panelWidth > screenWidth - 8) {
+    left = buttonRect.left - panelWidth - 8 // Move to left side of button
   }
 
-  function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape') {
-      closeAllPanels();
-    }
+  if (left < 8) {
+    left = 8 // Don't go off left edge
   }
 
-  // Timeline toggle function
-  function toggleTimelineBanner() {
-    const current = localStorage.getItem('defaultBannerType') || 'standard';
-    localStorage.setItem('defaultBannerType', current === 'timeline' ? 'standard' : 'timeline');
-    window.location.reload();
+  if (top + panel.offsetHeight > screenHeight - 8) {
+    top = screenHeight - panel.offsetHeight - 8
   }
 
-  // Connect to the actual SideNavbar buttons
-  function connectToSideNavbarButtons() {
-    const menuToggleBtn = document.getElementById('sidenav-menu-toggle');
-    const settingsToggleBtn = document.getElementById('sidenav-settings-toggle');
-    const timelineBtn = document.getElementById('sidenav-timeline-btn');
-
-    if (menuToggleBtn) {
-      menuToggleBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        showSettingsPanel = false;
-        showMenuPanel = !showMenuPanel;
-      });
-    }
-
-    if (settingsToggleBtn) {
-      settingsToggleBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        showMenuPanel = false;
-        showSettingsPanel = !showSettingsPanel;
-      });
-    }
-
-    if (timelineBtn) {
-      timelineBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleTimelineBanner();
-      });
-    }
+  if (top < 8) {
+    top = 8
   }
 
-  // Position panels relative to their trigger buttons
-  function positionPanelRelativeToButton(panelType: 'menu' | 'settings', button: HTMLElement) {
-    const panel = panelType === 'menu' ? menuPanel : settingsPanel;
-    
-    if (!panel || !button) return;
-    
-    const buttonRect = button.getBoundingClientRect();
-    const panelWidth = panel.offsetWidth;
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
-    
-    let left = buttonRect.right + 8; // Start to the right of the button
-    let top = buttonRect.top;
-    
-    // Adjust if panel goes off screen
-    if (left + panelWidth > screenWidth - 8) {
-      left = buttonRect.left - panelWidth - 8; // Move to left side of button
-    }
-    
-    if (left < 8) {
-      left = 8; // Don't go off left edge
-    }
-    
-    if (top + panel.offsetHeight > screenHeight - 8) {
-      top = screenHeight - panel.offsetHeight - 8;
-    }
-    
-    if (top < 8) {
-      top = 8;
-    }
-    
-    panel.style.left = `${left}px`;
-    panel.style.top = `${top}px`;
-  }
+  panel.style.left = `${left}px`
+  panel.style.top = `${top}px`
+}
 </script>
 
 <svelte:window on:click={handleClickOutside} on:keydown={handleKeydown} />

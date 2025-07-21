@@ -1,292 +1,316 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from 'svelte';
-  import { marked } from 'marked';
-  import { generateSlugFromTitle } from '../utils/postUtils';
-  import type { Post } from '../utils/postUtils';
-  
-  // Initialize event dispatcher
-  const dispatch = createEventDispatcher<{
-    clear: void;
-    autosave: { post: Post };
-  }>();
-  
-  // Props
-  export let post: Post;
-  export let isEditing = false;
-  
-  // Local state
-  let editorMode: 'edit' | 'split' | 'preview' = 'edit';
-  let showMarkdownHelp = false;
-  let isFullscreen = false;
-  let lastSavedAt: Date | null = null;
-  let wordCount = 0;
-  let charCount = 0;
-  let readingTime = 0;
-  let showFormatPanel = false;
-  let searchText = '';
-  let replaceText = '';
-  let showSearchReplace = false;
-  let editorElement: HTMLTextAreaElement;
-  
-  // Derived values
-  $: tagsArray = typeof post.tags === 'string' ? 
-    (post.tags ? post.tags.split(',').map(tag => tag.trim()) : []) : 
-    post.tags;
-  $: previewHtml = post.content ? marked(post.content) : '';
-  $: showVideoFields = post.banner.type === 'video';
-  $: showTimelineFields = post.timelineData.enabled;
-  $: showAdvancedFields = post.showAdvancedOptions;
-  
-  // Update text statistics whenever content changes
-  $: {
-    if (post.content) {
-      // Character count
-      charCount = post.content.length;
-      
-      // Word count
-      const words = post.content.match(/\S+/g);
-      wordCount = words ? words.length : 0;
-      
-      // Reading time (average reading speed is around 200-250 words per minute)
-      readingTime = Math.max(1, Math.ceil(wordCount / 225));
-    } else {
-      charCount = 0;
-      wordCount = 0;
-      readingTime = 0;
-    }
-  }
-  
-  // Function to insert text at cursor position
-  function insertTextAtCursor(text: string, before: string, after: string, elementId: string): string {
-    const textarea = document.getElementById(elementId) as HTMLTextAreaElement;
-    if (!textarea) return text;
-    
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = text.substring(start, end);
-    
-    const newText = text.substring(0, start) + before + selectedText + after + text.substring(end);
-    
-    // Set cursor position after insertion
-    setTimeout(() => {
-      textarea.focus();
-      textarea.selectionStart = start + before.length;
-      textarea.selectionEnd = start + before.length + selectedText.length;
-    }, 0);
-    
-    return newText;
-  }
+import { marked } from 'marked'
+import { createEventDispatcher, onMount } from 'svelte'
+import { generateSlugFromTitle } from '../utils/postUtils'
+import type { Post } from '../utils/postUtils'
 
-  // Handle keyboard shortcuts
-  function handleKeydown(event: KeyboardEvent) {
-    // Skip if modifiers aren't pressed or if focus is not in editor
-    if (!event.ctrlKey && !event.metaKey) return;
-    
-    // Skip if target is not the editor
-    if (!(event.target instanceof HTMLTextAreaElement)) return;
-    
-    // Format shortcuts
-    switch (event.key.toLowerCase()) {
-      case 'b': // Bold
-        event.preventDefault();
-        post.content = insertTextAtCursor(post.content, '**', '**', 'content');
-        break;
-      case 'i': // Italic
-        event.preventDefault();
-        post.content = insertTextAtCursor(post.content, '_', '_', 'content');
-        break;
-      case 'k': // Link
-        event.preventDefault();
-        post.content = insertTextAtCursor(post.content, '[', '](url)', 'content');
-        break;
-      case '1': // H1
-        if (event.ctrlKey && event.altKey) {
-          event.preventDefault();
-          post.content = insertTextAtCursor(post.content, '# ', '', 'content');
-        }
-        break;
-      case '2': // H2
-        if (event.ctrlKey && event.altKey) {
-          event.preventDefault();
-          post.content = insertTextAtCursor(post.content, '## ', '', 'content');
-        }
-        break;
-      case '3': // H3
-        if (event.ctrlKey && event.altKey) {
-          event.preventDefault();
-          post.content = insertTextAtCursor(post.content, '### ', '', 'content');
-        }
-        break;
-      case 'l': // List
-        if (event.ctrlKey && event.altKey) {
-          event.preventDefault();
-          post.content = insertTextAtCursor(post.content, '- ', '', 'content');
-        }
-        break;
-      case 'f': // Find/Search
-        if (!showSearchReplace) {
-          event.preventDefault();
-          showSearchReplace = true;
-          setTimeout(() => document.getElementById('search-input')?.focus(), 100);
-        }
-        break;
-    }
+// Initialize event dispatcher
+const dispatch = createEventDispatcher<{
+  clear: void
+  autosave: { post: Post }
+}>()
+
+// Props
+export let post: Post
+export const isEditing = false
+
+// Local state
+let editorMode: 'edit' | 'split' | 'preview' = 'edit'
+let showMarkdownHelp = false
+let isFullscreen = false
+let lastSavedAt: Date | null = null
+let wordCount = 0
+let charCount = 0
+let readingTime = 0
+const showFormatPanel = false
+let searchText = ''
+let replaceText = ''
+let showSearchReplace = false
+let editorElement: HTMLTextAreaElement
+
+// Derived values
+$: tagsArray =
+  typeof post.tags === 'string'
+    ? post.tags
+      ? post.tags.split(',').map(tag => tag.trim())
+      : []
+    : post.tags
+$: previewHtml = post.content ? marked(post.content) : ''
+$: showVideoFields = post.banner.type === 'video'
+$: showTimelineFields = post.timelineData.enabled
+$: showAdvancedFields = post.showAdvancedOptions
+
+// Update text statistics whenever content changes
+$: {
+  if (post.content) {
+    // Character count
+    charCount = post.content.length
+
+    // Word count
+    const words = post.content.match(/\S+/g)
+    wordCount = words ? words.length : 0
+
+    // Reading time (average reading speed is around 200-250 words per minute)
+    readingTime = Math.max(1, Math.ceil(wordCount / 225))
+  } else {
+    charCount = 0
+    wordCount = 0
+    readingTime = 0
   }
-  
-  // Auto-format as user types
-  function handleInput(event: Event) {
-    const textarea = event.target as HTMLTextAreaElement;
-    const value = textarea.value;
-    const pos = textarea.selectionStart;
-    
-    // Auto-continue lists
-    if (event.inputType === 'insertLineBreak' || event.inputType === 'insertParagraph') {
-      const lineStart = value.lastIndexOf('\n', pos - 2) + 1;
-      const lastLine = value.substring(lineStart, pos - 1); // Get the line before the new one
-      
-      // Check for list patterns
-      const bulletMatch = lastLine.match(/^(\s*[-*+]\s+)(.*)$/);
-      const numberMatch = lastLine.match(/^(\s*\d+\.\s+)(.*)$/);
-      
-      if (bulletMatch && !bulletMatch[2].trim()) {
-        // Empty bullet point - delete it and the newline
-        const newValue = value.substring(0, lineStart) + value.substring(pos);
-        post.content = newValue;
-        setTimeout(() => {
-          textarea.selectionStart = lineStart;
-          textarea.selectionEnd = lineStart;
-        }, 0);
-      } else if (bulletMatch) {
-        // Continue bullet list
-        const newValue = value.substring(0, pos) + bulletMatch[1] + value.substring(pos);
-        post.content = newValue;
-        setTimeout(() => {
-          textarea.selectionStart = pos + bulletMatch[1].length;
-          textarea.selectionEnd = pos + bulletMatch[1].length;
-        }, 0);
-      } else if (numberMatch && !numberMatch[2].trim()) {
-        // Empty numbered item - delete it and the newline
-        const newValue = value.substring(0, lineStart) + value.substring(pos);
-        post.content = newValue;
-        setTimeout(() => {
-          textarea.selectionStart = lineStart;
-          textarea.selectionEnd = lineStart;
-        }, 0);
-      } else if (numberMatch) {
-        // Continue numbered list with incremented number
-        const num = parseInt(numberMatch[0]) + 1;
-        const nextItem = `${num}. `;
-        const newValue = value.substring(0, pos) + nextItem + value.substring(pos);
-        post.content = newValue;
-        setTimeout(() => {
-          textarea.selectionStart = pos + nextItem.length;
-          textarea.selectionEnd = pos + nextItem.length;
-        }, 0);
+}
+
+// Function to insert text at cursor position
+function insertTextAtCursor(
+  text: string,
+  before: string,
+  after: string,
+  elementId: string,
+): string {
+  const textarea = document.getElementById(elementId) as HTMLTextAreaElement
+  if (!textarea) return text
+
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const selectedText = text.substring(start, end)
+
+  const newText =
+    text.substring(0, start) +
+    before +
+    selectedText +
+    after +
+    text.substring(end)
+
+  // Set cursor position after insertion
+  setTimeout(() => {
+    textarea.focus()
+    textarea.selectionStart = start + before.length
+    textarea.selectionEnd = start + before.length + selectedText.length
+  }, 0)
+
+  return newText
+}
+
+// Handle keyboard shortcuts
+function handleKeydown(event: KeyboardEvent) {
+  // Skip if modifiers aren't pressed or if focus is not in editor
+  if (!event.ctrlKey && !event.metaKey) return
+
+  // Skip if target is not the editor
+  if (!(event.target instanceof HTMLTextAreaElement)) return
+
+  // Format shortcuts
+  switch (event.key.toLowerCase()) {
+    case 'b': // Bold
+      event.preventDefault()
+      post.content = insertTextAtCursor(post.content, '**', '**', 'content')
+      break
+    case 'i': // Italic
+      event.preventDefault()
+      post.content = insertTextAtCursor(post.content, '_', '_', 'content')
+      break
+    case 'k': // Link
+      event.preventDefault()
+      post.content = insertTextAtCursor(post.content, '[', '](url)', 'content')
+      break
+    case '1': // H1
+      if (event.ctrlKey && event.altKey) {
+        event.preventDefault()
+        post.content = insertTextAtCursor(post.content, '# ', '', 'content')
       }
-    }
+      break
+    case '2': // H2
+      if (event.ctrlKey && event.altKey) {
+        event.preventDefault()
+        post.content = insertTextAtCursor(post.content, '## ', '', 'content')
+      }
+      break
+    case '3': // H3
+      if (event.ctrlKey && event.altKey) {
+        event.preventDefault()
+        post.content = insertTextAtCursor(post.content, '### ', '', 'content')
+      }
+      break
+    case 'l': // List
+      if (event.ctrlKey && event.altKey) {
+        event.preventDefault()
+        post.content = insertTextAtCursor(post.content, '- ', '', 'content')
+      }
+      break
+    case 'f': // Find/Search
+      if (!showSearchReplace) {
+        event.preventDefault()
+        showSearchReplace = true
+        setTimeout(() => document.getElementById('search-input')?.focus(), 100)
+      }
+      break
   }
-  
-  // Toggle editor modes
-  function toggleEditorMode() {
-    if (editorMode === 'edit') editorMode = 'split';
-    else if (editorMode === 'split') editorMode = 'preview';
-    else editorMode = 'edit';
-  }
-  
-  // Toggle fullscreen
-  function toggleFullscreen() {
-    isFullscreen = !isFullscreen;
-    
-    // Focus the editor after switching to fullscreen
-    if (isFullscreen) {
+}
+
+// Auto-format as user types
+function handleInput(event: Event) {
+  const textarea = event.target as HTMLTextAreaElement
+  const value = textarea.value
+  const pos = textarea.selectionStart
+
+  // Auto-continue lists
+  if (
+    event.inputType === 'insertLineBreak' ||
+    event.inputType === 'insertParagraph'
+  ) {
+    const lineStart = value.lastIndexOf('\n', pos - 2) + 1
+    const lastLine = value.substring(lineStart, pos - 1) // Get the line before the new one
+
+    // Check for list patterns
+    const bulletMatch = lastLine.match(/^(\s*[-*+]\s+)(.*)$/)
+    const numberMatch = lastLine.match(/^(\s*\d+\.\s+)(.*)$/)
+
+    if (bulletMatch && !bulletMatch[2].trim()) {
+      // Empty bullet point - delete it and the newline
+      const newValue = value.substring(0, lineStart) + value.substring(pos)
+      post.content = newValue
       setTimeout(() => {
-        editorElement?.focus();
-      }, 100);
+        textarea.selectionStart = lineStart
+        textarea.selectionEnd = lineStart
+      }, 0)
+    } else if (bulletMatch) {
+      // Continue bullet list
+      const newValue =
+        value.substring(0, pos) + bulletMatch[1] + value.substring(pos)
+      post.content = newValue
+      setTimeout(() => {
+        textarea.selectionStart = pos + bulletMatch[1].length
+        textarea.selectionEnd = pos + bulletMatch[1].length
+      }, 0)
+    } else if (numberMatch && !numberMatch[2].trim()) {
+      // Empty numbered item - delete it and the newline
+      const newValue = value.substring(0, lineStart) + value.substring(pos)
+      post.content = newValue
+      setTimeout(() => {
+        textarea.selectionStart = lineStart
+        textarea.selectionEnd = lineStart
+      }, 0)
+    } else if (numberMatch) {
+      // Continue numbered list with incremented number
+      const num = Number.parseInt(numberMatch[0]) + 1
+      const nextItem = `${num}. `
+      const newValue = value.substring(0, pos) + nextItem + value.substring(pos)
+      post.content = newValue
+      setTimeout(() => {
+        textarea.selectionStart = pos + nextItem.length
+        textarea.selectionEnd = pos + nextItem.length
+      }, 0)
     }
   }
-  
-  // Search and replace
-  function handleSearch() {
-    if (!searchText) return;
-    
-    const textarea = document.getElementById('content') as HTMLTextAreaElement;
-    if (!textarea) return;
-    
-    const content = textarea.value;
-    const currentPos = textarea.selectionEnd;
-    const searchIndex = content.indexOf(searchText, currentPos);
-    
-    if (searchIndex !== -1) {
-      textarea.focus();
-      textarea.setSelectionRange(searchIndex, searchIndex + searchText.length);
-    } else {
-      // Start from beginning if not found
-      const fromStartIndex = content.indexOf(searchText);
-      if (fromStartIndex !== -1) {
-        textarea.focus();
-        textarea.setSelectionRange(fromStartIndex, fromStartIndex + searchText.length);
-      }
+}
+
+// Toggle editor modes
+function toggleEditorMode() {
+  if (editorMode === 'edit') editorMode = 'split'
+  else if (editorMode === 'split') editorMode = 'preview'
+  else editorMode = 'edit'
+}
+
+// Toggle fullscreen
+function toggleFullscreen() {
+  isFullscreen = !isFullscreen
+
+  // Focus the editor after switching to fullscreen
+  if (isFullscreen) {
+    setTimeout(() => {
+      editorElement?.focus()
+    }, 100)
+  }
+}
+
+// Search and replace
+function handleSearch() {
+  if (!searchText) return
+
+  const textarea = document.getElementById('content') as HTMLTextAreaElement
+  if (!textarea) return
+
+  const content = textarea.value
+  const currentPos = textarea.selectionEnd
+  const searchIndex = content.indexOf(searchText, currentPos)
+
+  if (searchIndex !== -1) {
+    textarea.focus()
+    textarea.setSelectionRange(searchIndex, searchIndex + searchText.length)
+  } else {
+    // Start from beginning if not found
+    const fromStartIndex = content.indexOf(searchText)
+    if (fromStartIndex !== -1) {
+      textarea.focus()
+      textarea.setSelectionRange(
+        fromStartIndex,
+        fromStartIndex + searchText.length,
+      )
     }
   }
-  
-  function handleReplace() {
-    if (!searchText) return;
-    
-    const textarea = document.getElementById('content') as HTMLTextAreaElement;
-    if (!textarea) return;
-    
-    const content = textarea.value;
-    const selStart = textarea.selectionStart;
-    const selEnd = textarea.selectionEnd;
-    
-    // Check if current selection matches search text
-    if (content.substring(selStart, selEnd) === searchText) {
-      post.content = content.substring(0, selStart) + replaceText + content.substring(selEnd);
-      textarea.focus();
-      textarea.setSelectionRange(selStart + replaceText.length, selStart + replaceText.length);
-    }
+}
+
+function handleReplace() {
+  if (!searchText) return
+
+  const textarea = document.getElementById('content') as HTMLTextAreaElement
+  if (!textarea) return
+
+  const content = textarea.value
+  const selStart = textarea.selectionStart
+  const selEnd = textarea.selectionEnd
+
+  // Check if current selection matches search text
+  if (content.substring(selStart, selEnd) === searchText) {
+    post.content =
+      content.substring(0, selStart) + replaceText + content.substring(selEnd)
+    textarea.focus()
+    textarea.setSelectionRange(
+      selStart + replaceText.length,
+      selStart + replaceText.length,
+    )
   }
-  
-  function handleReplaceAll() {
-    if (!searchText) return;
-    
-    post.content = post.content.split(searchText).join(replaceText);
+}
+
+function handleReplaceAll() {
+  if (!searchText) return
+
+  post.content = post.content.split(searchText).join(replaceText)
+}
+
+// Generate slug from title
+function generateSlug() {
+  if (post.title) {
+    post.slug = generateSlugFromTitle(post.title)
   }
-  
-  // Generate slug from title
-  function generateSlug() {
+}
+
+// Clear the form
+function clearForm() {
+  dispatch('clear')
+}
+
+// Helper to format date
+function formatTime(date: Date): string {
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+// Auto-save draft
+onMount(() => {
+  // Set editor element reference
+  editorElement = document.getElementById('content') as HTMLTextAreaElement
+
+  // Auto-save draft every 30 seconds if there's content
+  const autoSaveInterval = setInterval(() => {
     if (post.title) {
-      post.slug = generateSlugFromTitle(post.title);
+      dispatch('autosave', { post })
+      lastSavedAt = new Date()
     }
+  }, 30000)
+
+  return () => {
+    clearInterval(autoSaveInterval)
   }
-  
-  // Clear the form
-  function clearForm() {
-    dispatch('clear');
-  }
-  
-  // Helper to format date
-  function formatTime(date: Date): string {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
-  
-  // Auto-save draft
-  onMount(() => {
-    // Set editor element reference
-    editorElement = document.getElementById('content') as HTMLTextAreaElement;
-    
-    // Auto-save draft every 30 seconds if there's content
-    const autoSaveInterval = setInterval(() => {
-      if (post.title) {
-        dispatch('autosave', { post });
-        lastSavedAt = new Date();
-      }
-    }, 30000);
-    
-    return () => {
-      clearInterval(autoSaveInterval);
-    };
-  });
+})
 </script>
 
 <div class="grid grid-cols-1 gap-8">

@@ -1,25 +1,29 @@
 ---
 // src/components/timeline/TimelineViewModes/ListView.astro
-console.log("Loading ListView.astro component");
+console.log('Loading ListView.astro component')
 
-import type { TimelineEvent } from '../../../services/TimelineService.client';
-import { groupEventsByEra, getEraDisplayName, getEraClasses } from '../../../services/TimelineService.client';
+import type { TimelineEvent } from '../../../services/TimelineService.client'
+import {
+  getEraClasses,
+  getEraDisplayName,
+  groupEventsByEra,
+} from '../../../services/TimelineService.client'
 
 export interface Props {
-  events?: TimelineEvent[];
-  background?: string;
-  selectedEventSlug?: string | null; // Pass slug for easier comparison
+  events?: TimelineEvent[]
+  background?: string
+  selectedEventSlug?: string | null // Pass slug for easier comparison
 }
 
 const {
   events = [],
   background = '/assets/banner/0001.png',
   selectedEventSlug = null,
-} = Astro.props;
+} = Astro.props
 
-const eventsByEra = groupEventsByEra(events);
-const listViewId = `list-view-${Math.random().toString(36).substring(2,9)}`;
-console.log("ListView.astro: Generated ID:", listViewId);
+const eventsByEra = groupEventsByEra(events)
+const listViewId = `list-view-${Math.random().toString(36).substring(2, 9)}`
+console.log('ListView.astro: Generated ID:', listViewId)
 ---
 
 <div class="timeline-interface relative w-full h-full" id={listViewId}>

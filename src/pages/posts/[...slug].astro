@@ -8,10 +8,10 @@ import { i18n } from '@i18n/translation'
 import MainGridLayout from '@layouts/MainGridLayout.astro'
 import { getDir, getPostUrlBySlug } from '@utils/url-utils'
 import { Icon } from 'astro-icon/components'
-import { licenseConfig } from '../../config/config'
 import PostMetadata from '../../components/PostMeta.astro'
+import Bleepy from '../../components/bleepy/Bleepy.astro'
 import ImageWrapper from '../../components/misc/ImageWrapper.astro'
-import Bleepy from '../../components/bleepy/Bleepy.astro';
+import { licenseConfig } from '../../config/config'
 import { profileConfig, siteConfig } from '../../config/config'
 import { formatDateToYYYYMMDD } from '../../utils/date-utils'
 
@@ -19,33 +19,51 @@ import { formatDateToYYYYMMDD } from '../../utils/date-utils'
 import LayoutToggle from '../../components/client/LayoutToggle.svelte'
 
 export async function getStaticPaths() {
-  const posts = await getCollection('posts'); // Include all posts, including drafts
+  const posts = await getCollection('posts') // Include all posts, including drafts
   return posts.map(post => ({
     params: { slug: post.slug },
     props: { post },
-  }));
+  }))
 }
 
-const { post } = Astro.props; // Destructure `post` instead of `entry`
-console.log('SLUG PAGE - mascotContext from frontmatter:', post.data.mascotContext);
-const mascotCtx = post.data.mascotContext;
-const bannerTypeCtx = post.data.bannerType;
-const shouldRenderAssistantBleepy = bannerTypeCtx === 'assistant';
-const hasMascotContext = !!mascotCtx;
-console.log('SLUG PAGE - mascotContext value for Bleepy prop (from post.data.mascotContext):', mascotCtx);
-console.log('SLUG PAGE - typeof mascotContext value for Bleepy prop:', typeof mascotCtx);
-console.log('SLUG PAGE - bannerType value (from post.data.bannerType):', bannerTypeCtx);
-console.log('SLUG PAGE - Condition for rendering Bleepy (bannerTypeCtx === "assistant"):', bannerTypeCtx === 'assistant');
-console.log('SLUG PAGE - shouldRenderAssistantBleepy:', shouldRenderAssistantBleepy);
-console.log('SLUG PAGE - hasMascotContext:', hasMascotContext);
+const { post } = Astro.props // Destructure `post` instead of `entry`
+console.log(
+  'SLUG PAGE - mascotContext from frontmatter:',
+  post.data.mascotContext,
+)
+const mascotCtx = post.data.mascotContext
+const bannerTypeCtx = post.data.bannerType
+const shouldRenderAssistantBleepy = bannerTypeCtx === 'assistant'
+const hasMascotContext = !!mascotCtx
+console.log(
+  'SLUG PAGE - mascotContext value for Bleepy prop (from post.data.mascotContext):',
+  mascotCtx,
+)
+console.log(
+  'SLUG PAGE - typeof mascotContext value for Bleepy prop:',
+  typeof mascotCtx,
+)
+console.log(
+  'SLUG PAGE - bannerType value (from post.data.bannerType):',
+  bannerTypeCtx,
+)
+console.log(
+  'SLUG PAGE - Condition for rendering Bleepy (bannerTypeCtx === "assistant"):',
+  bannerTypeCtx === 'assistant',
+)
+console.log(
+  'SLUG PAGE - shouldRenderAssistantBleepy:',
+  shouldRenderAssistantBleepy,
+)
+console.log('SLUG PAGE - hasMascotContext:', hasMascotContext)
 
 // Extract backgroundImage from frontmatter for dynamic background support
-const backgroundImage = post.data.backgroundImage;
-console.log('SLUG PAGE - backgroundImage from frontmatter:', backgroundImage);
+const backgroundImage = post.data.backgroundImage
+console.log('SLUG PAGE - backgroundImage from frontmatter:', backgroundImage)
 
 // ⭐ NEW: Extract oneColumn setting from frontmatter
-const oneColumnMode = post.data.oneColumn || false;
-console.log('SLUG PAGE - oneColumn from frontmatter:', oneColumnMode);
+const oneColumnMode = post.data.oneColumn || false
+console.log('SLUG PAGE - oneColumn from frontmatter:', oneColumnMode)
 
 // Extract custom author data from frontmatter
 const customAuthorData = {
@@ -53,8 +71,8 @@ const customAuthorData = {
   authorName: post.data.authorName,
   authorBio: post.data.authorBio,
   authorLink: post.data.authorLink, // NEW - Extract custom author link
-};
-console.log('SLUG PAGE - Custom author data:', customAuthorData);
+}
+console.log('SLUG PAGE - Custom author data:', customAuthorData)
 
 const { Content, headings } = await post.render()
 
@@ -72,7 +90,9 @@ const jsonLd = {
     name: profileConfig.name,
     url: Astro.site,
   },
-  inLanguage: (post.data.lang ? post.data.lang.replace('_', '-') : siteConfig.lang.replace('_', '-')),
+  inLanguage: post.data.lang
+    ? post.data.lang.replace('_', '-')
+    : siteConfig.lang.replace('_', '-'),
   // TODO include cover image here
 }
 ---

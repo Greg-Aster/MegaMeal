@@ -1,128 +1,145 @@
 <!-- LayoutToggle.svelte - Cleaned and simplified -->
 <script lang="ts">
-  import { onMount } from 'svelte';
+import { onMount } from 'svelte'
 
-  // Appearance configuration
-  export let position: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' = 'top-right';
-  export let variant: 'full' | 'minimal' = 'full'; // Controls appearance
-  export let showLabels: boolean = true; // Only applies to 'full' variant
-  export let size: 'sm' | 'md' | 'lg' = 'md'; // Only applies to 'minimal' variant
+// Appearance configuration
+export const position:
+  | 'top-right'
+  | 'top-left'
+  | 'bottom-right'
+  | 'bottom-left' = 'top-right'
+export const variant: 'full' | 'minimal' = 'full' // Controls appearance
+export const showLabels = true // Only applies to 'full' variant
+export const size: 'sm' | 'md' | 'lg' = 'md' // Only applies to 'minimal' variant
 
-  let isOneColumn = false;
-  let isTransitioning = false;
-  let isReady = false;
-  let isFullscreenMode = false;
+let isOneColumn = false
+let isTransitioning = false
+let isReady = false
+let isFullscreenMode = false
 
-  onMount(() => {
-    let retryCount = 0;
-    const maxRetries = 20; // Try for up to 2 seconds
-    
-    // Wait for SpecialPageFeatures to expose the global toggle function
-    const checkForToggleFunction = () => {
-      console.log(`LayoutToggle - Checking for global functions (attempt ${retryCount + 1}/${maxRetries})`);
-      
-      if ((window as any).toggleLayoutState && (window as any).getLayoutState) {
-        isReady = true;
-        
-        // Get initial state
-        updateStateFromGlobal();
-        
-        // Poll for state changes (mainly for fullscreen mode)
-        const pollInterval = setInterval(() => {
-          updateStateFromGlobal();
-        }, 100);
+onMount(() => {
+  let retryCount = 0
+  const maxRetries = 20 // Try for up to 2 seconds
 
-        console.log('LayoutToggle - Successfully connected to SpecialPageFeatures toggle system');
-        
-        return () => {
-          clearInterval(pollInterval);
-        };
-      } else {
-        retryCount++;
-        if (retryCount < maxRetries) {
-          // Retry with exponential backoff
-          const delay = Math.min(100 * Math.pow(1.2, retryCount), 500);
-          console.log(`LayoutToggle - Functions not ready, retrying in ${delay}ms...`);
-          setTimeout(checkForToggleFunction, delay);
-        } else {
-          console.error('LayoutToggle - Failed to connect to SpecialPageFeatures after maximum retries');
-          console.error('LayoutToggle - Available window functions:', Object.keys(window).filter(k => k.includes('Layout') || k.includes('toggle')));
-          
-          // Set as ready anyway to prevent permanent disabled state
-          isReady = true;
-        }
-      }
-    };
+  // Wait for SpecialPageFeatures to expose the global toggle function
+  const checkForToggleFunction = () => {
+    console.log(
+      `LayoutToggle - Checking for global functions (attempt ${retryCount + 1}/${maxRetries})`,
+    )
 
-    checkForToggleFunction();
+    if ((window as any).toggleLayoutState && (window as any).getLayoutState) {
+      isReady = true
 
-    // Listen for fullscreen changes only
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'fullscreenMode') {
-        updateStateFromGlobal();
-      }
-    };
+      // Get initial state
+      updateStateFromGlobal()
 
-    window.addEventListener('storage', handleStorageChange);
+      // Poll for state changes (mainly for fullscreen mode)
+      const pollInterval = setInterval(() => {
+        updateStateFromGlobal()
+      }, 100)
 
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  });
+      console.log(
+        'LayoutToggle - Successfully connected to SpecialPageFeatures toggle system',
+      )
 
-  // Update state from global functions and check fullscreen
-  function updateStateFromGlobal() {
-    if ((window as any).getLayoutState) {
-      const state = (window as any).getLayoutState();
-      isOneColumn = state.isOneColumn;
-      isTransitioning = state.isTransitioning;
-      
-      // Check fullscreen mode
-      isFullscreenMode = localStorage.getItem('fullscreenMode') === 'true';
-    }
-  }
-
-  function toggleLayout() {
-    // Prevent toggle when in fullscreen mode or transitioning
-    if (isTransitioning || isFullscreenMode) return;
-    
-    // Use centralized toggle function only
-    if ((window as any).toggleLayoutState) {
-      console.log('LayoutToggle - Calling centralized toggle function');
-      const success = (window as any).toggleLayoutState();
-      
-      if (!success) {
-        console.warn('LayoutToggle - Toggle failed');
+      return () => {
+        clearInterval(pollInterval)
       }
     } else {
-      console.error('LayoutToggle - Global toggle function not available');
-      // No fallback DOM manipulation - it was causing the issues
+      retryCount++
+      if (retryCount < maxRetries) {
+        // Retry with exponential backoff
+        const delay = Math.min(100 * Math.pow(1.2, retryCount), 500)
+        console.log(
+          `LayoutToggle - Functions not ready, retrying in ${delay}ms...`,
+        )
+        setTimeout(checkForToggleFunction, delay)
+      } else {
+        console.error(
+          'LayoutToggle - Failed to connect to SpecialPageFeatures after maximum retries',
+        )
+        console.error(
+          'LayoutToggle - Available window functions:',
+          Object.keys(window).filter(
+            k => k.includes('Layout') || k.includes('toggle'),
+          ),
+        )
+
+        // Set as ready anyway to prevent permanent disabled state
+        isReady = true
+      }
     }
   }
 
-  // Position classes
-  $: positionClasses = {
-    'top-right': 'top-4 right-4',
-    'top-left': 'top-4 left-4', 
-    'bottom-right': 'bottom-4 right-4',
-    'bottom-left': 'bottom-4 left-4'
-  }[position];
+  checkForToggleFunction()
 
-  // Size classes for minimal variant
-  $: sizeClasses = {
-    'sm': 'w-8 h-8 p-1.5',
-    'md': 'w-10 h-10 p-2',
-    'lg': 'w-12 h-12 p-2.5'
-  }[size];
+  // Listen for fullscreen changes only
+  const handleStorageChange = (e: StorageEvent) => {
+    if (e.key === 'fullscreenMode') {
+      updateStateFromGlobal()
+    }
+  }
 
-  $: iconSize = {
-    'sm': 'w-3 h-3',
-    'md': 'w-4 h-4', 
-    'lg': 'w-5 h-5'
-  }[size];
+  window.addEventListener('storage', handleStorageChange)
 
-  // Hide toggle when in fullscreen mode
-  $: shouldHideToggle = isFullscreenMode;
+  return () => {
+    window.removeEventListener('storage', handleStorageChange)
+  }
+})
+
+// Update state from global functions and check fullscreen
+function updateStateFromGlobal() {
+  if ((window as any).getLayoutState) {
+    const state = (window as any).getLayoutState()
+    isOneColumn = state.isOneColumn
+    isTransitioning = state.isTransitioning
+
+    // Check fullscreen mode
+    isFullscreenMode = localStorage.getItem('fullscreenMode') === 'true'
+  }
+}
+
+function toggleLayout() {
+  // Prevent toggle when in fullscreen mode or transitioning
+  if (isTransitioning || isFullscreenMode) return
+
+  // Use centralized toggle function only
+  if ((window as any).toggleLayoutState) {
+    console.log('LayoutToggle - Calling centralized toggle function')
+    const success = (window as any).toggleLayoutState()
+
+    if (!success) {
+      console.warn('LayoutToggle - Toggle failed')
+    }
+  } else {
+    console.error('LayoutToggle - Global toggle function not available')
+    // No fallback DOM manipulation - it was causing the issues
+  }
+}
+
+// Position classes
+$: positionClasses = {
+  'top-right': 'top-4 right-4',
+  'top-left': 'top-4 left-4',
+  'bottom-right': 'bottom-4 right-4',
+  'bottom-left': 'bottom-4 left-4',
+}[position]
+
+// Size classes for minimal variant
+$: sizeClasses = {
+  sm: 'w-8 h-8 p-1.5',
+  md: 'w-10 h-10 p-2',
+  lg: 'w-12 h-12 p-2.5',
+}[size]
+
+$: iconSize = {
+  sm: 'w-3 h-3',
+  md: 'w-4 h-4',
+  lg: 'w-5 h-5',
+}[size]
+
+// Hide toggle when in fullscreen mode
+$: shouldHideToggle = isFullscreenMode
 </script>
 
 <!-- Only show toggle when not in fullscreen mode -->

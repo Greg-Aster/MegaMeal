@@ -9,7 +9,7 @@ export const en: Translation = {
   [Key.store]: 'Store',
   [Key.projects]: 'Projects',
   [Key.search]: 'Search',
-  
+
   [Key.configs]: 'Configs',
   [Key.friends]: 'Friends',
   [Key.newPost]: 'New Post',

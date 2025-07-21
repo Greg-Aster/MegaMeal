@@ -1,14 +1,14 @@
 ---
 // src/components/timeline/StarNode.astro - Complete version maintaining TimelineView compatibility
 export interface Props {
-  era?: string;
-  isKeyEvent?: boolean;
-  isSelected?: boolean;
-  isHovered?: boolean;
-  size?: number;
-  identifier?: string;
-  useEraColors?: boolean;
-  triggerHighlightAnimation?: boolean;
+  era?: string
+  isKeyEvent?: boolean
+  isSelected?: boolean
+  isHovered?: boolean
+  size?: number
+  identifier?: string
+  useEraColors?: boolean
+  triggerHighlightAnimation?: boolean
 }
 
 const {
@@ -20,7 +20,7 @@ const {
   identifier = Math.random().toString(36).substring(2, 10),
   useEraColors = false,
   triggerHighlightAnimation = false,
-} = Astro.props;
+} = Astro.props
 
 // =====================================================
 // SHARED UTILITIES - Keep consistent with StarMapView
@@ -33,63 +33,92 @@ const eraColorMap = {
   'singularity-conflict': '#ef4444',
   'transcendent-age': '#14b8a6',
   'final-epoch': '#22c55e',
-  'unknown': '#6366f1'
-};
-
-const colorSpectrum = [
-  '#ef4444', '#f43f5e', '#f97316', '#f59e0b', '#eab308', '#facc15',
-  '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6',
-  '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
-];
-
-const starTypes = ['point', 'classic', 'sparkle', 'refraction', 'halo', 'subtle'];
-
-function hashCode(str: string): number {
-  if (!str) return 0;
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash);
+  unknown: '#6366f1',
 }
 
-function getStarColor(id: string, currentEra?: string, shouldUseEraColors?: boolean): string {
-  if (shouldUseEraColors && currentEra && eraColorMap[currentEra as keyof typeof eraColorMap]) {
-    return eraColorMap[currentEra as keyof typeof eraColorMap];
+const colorSpectrum = [
+  '#ef4444',
+  '#f43f5e',
+  '#f97316',
+  '#f59e0b',
+  '#eab308',
+  '#facc15',
+  '#22c55e',
+  '#10b981',
+  '#14b8a6',
+  '#06b6d4',
+  '#0ea5e9',
+  '#3b82f6',
+  '#6366f1',
+  '#8b5cf6',
+  '#a855f7',
+  '#d946ef',
+  '#ec4899',
+]
+
+const starTypes = [
+  'point',
+  'classic',
+  'sparkle',
+  'refraction',
+  'halo',
+  'subtle',
+]
+
+function hashCode(str: string): number {
+  if (!str) return 0
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i)
+    hash |= 0
   }
-  const hash = hashCode(id);
-  return colorSpectrum[hash % colorSpectrum.length];
+  return Math.abs(hash)
+}
+
+function getStarColor(
+  id: string,
+  currentEra?: string,
+  shouldUseEraColors?: boolean,
+): string {
+  if (
+    shouldUseEraColors &&
+    currentEra &&
+    eraColorMap[currentEra as keyof typeof eraColorMap]
+  ) {
+    return eraColorMap[currentEra as keyof typeof eraColorMap]
+  }
+  const hash = hashCode(id)
+  return colorSpectrum[hash % colorSpectrum.length]
 }
 
 function getStarType(id: string, keyEvent: boolean): string {
-  const hash = hashCode(id);
+  const hash = hashCode(id)
   if (keyEvent) {
-    return ['classic', 'sparkle', 'refraction', 'halo'][hash % 4];
+    return ['classic', 'sparkle', 'refraction', 'halo'][hash % 4]
   }
-  return starTypes[hash % starTypes.length];
+  return starTypes[hash % starTypes.length]
 }
 
 function getSizeFactor(keyEvent: boolean): number {
-  return keyEvent ? 1.2 : 0.85 + (Math.random() * 0.3);
+  return keyEvent ? 1.2 : 0.85 + Math.random() * 0.3
 }
 
 function getAnimationDuration(id: string): number {
-  const hash = hashCode(id);
-  return 4 + (hash % 5);
+  const hash = hashCode(id)
+  return 4 + (hash % 5)
 }
 
 // =====================================================
 // CALCULATE STAR PROPERTIES
 // =====================================================
-const uniqueId = `star-${identifier}-${isKeyEvent ? 'key' : 'normal'}`;
-const starType = getStarType(uniqueId, isKeyEvent);
-const sizeFactor = getSizeFactor(isKeyEvent);
-const finalSize = size * sizeFactor;
-const mainColor = getStarColor(uniqueId, era, useEraColors);
-const animationDuration = getAnimationDuration(uniqueId);
+const uniqueId = `star-${identifier}-${isKeyEvent ? 'key' : 'normal'}`
+const starType = getStarType(uniqueId, isKeyEvent)
+const sizeFactor = getSizeFactor(isKeyEvent)
+const finalSize = size * sizeFactor
+const mainColor = getStarColor(uniqueId, era, useEraColors)
+const animationDuration = getAnimationDuration(uniqueId)
 
-const wrapperId = `star-wrapper-${uniqueId}`;
+const wrapperId = `star-wrapper-${uniqueId}`
 ---
 
 <div

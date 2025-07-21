@@ -1,160 +1,163 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
-  import { url } from '@utils/url-utils'
-  import { i18n } from '@i18n/translation'
-  import { isFriendContentEnabled, getFriendContent } from '../stores/friendStore';
-  import I18nKey from '@i18n/i18nKey'
-  import Icon from '@iconify/svelte'
-  
-  let keywordDesktop = ''
-  let keywordMobile = ''
-  let result = []
-  let friendResults = [] // Store friend search results separately
-  let isAuthenticated = false
-  let friendContentEnabled = false
-  
-  const fakeResult = [
-    {
-      url: url('/'),
-      meta: {
-        title: 'This Is a Fake Search Result',
-      },
-      excerpt:
-        'Because the search cannot work in the <mark>dev</mark> environment.',
+import I18nKey from '@i18n/i18nKey'
+import { i18n } from '@i18n/translation'
+import Icon from '@iconify/svelte'
+import { url } from '@utils/url-utils'
+import { onMount } from 'svelte'
+import { getFriendContent, isFriendContentEnabled } from '../stores/friendStore'
+
+let keywordDesktop = ''
+let keywordMobile = ''
+let result = []
+let friendResults = [] // Store friend search results separately
+let isAuthenticated = false
+let friendContentEnabled = false
+
+const fakeResult = [
+  {
+    url: url('/'),
+    meta: {
+      title: 'This Is a Fake Search Result',
     },
-    {
-      url: url('/'),
-      meta: {
-        title: 'If You Want to Test the Search',
-      },
-      excerpt: 'Try running <mark>npm build && npm preview</mark> instead.',
+    excerpt:
+      'Because the search cannot work in the <mark>dev</mark> environment.',
+  },
+  {
+    url: url('/'),
+    meta: {
+      title: 'If You Want to Test the Search',
     },
-  ]
-  
-  let search = (keyword: string, isDesktop: boolean) => {}
-  
-  onMount(() => {
-    // Check authentication and friend content status
-    isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-    friendContentEnabled = isFriendContentEnabled();
-  
-    search = async (keyword: string, isDesktop: boolean) => {
-      let panel = document.getElementById('search-panel')
-      if (!panel) return
-  
-      if (!keyword && isDesktop) {
-        panel.classList.add('float-panel-closed')
-        return
-      }
-  
-      // Initialize results array
-      let arr = []
-      
-      // Get standard search results
-      if (import.meta.env.PROD) {
-        const ret = await pagefind.search(keyword)
-        for (const item of ret.results) {
-          arr.push(await item.data())
-        }
-      } else {
-        // Mock data for non-production environment
-        arr = fakeResult
-      }
-      
-      // Get and add friend content results if enabled
-      if (isAuthenticated && friendContentEnabled) {
-        friendResults = searchFriendPosts(keyword);
-        
-        // Convert friend results to the same format as pagefind results
-        const formattedFriendResults = friendResults.map(post => ({
-          url: post.sourceUrl || `/friend-${post.slug || post.id}`,
-          meta: {
-            title: `${post.title} (from ${post.friendName})`,
-          },
-          excerpt: highlightKeyword(post.description || '', keyword),
-          // Add indicator this is friend content
-          isFriendContent: true,
-          friendName: post.friendName,
-          friendUrl: post.friendUrl
-        }));
-        
-        // Add friend results to the main results array
-        arr = [...arr, ...formattedFriendResults];
-      }
-  
-      if (!arr.length && isDesktop) {
-        panel.classList.add('float-panel-closed')
-        return
-      }
-  
-      if (isDesktop) {
-        panel.classList.remove('float-panel-closed')
-      }
-      result = arr
+    excerpt: 'Try running <mark>npm build && npm preview</mark> instead.',
+  },
+]
+
+let search = (keyword: string, isDesktop: boolean) => {}
+
+onMount(() => {
+  // Check authentication and friend content status
+  isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
+  friendContentEnabled = isFriendContentEnabled()
+
+  search = async (keyword: string, isDesktop: boolean) => {
+    const panel = document.getElementById('search-panel')
+    if (!panel) return
+
+    if (!keyword && isDesktop) {
+      panel.classList.add('float-panel-closed')
+      return
     }
-    
-    // Listen for friend content toggle events
-    window.addEventListener('friend-content-toggled', (e) => {
-      const event = e as CustomEvent;
-      const enabled = event.detail?.enabled ?? false;
-      
-      if (friendContentEnabled !== enabled) {
-        friendContentEnabled = enabled;
-        // Re-search with current keyword to update results
-        search(keywordDesktop || keywordMobile, true);
+
+    // Initialize results array
+    let arr = []
+
+    // Get standard search results
+    if (import.meta.env.PROD) {
+      const ret = await pagefind.search(keyword)
+      for (const item of ret.results) {
+        arr.push(await item.data())
       }
-    });
+    } else {
+      // Mock data for non-production environment
+      arr = fakeResult
+    }
+
+    // Get and add friend content results if enabled
+    if (isAuthenticated && friendContentEnabled) {
+      friendResults = searchFriendPosts(keyword)
+
+      // Convert friend results to the same format as pagefind results
+      const formattedFriendResults = friendResults.map(post => ({
+        url: post.sourceUrl || `/friend-${post.slug || post.id}`,
+        meta: {
+          title: `${post.title} (from ${post.friendName})`,
+        },
+        excerpt: highlightKeyword(post.description || '', keyword),
+        // Add indicator this is friend content
+        isFriendContent: true,
+        friendName: post.friendName,
+        friendUrl: post.friendUrl,
+      }))
+
+      // Add friend results to the main results array
+      arr = [...arr, ...formattedFriendResults]
+    }
+
+    if (!arr.length && isDesktop) {
+      panel.classList.add('float-panel-closed')
+      return
+    }
+
+    if (isDesktop) {
+      panel.classList.remove('float-panel-closed')
+    }
+    result = arr
+  }
+
+  // Listen for friend content toggle events
+  window.addEventListener('friend-content-toggled', e => {
+    const event = e as CustomEvent
+    const enabled = event.detail?.enabled ?? false
+
+    if (friendContentEnabled !== enabled) {
+      friendContentEnabled = enabled
+      // Re-search with current keyword to update results
+      search(keywordDesktop || keywordMobile, true)
+    }
   })
-  
-  // Function to search through friend posts
-  function searchFriendPosts(keyword) {
-    if (!keyword) return [];
-    
-    const friendPosts = getFriendContent();
-    const normalizedKeyword = keyword.toLowerCase();
-    
-    return friendPosts.filter(post => {
-      // Search in title
-      if (post.title?.toLowerCase().includes(normalizedKeyword)) return true;
-      
-      // Search in description
-      if (post.description?.toLowerCase().includes(normalizedKeyword)) return true;
-      
-      // Search in content (if available)
-      if (post.content?.toLowerCase().includes(normalizedKeyword)) return true;
-      
-      // Search in tags
-      if (post.tags && Array.isArray(post.tags)) {
-        if (post.tags.some(tag => tag.toLowerCase().includes(normalizedKeyword))) return true;
-      }
-      
-      // Search in category
-      if (post.category?.toLowerCase().includes(normalizedKeyword)) return true;
-      
-      return false;
-    });
-  }
-  
-  // Helper function to highlight keywords
-  function highlightKeyword(text, keyword) {
-    if (!text || !keyword) return text;
-    
-    const normalizedKeyword = keyword.toLowerCase();
-    const parts = text.split(new RegExp(`(${keyword})`, 'gi'));
-    
-    return parts.map(part => 
-      part.toLowerCase() === normalizedKeyword ? `<mark>${part}</mark>` : part
-    ).join('');
-  }
-  
-  const togglePanel = () => {
-    let panel = document.getElementById('search-panel')
-    panel?.classList.toggle('float-panel-closed')
-  }
-  
-  $: search(keywordDesktop, true)
-  $: search(keywordMobile, false)
-  </script>
+})
+
+// Function to search through friend posts
+function searchFriendPosts(keyword) {
+  if (!keyword) return []
+
+  const friendPosts = getFriendContent()
+  const normalizedKeyword = keyword.toLowerCase()
+
+  return friendPosts.filter(post => {
+    // Search in title
+    if (post.title?.toLowerCase().includes(normalizedKeyword)) return true
+
+    // Search in description
+    if (post.description?.toLowerCase().includes(normalizedKeyword)) return true
+
+    // Search in content (if available)
+    if (post.content?.toLowerCase().includes(normalizedKeyword)) return true
+
+    // Search in tags
+    if (post.tags && Array.isArray(post.tags)) {
+      if (post.tags.some(tag => tag.toLowerCase().includes(normalizedKeyword)))
+        return true
+    }
+
+    // Search in category
+    if (post.category?.toLowerCase().includes(normalizedKeyword)) return true
+
+    return false
+  })
+}
+
+// Helper function to highlight keywords
+function highlightKeyword(text, keyword) {
+  if (!text || !keyword) return text
+
+  const normalizedKeyword = keyword.toLowerCase()
+  const parts = text.split(new RegExp(`(${keyword})`, 'gi'))
+
+  return parts
+    .map(part =>
+      part.toLowerCase() === normalizedKeyword ? `<mark>${part}</mark>` : part,
+    )
+    .join('')
+}
+
+const togglePanel = () => {
+  const panel = document.getElementById('search-panel')
+  panel?.classList.toggle('float-panel-closed')
+}
+
+$: search(keywordDesktop, true)
+$: search(keywordMobile, false)
+</script>
   
   <!-- search bar for desktop view -->
   <div id="search-bar" class="hidden lg:flex transition-all items-center h-11 mr-2 rounded-lg

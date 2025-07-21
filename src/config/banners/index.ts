@@ -2,24 +2,24 @@
  * ===================================================================
  * BANNER CONFIGURATIONS INDEX - CENTRALIZED EXPORTS
  * ===================================================================
- * 
+ *
  * This file provides centralized exports for all banner configuration modules,
  * making it easier to import banner configurations throughout the application.
  * It serves as the main entry point for the banner system.
- * 
+ *
  * ORGANIZATION:
  * - Type definitions and interfaces
  * - Individual banner type configurations
  * - Helper functions and utilities
  * - Type guards for safe type checking
  * - Validation functions
- * 
+ *
  * USAGE:
  * - Import specific configurations: import { standardBannerConfig } from '@/config/banners'
  * - Import types: import type { BannerType } from '@/config/banners'
  * - Import utilities: import { isVideoBannerData } from '@/config/banners'
  * - Import everything: import * as BannerConfigs from '@/config/banners'
- * 
+ *
  * MAINTENANCE NOTES:
  * - Add new banner type exports when creating new banner modules
  * - Keep exports organized by category for better discoverability
@@ -37,7 +37,6 @@ export type {
   // Core banner types
   BannerType,
   BannerData,
-  
   // Individual banner data types
   StandardBannerData,
   VideoBannerData,
@@ -45,7 +44,6 @@ export type {
   TimelineBannerData,
   AssistantBannerData,
   NoneBannerData,
-  
   // Configuration interfaces
   BannerAnimationConfig,
   BannerLayoutConfig,
@@ -54,11 +52,10 @@ export type {
   BannerNavbarConfig,
   BannerPanelConfig,
   BannerParallaxConfig,
-  
   // Helper types
   BannerDeterminationResult,
   PostBannerData,
-  LinkPreviewInfo
+  LinkPreviewInfo,
 } from './types'
 
 // =====================================================================
@@ -86,13 +83,13 @@ export { noneBannerData } from './none'
 // =====================================================================
 
 // Export standard banner assets and configuration
-export { 
+export {
   bannerList,
   bannerLinks,
   defaultBanner,
   linkPreviewData,
   animationConfig,
-  iconSVGs
+  iconSVGs,
 } from './standard'
 
 // Export standard banner helper functions
@@ -102,7 +99,7 @@ export {
   hasAnyBannerLinks,
   getLinkPreviewData,
   getIconSVG,
-  validateStandardBannerConfig
+  validateStandardBannerConfig,
 } from './standard'
 
 // =====================================================================
@@ -115,7 +112,7 @@ export {
   qualityPreferences,
   aspectRatioConfig,
   videoFallbackConfig,
-  videoLoadingConfig
+  videoLoadingConfig,
 } from './video'
 
 // Export video banner helper functions
@@ -124,7 +121,7 @@ export {
   extractVideoId,
   validateVideoBannerConfig,
   getVideoThumbnail,
-  getVideoIframeAttributes
+  getVideoIframeAttributes,
 } from './video'
 
 // =====================================================================
@@ -137,7 +134,7 @@ export {
   responsiveBreakpoints,
   imageDisplayConfig,
   imageFallbackConfig,
-  imageLoadingConfig
+  imageLoadingConfig,
 } from './image'
 
 // Export image banner helper functions
@@ -147,7 +144,7 @@ export {
   validateImageBannerConfig,
   getImageAttributes,
   isExternalImage,
-  getImagePlaceholder
+  getImagePlaceholder,
 } from './image'
 
 // =====================================================================
@@ -160,7 +157,7 @@ export {
   timelineBannerLayout,
   timelineBannerInteraction,
   timelineBannerEraConfig,
-  timelineBannerCategories
+  timelineBannerCategories,
 } from './timeline'
 
 // Export timeline banner helper functions
@@ -169,7 +166,7 @@ export {
   validateTimelineBannerConfig,
   getEraForTimelineRange,
   getTimelineBannerStyles,
-  getTimelineBannerCategory
+  getTimelineBannerCategory,
 } from './timeline'
 
 // =====================================================================
@@ -184,7 +181,7 @@ export {
   assistantBannerInteraction,
   assistantQuickActions,
   contextualActions,
-  assistantBannerStyling
+  assistantBannerStyling,
 } from './assistant'
 
 // Export assistant banner helper functions
@@ -193,7 +190,7 @@ export {
   getContextualQuickActions,
   validateAssistantBannerConfig,
   getAssistantBannerStyles,
-  getAssistantAvatar
+  getAssistantAvatar,
 } from './assistant'
 
 // =====================================================================
@@ -204,7 +201,7 @@ export {
 export {
   noneBannerLayout,
   noneBannerVisualConfig,
-  noneBannerResponsiveConfig
+  noneBannerResponsiveConfig,
 } from './none'
 
 // Export none banner helper functions
@@ -213,7 +210,7 @@ export {
   getNoneBannerContentPosition,
   shouldApplyConsistentSpacing,
   validateNoneBannerConfig,
-  getNoneBannerResponsiveAdjustments
+  getNoneBannerResponsiveAdjustments,
 } from './none'
 
 // =====================================================================
@@ -241,7 +238,7 @@ export const allBannerConfigs = {
   image: imageBannerConfig,
   timeline: timelineBannerConfig,
   assistant: assistantBannerConfig,
-  none: noneBannerConfig
+  none: noneBannerConfig,
 } as const
 
 /**
@@ -254,7 +251,7 @@ export const allBannerData = {
   image: imageBannerData,
   timeline: timelineBannerData,
   assistant: assistantBannerData,
-  none: noneBannerData
+  none: noneBannerData,
 } as const
 
 /**
@@ -266,7 +263,7 @@ export const bannerTypeGuards = {
   isImageBannerData,
   isTimelineBannerData,
   isAssistantBannerData,
-  isNoneBannerData
+  isNoneBannerData,
 } as const
 
 /**
@@ -279,7 +276,7 @@ export const bannerValidators = {
   validateImageBannerConfig,
   validateTimelineBannerConfig,
   validateAssistantBannerConfig,
-  validateNoneBannerConfig
+  validateNoneBannerConfig,
 } as const
 
 // =====================================================================
@@ -289,7 +286,7 @@ export const bannerValidators = {
 /**
  * Get banner configuration by type string
  * Dynamically returns the appropriate banner configuration
- * 
+ *
  * @param bannerType - Banner type string
  * @returns Banner configuration object or null if invalid type
  */
@@ -315,7 +312,7 @@ export function getBannerConfigByType(bannerType: string) {
 /**
  * Get banner data by type string
  * Dynamically returns the appropriate banner data
- * 
+ *
  * @param bannerType - Banner type string
  * @returns Banner data object or null if invalid type
  */
@@ -341,7 +338,7 @@ export function getBannerDataByType(bannerType: string) {
 /**
  * Get type guard function by banner type string
  * Dynamically returns the appropriate type guard function
- * 
+ *
  * @param bannerType - Banner type string
  * @returns Type guard function or null if invalid type
  */
@@ -359,7 +356,8 @@ export function getTypeGuardByBannerType(bannerType: string) {
       return isNoneBannerData
     case 'standard':
       // Standard banner data is just an empty object, so we can check for that
-      return (data: any) => data && typeof data === 'object' && Object.keys(data).length === 0
+      return (data: any) =>
+        data && typeof data === 'object' && Object.keys(data).length === 0
     default:
       return null
   }
@@ -368,7 +366,7 @@ export function getTypeGuardByBannerType(bannerType: string) {
 /**
  * Get all available banner types
  * Returns array of all supported banner type strings
- * 
+ *
  * @returns Array of banner type strings
  */
 export function getAllBannerTypes(): string[] {
@@ -378,18 +376,20 @@ export function getAllBannerTypes(): string[] {
 /**
  * Check if banner type is valid
  * Validates that a string is a supported banner type
- * 
+ *
  * @param bannerType - Banner type string to validate
  * @returns True if banner type is valid
  */
-export function isValidBannerType(bannerType: string): bannerType is keyof typeof allBannerConfigs {
+export function isValidBannerType(
+  bannerType: string,
+): bannerType is keyof typeof allBannerConfigs {
   return getAllBannerTypes().includes(bannerType)
 }
 
 /**
  * Validate banner data for given type
  * Dynamically validates banner data using appropriate validator
- * 
+ *
  * @param bannerType - Banner type string
  * @param data - Banner data to validate
  * @returns Validation result or null if invalid banner type

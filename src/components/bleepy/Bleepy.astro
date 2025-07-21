@@ -1,21 +1,27 @@
 ---
 export interface Props {
-  backgroundImageUrl?: string;
-  mascotContext?: string; // Added for page-specific context
-  instanceIdentifier?: string;
+  backgroundImageUrl?: string
+  mascotContext?: string // Added for page-specific context
+  instanceIdentifier?: string
 }
-const { backgroundImageUrl, mascotContext, instanceIdentifier } = Astro.props;
-console.log(`BLEEPY.ASTRO (${instanceIdentifier || 'UNKNOWN'}) - Prop mascotContext received:`, mascotContext);
-console.log(`BLEEPY.ASTRO (${instanceIdentifier || 'UNKNOWN'}) - Typeof mascotContext:`, typeof mascotContext);
+const { backgroundImageUrl, mascotContext, instanceIdentifier } = Astro.props
+console.log(
+  `BLEEPY.ASTRO (${instanceIdentifier || 'UNKNOWN'}) - Prop mascotContext received:`,
+  mascotContext,
+)
+console.log(
+  `BLEEPY.ASTRO (${instanceIdentifier || 'UNKNOWN'}) - Typeof mascotContext:`,
+  typeof mascotContext,
+)
 
 import {
+  cuppyDismissDialogues,
   cuppyMascotData,
   cuppyPersonaString,
   cuppyRandomDialogues,
-  cuppyDismissDialogues,
   // MascotName, // This is a type and not needed as a runtime value for define:vars
-  currentAiProvider
-} from '../../config/bleepyConfig.ts';
+  currentAiProvider,
+} from '../../config/bleepyConfig.ts'
 ---
 <!-- Main Mascot Container -->
 <div id="mascot-container" data-background-image-url={backgroundImageUrl} data-mascot-context={mascotContext}>

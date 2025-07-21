@@ -1,49 +1,51 @@
 ---
+import {
+  colorSpectrum,
+  connectionPatterns,
+  constellationConfig,
+  constellationPatterns,
+  eraColorMap,
+  starTypes,
+} from '../../../config/timelineconfig'
 // src/components/timeline/StarMapView.astro
-import type { TimelineEvent } from '../../../services/TimelineService.client';
-import { 
-  constellationConfig, 
-  constellationPatterns, 
-  connectionPatterns, 
-  eraColorMap, 
-  colorSpectrum, 
-  starTypes 
-} from '../../../config/timelineconfig';
+import type { TimelineEvent } from '../../../services/TimelineService.client'
 
 export interface Props {
-  id?: string;
-  events: TimelineEvent[];
-  useEraColors?: boolean;
-  skyboxImageUrl?: string;
+  id?: string
+  events: TimelineEvent[]
+  useEraColors?: boolean
+  skyboxImageUrl?: string
 }
 
 const {
-  id = "starmap-view",
+  id = 'starmap-view',
   events,
   useEraColors = false,
-  skyboxImageUrl = "/assets/hdri/skywip4.webp",
-} = Astro.props;
+  skyboxImageUrl = '/assets/hdri/skywip4.webp',
+} = Astro.props
 
-const mapId = `${id}-three-container`;
-const floatingCardId = `${id}-floating-card`;
+const mapId = `${id}-three-container`
+const floatingCardId = `${id}-floating-card`
 
 // Prepare events for starmap
-const starmapEventsJson = JSON.stringify(events.map(e => ({
-  slug: e.slug,
-  title: e.title,
-  year: e.year,
-  description: e.description || "No description available.",
-  era: e.era,
-  isKeyEvent: e.isKeyEvent || false,
-})));
+const starmapEventsJson = JSON.stringify(
+  events.map(e => ({
+    slug: e.slug,
+    title: e.title,
+    year: e.year,
+    description: e.description || 'No description available.',
+    era: e.era,
+    isKeyEvent: e.isKeyEvent || false,
+  })),
+)
 
 // Convert constellation configs to JSON for client-side use
-const constellationConfigJson = JSON.stringify(constellationConfig);
-const constellationPatternsJson = JSON.stringify(constellationPatterns);
-const connectionPatternsJson = JSON.stringify(connectionPatterns);
-const eraColorMapJson = JSON.stringify(eraColorMap);
-const colorSpectrumJson = JSON.stringify(colorSpectrum);
-const starTypesJson = JSON.stringify(starTypes);
+const constellationConfigJson = JSON.stringify(constellationConfig)
+const constellationPatternsJson = JSON.stringify(constellationPatterns)
+const connectionPatternsJson = JSON.stringify(connectionPatterns)
+const eraColorMapJson = JSON.stringify(eraColorMap)
+const colorSpectrumJson = JSON.stringify(colorSpectrum)
+const starTypesJson = JSON.stringify(starTypes)
 ---
 
 <div id={mapId} class="starmap-three-container" style="width: 100%; height: 100%; overflow: hidden; background-color: #000510; position: relative;">

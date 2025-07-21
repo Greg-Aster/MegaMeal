@@ -1,282 +1,296 @@
 <script>
-  import { onMount } from 'svelte';
-  import { 
-    friends,
-    getFriends,
-    formatUrl, 
-    validateSite, 
-    fetchFriendContent, 
-    downloadFriendAsMarkdown,
-    addFriend,
-    removeFriend,
-    updateFriend,
-    addPermanentFriends
-  } from '../../../stores/friendStore';
-  import { siteConfig, profileConfig } from '../../../config/config';
-  
-  // Props
-  export let savedFriends = [];
-  
-  // Form inputs
-  let friendName = '';
-  let friendUrl = '';
-  let friendContentEnabled = true;
-  let lastSyncTime = null;
-  
-  // Status message for UI feedback
-  let statusMessage = '';
-  let statusType = 'info';
-  let isLoading = false;
+import { onMount } from 'svelte'
+import { profileConfig, siteConfig } from '../../../config/config'
+import {
+  addFriend,
+  addPermanentFriends,
+  downloadFriendAsMarkdown,
+  fetchFriendContent,
+  formatUrl,
+  friends,
+  getFriends,
+  removeFriend,
+  updateFriend,
+  validateSite,
+} from '../../../stores/friendStore'
 
-  // Sync states
-  let syncStates = {};
-  let syncAllStatus = 'idle';
-  
-  // Initialize permanent friends before hydration
-  if (savedFriends && savedFriends.length > 0) {
-    addPermanentFriends(savedFriends);
-  }
+// Props
+export const savedFriends = []
 
-  // Check if an image exists
-  async function checkImageExists(url) {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve(true);
-      img.onerror = () => resolve(false);
-      img.src = url;
-    });
-  }
-    
-  // Image error handler with improved retry logic for static sites
-  function handleImageError(event) {
+// Form inputs
+let friendName = ''
+let friendUrl = ''
+let friendContentEnabled = true
+let lastSyncTime = null
+
+// Status message for UI feedback
+let statusMessage = ''
+let statusType = 'info'
+let isLoading = false
+
+// Sync states
+let syncStates = {}
+let syncAllStatus = 'idle'
+
+// Initialize permanent friends before hydration
+if (savedFriends && savedFriends.length > 0) {
+  addPermanentFriends(savedFriends)
+}
+
+// Check if an image exists
+async function checkImageExists(url) {
+  return new Promise(resolve => {
+    const img = new Image()
+    img.onload = () => resolve(true)
+    img.onerror = () => resolve(false)
+    img.src = url
+  })
+}
+
+// Image error handler with improved retry logic for static sites
+function handleImageError(event) {
+  try {
+    const originalSrc = event.target.src
+    console.log(`Avatar image failed to load: ${originalSrc}`)
+
+    // Prevent infinite error loops
+    if (originalSrc.includes('/assets/avatar/avatar.png')) {
+      console.log('Default avatar failed to load, using fallback SVG')
+      event.target.src =
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23d1d5db'/%3E%3C/svg%3E"
+      event.target.onerror = null
+      return
+    }
+
+    // Try to load the default avatar with correct path for GitHub Pages
+    const basePath = document.querySelector('base')?.getAttribute('href') || ''
+    event.target.src = `${basePath}/assets/avatar/avatar.png`.replace('//', '/')
+
+    // Set fallback for default avatar
+    event.target.onerror = () => {
+      event.target.src =
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23d1d5db'/%3E%3C/svg%3E"
+      event.target.onerror = null
+    }
+  } catch (error) {
+    console.error('Error in image error handler:', error)
+    // Final fallback
     try {
-      const originalSrc = event.target.src;
-      console.log(`Avatar image failed to load: ${originalSrc}`);
-      
-      // Prevent infinite error loops
-      if (originalSrc.includes('/assets/avatar/avatar.png')) {
-        console.log('Default avatar failed to load, using fallback SVG');
-        event.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23d1d5db'/%3E%3C/svg%3E";
-        event.target.onerror = null;
-        return;
+      event.target.src =
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23d1d5db'/%3E%3C/svg%3E"
+      event.target.onerror = null
+    } catch {
+      // Last resort - hide the image
+      if (event.target.style) {
+        event.target.style.display = 'none'
       }
-      
-      // Try to load the default avatar with correct path for GitHub Pages
-      const basePath = document.querySelector('base')?.getAttribute('href') || '';
-      event.target.src = `${basePath}/assets/avatar/avatar.png`.replace('//', '/');
-      
-      // Set fallback for default avatar
-      event.target.onerror = () => {
-        event.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23d1d5db'/%3E%3C/svg%3E";
-        event.target.onerror = null;
-      };
-    } catch (error) {
-      console.error('Error in image error handler:', error);
-      // Final fallback
+    }
+  }
+}
+
+// Initialize client-side settings
+onMount(() => {
+  friendContentEnabled =
+    localStorage.getItem('friendContentEnabled') !== 'false'
+  lastSyncTime = localStorage.getItem('lastFriendSyncTime')
+})
+
+function showStatus(message, type = 'info', autoDismiss = true) {
+  statusMessage = message
+  statusType = type
+
+  if (autoDismiss) {
+    setTimeout(() => {
+      statusMessage = ''
+    }, 5000)
+  }
+}
+
+// Add a new friend
+async function addNewFriend() {
+  if (!friendUrl) {
+    showStatus('Please provide a URL for the friend site.', 'error')
+    return
+  }
+
+  const cleanUrl = formatUrl(friendUrl)
+
+  if (getFriends().some(f => f.url === cleanUrl)) {
+    showStatus('This site is already in your friends list.', 'error')
+    return
+  }
+
+  isLoading = true
+  showStatus('Validating site and fetching content...', 'info', false)
+
+  try {
+    const validation = await validateSite(cleanUrl)
+
+    if (!validation.valid) {
+      showStatus(`Site validation failed: ${validation.message}`, 'error')
+      isLoading = false
+      return
+    }
+
+    let siteName = friendName || validation.siteInfo?.name
+    const siteBio = validation.siteInfo?.description || ''
+    const siteAvatar = validation.siteInfo?.avatar || ''
+
+    if (!siteName) {
       try {
-        event.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23d1d5db'/%3E%3C/svg%3E";
-        event.target.onerror = null;
+        const url = new URL(cleanUrl)
+        siteName = url.hostname.replace('www.', '')
       } catch {
-        // Last resort - hide the image
-        if (event.target.style) {
-          event.target.style.display = 'none';
-        }
+        siteName = cleanUrl
       }
     }
-  }
-  
-  // Initialize client-side settings
-  onMount(() => {
-    friendContentEnabled = localStorage.getItem('friendContentEnabled') !== 'false';
-    lastSyncTime = localStorage.getItem('lastFriendSyncTime');
-  });
-  
-  function showStatus(message, type = 'info', autoDismiss = true) {
-    statusMessage = message;
-    statusType = type;
-    
-    if (autoDismiss) {
-      setTimeout(() => {
-        statusMessage = '';
-      }, 5000);
+
+    const newFriend = {
+      id: `friend-${Date.now()}`,
+      name: siteName,
+      url: cleanUrl,
+      bio: siteBio,
+      avatar: siteAvatar,
+      postCount: 0,
+      lastSynced: null,
+      posts: [],
+      isPermanent: false,
     }
-  }
-  
-  // Add a new friend
-  async function addNewFriend() {
-    if (!friendUrl) {
-      showStatus('Please provide a URL for the friend site.', 'error');
-      return;
-    }
-    
-    const cleanUrl = formatUrl(friendUrl);
-    
-    if (getFriends().some(f => f.url === cleanUrl)) {
-      showStatus('This site is already in your friends list.', 'error');
-      return;
-    }
-    
-    isLoading = true;
-    showStatus('Validating site and fetching content...', 'info', false);
-    
+
+    addFriend(newFriend)
+    friendName = ''
+    friendUrl = ''
+
     try {
-      const validation = await validateSite(cleanUrl);
-      
-      if (!validation.valid) {
-        showStatus(`Site validation failed: ${validation.message}`, 'error');
-        isLoading = false;
-        return;
-      }
-      
-      let siteName = friendName || validation.siteInfo?.name;
-      let siteBio = validation.siteInfo?.description || '';
-      let siteAvatar = validation.siteInfo?.avatar || '';
-      
-      if (!siteName) {
-        try {
-          const url = new URL(cleanUrl);
-          siteName = url.hostname.replace('www.', '');
-        } catch {
-          siteName = cleanUrl;
-        }
-      }
-      
-      const newFriend = {
-        id: `friend-${Date.now()}`,
-        name: siteName,
-        url: cleanUrl,
-        bio: siteBio,
-        avatar: siteAvatar,
-        postCount: 0,
-        lastSynced: null,
-        posts: [],
-        isPermanent: false
-      };
-      
-      addFriend(newFriend);
-      friendName = '';
-      friendUrl = '';
-      
-      try {
-        const posts = await fetchFriendContent(cleanUrl);
-        updateFriend({
-          ...newFriend,
-          posts,
-          postCount: posts.length,
-          lastSynced: new Date().toISOString()
-        });
-        showStatus(`Friend added successfully with ${posts.length} posts!`, 'success');
-      } catch (error) {
-        console.error('Error fetching content:', error);
-        showStatus('Friend added, but error fetching content.', 'error');
-      }
-    } catch (error) {
-      console.error('Error adding friend:', error);
-      showStatus(`Error: ${error.message}`, 'error');
-    } finally {
-      isLoading = false;
-    }
-  }
-  
-  function handleRemoveFriend(id) {
-    if (confirm('Are you sure you want to remove this friend?')) {
-      removeFriend(id);
-    }
-  }
-  
-  function handleSaveAsPermanent(friend) {
-    try {
-      const { filename } = downloadFriendAsMarkdown(friend);
-      showStatus(`File "${filename}" created! Move to content/friends/`, 'success');
-    } catch (error) {
-      console.error('Error saving friend:', error);
-      showStatus(`Error creating file: ${error.message}`, 'error');
-    }
-  }
-  
-  async function syncFriend(friend) {
-    syncStates = { ...syncStates, [friend.id]: 'syncing' };
-    
-    try {
-      const posts = await fetchFriendContent(friend.url);
+      const posts = await fetchFriendContent(cleanUrl)
       updateFriend({
-        ...friend,
+        ...newFriend,
         posts,
         postCount: posts.length,
-        lastSynced: new Date().toISOString()
-      });
-      syncStates = { ...syncStates, [friend.id]: 'success' };
+        lastSynced: new Date().toISOString(),
+      })
+      showStatus(
+        `Friend added successfully with ${posts.length} posts!`,
+        'success',
+      )
     } catch (error) {
-      console.error('Error syncing friend content:', error);
-      syncStates = { ...syncStates, [friend.id]: 'error' };
-    } finally {
-      setTimeout(() => {
-        const { [friend.id]: _, ...rest } = syncStates;
-        syncStates = rest;
-      }, 2000);
+      console.error('Error fetching content:', error)
+      showStatus('Friend added, but error fetching content.', 'error')
     }
+  } catch (error) {
+    console.error('Error adding friend:', error)
+    showStatus(`Error: ${error.message}`, 'error')
+  } finally {
+    isLoading = false
   }
-  
-  async function syncAllFriends() {
-    const allFriends = getFriends();
-    if (allFriends.length === 0) {
-      alert('No friends to sync. Add some friends first.');
-      return;
-    }
-    
-    syncAllStatus = 'syncing';
-    
-    try {
-      for (const friend of allFriends) {
-        try {
-          const posts = await fetchFriendContent(friend.url);
-          updateFriend({
-            ...friend,
-            posts,
-            postCount: posts.length,
-            lastSynced: new Date().toISOString()
-          });
-        } catch (error) {
-          console.error(`Error syncing friend ${friend.name}:`, error);
-        }
-      }
-      
-      const now = new Date().toISOString();
-      localStorage.setItem('lastFriendSyncTime', now);
-      lastSyncTime = now;
-      syncAllStatus = 'success';
-    } catch (error) {
-      console.error('Error in global sync:', error);
-      syncAllStatus = 'error';
-    } finally {
-      setTimeout(() => { syncAllStatus = 'idle' }, 2000);
-    }
+}
+
+function handleRemoveFriend(id) {
+  if (confirm('Are you sure you want to remove this friend?')) {
+    removeFriend(id)
+  }
+}
+
+function handleSaveAsPermanent(friend) {
+  try {
+    const { filename } = downloadFriendAsMarkdown(friend)
+    showStatus(
+      `File "${filename}" created! Move to content/friends/`,
+      'success',
+    )
+  } catch (error) {
+    console.error('Error saving friend:', error)
+    showStatus(`Error creating file: ${error.message}`, 'error')
+  }
+}
+
+async function syncFriend(friend) {
+  syncStates = { ...syncStates, [friend.id]: 'syncing' }
+
+  try {
+    const posts = await fetchFriendContent(friend.url)
+    updateFriend({
+      ...friend,
+      posts,
+      postCount: posts.length,
+      lastSynced: new Date().toISOString(),
+    })
+    syncStates = { ...syncStates, [friend.id]: 'success' }
+  } catch (error) {
+    console.error('Error syncing friend content:', error)
+    syncStates = { ...syncStates, [friend.id]: 'error' }
+  } finally {
+    setTimeout(() => {
+      const { [friend.id]: _, ...rest } = syncStates
+      syncStates = rest
+    }, 2000)
+  }
+}
+
+async function syncAllFriends() {
+  const allFriends = getFriends()
+  if (allFriends.length === 0) {
+    alert('No friends to sync. Add some friends first.')
+    return
   }
 
-  function updateContentIntegration(event) {
-    friendContentEnabled = event.target.checked;
-    localStorage.setItem('friendContentEnabled', friendContentEnabled);
-    document.dispatchEvent(new CustomEvent('friend-content-toggled', {
+  syncAllStatus = 'syncing'
+
+  try {
+    for (const friend of allFriends) {
+      try {
+        const posts = await fetchFriendContent(friend.url)
+        updateFriend({
+          ...friend,
+          posts,
+          postCount: posts.length,
+          lastSynced: new Date().toISOString(),
+        })
+      } catch (error) {
+        console.error(`Error syncing friend ${friend.name}:`, error)
+      }
+    }
+
+    const now = new Date().toISOString()
+    localStorage.setItem('lastFriendSyncTime', now)
+    lastSyncTime = now
+    syncAllStatus = 'success'
+  } catch (error) {
+    console.error('Error in global sync:', error)
+    syncAllStatus = 'error'
+  } finally {
+    setTimeout(() => {
+      syncAllStatus = 'idle'
+    }, 2000)
+  }
+}
+
+function updateContentIntegration(event) {
+  friendContentEnabled = event.target.checked
+  localStorage.setItem('friendContentEnabled', friendContentEnabled)
+  document.dispatchEvent(
+    new CustomEvent('friend-content-toggled', {
       detail: { enabled: friendContentEnabled },
-      bubbles: true
-    }));
-  }
-  
-  function formatTimeAgo(dateString) {
-    if (!dateString) return 'Never';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffSec = Math.floor(diffMs / 1000);
-    const diffMin = Math.floor(diffSec / 60);
-    const diffHour = Math.floor(diffMin / 60);
-    const diffDay = Math.floor(diffHour / 24);
-    
-    if (diffDay > 0) return diffDay === 1 ? 'yesterday' : `${diffDay} days ago`;
-    if (diffHour > 0) return `${diffHour} hour${diffHour === 1 ? '' : 's'} ago`;
-    if (diffMin > 0) return `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`;
-    return 'just now';
-  }
+      bubbles: true,
+    }),
+  )
+}
+
+function formatTimeAgo(dateString) {
+  if (!dateString) return 'Never'
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now - date
+  const diffSec = Math.floor(diffMs / 1000)
+  const diffMin = Math.floor(diffSec / 60)
+  const diffHour = Math.floor(diffMin / 60)
+  const diffDay = Math.floor(diffHour / 24)
+
+  if (diffDay > 0) return diffDay === 1 ? 'yesterday' : `${diffDay} days ago`
+  if (diffHour > 0) return `${diffHour} hour${diffHour === 1 ? '' : 's'} ago`
+  if (diffMin > 0) return `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`
+  return 'just now'
+}
 </script>
 
 <!-- Status message display -->

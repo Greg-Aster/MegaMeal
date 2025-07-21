@@ -10,7 +10,10 @@ interface Props {
 const className = Astro.props.class
 const style = Astro.props.style
 const pageMascotContext = Astro.props.pageMascotContext || ''
-console.log(`CUPPYWIDGET.ASTRO (Server): Prop pageMascotContext received:`, pageMascotContext);
+console.log(
+  `CUPPYWIDGET.ASTRO (Server): Prop pageMascotContext received:`,
+  pageMascotContext,
+)
 ---
 
 <WidgetLayout 

@@ -1,33 +1,35 @@
 // --- TypeScript Interfaces for Animation Data ---
 export interface BaseAnimation {
-  id: string;
-  animationClass: string;
+  id: string
+  animationClass: string
 }
 
 export interface PretzelPeteSurrealAnimation extends BaseAnimation {
-  originalBodyId: string;
-  unravelledPathIds: string[];
-  saltSelector: string;
-  step1Duration: number;
-  step2Duration: number;
-  swayDuration: number;
-  saltFallDuration: number;
-  reverseStep1Duration: number;
-  reverseStep2Duration: number;
+  originalBodyId: string
+  unravelledPathIds: string[]
+  saltSelector: string
+  step1Duration: number
+  step2Duration: number
+  swayDuration: number
+  saltFallDuration: number
+  reverseStep1Duration: number
+  reverseStep2Duration: number
 }
 
 export interface SushiSamSurrealAnimation extends BaseAnimation {
-  flapSelector: string;
-  openDuration: number;
-  closeDuration: number;
-  revealDuration: number;
+  flapSelector: string
+  openDuration: number
+  closeDuration: number
+  revealDuration: number
 }
 
-export type SurrealAnimationData = PretzelPeteSurrealAnimation | SushiSamSurrealAnimation;
+export type SurrealAnimationData =
+  | PretzelPeteSurrealAnimation
+  | SushiSamSurrealAnimation
 
 // --- Mascot Data ---
 export const mascots = [
-/*  {
+  /*  {
     name: "Pretzel Pete",
     svgHTML: `
       <svg id="pretzel-pete" viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg" width="100" height="130">
@@ -87,7 +89,7 @@ export const mascots = [
       }
     ]
   }, */
-/*   {
+  /*   {
     name: "Sushi Sam",
     svgHTML: `
       <svg id="sushi-sam" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" width="100" height="120">
@@ -151,14 +153,14 @@ export const mascots = [
       }
     ]
   } */
-];
+]
 
 // --- Persona Strings ---
 export const personaStrings = {
-/*   "Pretzel Pete": "You are Pretzel Pete, a classic twisted pretzel mascot with stick-figure arms and legs and googly eyes. You are a bit salty, a bit twisted (in personality too!), and prone to dry wit and pretzel-related puns. Respond to the user with a slightly cynical but humorous food-themed perspective. Keep responses relatively short.",
+  /*   "Pretzel Pete": "You are Pretzel Pete, a classic twisted pretzel mascot with stick-figure arms and legs and googly eyes. You are a bit salty, a bit twisted (in personality too!), and prone to dry wit and pretzel-related puns. Respond to the user with a slightly cynical but humorous food-themed perspective. Keep responses relatively short.",
   "Sushi Sam": "You are Sushi Sam, a wise piece of maki sushi with sesame seed eyes and a hachimaki headband. You offer philosophical, zen-like, or sometimes cryptic food-themed advice and observations. You might speak in short, haiku-like phrases or ask contemplative questions. Keep responses concise." */
-};
-export type MascotName = keyof typeof personaStrings;
+}
+export type MascotName = keyof typeof personaStrings
 
 // --- Dialogue Content ---
 // Bleepy-specific dialogues moved to src/config/bleepyConfig.ts

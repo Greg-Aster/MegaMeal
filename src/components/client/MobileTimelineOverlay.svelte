@@ -13,324 +13,329 @@
 -->
 
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
-  import { writable } from 'svelte/store';
-  
-  // Props
-  export let timelineBannerConfig: any = {};
-  export let isTimelineBanner: boolean = false;
-  
-  // State management using existing store pattern
-  const isFullscreen = writable(false);
-  const isMobile = writable(false);
-  const showOverlay = writable(false);
-  const isInteractive = writable(false);
-  
-  // Component state
-  let overlayElement: HTMLElement;
-  let timelineContainer: HTMLElement | null = null;
-  let bannerContainer: HTMLElement | null = null;
-  let isInitialized = false;
-  let touchStartY = 0;
-  let scrollAttempted = false;
-  
-  // Use existing timing constants
-  const SCROLL_THRESHOLD = 20;
-  const MOBILE_BREAKPOINT = 768; // md: breakpoint from Tailwind
-  
-  /**
-   * Initialize mobile detection and event listeners
-   */
-  onMount(() => {
-    detectMobileDevice();
-    setupEventListeners();
-    findTimelineElements();
-    initializeOverlayState();
-    
-    isInitialized = true;
-    console.log('🎯 Mobile Timeline Overlay initialized');
-  });
-  
-  /**
-   * Cleanup event listeners
-   */
-  onDestroy(() => {
-    if (typeof window !== 'undefined') {
-      removeEventListeners();
-      exitFullscreenMode();
-    }
-  });
-  
-  /**
-   * Detect if device is mobile based on existing breakpoint system
-   */
-  function detectMobileDevice() {
-    if (typeof window === 'undefined') return;
-    
-    const checkMobile = () => {
-      const isMobileSize = window.innerWidth < MOBILE_BREAKPOINT;
-      const hasTouchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      const mobileDevice = isMobileSize && hasTouchScreen;
-      
-      isMobile.set(mobileDevice);
-      
-      if (mobileDevice && isTimelineBanner) {
-        showOverlay.set(true);
-        disableTimelineInteractions();
-      } else {
-        showOverlay.set(false);
-        enableTimelineInteractions();
-      }
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    window.addEventListener('orientationchange', checkMobile);
+import { onDestroy, onMount } from 'svelte'
+import { writable } from 'svelte/store'
+
+// Props
+export const timelineBannerConfig: any = {}
+export const isTimelineBanner = false
+
+// State management using existing store pattern
+const isFullscreen = writable(false)
+const isMobile = writable(false)
+const showOverlay = writable(false)
+const isInteractive = writable(false)
+
+// Component state
+let overlayElement: HTMLElement
+let timelineContainer: HTMLElement | null = null
+let bannerContainer: HTMLElement | null = null
+let isInitialized = false
+let touchStartY = 0
+let scrollAttempted = false
+
+// Use existing timing constants
+const SCROLL_THRESHOLD = 20
+const MOBILE_BREAKPOINT = 768 // md: breakpoint from Tailwind
+
+/**
+ * Initialize mobile detection and event listeners
+ */
+onMount(() => {
+  detectMobileDevice()
+  setupEventListeners()
+  findTimelineElements()
+  initializeOverlayState()
+
+  isInitialized = true
+  console.log('🎯 Mobile Timeline Overlay initialized')
+})
+
+/**
+ * Cleanup event listeners
+ */
+onDestroy(() => {
+  if (typeof window !== 'undefined') {
+    removeEventListeners()
+    exitFullscreenMode()
   }
-  
-  /**
-   * Find timeline-related DOM elements using existing selectors
-   */
-  function findTimelineElements() {
-    if (typeof window === 'undefined') return;
-    
-    timelineContainer = document.querySelector('.banner-container-timeline');
-    bannerContainer = document.querySelector('#banner-container');
-    
-    if (timelineContainer) {
-      console.log('🎯 Timeline container found');
-    }
-  }
-  
-  /**
-   * Setup event listeners using existing event pattern
-   */
-  function setupEventListeners() {
-    if (typeof window === 'undefined') return;
-    
-    // Listen for Astro page transitions (existing pattern)
-    document.addEventListener('astro:page-load', handlePageNavigation);
-    document.addEventListener('astro:before-navigation', handleBeforeNavigation);
-    
-    // Storage changes for cross-tab communication
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Keyboard accessibility
-    document.addEventListener('keydown', handleKeydown);
-  }
-  
-  /**
-   * Remove event listeners
-   */
-  function removeEventListeners() {
-    document.removeEventListener('astro:page-load', handlePageNavigation);
-    document.removeEventListener('astro:before-navigation', handleBeforeNavigation);
-    window.removeEventListener('storage', handleStorageChange);
-    window.removeEventListener('keydown', handleKeydown);
-  }
-  
-  /**
-   * Initialize overlay state
-   */
-  function initializeOverlayState() {
-    if (!isTimelineBanner) {
-      showOverlay.set(false);
-      return;
-    }
-    
-    // Check if already in fullscreen mode
-    const isCurrentlyFullscreen = localStorage.getItem('timelineFullscreenActive') === 'true';
-    if (isCurrentlyFullscreen) {
-      enterFullscreenMode();
-    }
-  }
-  
-  /**
-   * Disable timeline interactions using existing CSS class pattern
-   */
-  function disableTimelineInteractions() {
-    if (!timelineContainer) return;
-    
-    timelineContainer.classList.add('timeline-interactions-disabled');
-    
-    const timelineElements = timelineContainer.querySelectorAll('*');
-    timelineElements.forEach(el => {
-      if (el instanceof HTMLElement) {
-        el.style.pointerEvents = 'none';
-        el.style.touchAction = 'none';
-      }
-    });
-    
-    isInteractive.set(false);
-  }
-  
-  /**
-   * Enable timeline interactions
-   */
-  function enableTimelineInteractions() {
-    if (!timelineContainer) return;
-    
-    timelineContainer.classList.remove('timeline-interactions-disabled');
-    
-    const timelineElements = timelineContainer.querySelectorAll('*');
-    timelineElements.forEach(el => {
-      if (el instanceof HTMLElement) {
-        el.style.pointerEvents = '';
-        el.style.touchAction = '';
-      }
-    });
-    
-    isInteractive.set(true);
-  }
-  
-  /**
-   * Handle tap on overlay to enter fullscreen mode
-   */
-  function handleOverlayTap(event: TouchEvent | MouseEvent) {
-    event.preventDefault();
-    event.stopPropagation();
-    
-    if ($isFullscreen) {
-      exitFullscreenMode();
+})
+
+/**
+ * Detect if device is mobile based on existing breakpoint system
+ */
+function detectMobileDevice() {
+  if (typeof window === 'undefined') return
+
+  const checkMobile = () => {
+    const isMobileSize = window.innerWidth < MOBILE_BREAKPOINT
+    const hasTouchScreen =
+      'ontouchstart' in window || navigator.maxTouchPoints > 0
+    const mobileDevice = isMobileSize && hasTouchScreen
+
+    isMobile.set(mobileDevice)
+
+    if (mobileDevice && isTimelineBanner) {
+      showOverlay.set(true)
+      disableTimelineInteractions()
     } else {
-      enterFullscreenMode();
+      showOverlay.set(false)
+      enableTimelineInteractions()
     }
   }
-  
-  /**
-   * Handle touch start for scroll detection
-   */
-  function handleTouchStart(event: TouchEvent) {
-    touchStartY = event.touches[0].clientY;
-    scrollAttempted = false;
+
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+  window.addEventListener('orientationchange', checkMobile)
+}
+
+/**
+ * Find timeline-related DOM elements using existing selectors
+ */
+function findTimelineElements() {
+  if (typeof window === 'undefined') return
+
+  timelineContainer = document.querySelector('.banner-container-timeline')
+  bannerContainer = document.querySelector('#banner-container')
+
+  if (timelineContainer) {
+    console.log('🎯 Timeline container found')
   }
-  
-  /**
-   * Handle touch move to detect scroll attempts
-   */
-  function handleTouchMove(event: TouchEvent) {
-    if (!$isFullscreen) {
-      const touchY = event.touches[0].clientY;
-      const deltaY = Math.abs(touchY - touchStartY);
-      
-      if (deltaY > SCROLL_THRESHOLD) {
-        scrollAttempted = true;
-        return;
-      }
+}
+
+/**
+ * Setup event listeners using existing event pattern
+ */
+function setupEventListeners() {
+  if (typeof window === 'undefined') return
+
+  // Listen for Astro page transitions (existing pattern)
+  document.addEventListener('astro:page-load', handlePageNavigation)
+  document.addEventListener('astro:before-navigation', handleBeforeNavigation)
+
+  // Storage changes for cross-tab communication
+  window.addEventListener('storage', handleStorageChange)
+
+  // Keyboard accessibility
+  document.addEventListener('keydown', handleKeydown)
+}
+
+/**
+ * Remove event listeners
+ */
+function removeEventListeners() {
+  document.removeEventListener('astro:page-load', handlePageNavigation)
+  document.removeEventListener(
+    'astro:before-navigation',
+    handleBeforeNavigation,
+  )
+  window.removeEventListener('storage', handleStorageChange)
+  window.removeEventListener('keydown', handleKeydown)
+}
+
+/**
+ * Initialize overlay state
+ */
+function initializeOverlayState() {
+  if (!isTimelineBanner) {
+    showOverlay.set(false)
+    return
+  }
+
+  // Check if already in fullscreen mode
+  const isCurrentlyFullscreen =
+    localStorage.getItem('timelineFullscreenActive') === 'true'
+  if (isCurrentlyFullscreen) {
+    enterFullscreenMode()
+  }
+}
+
+/**
+ * Disable timeline interactions using existing CSS class pattern
+ */
+function disableTimelineInteractions() {
+  if (!timelineContainer) return
+
+  timelineContainer.classList.add('timeline-interactions-disabled')
+
+  const timelineElements = timelineContainer.querySelectorAll('*')
+  timelineElements.forEach(el => {
+    if (el instanceof HTMLElement) {
+      el.style.pointerEvents = 'none'
+      el.style.touchAction = 'none'
+    }
+  })
+
+  isInteractive.set(false)
+}
+
+/**
+ * Enable timeline interactions
+ */
+function enableTimelineInteractions() {
+  if (!timelineContainer) return
+
+  timelineContainer.classList.remove('timeline-interactions-disabled')
+
+  const timelineElements = timelineContainer.querySelectorAll('*')
+  timelineElements.forEach(el => {
+    if (el instanceof HTMLElement) {
+      el.style.pointerEvents = ''
+      el.style.touchAction = ''
+    }
+  })
+
+  isInteractive.set(true)
+}
+
+/**
+ * Handle tap on overlay to enter fullscreen mode
+ */
+function handleOverlayTap(event: TouchEvent | MouseEvent) {
+  event.preventDefault()
+  event.stopPropagation()
+
+  if ($isFullscreen) {
+    exitFullscreenMode()
+  } else {
+    enterFullscreenMode()
+  }
+}
+
+/**
+ * Handle touch start for scroll detection
+ */
+function handleTouchStart(event: TouchEvent) {
+  touchStartY = event.touches[0].clientY
+  scrollAttempted = false
+}
+
+/**
+ * Handle touch move to detect scroll attempts
+ */
+function handleTouchMove(event: TouchEvent) {
+  if (!$isFullscreen) {
+    const touchY = event.touches[0].clientY
+    const deltaY = Math.abs(touchY - touchStartY)
+
+    if (deltaY > SCROLL_THRESHOLD) {
+      scrollAttempted = true
+      return
     }
   }
-  
-  /**
-   * Handle touch end
-   */
-  function handleTouchEnd(event: TouchEvent) {
-    if (!scrollAttempted && !$isFullscreen) {
-      handleOverlayTap(event);
+}
+
+/**
+ * Handle touch end
+ */
+function handleTouchEnd(event: TouchEvent) {
+  if (!scrollAttempted && !$isFullscreen) {
+    handleOverlayTap(event)
+  }
+}
+
+/**
+ * Enter fullscreen timeline mode using existing class pattern
+ */
+function enterFullscreenMode() {
+  if (typeof window === 'undefined') return
+
+  console.log('🚀 Entering timeline fullscreen mode')
+
+  isFullscreen.set(true)
+  localStorage.setItem('timelineFullscreenActive', 'true')
+
+  // Use existing class system
+  document.documentElement.classList.add('timeline-fullscreen-active')
+  document.body.classList.add('timeline-fullscreen-active')
+
+  if (bannerContainer) {
+    bannerContainer.classList.add('timeline-fullscreen')
+  }
+
+  enableTimelineInteractions()
+  showOverlay.set(false)
+
+  // Emit custom event (existing pattern)
+  window.dispatchEvent(new CustomEvent('timeline-fullscreen-enter'))
+}
+
+/**
+ * Exit fullscreen timeline mode
+ */
+function exitFullscreenMode() {
+  if (typeof window === 'undefined') return
+
+  console.log('🎯 Exiting timeline fullscreen mode')
+
+  isFullscreen.set(false)
+  localStorage.removeItem('timelineFullscreenActive')
+
+  document.documentElement.classList.remove('timeline-fullscreen-active')
+  document.body.classList.remove('timeline-fullscreen-active')
+
+  if (bannerContainer) {
+    bannerContainer.classList.remove('timeline-fullscreen')
+  }
+
+  // Re-enable overlay after transition
+  if ($isMobile && isTimelineBanner) {
+    setTimeout(() => {
+      showOverlay.set(true)
+      disableTimelineInteractions()
+    }, 300) // Use existing transition timing
+  }
+
+  window.dispatchEvent(new CustomEvent('timeline-fullscreen-exit'))
+}
+
+/**
+ * Handle page navigation (existing Astro pattern)
+ */
+function handlePageNavigation() {
+  console.log('📱 Page navigation detected')
+
+  if ($isFullscreen) {
+    exitFullscreenMode()
+  }
+}
+
+/**
+ * Handle before navigation
+ */
+function handleBeforeNavigation() {
+  if ($isFullscreen) {
+    console.log('📱 Preparing to exit fullscreen for navigation')
+  }
+}
+
+/**
+ * Handle storage changes for cross-tab communication
+ */
+function handleStorageChange(event: StorageEvent) {
+  if (event.key === 'timelineFullscreenActive') {
+    const isActive = event.newValue === 'true'
+    isFullscreen.set(isActive)
+
+    if (isActive) {
+      enterFullscreenMode()
+    } else {
+      exitFullscreenMode()
     }
   }
-  
-  /**
-   * Enter fullscreen timeline mode using existing class pattern
-   */
-  function enterFullscreenMode() {
-    if (typeof window === 'undefined') return;
-    
-    console.log('🚀 Entering timeline fullscreen mode');
-    
-    isFullscreen.set(true);
-    localStorage.setItem('timelineFullscreenActive', 'true');
-    
-    // Use existing class system
-    document.documentElement.classList.add('timeline-fullscreen-active');
-    document.body.classList.add('timeline-fullscreen-active');
-    
-    if (bannerContainer) {
-      bannerContainer.classList.add('timeline-fullscreen');
-    }
-    
-    enableTimelineInteractions();
-    showOverlay.set(false);
-    
-    // Emit custom event (existing pattern)
-    window.dispatchEvent(new CustomEvent('timeline-fullscreen-enter'));
+}
+
+/**
+ * Handle keyboard shortcuts
+ */
+function handleKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && $isFullscreen) {
+    exitFullscreenMode()
   }
-  
-  /**
-   * Exit fullscreen timeline mode
-   */
-  function exitFullscreenMode() {
-    if (typeof window === 'undefined') return;
-    
-    console.log('🎯 Exiting timeline fullscreen mode');
-    
-    isFullscreen.set(false);
-    localStorage.removeItem('timelineFullscreenActive');
-    
-    document.documentElement.classList.remove('timeline-fullscreen-active');
-    document.body.classList.remove('timeline-fullscreen-active');
-    
-    if (bannerContainer) {
-      bannerContainer.classList.remove('timeline-fullscreen');
-    }
-    
-    // Re-enable overlay after transition
-    if ($isMobile && isTimelineBanner) {
-      setTimeout(() => {
-        showOverlay.set(true);
-        disableTimelineInteractions();
-      }, 300); // Use existing transition timing
-    }
-    
-    window.dispatchEvent(new CustomEvent('timeline-fullscreen-exit'));
-  }
-  
-  /**
-   * Handle page navigation (existing Astro pattern)
-   */
-  function handlePageNavigation() {
-    console.log('📱 Page navigation detected');
-    
-    if ($isFullscreen) {
-      exitFullscreenMode();
-    }
-  }
-  
-  /**
-   * Handle before navigation
-   */
-  function handleBeforeNavigation() {
-    if ($isFullscreen) {
-      console.log('📱 Preparing to exit fullscreen for navigation');
-    }
-  }
-  
-  /**
-   * Handle storage changes for cross-tab communication
-   */
-  function handleStorageChange(event: StorageEvent) {
-    if (event.key === 'timelineFullscreenActive') {
-      const isActive = event.newValue === 'true';
-      isFullscreen.set(isActive);
-      
-      if (isActive) {
-        enterFullscreenMode();
-      } else {
-        exitFullscreenMode();
-      }
-    }
-  }
-  
-  /**
-   * Handle keyboard shortcuts
-   */
-  function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape' && $isFullscreen) {
-      exitFullscreenMode();
-    }
-  }
-  
-  // Reactive visibility using existing store pattern
-  $: isVisible = $showOverlay && $isMobile && isTimelineBanner && !$isFullscreen;
+}
+
+// Reactive visibility using existing store pattern
+$: isVisible = $showOverlay && $isMobile && isTimelineBanner && !$isFullscreen
 </script>
 
 <!-- Mobile Timeline Overlay -->

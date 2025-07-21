@@ -1,6 +1,6 @@
 ---
-import { type NavBarLink } from '../../types/config'
 import { Icon } from 'astro-icon/components'
+import type { NavBarLink } from '../../types/config'
 import { url } from '../../utils/url-utils'
 
 interface Props {
@@ -14,21 +14,21 @@ const isAuthenticated = Astro.props.isAuthenticated || false
 // Define admin links that will show when authenticated
 const adminLinks = [
   {
-    name: "New Post",
-    url: "/new-post",
-    icon: "material-symbols:note-add-outline"
+    name: 'New Post',
+    url: '/new-post',
+    icon: 'material-symbols:note-add-outline',
   },
   {
-    name: "Configs",
-    url: "/configs",
-    icon: "material-symbols:settings-outline"
+    name: 'Configs',
+    url: '/configs',
+    icon: 'material-symbols:settings-outline',
   },
   {
-    name: "Friends",
-    url: "/friends",
-    icon: "material-symbols:group" 
-  }
-];
+    name: 'Friends',
+    url: '/friends',
+    icon: 'material-symbols:group',
+  },
+]
 ---
 
 <div id="nav-menu-panel" class:list={["float-panel float-panel-closed absolute transition-all fixed right-4 px-2 py-2"]}>

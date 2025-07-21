@@ -1,485 +1,531 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { createGitHubService } from '../../../lib/github-service';
-  
-  // Import components
-  import ToastNotification from './components/ToastNotification.svelte';
-  import PostForm from './components/PostForm.svelte';
-  import PostBrowser from './components/PostBrowser.svelte';
-  import ImportPanel from './components/ImportPanel.svelte';
-  import GithubIntegration from './components/GithubIntegration.svelte';
-  
-  // Import utility functions correctly
-  import { 
-    createEmptyPost, 
-    generateFrontmatter, 
-    saveCachedPost, 
-    getCachedPosts
-  } from './utils/postUtils';
-  
-  // Use import type for TypeScript interfaces
-  import type { Post, PostMetadata } from './utils/postUtils';
-  
-  import { 
-    initializeGithubService, 
-    fetchGitHubPosts
-  } from './utils/githubUtils';
-  
-  import type { GitHubService } from './utils/githubUtils';
-  
-  import { 
-    generateMdxFile
-  } from './utils/fileUtils';
-  
-  import type { FileImportResult } from './utils/fileUtils';
-  
-  // Tab state
-  let activeTab: 'create' | 'import' | 'browse' = 'create';
-  
-  // GitHub integration state
-  let githubService: GitHubService = createGitHubService();
-  let isGitHubAuthenticated = false;
-  let showGitHubAuthForm = false;
-  let isCommitting = false;
-  let commitStatus = { success: false, error: null as string | null };
-  let showDeployOptions = false;
-  let githubToken = '';
-  let githubFolder = 'src/content/posts';
-  let subfolderPath = '';
-  
-  // Local posts browsing state
-  let localPosts: PostMetadata[] = [];
-  let isLoadingPosts = false;
-  let loadError: string | null = null;
-  let selectedPost: string | null = null;
-  let isEditing = false;
-  let isDeleting = false;
-  
-  // Cached posts for faster loading
-  let cachedPosts: PostMetadata[] = [];
-  
-  // Post model
-  let post: Post = createEmptyPost();
-  
-  // Toast notification state
-  let showToast = false;
-  let toastMessage = '';
-  let toastType: 'success' | 'error' = 'success';
-  
-  // Derived values
-  $: formValid = !!post.title && !!post.slug && !!post.published;
-  
-  // Initialize GitHub service
-  function initializeGithub() {
-    const initResult = initializeGithubService(githubService);
-    isGitHubAuthenticated = initResult.isGitHubAuthenticated;
-    loadError = initResult.loadError;
-    
-    // Set GitHub repository settings if needed
-    if (!githubService.config) {
-      githubService = createGitHubService({
-        // These should match your GitHub repository details
-        owner: 'your-github-username', // Update with your GitHub username
-        repo: 'your-repo-name',        // Update with your repository name
-        branch: 'main',                // Update with your branch name
-        configPath: 'src/config',
-        postsPath: githubFolder
-      });
+import { onMount } from 'svelte'
+import { createGitHubService } from '../../../lib/github-service'
+
+import GithubIntegration from './components/GithubIntegration.svelte'
+import ImportPanel from './components/ImportPanel.svelte'
+import PostBrowser from './components/PostBrowser.svelte'
+import PostForm from './components/PostForm.svelte'
+// Import components
+import ToastNotification from './components/ToastNotification.svelte'
+
+// Import utility functions correctly
+import {
+  createEmptyPost,
+  generateFrontmatter,
+  getCachedPosts,
+  saveCachedPost,
+} from './utils/postUtils'
+
+// Use import type for TypeScript interfaces
+import type { Post, PostMetadata } from './utils/postUtils'
+
+import { fetchGitHubPosts, initializeGithubService } from './utils/githubUtils'
+
+import type { GitHubService } from './utils/githubUtils'
+
+import { generateMdxFile } from './utils/fileUtils'
+
+import type { FileImportResult } from './utils/fileUtils'
+
+// Tab state
+let activeTab: 'create' | 'import' | 'browse' = 'create'
+
+// GitHub integration state
+let githubService: GitHubService = createGitHubService()
+let isGitHubAuthenticated = false
+let showGitHubAuthForm = false
+let isCommitting = false
+let commitStatus = { success: false, error: null as string | null }
+let showDeployOptions = false
+let githubToken = ''
+let githubFolder = 'src/content/posts'
+let subfolderPath = ''
+
+// Local posts browsing state
+let localPosts: PostMetadata[] = []
+let isLoadingPosts = false
+let loadError: string | null = null
+let selectedPost: string | null = null
+let isEditing = false
+let isDeleting = false
+
+// Cached posts for faster loading
+let cachedPosts: PostMetadata[] = []
+
+// Post model
+let post: Post = createEmptyPost()
+
+// Toast notification state
+let showToast = false
+let toastMessage = ''
+let toastType: 'success' | 'error' = 'success'
+
+// Derived values
+$: formValid = !!post.title && !!post.slug && !!post.published
+
+// Initialize GitHub service
+function initializeGithub() {
+  const initResult = initializeGithubService(githubService)
+  isGitHubAuthenticated = initResult.isGitHubAuthenticated
+  loadError = initResult.loadError
+
+  // Set GitHub repository settings if needed
+  if (!githubService.config) {
+    githubService = createGitHubService({
+      // These should match your GitHub repository details
+      owner: 'your-github-username', // Update with your GitHub username
+      repo: 'your-repo-name', // Update with your repository name
+      branch: 'main', // Update with your branch name
+      configPath: 'src/config',
+      postsPath: githubFolder,
+    })
+  }
+}
+
+// Toast notification function
+function showNotification(
+  message: string,
+  type: 'success' | 'error' = 'success',
+) {
+  toastMessage = message
+  toastType = type
+  showToast = true
+
+  setTimeout(() => {
+    showToast = false
+  }, 3000)
+}
+
+// Save draft
+async function saveDraft() {
+  await savePost(true)
+}
+
+// Publish post
+async function publishPost() {
+  await savePost(false)
+}
+
+// Common save function
+async function savePost(isDraft = false) {
+  try {
+    post.draft = isDraft
+
+    // Build complete post data
+    const postData = { ...post }
+
+    // Convert comma-separated tags to array if it's a string
+    if (typeof postData.tags === 'string') {
+      postData.tags = postData.tags
+        ? postData.tags.split(',').map(tag => tag.trim())
+        : []
     }
+
+    // Generate and download the MDX file
+    generateMdxFile(postData)
+
+    // Save to localStorage for future reference
+    const updatedCachedPosts = saveCachedPost(postData, githubFolder)
+    cachedPosts = updatedCachedPosts
+
+    // Show success toast
+    showNotification(
+      isDraft ? 'Draft saved successfully!' : 'Post published successfully!',
+    )
+  } catch (error: any) {
+    console.error('Error saving post:', error)
+    showNotification('Failed to save post: ' + error.message, 'error')
   }
-  
-  // Toast notification function
-  function showNotification(message: string, type: 'success' | 'error' = 'success') {
-    toastMessage = message;
-    toastType = type;
-    showToast = true;
-    
-    setTimeout(() => {
-      showToast = false;
-    }, 3000);
-  }
-  
-  // Save draft
-  async function saveDraft() {
-    await savePost(true);
-  }
-  
-  // Publish post
-  async function publishPost() {
-    await savePost(false);
-  }
-  
-  // Common save function
-  async function savePost(isDraft = false) {
-    try {
-      post.draft = isDraft;
-      
-      // Build complete post data
-      const postData = { ...post };
-      
-      // Convert comma-separated tags to array if it's a string
-      if (typeof postData.tags === 'string') {
-        postData.tags = postData.tags ? postData.tags.split(',').map(tag => tag.trim()) : [];
+}
+
+// Fetch local posts
+async function fetchLocalPosts() {
+  isLoadingPosts = true
+  loadError = null
+
+  try {
+    // Try to get posts from GitHub if authenticated
+    if (isGitHubAuthenticated) {
+      try {
+        const posts = await fetchGitHubPosts(githubService, githubFolder)
+        localPosts = posts
+
+        // Save these posts to localStorage for future reference
+        localStorage.setItem('cachedPosts', JSON.stringify(posts))
+        cachedPosts = posts
+
+        return
+      } catch (error: any) {
+        console.error('Failed to fetch posts from GitHub:', error)
+        loadError =
+          'Failed to load posts from GitHub. Falling back to cached posts.'
+
+        // Fall back to localStorage cache
+        localPosts = getCachedPosts()
+        return
       }
-      
-      // Generate and download the MDX file
-      generateMdxFile(postData);
-      
-      // Save to localStorage for future reference
-      const updatedCachedPosts = saveCachedPost(postData, githubFolder);
-      cachedPosts = updatedCachedPosts;
-      
-      // Show success toast
-      showNotification(isDraft ? 'Draft saved successfully!' : 'Post published successfully!');
-    } catch (error: any) {
-      console.error('Error saving post:', error);
-      showNotification('Failed to save post: ' + error.message, 'error');
-    }
-  }
-  
-  // Fetch local posts
-  async function fetchLocalPosts() {
-    isLoadingPosts = true;
-    loadError = null;
-    
-    try {
-      // Try to get posts from GitHub if authenticated
-      if (isGitHubAuthenticated) {
-        try {
-          const posts = await fetchGitHubPosts(githubService, githubFolder);
-          localPosts = posts;
-          
-          // Save these posts to localStorage for future reference
-          localStorage.setItem('cachedPosts', JSON.stringify(posts));
-          cachedPosts = posts;
-          
-          return;
-        } catch (error: any) {
-          console.error("Failed to fetch posts from GitHub:", error);
-          loadError = "Failed to load posts from GitHub. Falling back to cached posts.";
-          
-          // Fall back to localStorage cache
-          localPosts = getCachedPosts();
-          return;
-        }
+    } else {
+      // Not authenticated with GitHub, use localStorage cache
+      const cached = getCachedPosts()
+      if (cached.length > 0) {
+        localPosts = cached
       } else {
-        // Not authenticated with GitHub, use localStorage cache
-        const cached = getCachedPosts();
-        if (cached.length > 0) {
-          localPosts = cached;
-        } else {
-          loadError = "No cached posts found. Please authenticate with GitHub to load posts.";
-          localPosts = [];
-        }
+        loadError =
+          'No cached posts found. Please authenticate with GitHub to load posts.'
+        localPosts = []
       }
-    } catch (error: any) {
-      console.error('Error fetching posts:', error);
-      loadError = 'Failed to load posts: ' + error.message;
-      localPosts = [];
-    } finally {
-      isLoadingPosts = false;
     }
+  } catch (error: any) {
+    console.error('Error fetching posts:', error)
+    loadError = 'Failed to load posts: ' + error.message
+    localPosts = []
+  } finally {
+    isLoadingPosts = false
   }
-  
-  // Load post for editing
-  async function loadPostForEditing(postId: string) {
-    try {
-      let postData: Partial<Post> | null = null;
-      
-      // First try to get the full post data from localStorage
-      const cachedFullPost = localStorage.getItem(`fullPost_${postId.replace(/\.(md|mdx)$/, '')}`);
-      
-      if (cachedFullPost) {
-        // We have the full post in localStorage
-        postData = JSON.parse(cachedFullPost);
-      } else if (isGitHubAuthenticated) {
-        // If using GitHub, get the content from the repository
-        const selectedPost = localPosts.find(p => p.id === postId);
-        if (!selectedPost) {
-          throw new Error('Post not found');
-        }
-        
-        const filepath = selectedPost.filepath;
-        const file = await githubService.getFile(filepath);
-        
-        // Import parseMdxFile function
-        const { parseMdxFile } = await import('./utils/postUtils');
-        const { frontmatter, content } = parseMdxFile(file.content);
-        
-        // Create a full post object
-        postData = {
-          title: frontmatter.title || selectedPost.title,
-          description: frontmatter.description || selectedPost.description || '',
-          slug: selectedPost.slug,
-          published: frontmatter.published || selectedPost.published || new Date().toISOString().split('T')[0],
-          image: frontmatter.image || '',
-          tags: Array.isArray(frontmatter.tags) ? frontmatter.tags.join(', ') : frontmatter.tags || '',
-          category: frontmatter.category || selectedPost.category || '',
-          draft: frontmatter.draft === undefined ? false : frontmatter.draft,
-          content: content,
-          filepath: filepath,
-          advanced: {
-            avatarImage: frontmatter.avatarImage || '',
-            authorName: frontmatter.authorName || '',
-            authorBio: frontmatter.authorBio || '',
-            showImageOnPost: frontmatter.showImageOnPost === undefined ? false : frontmatter.showImageOnPost as boolean,
-            lang: frontmatter.lang || 'en',
-            bannerImage: frontmatter.bannerImage || ''
-          },
-          timelineData: {
-            enabled: !!(frontmatter.timelineYear || frontmatter.timelineEra || frontmatter.timelineLocation),
-            year: frontmatter.timelineYear,
-            era: frontmatter.timelineEra || '',
-            location: frontmatter.timelineLocation || '',
-            isKeyEvent: frontmatter.isKeyEvent || false
-          },
-          banner: {
-            type: frontmatter.bannerType || '',
-            videoId: frontmatter.bannerData?.videoId || '',
-            timelineCategory: frontmatter.bannerData?.category || ''
-          }
-        };
-        
-        // Save this full post to localStorage for future use
-        localStorage.setItem(`fullPost_${postData.slug}`, JSON.stringify(postData));
-      } else {
-        // Can't get the full post
-        throw new Error('Could not load the full post. Try authenticating with GitHub.');
+}
+
+// Load post for editing
+async function loadPostForEditing(postId: string) {
+  try {
+    let postData: Partial<Post> | null = null
+
+    // First try to get the full post data from localStorage
+    const cachedFullPost = localStorage.getItem(
+      `fullPost_${postId.replace(/\.(md|mdx)$/, '')}`,
+    )
+
+    if (cachedFullPost) {
+      // We have the full post in localStorage
+      postData = JSON.parse(cachedFullPost)
+    } else if (isGitHubAuthenticated) {
+      // If using GitHub, get the content from the repository
+      const selectedPost = localPosts.find(p => p.id === postId)
+      if (!selectedPost) {
+        throw new Error('Post not found')
       }
-      
-      if (!postData) {
-        throw new Error('Failed to load post data');
-      }
-      
-      // Reset the post object with the loaded content
-      const emptyPost = createEmptyPost();
-      post = {
-        ...emptyPost,
-        ...postData,
-        // Ensure all required properties are set
-        title: postData.title || '',
-        description: postData.description || '',
-        slug: postData.slug || postId.replace(/\.(md|mdx)$/, ''),
-        published: postData.published || new Date().toISOString().split('T')[0],
-        content: postData.content || '',
-        filepath: postData.filepath || '',
+
+      const filepath = selectedPost.filepath
+      const file = await githubService.getFile(filepath)
+
+      // Import parseMdxFile function
+      const { parseMdxFile } = await import('./utils/postUtils')
+      const { frontmatter, content } = parseMdxFile(file.content)
+
+      // Create a full post object
+      postData = {
+        title: frontmatter.title || selectedPost.title,
+        description: frontmatter.description || selectedPost.description || '',
+        slug: selectedPost.slug,
+        published:
+          frontmatter.published ||
+          selectedPost.published ||
+          new Date().toISOString().split('T')[0],
+        image: frontmatter.image || '',
+        tags: Array.isArray(frontmatter.tags)
+          ? frontmatter.tags.join(', ')
+          : frontmatter.tags || '',
+        category: frontmatter.category || selectedPost.category || '',
+        draft: frontmatter.draft === undefined ? false : frontmatter.draft,
+        content: content,
+        filepath: filepath,
         advanced: {
-          ...emptyPost.advanced,
-          ...(postData.advanced || {})
+          avatarImage: frontmatter.avatarImage || '',
+          authorName: frontmatter.authorName || '',
+          authorBio: frontmatter.authorBio || '',
+          showImageOnPost:
+            frontmatter.showImageOnPost === undefined
+              ? false
+              : (frontmatter.showImageOnPost as boolean),
+          lang: frontmatter.lang || 'en',
+          bannerImage: frontmatter.bannerImage || '',
         },
         timelineData: {
-          ...emptyPost.timelineData,
-          ...(postData.timelineData || {})
+          enabled: !!(
+            frontmatter.timelineYear ||
+            frontmatter.timelineEra ||
+            frontmatter.timelineLocation
+          ),
+          year: frontmatter.timelineYear,
+          era: frontmatter.timelineEra || '',
+          location: frontmatter.timelineLocation || '',
+          isKeyEvent: frontmatter.isKeyEvent || false,
         },
         banner: {
-          ...emptyPost.banner,
-          ...(postData.banner || {})
-        }
-      };
-      
-      // Enable advanced options if any of those fields are populated
-      if (post.advanced.avatarImage || post.advanced.authorName || post.advanced.authorBio || 
-          post.advanced.bannerImage || post.advanced.lang !== 'en' || post.advanced.showImageOnPost === true) {
-        post.showAdvancedOptions = true;
+          type: frontmatter.bannerType || '',
+          videoId: frontmatter.bannerData?.videoId || '',
+          timelineCategory: frontmatter.bannerData?.category || '',
+        },
       }
-      
-      // Set editing state
-      isEditing = true;
-      selectedPost = postId;
-      
-      // Switch to the create tab to show the loaded post for editing
-      activeTab = 'create';
-      
-      showNotification('Post loaded for editing');
-    } catch (error: any) {
-      console.error('Error loading post:', error);
-      showNotification('Failed to load post: ' + error.message, 'error');
+
+      // Save this full post to localStorage for future use
+      localStorage.setItem(
+        `fullPost_${postData.slug}`,
+        JSON.stringify(postData),
+      )
+    } else {
+      // Can't get the full post
+      throw new Error(
+        'Could not load the full post. Try authenticating with GitHub.',
+      )
     }
+
+    if (!postData) {
+      throw new Error('Failed to load post data')
+    }
+
+    // Reset the post object with the loaded content
+    const emptyPost = createEmptyPost()
+    post = {
+      ...emptyPost,
+      ...postData,
+      // Ensure all required properties are set
+      title: postData.title || '',
+      description: postData.description || '',
+      slug: postData.slug || postId.replace(/\.(md|mdx)$/, ''),
+      published: postData.published || new Date().toISOString().split('T')[0],
+      content: postData.content || '',
+      filepath: postData.filepath || '',
+      advanced: {
+        ...emptyPost.advanced,
+        ...(postData.advanced || {}),
+      },
+      timelineData: {
+        ...emptyPost.timelineData,
+        ...(postData.timelineData || {}),
+      },
+      banner: {
+        ...emptyPost.banner,
+        ...(postData.banner || {}),
+      },
+    }
+
+    // Enable advanced options if any of those fields are populated
+    if (
+      post.advanced.avatarImage ||
+      post.advanced.authorName ||
+      post.advanced.authorBio ||
+      post.advanced.bannerImage ||
+      post.advanced.lang !== 'en' ||
+      post.advanced.showImageOnPost === true
+    ) {
+      post.showAdvancedOptions = true
+    }
+
+    // Set editing state
+    isEditing = true
+    selectedPost = postId
+
+    // Switch to the create tab to show the loaded post for editing
+    activeTab = 'create'
+
+    showNotification('Post loaded for editing')
+  } catch (error: any) {
+    console.error('Error loading post:', error)
+    showNotification('Failed to load post: ' + error.message, 'error')
   }
-  
-  // Delete a post
-  async function deletePost(postId: string) {
-    if (!confirm(`Are you sure you want to delete this post? This cannot be undone.`)) {
-      return;
+}
+
+// Delete a post
+async function deletePost(postId: string) {
+  if (
+    !confirm(
+      `Are you sure you want to delete this post? This cannot be undone.`,
+    )
+  ) {
+    return
+  }
+
+  try {
+    isDeleting = true
+
+    // Find the post
+    const postToDelete = localPosts.find(p => p.id === postId)
+    if (!postToDelete) {
+      throw new Error('Post not found')
     }
-    
+
+    if (isGitHubAuthenticated) {
+      // Delete from GitHub repository
+      await githubService.deleteFile(
+        postToDelete.filepath,
+        `Delete post: ${postToDelete.title}`,
+      )
+
+      showNotification('Post deleted from GitHub successfully')
+
+      // Remove from localStorage
+      const slug = postToDelete.slug || postId.replace(/\.(md|mdx)$/, '')
+      localStorage.removeItem(`fullPost_${slug}`)
+
+      // Update cached posts list
+      const cachedPostsStr = localStorage.getItem('cachedPosts')
+      if (cachedPostsStr) {
+        let cachedPosts = JSON.parse(cachedPostsStr)
+        cachedPosts = cachedPosts.filter((p: PostMetadata) => p.id !== postId)
+        localStorage.setItem('cachedPosts', JSON.stringify(cachedPosts))
+      }
+
+      // Refresh the post list
+      await fetchLocalPosts()
+    } else {
+      // Just remove from localStorage
+      const slug = postToDelete.slug || postId.replace(/\.(md|mdx)$/, '')
+      localStorage.removeItem(`fullPost_${slug}`)
+
+      // Update cached posts list
+      const cachedPostsStr = localStorage.getItem('cachedPosts')
+      if (cachedPostsStr) {
+        let cachedPosts = JSON.parse(cachedPostsStr)
+        cachedPosts = cachedPosts.filter((p: PostMetadata) => p.id !== postId)
+        localStorage.setItem('cachedPosts', JSON.stringify(cachedPosts))
+
+        // Update the localPosts array
+        localPosts = cachedPosts
+      }
+
+      showNotification(
+        'Post removed from local cache. To delete from GitHub, please authenticate first.',
+      )
+    }
+
+    // If we were editing this post, reset the form
+    if (selectedPost === postId) {
+      clearForm()
+    }
+  } catch (error: any) {
+    console.error('Error deleting post:', error)
+    showNotification('Failed to delete post: ' + error.message, 'error')
+  } finally {
+    isDeleting = false
+  }
+}
+
+// Clear the form
+function clearForm() {
+  localStorage.removeItem('draftPost')
+  post = createEmptyPost()
+  isEditing = false
+  selectedPost = null
+  showNotification('Content cleared!')
+}
+
+// Handle import success
+function handleImportSuccess(event: CustomEvent<FileImportResult>) {
+  const { post: importedPost } = event.detail
+
+  // Update the current post with the imported data
+  post = importedPost
+
+  // Switch to create tab to show the imported content
+  activeTab = 'create'
+  isEditing = false
+}
+
+// Handle auto-save
+function handleAutosave(event: CustomEvent<{ post: Post }>) {
+  const { post: currentPost } = event.detail
+  localStorage.setItem('draftPost', JSON.stringify(currentPost))
+  console.log('Draft auto-saved')
+}
+
+// Handle GitHub integration events
+function handleAuthSuccess() {
+  if (activeTab === 'browse') fetchLocalPosts()
+}
+
+function handleSaveSuccess(
+  event: CustomEvent<{ post: Post; isDraft: boolean }>,
+) {
+  const { post: savedPost, isDraft } = event.detail
+  saveCachedPost(savedPost, githubFolder)
+  showNotification(
+    isDraft
+      ? 'Draft saved successfully to GitHub!'
+      : 'Post published successfully to GitHub!',
+  )
+  if (isEditing && activeTab === 'browse') fetchLocalPosts()
+  if (!isDraft) isEditing = false
+}
+
+function handleSaveError(event: CustomEvent<{ error: string }>) {
+  showNotification(`Failed to save to GitHub: ${event.detail.error}`, 'error')
+}
+
+function handleRebuildSuccess() {
+  showNotification('Site rebuild triggered successfully!', 'success')
+}
+
+function handleRebuildError(event: CustomEvent<{ error: string }>) {
+  showNotification(`Failed to trigger rebuild: ${event.detail.error}`, 'error')
+}
+
+// Handle GitHub save event for window
+function handleSaveToGithub(event: CustomEvent) {
+  if (event && event.detail) {
+    const { post, isDraft } = event.detail
+    // Forward event to GithubIntegration component
+    const customEvent = new CustomEvent('save-to-github', {
+      detail: { post, isDraft },
+    })
+
+    // Find and dispatch to GithubIntegration
+    const target = document.querySelector(
+      'button[data-action="save-to-github"]',
+    )
+    if (target) target.dispatchEvent(customEvent)
+  }
+}
+
+// Setup event listeners
+onMount(() => {
+  const savedDraft = localStorage.getItem('draftPost')
+  if (savedDraft) {
     try {
-      isDeleting = true;
-      
-      // Find the post
-      const postToDelete = localPosts.find(p => p.id === postId);
-      if (!postToDelete) {
-        throw new Error('Post not found');
-      }
-      
-      if (isGitHubAuthenticated) {
-        // Delete from GitHub repository
-        await githubService.deleteFile(
-          postToDelete.filepath,
-          `Delete post: ${postToDelete.title}`
-        );
-        
-        showNotification('Post deleted from GitHub successfully');
-        
-        // Remove from localStorage
-        const slug = postToDelete.slug || postId.replace(/\.(md|mdx)$/, '');
-        localStorage.removeItem(`fullPost_${slug}`);
-        
-        // Update cached posts list
-        const cachedPostsStr = localStorage.getItem('cachedPosts');
-        if (cachedPostsStr) {
-          let cachedPosts = JSON.parse(cachedPostsStr);
-          cachedPosts = cachedPosts.filter((p: PostMetadata) => p.id !== postId);
-          localStorage.setItem('cachedPosts', JSON.stringify(cachedPosts));
+      const savedPost = JSON.parse(savedDraft)
+      if (!savedPost.advanced) {
+        savedPost.advanced = {
+          avatarImage: '',
+          authorName: '',
+          authorBio: '',
+          showImageOnPost: false,
+          lang: 'en',
+          bannerImage: '',
         }
-        
-        // Refresh the post list
-        await fetchLocalPosts();
-      } else {
-        // Just remove from localStorage
-        const slug = postToDelete.slug || postId.replace(/\.(md|mdx)$/, '');
-        localStorage.removeItem(`fullPost_${slug}`);
-        
-        // Update cached posts list
-        const cachedPostsStr = localStorage.getItem('cachedPosts');
-        if (cachedPostsStr) {
-          let cachedPosts = JSON.parse(cachedPostsStr);
-          cachedPosts = cachedPosts.filter((p: PostMetadata) => p.id !== postId);
-          localStorage.setItem('cachedPosts', JSON.stringify(cachedPosts));
-          
-          // Update the localPosts array
-          localPosts = cachedPosts;
-        }
-        
-        showNotification('Post removed from local cache. To delete from GitHub, please authenticate first.');
       }
-      
-      // If we were editing this post, reset the form
-      if (selectedPost === postId) {
-        clearForm();
-      }
-    } catch (error: any) {
-      console.error('Error deleting post:', error);
-      showNotification('Failed to delete post: ' + error.message, 'error');
-    } finally {
-      isDeleting = false;
+      post = savedPost
+      showNotification('Draft loaded from local storage')
+    } catch (e) {
+      console.error('Error loading draft:', e)
     }
   }
-  
-  // Clear the form
-  function clearForm() {
-    localStorage.removeItem('draftPost');
-    post = createEmptyPost();
-    isEditing = false;
-    selectedPost = null;
-    showNotification('Content cleared!');
+
+  // Initialize GitHub service
+  initializeGithub()
+
+  // Load cached posts
+  cachedPosts = getCachedPosts()
+
+  // Fetch local posts if we're in browse mode
+  if (activeTab === 'browse') {
+    fetchLocalPosts()
   }
-  
-  // Handle import success
-  function handleImportSuccess(event: CustomEvent<FileImportResult>) {
-    const { post: importedPost } = event.detail;
-    
-    // Update the current post with the imported data
-    post = importedPost;
-    
-    // Switch to create tab to show the imported content
-    activeTab = 'create';
-    isEditing = false;
+
+  // Add window event listener
+  window.addEventListener('save-to-github', handleSaveToGithub as EventListener)
+
+  return () => {
+    window.removeEventListener(
+      'save-to-github',
+      handleSaveToGithub as EventListener,
+    )
   }
-  
-  // Handle auto-save
-  function handleAutosave(event: CustomEvent<{ post: Post }>) {
-    const { post: currentPost } = event.detail;
-    localStorage.setItem('draftPost', JSON.stringify(currentPost));
-    console.log('Draft auto-saved');
-  }
-  
-  // Handle GitHub integration events
-  function handleAuthSuccess() {
-    if (activeTab === 'browse') fetchLocalPosts();
-  }
-  
-  function handleSaveSuccess(event: CustomEvent<{ post: Post, isDraft: boolean }>) {
-    const { post: savedPost, isDraft } = event.detail;
-    saveCachedPost(savedPost, githubFolder);
-    showNotification(isDraft ? 'Draft saved successfully to GitHub!' : 'Post published successfully to GitHub!');
-    if (isEditing && activeTab === 'browse') fetchLocalPosts();
-    if (!isDraft) isEditing = false;
-  }
-  
-  function handleSaveError(event: CustomEvent<{ error: string }>) {
-    showNotification(`Failed to save to GitHub: ${event.detail.error}`, 'error');
-  }
-  
-  function handleRebuildSuccess() {
-    showNotification('Site rebuild triggered successfully!', 'success');
-  }
-  
-  function handleRebuildError(event: CustomEvent<{ error: string }>) {
-    showNotification(`Failed to trigger rebuild: ${event.detail.error}`, 'error');
-  }
-  
-  // Handle GitHub save event for window
-  function handleSaveToGithub(event: CustomEvent) {
-    if (event && event.detail) {
-      const { post, isDraft } = event.detail;
-      // Forward event to GithubIntegration component
-      const customEvent = new CustomEvent('save-to-github', { 
-        detail: { post, isDraft } 
-      });
-      
-      // Find and dispatch to GithubIntegration
-      const target = document.querySelector('button[data-action="save-to-github"]');
-      if (target) target.dispatchEvent(customEvent);
-    }
-  }
-  
-  // Setup event listeners
-  onMount(() => {
-    const savedDraft = localStorage.getItem('draftPost');
-    if (savedDraft) {
-      try {
-        const savedPost = JSON.parse(savedDraft);
-        if (!savedPost.advanced) {
-          savedPost.advanced = {
-            avatarImage: '',
-            authorName: '',
-            authorBio: '',
-            showImageOnPost: false,
-            lang: 'en',
-            bannerImage: ''
-          };
-        }
-        post = savedPost;
-        showNotification('Draft loaded from local storage');
-      } catch (e) {
-        console.error('Error loading draft:', e);
-      }
-    }
-    
-    // Initialize GitHub service
-    initializeGithub();
-    
-    // Load cached posts
-    cachedPosts = getCachedPosts();
-    
-    // Fetch local posts if we're in browse mode
-    if (activeTab === 'browse') {
-      fetchLocalPosts();
-    }
-    
-    // Add window event listener
-    window.addEventListener('save-to-github', handleSaveToGithub as EventListener);
-    
-    return () => {
-      window.removeEventListener('save-to-github', handleSaveToGithub as EventListener);
-    };
-  });
-  
-  // Watch for tab changes to load posts when needed
-  $: if (activeTab === 'browse') {
-    fetchLocalPosts();
-  }
+})
+
+// Watch for tab changes to load posts when needed
+$: if (activeTab === 'browse') {
+  fetchLocalPosts()
+}
 </script>
 
 <div class="post-editor w-full">

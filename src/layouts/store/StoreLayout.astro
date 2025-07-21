@@ -1,21 +1,21 @@
 ---
+import Footer from '@components/Footer.astro'
+import BackToTop from '@components/control/BackToTop.astro'
+import ImageWrapper from '../../components/misc/ImageWrapper.astro'
+import StoreNavbar from '../../components/store/StoreNavbar.astro'
+import { siteConfig } from '../../config/config'
 // src/layouts/store/StoreLayout.astro
-import Layout from '../Layout.astro'; // Adjusted path to parent directory
-import StoreNavbar from '../../components/store/StoreNavbar.astro';
-import Footer from '@components/Footer.astro';
-import BackToTop from '@components/control/BackToTop.astro';
-import ImageWrapper from '../../components/misc/ImageWrapper.astro';
-import { siteConfig } from '../../config/config';
+import Layout from '../Layout.astro' // Adjusted path to parent directory
 // Removed LIGHT_MODE, DARK_MODE, AUTO_MODE, PAGE_WIDTH constants as theme script is removed
 // main.css is likely imported by Layout.astro, if not, it might need to be re-evaluated.
 // For now, assuming Layout.astro handles global styles.
 
 export interface Props {
-  title: string;
-  description: string;
+  title: string
+  description: string
   // Add other props if Layout.astro expects them (e.g., lang, banner for OG tags)
 }
-const { title, description, ...rest } = Astro.props; // Capture other potential props for Layout
+const { title, description, ...rest } = Astro.props // Capture other potential props for Layout
 ---
 <Layout title={title} description={description} {...rest}>
   {/* Specific Google Fonts for StoreLayout */}

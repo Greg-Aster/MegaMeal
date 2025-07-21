@@ -11,11 +11,10 @@ export type SiteConfig = {
     fixed: boolean
   }
 
-    // Add transparency configuration
-    transparency?: number;
+  // Add transparency configuration
+  transparency?: number
 
-    
-  defaultTheme: LIGHT_DARK_MODE 
+  defaultTheme: LIGHT_DARK_MODE
   banner: {
     enable: boolean
     src: string
@@ -53,10 +52,10 @@ export enum LinkPreset {
 
 //Password values
 export type PasswordConfig = {
-  username: string;
-  passwordHash: string;
-  needsSetup: boolean; // Flag to indicate if setup is needed
-  createdAt?: string;
+  username: string
+  passwordHash: string
+  needsSetup: boolean // Flag to indicate if setup is needed
+  createdAt?: string
 }
 
 //extend NavBarLink type to support dropdown menus
@@ -97,39 +96,39 @@ export type LIGHT_DARK_MODE =
   | typeof DARK_MODE
   | typeof AUTO_MODE
 
-  export type BlogPostData = {
-    body: string
-    title: string
-    published: Date
-    description: string
-    tags: string[]
-    draft?: boolean
-    yIndex: number
-    image?: string
-    category?: string
-    prevTitle?: string
-    prevSlug?: string
-    nextTitle?: string
-    nextSlug?: string
-    bannerLink?: string
-    backgroundImage?: string // DYNAMIC BACKGROUND IMAGE SUPPORT
+export type BlogPostData = {
+  body: string
+  title: string
+  published: Date
+  description: string
+  tags: string[]
+  draft?: boolean
+  yIndex: number
+  image?: string
+  category?: string
+  prevTitle?: string
+  prevSlug?: string
+  nextTitle?: string
+  nextSlug?: string
+  bannerLink?: string
+  backgroundImage?: string // DYNAMIC BACKGROUND IMAGE SUPPORT
 
-    // Timeline-specific fields
-    timelineYear?: string
-    timelineEra?: string
-    isKeyEvent?: boolean
-    timelineLocation?: string
-    // Banner configuration
-    bannerType?: 'image' | 'video' | 'timeline' | 'assistant' // Added 'assistant' type
-    bannerData?: {
-      videoId?: string       // For video banners
-      imageUrl?: string      // For image banners (add this)
-      category?: string      // For timeline banners
-      startYear?: number     // For timeline banners
-      endYear?: number       // For timeline banners
-      background?: string    // For timeline banners
-      title?: string         // Optional title override
-      height?: string        // Optional height setting
-      compact?: boolean      // Optional compact mode
-    }
+  // Timeline-specific fields
+  timelineYear?: string
+  timelineEra?: string
+  isKeyEvent?: boolean
+  timelineLocation?: string
+  // Banner configuration
+  bannerType?: 'image' | 'video' | 'timeline' | 'assistant' // Added 'assistant' type
+  bannerData?: {
+    videoId?: string // For video banners
+    imageUrl?: string // For image banners (add this)
+    category?: string // For timeline banners
+    startYear?: number // For timeline banners
+    endYear?: number // For timeline banners
+    background?: string // For timeline banners
+    title?: string // Optional title override
+    height?: string // Optional height setting
+    compact?: boolean // Optional compact mode
   }
+}

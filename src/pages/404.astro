@@ -1,13 +1,16 @@
 ---
-import { Content, frontmatter } from '@/content/posts/store/store-placeholder.mdx';
-import StoreLayout from '@/layouts/store/StoreLayout.astro';
-import MainGridLayout from '@/layouts/MainGridLayout.astro';
-import { Icon } from 'astro-icon/components';
+import {
+  Content,
+  frontmatter,
+} from '@/content/posts/store/store-placeholder.mdx'
+import MainGridLayout from '@/layouts/MainGridLayout.astro'
+import StoreLayout from '@/layouts/store/StoreLayout.astro'
+import { Icon } from 'astro-icon/components'
 
-const isStorePagination404 = Astro.url.pathname.startsWith('/store/page/');
+const isStorePagination404 = Astro.url.pathname.startsWith('/store/page/')
 
 // Get the requested path for display
-const requestedPath = Astro.url.pathname;
+const requestedPath = Astro.url.pathname
 ---
 
 {isStorePagination404 ? (

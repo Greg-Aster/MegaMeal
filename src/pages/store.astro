@@ -1,25 +1,25 @@
 ---
-import StoreLayout from '../layouts/store/StoreLayout.astro';
-import { getCollection } from 'astro:content';
-import ProductCard from '../components/store/ProductCard.astro';
-import StorePagination from '../components/store/StorePagination.astro';
+import { getCollection } from 'astro:content'
+import ProductCard from '../components/store/ProductCard.astro'
+import StorePagination from '../components/store/StorePagination.astro'
+import StoreLayout from '../layouts/store/StoreLayout.astro'
 
-const PRODUCTS_PER_PAGE = 5;
+const PRODUCTS_PER_PAGE = 5
 
 // Placeholder products array for display purposes
 const products = await getCollection('products', ({ data }) => {
-  return data.draft !== true;
-});
+  return data.draft !== true
+})
 
-const currentPage = 1; // This file (store.astro) handles the first page
-const totalPages = Math.ceil(products.length / PRODUCTS_PER_PAGE);
-const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
-const endIndex = startIndex + PRODUCTS_PER_PAGE;
-const displayedProducts = products.slice(startIndex, endIndex);
-const baseUrl = "/store"; // This will be storeBaseUrl for the component
-const pageUrlPrev = undefined; // Page 1 has no previous page
-const pageUrlNext = totalPages > 1 ? `${baseUrl}/page/2` : undefined;
-console.log({ totalPages }); // Verify totalPages
+const currentPage = 1 // This file (store.astro) handles the first page
+const totalPages = Math.ceil(products.length / PRODUCTS_PER_PAGE)
+const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE
+const endIndex = startIndex + PRODUCTS_PER_PAGE
+const displayedProducts = products.slice(startIndex, endIndex)
+const baseUrl = '/store' // This will be storeBaseUrl for the component
+const pageUrlPrev = undefined // Page 1 has no previous page
+const pageUrlNext = totalPages > 1 ? `${baseUrl}/page/2` : undefined
+console.log({ totalPages }) // Verify totalPages
 ---
 <StoreLayout title="Store" description="Browse our unique collection of unsettling treasures.">
   <div class="container mx-auto px-4 py-8">

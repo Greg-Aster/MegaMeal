@@ -8,28 +8,28 @@ import { i18n } from '@i18n/translation'
 import MainGridLayout from '@layouts/MainGridLayout.astro'
 import { getDir } from '@utils/url-utils'
 import { Icon } from 'astro-icon/components'
-import { licenseConfig } from '../../config/config'
 import ImageWrapper from '../../components/misc/ImageWrapper.astro'
-import { profileConfig, siteConfig, avatarConfig } from '../../config/config' // 🎬 NEW: Import avatarConfig
+import { licenseConfig } from '../../config/config'
+import { avatarConfig, profileConfig, siteConfig } from '../../config/config' // 🎬 NEW: Import avatarConfig
 import { formatDateToYYYYMMDD } from '../../utils/date-utils'
 
 // ⭐ FIXED: Import the correct layout toggle component
 import LayoutToggle from '../../components/client/LayoutToggle.svelte'
 
 export async function getStaticPaths() {
-  const aboutPages = await getCollection('about');
+  const aboutPages = await getCollection('about')
   return aboutPages.map(aboutPage => ({
     params: { slug: aboutPage.slug },
     props: { aboutPage },
-  }));
+  }))
 }
 
-const { aboutPage } = Astro.props;
-console.log('ABOUT PAGE - Processing about page:', aboutPage.slug);
+const { aboutPage } = Astro.props
+console.log('ABOUT PAGE - Processing about page:', aboutPage.slug)
 
 // ⭐ NEW: Extract oneColumn setting from frontmatter
-const oneColumnMode = aboutPage.data.oneColumn || false;
-console.log('ABOUT PAGE - oneColumn from frontmatter:', oneColumnMode);
+const oneColumnMode = aboutPage.data.oneColumn || false
+console.log('ABOUT PAGE - oneColumn from frontmatter:', oneColumnMode)
 
 // Extract custom author data for the layout
 const customAuthorData = {
@@ -37,44 +37,48 @@ const customAuthorData = {
   authorName: aboutPage.data.name,
   authorBio: aboutPage.data.bio,
   authorLink: `/about/${aboutPage.slug}/`, // Self-referential link
-};
+}
 
-console.log('ABOUT PAGE - Custom author data:', customAuthorData);
+console.log('ABOUT PAGE - Custom author data:', customAuthorData)
 
 // Extract backgroundImage from frontmatter for dynamic background support
-const backgroundImage = aboutPage.data.backgroundImage;
+const backgroundImage = aboutPage.data.backgroundImage
 
 // 🎬 NEW: Video configuration from avatarConfig (same as Profile.svelte)
-const videoConfig = avatarConfig?.videoConfig || {};
-const playbackRate = videoConfig.playbackRate || 0.5; // Default to 50% speed
-const shouldLoop = videoConfig.loop ?? true; // Default to true, can be disabled
-const loopDelay = videoConfig.loopDelay || 5000; // Delay between loops in ms
-const playOnce = videoConfig.playOnce || false; // Play once then stop
+const videoConfig = avatarConfig?.videoConfig || {}
+const playbackRate = videoConfig.playbackRate || 0.5 // Default to 50% speed
+const shouldLoop = videoConfig.loop ?? true // Default to true, can be disabled
+const loopDelay = videoConfig.loopDelay || 5000 // Delay between loops in ms
+const playOnce = videoConfig.playOnce || false // Play once then stop
 
 console.log('ABOUT PAGE - Video config:', {
   playbackRate,
   shouldLoop,
   loopDelay,
-  playOnce
-});
+  playOnce,
+})
 
 // 🎬 NEW: Video detection helper functions (same as Profile.svelte)
 function isVideoFile(src: string): boolean {
-  if (!src) return false;
-  const lowercaseSrc = src.toLowerCase();
-  return lowercaseSrc.includes('.mp4') || 
-         lowercaseSrc.includes('.webm') || 
-         lowercaseSrc.includes('.mov') ||
-         lowercaseSrc.match(/\.(mp4|webm|mov|avi)(\?|$)/);
+  if (!src) return false
+  const lowercaseSrc = src.toLowerCase()
+  return (
+    lowercaseSrc.includes('.mp4') ||
+    lowercaseSrc.includes('.webm') ||
+    lowercaseSrc.includes('.mov') ||
+    lowercaseSrc.match(/\.(mp4|webm|mov|avi)(\?|$)/)
+  )
 }
 
 function isAnimatedFile(src: string): boolean {
-  if (!src) return false;
-  const lowercaseSrc = src.toLowerCase();
-  return lowercaseSrc.includes('.gif') || 
-         lowercaseSrc.includes('.webp') || 
-         lowercaseSrc.includes('.apng') ||
-         lowercaseSrc.match(/\.(gif|webp|apng)(\?|$)/);
+  if (!src) return false
+  const lowercaseSrc = src.toLowerCase()
+  return (
+    lowercaseSrc.includes('.gif') ||
+    lowercaseSrc.includes('.webp') ||
+    lowercaseSrc.includes('.apng') ||
+    lowercaseSrc.match(/\.(gif|webp|apng)(\?|$)/)
+  )
 }
 
 const { Content, headings } = await aboutPage.render()
@@ -84,7 +88,9 @@ const jsonLd = {
   '@type': 'AboutPage',
   headline: aboutPage.data.title,
   description: aboutPage.data.description || aboutPage.data.title,
-  datePublished: aboutPage.data.published ? formatDateToYYYYMMDD(aboutPage.data.published) : undefined,
+  datePublished: aboutPage.data.published
+    ? formatDateToYYYYMMDD(aboutPage.data.published)
+    : undefined,
   author: {
     '@type': 'Person',
     name: aboutPage.data.name,

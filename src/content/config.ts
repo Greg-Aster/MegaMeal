@@ -1,4 +1,4 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection, z } from 'astro:content'
 
 // Define the 'posts' collection
 const postsCollection = defineCollection({
@@ -11,9 +11,9 @@ const postsCollection = defineCollection({
     image: z.string().optional().default(''),
     // Custom author profile fields
     avatarImage: z.string().optional(), // Custom path to avatar image
-    authorName: z.string().optional(),  // Custom author name 
-    authorBio: z.string().optional(),   // Custom author bio
-    authorLink: z.string().optional(),  // Custom author link - NEW FIELD
+    authorName: z.string().optional(), // Custom author name
+    authorBio: z.string().optional(), // Custom author bio
+    authorLink: z.string().optional(), // Custom author link - NEW FIELD
     tags: z.array(z.string()).optional().default([]),
     category: z.string().optional().default(''),
     lang: z.string().optional().default(''),
@@ -28,20 +28,22 @@ const postsCollection = defineCollection({
 
     // Add bannerType field
     bannerType: z.enum(['image', 'video', 'timeline', 'assistant']).optional(),
-    bannerLink: z.string().optional(),// for image banners link
+    bannerLink: z.string().optional(), // for image banners link
 
     // Banner data
-    bannerData: z.object({
-      videoId: z.string().optional(),
-      imageUrl: z.string().optional(), // for image banners
-      category: z.string().optional(),
-      startYear: z.number().optional(),
-      endYear: z.number().optional(),
-      background: z.string().optional(),
-      title: z.string().optional(), // Optional but useful
-      height: z.string().optional(), // Optional for custom heights
-      compact: z.boolean().optional(),
-    }).optional(),
+    bannerData: z
+      .object({
+        videoId: z.string().optional(),
+        imageUrl: z.string().optional(), // for image banners
+        category: z.string().optional(),
+        startYear: z.number().optional(),
+        endYear: z.number().optional(),
+        background: z.string().optional(),
+        title: z.string().optional(), // Optional but useful
+        height: z.string().optional(), // Optional for custom heights
+        compact: z.boolean().optional(),
+      })
+      .optional(),
 
     // Timeline properties
     timelineYear: z.number().optional(),
@@ -56,7 +58,7 @@ const postsCollection = defineCollection({
     nextTitle: z.string().default(''),
     nextSlug: z.string().default(''),
   }),
-});
+})
 
 // Rest of collections remain unchanged
 const specCollection = defineCollection({
@@ -64,7 +66,7 @@ const specCollection = defineCollection({
     title: z.string(),
     description: z.string().optional(),
   }),
-});
+})
 
 const teamCollection = defineCollection({
   schema: z.object({
@@ -75,7 +77,7 @@ const teamCollection = defineCollection({
     featured: z.boolean().optional(),
     order: z.number().default(0),
   }),
-});
+})
 
 // Define the friends collection
 const friendsCollection = defineCollection({
@@ -86,7 +88,7 @@ const friendsCollection = defineCollection({
     avatar: z.string().optional(),
     lastSynced: z.string().optional(),
   }),
-});
+})
 
 // Define the 'about' collection for dynamic author pages
 const aboutCollection = defineCollection({
@@ -106,24 +108,31 @@ const aboutCollection = defineCollection({
     // ⭐ NEW: One column support for about pages too
     oneColumn: z.boolean().optional().default(false),
     // Social links for this author
-    socialLinks: z.array(z.object({
-      name: z.string(),
-      url: z.string(),
-      icon: z.string(),
-    })).optional().default([]),
+    socialLinks: z
+      .array(
+        z.object({
+          name: z.string(),
+          url: z.string(),
+          icon: z.string(),
+        }),
+      )
+      .optional()
+      .default([]),
     // Optional banner/background for this author page
     backgroundImage: z.string().optional(),
     bannerType: z.enum(['image', 'video', 'timeline', 'assistant']).optional(),
-    bannerData: z.object({
-      videoId: z.string().optional(),
-      imageUrl: z.string().optional(),
-      category: z.string().optional(),
-      startYear: z.number().optional(),
-      endYear: z.number().optional(),
-      background: z.string().optional(),
-    }).optional(),
+    bannerData: z
+      .object({
+        videoId: z.string().optional(),
+        imageUrl: z.string().optional(),
+        category: z.string().optional(),
+        startYear: z.number().optional(),
+        endYear: z.number().optional(),
+        background: z.string().optional(),
+      })
+      .optional(),
   }),
-});
+})
 
 // Define the 'products' collection
 const productsCollection = defineCollection({
@@ -140,18 +149,24 @@ const productsCollection = defineCollection({
     // New fields for product frontmatter
     rating: z.number().optional(),
     additionalImages: z.array(z.string()).optional(),
-    specifications: z.array(z.object({ label: z.string(), value: z.string() })).optional(),
-    qanda: z.array(z.object({ question: z.string(), answer: z.string() })).optional(),
-    preWrittenReviews: z.array(
-      z.object({
-        author: z.string(),
-        rating: z.number().optional(),
-        date: z.string().optional(),
-        comment: z.string(),
-      })
-    ).optional(),
+    specifications: z
+      .array(z.object({ label: z.string(), value: z.string() }))
+      .optional(),
+    qanda: z
+      .array(z.object({ question: z.string(), answer: z.string() }))
+      .optional(),
+    preWrittenReviews: z
+      .array(
+        z.object({
+          author: z.string(),
+          rating: z.number().optional(),
+          date: z.string().optional(),
+          comment: z.string(),
+        }),
+      )
+      .optional(),
   }),
-});
+})
 
 // Export the collections
 export const collections = {
@@ -161,4 +176,4 @@ export const collections = {
   friends: friendsCollection,
   about: aboutCollection, // NEW: About collection for dynamic author pages
   products: productsCollection,
-};
+}

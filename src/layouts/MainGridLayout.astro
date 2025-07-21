@@ -1,110 +1,114 @@
 ---
+import { Image } from 'astro:assets'
 // =====================================================================
 // COMPONENT IMPORTS - CLEAN AND SIMPLE
 // =====================================================================
-import Footer from '@components/Footer.astro';
-import Navbar from '@components/Navbar.astro';
-import BackToTop from '@components/control/BackToTop.astro';
-import SideBar from '@components/widget/SideBar.astro';
-import Layout from './Layout.astro';
-import { Icon } from 'astro-icon/components';
-import { siteConfig } from '../config/config';
-import type { MarkdownHeading } from 'astro';
-import TOC from "../components/widget/TOC.astro";
-import ImageWrapper from "../components/misc/ImageWrapper.astro";
-import { Image } from 'astro:assets';
-import TimelineController from '../components/timeline/TimelineBanner.astro';
-import '../styles/timeline-styles.css';
-import { url } from '../utils/url-utils';
+import Footer from '@components/Footer.astro'
+import Navbar from '@components/Navbar.astro'
+import BackToTop from '@components/control/BackToTop.astro'
+import SideBar from '@components/widget/SideBar.astro'
+import type { MarkdownHeading } from 'astro'
+import { Icon } from 'astro-icon/components'
+import ImageWrapper from '../components/misc/ImageWrapper.astro'
+import TimelineController from '../components/timeline/TimelineBanner.astro'
+import TOC from '../components/widget/TOC.astro'
+import { siteConfig } from '../config/config'
+import Layout from './Layout.astro'
+import '../styles/timeline-styles.css'
+import { url } from '../utils/url-utils'
 
 // Bleepy (AI Assistant) related imports
-import Bleepy from '@components/bleepy/Bleepy.astro';
-import BleepyBanner from '@components/bleepy/BleepyBanner.astro';
+import Bleepy from '@components/bleepy/Bleepy.astro'
+import BleepyBanner from '@components/bleepy/BleepyBanner.astro'
 
+import MobileProfileOverlay from '@components/client/MobileProfileOverlay.svelte'
+import PageAnimations from '@components/client/PageAnimations.svelte'
+import Profile from '@components/client/Profile.svelte'
+import ScrollEffects from '@components/client/ScrollEffects.svelte'
 // ⭐ NEW: Import Svelte components for client-side functionality
-import SidenavPanels from '@components/client/SidenavPanels.svelte';
-import MobileProfileOverlay from '@components/client/MobileProfileOverlay.svelte';
-import SpecialPageFeatures from '@components/client/SpecialPageFeatures.svelte';
-import ScrollEffects from '@components/client/ScrollEffects.svelte';
-import PageAnimations from '@components/client/PageAnimations.svelte';
-import Profile from '@components/client/Profile.svelte';
+import SidenavPanels from '@components/client/SidenavPanels.svelte'
+import SpecialPageFeatures from '@components/client/SpecialPageFeatures.svelte'
 
+import { avatarConfig } from '../config/avatar.config'
 // Profile and avatar configs for Svelte components
-import { profileConfig } from '../config/config';
-import { avatarConfig } from '../config/avatar.config';
+import { profileConfig } from '../config/config'
 
 // ⭐ RESTORED: Import working banner configuration
 import {
+  bannerConfig,
   determineBannerConfiguration,
-  getDynamicBackgroundImage,
-  getShouldShowParallaxBackground,
   getBannerAnimationSettings,
-  getFallbackBannerCSS,
   getBannerLink,
-  bannerConfig
-} from '../config/banner.config';
+  getDynamicBackgroundImage,
+  getFallbackBannerCSS,
+  getShouldShowParallaxBackground,
+} from '../config/banner.config'
 
 // =====================================================================
 // TYPESCRIPT INTERFACES
 // =====================================================================
 
 interface Props {
-  title?: string;
-  banner?: string;              
-  description?: string;
-  lang?: string;
-  setOGTypeArticle?: boolean;
-  headings?: MarkdownHeading[];
-  post?: any;                   
-  bannerLink?: string;          
-  isPostPage?: boolean;         
-  pageMascotContext?: string;  
-  backgroundImage?: string | null;
+  title?: string
+  banner?: string
+  description?: string
+  lang?: string
+  setOGTypeArticle?: boolean
+  headings?: MarkdownHeading[]
+  post?: any
+  bannerLink?: string
+  isPostPage?: boolean
+  pageMascotContext?: string
+  backgroundImage?: string | null
   // ⭐ NEW: OneColumn layout prop
-  oneColumn?: boolean;
+  oneColumn?: boolean
   // ⭐ NEW: Custom author data prop
   customAuthorData?: {
-    avatarImage?: string;
-    authorName?: string;
-    authorBio?: string;
-    authorLink?: string;
-  };
+    avatarImage?: string
+    authorName?: string
+    authorBio?: string
+    authorLink?: string
+  }
 }
 
 // =====================================================================
 // PROPS DESTRUCTURING AND SETUP
 // =====================================================================
 
-const { 
-  title, 
+const {
+  title,
   banner = siteConfig.banner.src,
-  description, 
-  lang, 
-  setOGTypeArticle, 
-  headings = [], 
+  description,
+  lang,
+  setOGTypeArticle,
+  headings = [],
   post,
   bannerLink = '',
   isPostPage = false,
   backgroundImage,
-  oneColumn = false,        // ⭐ NEW: Accept oneColumn prop
-  customAuthorData  // ⭐ NEW: Extract custom author data
-} = Astro.props;
+  oneColumn = false, // ⭐ NEW: Accept oneColumn prop
+  customAuthorData, // ⭐ NEW: Extract custom author data
+} = Astro.props
 
 // =====================================================================
 // ⭐ NEW: Determine oneColumn mode from props or post data
 // =====================================================================
-const oneColumnMode = oneColumn || post?.data?.oneColumn || false;
-console.log('MainGridLayout - oneColumn mode:', oneColumnMode);
+const oneColumnMode = oneColumn || post?.data?.oneColumn || false
+console.log('MainGridLayout - oneColumn mode:', oneColumnMode)
 
 // =====================================================================
 // ⭐ RESTORED: Use working banner configuration system
 // =====================================================================
 
 // Get current path for page type determination
-const currentPath = Astro.url.pathname;
+const currentPath = Astro.url.pathname
 
 // ⭐ RESTORED: Use the working banner configuration function
-const bannerConfiguration = determineBannerConfiguration(post, 'default', bannerLink);
+const bannerConfiguration = determineBannerConfiguration(
+  post,
+  'default',
+  bannerLink,
+)
 
 // Destructure the processed configuration - WORKING STRUCTURE
 const {
@@ -113,8 +117,8 @@ const {
   bannerDataSources,
   layout,
   finalBannerLink,
-  currentBannerType
-} = bannerConfiguration;
+  currentBannerType,
+} = bannerConfiguration
 
 // ⭐ NEW: Process custom author data - merge with existing postData
 const processedAuthorData = {
@@ -123,9 +127,9 @@ const processedAuthorData = {
   customName: customAuthorData?.authorName || postData?.customName || '',
   customBio: customAuthorData?.authorBio || postData?.customBio || '',
   customLink: customAuthorData?.authorLink || '', // ⭐ NEW: Custom link support
-};
+}
 
-console.log('MainGridLayout - Processed author data:', processedAuthorData);
+console.log('MainGridLayout - Processed author data:', processedAuthorData)
 
 // Destructure banner type flags
 const {
@@ -135,29 +139,30 @@ const {
   hasAssistantBanner,
   hasStandardBanner,
   hasPostBanner,
-  isStandardPage
-} = bannerType;
+  isStandardPage,
+} = bannerType
 
 // ⭐ RESTORED: Use working layout values
 const {
-  mainPanelTop,        // This controls the overlap (WORKING)
-  navbarSpacing,       // This controls navbar spacing (WORKING + MOBILE PORTRAIT FIX)
+  mainPanelTop, // This controls the overlap (WORKING)
+  navbarSpacing, // This controls navbar spacing (WORKING + MOBILE PORTRAIT FIX)
   bannerHeight,
-  mainContentOffset
-} = layout;
+  mainContentOffset,
+} = layout
 
 // =====================================================================
 // ⭐ RESTORED: Background image logic (working)
 // =====================================================================
 
-const currentBackgroundImage = getDynamicBackgroundImage(backgroundImage);
-const shouldShowParallaxBackground = getShouldShowParallaxBackground(backgroundImage);
+const currentBackgroundImage = getDynamicBackgroundImage(backgroundImage)
+const shouldShowParallaxBackground =
+  getShouldShowParallaxBackground(backgroundImage)
 
 // =====================================================================
 // BLEEPY CONTEXT SETUP
 // =====================================================================
 
-let contextForBleepy = null;
+let contextForBleepy = null
 if (post && post.data) {
   contextForBleepy = {
     title: post.data.title,
@@ -167,7 +172,7 @@ if (post && post.data) {
     timelineEra: post.data.timelineEra,
     timelineLocation: post.data.timelineLocation,
     mascotContext: post.data.mascotContext,
-  };
+  }
 }
 ---
 

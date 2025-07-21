@@ -1,64 +1,65 @@
 // Import types
-import type { 
+import type {
   CommunityConfig,
-  DiscordConfig,
   ContactConfig,
-  NewsletterConfig,
+  DiscordConfig,
   EventsConfig,
   GuidelinesConfig,
-  HeroConfig
-} from '../types/communityconfig';
+  HeroConfig,
+  NewsletterConfig,
+} from '../types/communityconfig'
 
 // Community page configuration
 export const communityConfig: CommunityConfig = {
   hero: {
-    title: "Join Our Community",
-    description: "Connect with other members, share ideas, get help, and stay updated on the latest developments.",
+    title: 'Join Our Community',
+    description:
+      'Connect with other members, share ideas, get help, and stay updated on the latest developments.',
     showGraphic: true,
-    options: []
+    options: [],
   },
   discord: {
     enabled: true,
-    title: "Discord Community",
-    description: "",
-    inviteUrl: "",
-    buttonText: "",
+    title: 'Discord Community',
+    description: '',
+    inviteUrl: '',
+    buttonText: '',
     features: [],
-    channels: []
+    channels: [],
   },
   contact: {
     enabled: true,
-    title: "Get in Touch",
-    description: "",
-    formActionUrl: "",
-    buttonText: "",
+    title: 'Get in Touch',
+    description: '',
+    formActionUrl: '',
+    buttonText: '',
     features: [],
     formFields: {
       name: {},
       email: {},
       subject: {},
-      message: {}
-    }
+      message: {},
+    },
   },
   newsletter: {
     enabled: false,
-    title: "Newsletter",
-    description: "",
-    buttonText: "",
+    title: 'Newsletter',
+    description: '',
+    buttonText: '',
     features: [],
-    consentText: ""
+    consentText: '',
   },
   events: {
     enabled: false,
-    title: "Events",
-    description: "",
-    calendarButtonText: "",
-    calendarUrl: ""
+    title: 'Events',
+    description: '',
+    calendarButtonText: '',
+    calendarUrl: '',
   },
   guidelines: {
     enabled: true,
-    title: "Community Guidelines",
-    description: "",
-    items: []
-  }
+    title: 'Community Guidelines',
+    description: '',
+    items: [],
+  },
 }

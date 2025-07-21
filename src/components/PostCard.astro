@@ -2,27 +2,27 @@
 // src/components/PostCard.astro
 // UNIFIED: Single responsive system that works the same across all screen sizes
 
-import path from 'path';
-import ImageWrapper from './misc/ImageWrapper.astro';
-import { Icon } from 'astro-icon/components';
-import { i18n } from '../i18n/translation';
-import I18nKey from '../i18n/i18nKey';
-import { getDir } from '../utils/url-utils';
-import { postCardConfig } from '../config/postcard.config';
+import path from 'path'
+import { Icon } from 'astro-icon/components'
+import { postCardConfig } from '../config/postcard.config'
+import I18nKey from '../i18n/i18nKey'
+import { i18n } from '../i18n/translation'
+import { getDir } from '../utils/url-utils'
+import ImageWrapper from './misc/ImageWrapper.astro'
 
 interface Props {
-  class?: string;
-  entry: any;
-  title: string;
-  url: string;
-  published: Date;
-  updated?: Date;
-  category: string;
-  image: string;
-  description: string;
-  draft: boolean;
-  style?: string;
-  isPostPage?: boolean;
+  class?: string
+  entry: any
+  title: string
+  url: string
+  published: Date
+  updated?: Date
+  category: string
+  image: string
+  description: string
+  draft: boolean
+  style?: string
+  isPostPage?: boolean
 }
 
 const {
@@ -35,19 +35,22 @@ const {
   image,
   description,
   style = '',
-  isPostPage = false
-} = Astro.props;
+  isPostPage = false,
+} = Astro.props
 
-const className = Astro.props.class;
+const className = Astro.props.class
 
-const hasCover = image !== undefined && image !== null && image !== '' && 
-  (!isPostPage || (isPostPage && entry.data.showImageOnPost !== false));
+const hasCover =
+  image !== undefined &&
+  image !== null &&
+  image !== '' &&
+  (!isPostPage || (isPostPage && entry.data.showImageOnPost !== false))
 
-const config = postCardConfig.localPosts;
-const { remarkPluginFrontmatter } = await entry.render();
+const config = postCardConfig.localPosts
+const { remarkPluginFrontmatter } = await entry.render()
 
-const timestamp = published.getTime();
-const dateStr = published.toISOString().split('T')[0];
+const timestamp = published.getTime()
+const dateStr = published.toISOString().split('T')[0]
 ---
 
 <!-- UNIFIED: Same horizontal flexbox layout for all screen sizes -->

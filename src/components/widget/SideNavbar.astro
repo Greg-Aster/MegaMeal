@@ -15,79 +15,87 @@
 // =====================================================================
 // IMPORTS
 // =====================================================================
-import { Icon } from 'astro-icon/components';
-import { LinkPreset, type NavBarLink } from '../../types/config';
-import { navBarConfig, siteConfig } from '../../config/config';
-import { LinkPresets } from '../../constants/link-presets';
-import { url } from '../../utils/url-utils';
+import { Icon } from 'astro-icon/components'
+import { navBarConfig, siteConfig } from '../../config/config'
+import { LinkPresets } from '../../constants/link-presets'
+import type { LinkPreset, NavBarLink } from '../../types/config'
+import { url } from '../../utils/url-utils'
 
 // =====================================================================
 // TYPESCRIPT INTERFACES
 // =====================================================================
 interface Props {
-  class?: string;    // Additional CSS classes to apply to the container
-  style?: string;    // Inline styles for the container
+  class?: string // Additional CSS classes to apply to the container
+  style?: string // Inline styles for the container
 }
 
 // =====================================================================
 // PROPS DESTRUCTURING
 // =====================================================================
-const { class: className, style } = Astro.props;
+const { class: className, style } = Astro.props
 
 // =====================================================================
 // AUTHENTICATION CHECK
 // =====================================================================
 // Check if user is logged in (affects what navigation items are shown)
-const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false;
+const isAuthenticated = Astro.cookies.get('isAuthenticated')?.boolean() || false
 
 // =====================================================================
 // NAVIGATION LINKS PROCESSING - REFACTORED
 // =====================================================================
 
 // Items to exclude from main navigation (will be in menu toggle)
-const excludeFromMainNav = ['Archive', 'About'];
+const excludeFromMainNav = ['Archive', 'About']
 // Items to block out completely
-const blockedItems = ['Gastronomy']; // Restaurant/Gastronomy blocked
+const blockedItems = ['Gastronomy'] // Restaurant/Gastronomy blocked
 
 // Process links while filtering out specific items
 const processedLinks = navBarConfig.links
   .map((item: NavBarLink | LinkPreset) => {
     if (typeof item === 'number') {
-      return LinkPresets[item];  // Convert preset number to link object
+      return LinkPresets[item] // Convert preset number to link object
     }
-    return item;  // Already a link object, return as-is
+    return item // Already a link object, return as-is
   })
   .filter(link => {
     // Filter out blocked items and items that go in menu toggle
-    return !blockedItems.includes(link.name) && !excludeFromMainNav.includes(link.name);
-  });
+    return (
+      !blockedItems.includes(link.name) &&
+      !excludeFromMainNav.includes(link.name)
+    )
+  })
 
 // Find Home link for top positioning
 const homeLink = navBarConfig.links
-  .map((item: NavBarLink | LinkPreset) => typeof item === 'number' ? LinkPresets[item] : item)
-  .find(link => link.name === 'Home');
+  .map((item: NavBarLink | LinkPreset) =>
+    typeof item === 'number' ? LinkPresets[item] : item,
+  )
+  .find(link => link.name === 'Home')
 
 // Find Store link for separate positioning
-const storeLink = processedLinks.find(link => link.name === 'Store');
+const storeLink = processedLinks.find(link => link.name === 'Store')
 
 // Find Archive and About links for menu toggle
 const menuToggleLinks = navBarConfig.links
-  .map((item: NavBarLink | LinkPreset) => typeof item === 'number' ? LinkPresets[item] : item)
-  .filter(link => excludeFromMainNav.includes(link.name));
+  .map((item: NavBarLink | LinkPreset) =>
+    typeof item === 'number' ? LinkPresets[item] : item,
+  )
+  .filter(link => excludeFromMainNav.includes(link.name))
 
 // Create a flat list of ALL navigation links for the menu panel (excluding blocked items)
 const allLinks = navBarConfig.links.flatMap((item: NavBarLink | LinkPreset) => {
-  const link = typeof item === 'number' ? LinkPresets[item] : item;
-  if (blockedItems.includes(link.name)) return []; // Skip blocked items
-  return link.dropdown ? link.dropdown : link;
-});
+  const link = typeof item === 'number' ? LinkPresets[item] : item
+  if (blockedItems.includes(link.name)) return [] // Skip blocked items
+  return link.dropdown ? link.dropdown : link
+})
 
 // Main navigation links (excluding Home, Store, Archive, About, and blocked items)
-const mainNavLinks = processedLinks.filter(link => 
-  link.name !== 'Home' && 
-  link.name !== 'Store' && 
-  !excludeFromMainNav.includes(link.name)
-);
+const mainNavLinks = processedLinks.filter(
+  link =>
+    link.name !== 'Home' &&
+    link.name !== 'Store' &&
+    !excludeFromMainNav.includes(link.name),
+)
 
 // =====================================================================
 // ICON MAPPING FUNCTION
@@ -95,30 +103,32 @@ const mainNavLinks = processedLinks.filter(link =>
 // Maps navigation link names to their corresponding Material Symbols icons
 const getNavIcon = (name: string): string => {
   const iconMap: Record<string, string> = {
-    'Home': 'material-symbols:home-outline',
-    'Archive': 'material-symbols:archive-outline',
-    'About': 'material-symbols:person-outline',
-    'Projects': 'material-symbols:work-outline',
-    'Blog': 'material-symbols:article-outline',
-    'Contact': 'material-symbols:mail-outline',
-    'Timeline': 'material-symbols:timeline',
-    'Cookbook': 'material-symbols:menu-book-outline',
-    'Gastronomy': 'material-symbols:restaurant',
-    'Map': 'material-symbols:map',
-    'Store': 'material-symbols:attach-money',
-    'Profile': 'material-symbols:account-circle-outline',
-    'Settings': 'material-symbols:settings-outline',
-    'Search': 'material-symbols:search',
-    'Menu': 'material-symbols:menu-rounded',
-  };
-  
+    Home: 'material-symbols:home-outline',
+    Archive: 'material-symbols:archive-outline',
+    About: 'material-symbols:person-outline',
+    Projects: 'material-symbols:work-outline',
+    Blog: 'material-symbols:article-outline',
+    Contact: 'material-symbols:mail-outline',
+    Timeline: 'material-symbols:timeline',
+    Cookbook: 'material-symbols:menu-book-outline',
+    Gastronomy: 'material-symbols:restaurant',
+    Map: 'material-symbols:map',
+    Store: 'material-symbols:attach-money',
+    Profile: 'material-symbols:account-circle-outline',
+    Settings: 'material-symbols:settings-outline',
+    Search: 'material-symbols:search',
+    Menu: 'material-symbols:menu-rounded',
+  }
+
   // Debug: Log unmapped navigation items to help identify missing mappings
   if (!iconMap[name]) {
-    console.log(`🔍 Unmapped navigation item: "${name}" - using fallback link icon`);
+    console.log(
+      `🔍 Unmapped navigation item: "${name}" - using fallback link icon`,
+    )
   }
-  
-  return iconMap[name] || 'material-symbols:link';
-};
+
+  return iconMap[name] || 'material-symbols:link'
+}
 ---
 
 <!-- =============================================================== -->

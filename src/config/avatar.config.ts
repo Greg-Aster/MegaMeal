@@ -38,57 +38,50 @@ export interface AvatarConfig {
  */
 export const avatarConfig: AvatarConfig = {
   // List of all available avatars for post pages and rotation
-  avatarList: [
-    avatar1,
-    avatar2,
-    avatar3,
-    avatar4,
-    avatar5,
-    avatar6
-  ],
+  avatarList: [avatar1, avatar2, avatar3, avatar4, avatar5, avatar6],
 
   // Avatar to use on the home page (site owner)
   homeAvatar: avatar1,
 
-  // Animation interval in milliseconds 
+  // Animation interval in milliseconds
   animationInterval: 5000,
 
   // Sequence for the home page profile widget
   homePageProfileSequence: [
     {
       avatar: avatar1,
-      name: "Mysterious Witness",
-      bio: "Observer of extinction events, time traveler, and collector of perfect recipes across the multiverse."
+      name: 'Mysterious Witness',
+      bio: 'Observer of extinction events, time traveler, and collector of perfect recipes across the multiverse.',
     },
     {
       avatar: avatar2,
-      name: "Corporate CEO",
-      bio: "Overseeing galactic expansion and quarterly profits."
+      name: 'Corporate CEO',
+      bio: 'Overseeing galactic expansion and quarterly profits.',
     },
     {
       avatar: avatar3,
-      name: "Santiago Chen",
-      bio: "Bartender at the edge of reality, knows a secret or two."
+      name: 'Santiago Chen',
+      bio: 'Bartender at the edge of reality, knows a secret or two.',
     },
     {
       avatar: avatar4,
-      name: "The Sandwich Thief",
-      bio: "Always hungry, always lurking. Your sandwich is not safe."
-    }
-  ]
-};
+      name: 'The Sandwich Thief',
+      bio: 'Always hungry, always lurking. Your sandwich is not safe.',
+    },
+  ],
+}
 
 /**
  * Get a consistent avatar index for a given post slug
  * This ensures the same post always shows the same avatar
  */
-export function getAvatarIndexFromSlug(slug: string = '', avatarCount: number): number {
+export function getAvatarIndexFromSlug(slug = '', avatarCount: number): number {
   if (!slug) return 0 // Default to first avatar if no slug
 
   // Simple hash function to get consistent avatar for each slug
   let hash = 0
   for (let i = 0; i < slug.length; i++) {
-    hash = ((hash << 5) - hash) + slug.charCodeAt(i)
+    hash = (hash << 5) - hash + slug.charCodeAt(i)
     hash = hash & hash // Convert to 32bit integer
   }
 

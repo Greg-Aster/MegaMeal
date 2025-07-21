@@ -2,161 +2,176 @@
 // src/components/timeline/TimelineBanner.astro
 // RESTORED CONTROLLER COMPONENT - All features working
 
-import TimelineView from './TimelineViewModes/TimelineView.astro';
-import StarMapView from './TimelineViewModes/StarMapView.astro';
-import ListView from './TimelineViewModes/ListView.astro';
-import TreeView from './TimelineViewModes/TreeView.astro';
-import MapView from './TimelineViewModes/MapView.astro';
-import InfoCard from './InfoCard.astro';
+import InfoCard from './InfoCard.astro'
+import ListView from './TimelineViewModes/ListView.astro'
+import MapView from './TimelineViewModes/MapView.astro'
+import StarMapView from './TimelineViewModes/StarMapView.astro'
+import TimelineView from './TimelineViewModes/TimelineView.astro'
+import TreeView from './TimelineViewModes/TreeView.astro'
 
-import type { TimelineEvent } from '../../services/TimelineService.client';
-import { getTimelineEvents } from '../../services/TimelineService';
-import { extractEraConfig, type EraConfigMap } from '../../services/TimelineService.client';
-import { defaultTimelineViewConfig } from '../../config/timelineconfig';
-import type { TimelineFact } from '../../config/timelineFacts';
-import { megaMealUniverseFacts } from '../../config/timelineFacts';
+import type { TimelineFact } from '../../config/timelineFacts'
+import { megaMealUniverseFacts } from '../../config/timelineFacts'
+import { defaultTimelineViewConfig } from '../../config/timelineconfig'
+import { getTimelineEvents } from '../../services/TimelineService'
+import type { TimelineEvent } from '../../services/TimelineService.client'
+import {
+  type EraConfigMap,
+  extractEraConfig,
+} from '../../services/TimelineService.client'
 
 export interface Props {
-  id?: string;
-  class?: string;
-  category?: string;
-  startYear?: number;
-  endYear?: number;
-  background?: string;
-  compact?: boolean;
-  asBanner?: boolean;
-  bannerHeight?: string;
-  mobileHeight?: string;
-  initialViewMode?: "timeline" | "list" | "tree" | "map" | "starmap";
-  useEraColorsForStars?: boolean;
-  initialScale?: number;
-  initialOffsetX?: number;
-  initialOffsetY?: number;
-  useEraColors?: boolean;
+  id?: string
+  class?: string
+  category?: string
+  startYear?: number
+  endYear?: number
+  background?: string
+  compact?: boolean
+  asBanner?: boolean
+  bannerHeight?: string
+  mobileHeight?: string
+  initialViewMode?: 'timeline' | 'list' | 'tree' | 'map' | 'starmap'
+  useEraColorsForStars?: boolean
+  initialScale?: number
+  initialOffsetX?: number
+  initialOffsetY?: number
+  useEraColors?: boolean
 }
 
 const {
-  id = "unified-timeline-area",
-  class: classList = "",
-  category = "",
+  id = 'unified-timeline-area',
+  class: classList = '',
+  category = '',
   startYear: propStartYear,
   endYear: propEndYear,
-  background: initialBackground = "/assets/banner/0001.png",
+  background: initialBackground = '/assets/banner/0001.png',
   compact = false,
   asBanner = true,
-  bannerHeight = "500px",
-  mobileHeight = "400px",
-  initialViewMode = "starmap",
+  bannerHeight = '500px',
+  mobileHeight = '400px',
+  initialViewMode = 'starmap',
   useEraColorsForStars = false,
   useEraColors = false,
   initialScale = defaultTimelineViewConfig.defaultZoom,
   initialOffsetX = 0,
   initialOffsetY = 0,
-} = Astro.props;
+} = Astro.props
 
 // Server-side data fetching & processing
-let events: TimelineEvent[] = [];
-let currentBackground = initialBackground;
+let events: TimelineEvent[] = []
+let currentBackground = initialBackground
 
 try {
   events = await getTimelineEvents({
     category: category || undefined,
     startYear: propStartYear,
     endYear: propEndYear,
-    includeBanners: true
-  });
-  
-  const bannerPostWithBg = events.find(event => event.bannerData?.background);
+    includeBanners: true,
+  })
+
+  const bannerPostWithBg = events.find(event => event.bannerData?.background)
   if (bannerPostWithBg?.bannerData?.background) {
-    currentBackground = bannerPostWithBg.bannerData.background;
+    currentBackground = bannerPostWithBg.bannerData.background
   }
 } catch (error) {
-  console.error("Error fetching timeline events:", error);
+  console.error('Error fetching timeline events:', error)
 }
 
 // Configuration Extraction
-const eraConfig: EraConfigMap = extractEraConfig(events);
-const initialEra = Object.keys(eraConfig).length > 0 ? 'all-eras' : '';
+const eraConfig: EraConfigMap = extractEraConfig(events)
+const initialEra = Object.keys(eraConfig).length > 0 ? 'all-eras' : ''
 
 // Determine Effective Background
-let effectiveBackground = currentBackground;
+let effectiveBackground = currentBackground
 if (events.length > 0 && !effectiveBackground) {
-  const firstEraKey = Object.keys(eraConfig).find(key => key !== 'all-eras' && key !== 'all-time');
+  const firstEraKey = Object.keys(eraConfig).find(
+    key => key !== 'all-eras' && key !== 'all-time',
+  )
   if (firstEraKey && eraConfig[firstEraKey]?.backgroundImage) {
-    effectiveBackground = eraConfig[firstEraKey].backgroundImage;
+    effectiveBackground = eraConfig[firstEraKey].backgroundImage
   } else if (eraConfig['all-eras']?.backgroundImage) {
-    effectiveBackground = eraConfig['all-eras'].backgroundImage;
+    effectiveBackground = eraConfig['all-eras'].backgroundImage
   }
 }
 
 // Determine Year Range
-let startYear = propStartYear;
-let endYear = propEndYear;
+let startYear = propStartYear
+let endYear = propEndYear
 if (!startYear || !endYear) {
   if (events.length > 0) {
-    const years = events.map(event => event.year);
-    const minYear = Math.min(...years);
-    const maxYear = Math.max(...years);
-    const yearPadding = Math.max(5, Math.ceil((maxYear - minYear) * 0.1));
-    if (!startYear) startYear = minYear - yearPadding;
-    if (!endYear) endYear = maxYear + yearPadding;
+    const years = events.map(event => event.year)
+    const minYear = Math.min(...years)
+    const maxYear = Math.max(...years)
+    const yearPadding = Math.max(5, Math.ceil((maxYear - minYear) * 0.1))
+    if (!startYear) startYear = minYear - yearPadding
+    if (!endYear) endYear = maxYear + yearPadding
   } else {
-    startYear = startYear || 2000;
-    endYear = endYear || 2100;
+    startYear = startYear || 2000
+    endYear = endYear || 2100
   }
 }
 
 // Generate Unique IDs
-const wrapperId = `${id}-wrapper`;
-const timelineViewId = `${id}-timeline-view`;
-const starmapViewId = `${id}-starmap-view`;
-const listViewId = `${id}-list-view`;
-const treeViewId = `${id}-tree-view`;
-const mapViewId = `${id}-map-view`;
-const factsInfoCardId = `${id}-facts-infocard`;
+const wrapperId = `${id}-wrapper`
+const timelineViewId = `${id}-timeline-view`
+const starmapViewId = `${id}-starmap-view`
+const listViewId = `${id}-list-view`
+const treeViewId = `${id}-tree-view`
+const mapViewId = `${id}-map-view`
+const factsInfoCardId = `${id}-facts-infocard`
 
 // Initial fact for info card
-const initialFact: TimelineFact | null = megaMealUniverseFacts.length > 0
-  ? megaMealUniverseFacts[Math.floor(Math.random() * megaMealUniverseFacts.length)]
-  : null;
+const initialFact: TimelineFact | null =
+  megaMealUniverseFacts.length > 0
+    ? megaMealUniverseFacts[
+        Math.floor(Math.random() * megaMealUniverseFacts.length)
+      ]
+    : null
 
-const factsInfoCardFact = initialFact ? {
-  ...initialFact,
-  bgColorClass: 'bg-slate-800/90',
-  textColorClass: 'text-white',
-  headlineColorClass: 'text-white',
-  ctaButtonClass: 'bg-sky-600 hover:bg-sky-500 text-white'
-} : undefined;
+const factsInfoCardFact = initialFact
+  ? {
+      ...initialFact,
+      bgColorClass: 'bg-slate-800/90',
+      textColorClass: 'text-white',
+      headlineColorClass: 'text-white',
+      ctaButtonClass: 'bg-sky-600 hover:bg-sky-500 text-white',
+    }
+  : undefined
 
 // View modes configuration
 // View modes configuration
 const viewModes = [
-  { 
-    id: "starmap", 
-    label: "StarMap", 
-    svgPath: "M12 2l1.5 3h3.5l-2.5 2.5 1 3.5-3-2-3 2 1-3.5L8 5h3.5L12 2zM6 12l1 2h2l-1.5 1.5.5 2-2-1.5-2 1.5.5-2L3 14h2l1-2zM18 16l.8 1.6h1.8l-1.2 1.2.4 1.8-1.6-1.2-1.6 1.2.4-1.8-1.2-1.2h1.8L18 16z" 
+  {
+    id: 'starmap',
+    label: 'StarMap',
+    svgPath:
+      'M12 2l1.5 3h3.5l-2.5 2.5 1 3.5-3-2-3 2 1-3.5L8 5h3.5L12 2zM6 12l1 2h2l-1.5 1.5.5 2-2-1.5-2 1.5.5-2L3 14h2l1-2zM18 16l.8 1.6h1.8l-1.2 1.2.4 1.8-1.6-1.2-1.6 1.2.4-1.8-1.2-1.2h1.8L18 16z',
   },
-  { 
-    id: "timeline", 
-    label: "Timeline", 
-    svgPath: "M3 12h18M7 8v8M12 6v12M17 9v6M7 7a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM12 4a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM17 8a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" 
+  {
+    id: 'timeline',
+    label: 'Timeline',
+    svgPath:
+      'M3 12h18M7 8v8M12 6v12M17 9v6M7 7a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM12 4a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM17 8a1 1 0 1 0 0 2 1 1 0 0 0 0-2z',
   },
-  { 
-    id: "list", 
-    label: "List", 
-    svgPath: "M6 7a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM6 12a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM6 17a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM8 6h12a1 1 0 0 1 0 2H8a1 1 0 1 1 0-2zM8 11h12a1 1 0 0 1 0 2H8a1 1 0 1 1 0-2zM8 16h12a1 1 0 0 1 0 2H8a1 1 0 1 1 0-2z" 
+  {
+    id: 'list',
+    label: 'List',
+    svgPath:
+      'M6 7a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM6 12a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM6 17a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM8 6h12a1 1 0 0 1 0 2H8a1 1 0 1 1 0-2zM8 11h12a1 1 0 0 1 0 2H8a1 1 0 1 1 0-2zM8 16h12a1 1 0 0 1 0 2H8a1 1 0 1 1 0-2z',
   },
-  { 
-    id: "tree", 
-    label: "Tree", 
-    svgPath: "M12 3v3m0 0c1.5 0 3 .5 3 2v2c0 1.5-1.5 2-3 2m0-6c-1.5 0-3 .5-3 2v2c0 1.5 1.5 2 3 2m0 0v3m0 0v3M8 15h1.5M14.5 15H16M8 21h1.5M14.5 21H16M12 18a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM12 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" 
+  {
+    id: 'tree',
+    label: 'Tree',
+    svgPath:
+      'M12 3v3m0 0c1.5 0 3 .5 3 2v2c0 1.5-1.5 2-3 2m0-6c-1.5 0-3 .5-3 2v2c0 1.5 1.5 2 3 2m0 0v3m0 0v3M8 15h1.5M14.5 15H16M8 21h1.5M14.5 21H16M12 18a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM12 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z',
   },
-  { 
-    id: "map", 
-    label: "Map", 
-    svgPath: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zM12 11.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" 
+  {
+    id: 'map',
+    label: 'Map',
+    svgPath:
+      'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zM12 11.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
   },
-];
+]
 ---
 
 <div

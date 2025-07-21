@@ -1,9 +1,9 @@
 <script lang="ts">
-  export let error: string;
-  
-  function restartGame() {
-    window.location.reload();
-  }
+export let error: string
+
+function restartGame() {
+  window.location.reload()
+}
 </script>
 
 <div class="error-screen">

@@ -1,45 +1,51 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import { formatDate } from '../utils/postUtils';
-  import type { PostMetadata } from '../utils/postUtils';
-  
-  // Initialize event dispatcher
-  const dispatch = createEventDispatcher<{
-    edit: { postId: string };
-    delete: { postId: string };
-    refresh: void;
-  }>();
-  
-  // Props
-  export let posts: PostMetadata[] = [];
-  export let isLoading = false;
-  export let loadError: string | null = null;
-  export let isDeleting = false;
-  export let selectedPost: string | null = null;
-  
-  // Local state
-  let searchQuery = '';
-  
-  // Reactive filtered posts
-  $: filteredPosts = searchQuery 
-      ? posts.filter(p => 
-          p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-          p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (p.tags && Array.isArray(p.tags) && p.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))))
-      : posts;
-      
-  // Functions
-  function handleEditClick(postId: string) {
-    dispatch('edit', { postId });
-  }
-  
-  function handleDeleteClick(postId: string) {
-    dispatch('delete', { postId });
-  }
-  
-  function handleRefreshClick() {
-    dispatch('refresh');
-  }
+import { createEventDispatcher } from 'svelte'
+import { formatDate } from '../utils/postUtils'
+import type { PostMetadata } from '../utils/postUtils'
+
+// Initialize event dispatcher
+const dispatch = createEventDispatcher<{
+  edit: { postId: string }
+  delete: { postId: string }
+  refresh: void
+}>()
+
+// Props
+export const posts: PostMetadata[] = []
+export const isLoading = false
+export const loadError: string | null = null
+export const isDeleting = false
+export const selectedPost: string | null = null
+
+// Local state
+let searchQuery = ''
+
+// Reactive filtered posts
+$: filteredPosts = searchQuery
+  ? posts.filter(
+      p =>
+        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.tags &&
+          Array.isArray(p.tags) &&
+          p.tags.some(tag =>
+            tag.toLowerCase().includes(searchQuery.toLowerCase()),
+          )),
+    )
+  : posts
+
+// Functions
+function handleEditClick(postId: string) {
+  dispatch('edit', { postId })
+}
+
+function handleDeleteClick(postId: string) {
+  dispatch('delete', { postId })
+}
+
+function handleRefreshClick() {
+  dispatch('refresh')
+}
 </script>
 
 <div class="p-6 bg-neutral-50 dark:bg-neutral-800 rounded-lg">

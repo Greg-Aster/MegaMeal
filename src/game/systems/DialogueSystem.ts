@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { GameObject } from '../../engine/core/GameObject';
+import * as THREE from 'three'
+import { GameObject } from '../../engine/core/GameObject'
 
 /**
  * Manages the display of dialogue in the UI.
@@ -13,22 +13,22 @@ export class DialogueSystem extends GameObject {
     private interactionSystem: any,
     private eventBus: any,
     private camera: THREE.Camera,
-    private gameContainer: HTMLElement
+    private gameContainer: HTMLElement,
   ) {
-    super();
+    super()
   }
 
   public async initialize(config: any): Promise<void> {
-    this.validateNotDisposed();
-    console.log('Initializing DialogueSystem with config:', config);
+    this.validateNotDisposed()
+    console.log('Initializing DialogueSystem with config:', config)
     // Placeholder: Future implementation will manage dialogue UI.
-    this.markInitialized();
+    this.markInitialized()
   }
 
   public update(deltaTime: number): void {}
 
   public dispose(): void {
-    console.log('Disposing DialogueSystem');
-    this.markDisposed();
+    console.log('Disposing DialogueSystem')
+    this.markDisposed()
   }
 }

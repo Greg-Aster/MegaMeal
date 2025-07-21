@@ -1,0 +1,198 @@
+{
+  "id": "miranda",
+  "name": "Second Breakfast - Miranda Investigation Bridge",
+  "description": "Bridge of Captain Zhao's salvage vessel investigating the Miranda incident. Examine temporal anomalies, captain's logs, and the Perfect Bloody Mary sample that defied causality.",
+  "terrain": {
+    "type": "spaceship_interior",
+    "generator": "MirandaShipSystemModern",
+    "parameters": {
+      "type": "bridge",
+      "size": { "width": 20, "height": 4, "length": 20 },
+      "style": "investigation_vessel",
+      "lighting": "bright",
+      "floor": "Platform_Simple",
+      "walls": "WallAstra_Straight",
+      "props": ["Prop_Computer.gltf", "Prop_Crate3.gltf"],
+      "doors": [
+        { "position": "left", "type": "simple" },
+        { "position": "right", "type": "metal" },
+        { "position": "front", "type": "simple" }
+      ],
+      "sections": [
+        {
+          "id": "main_corridor",
+          "type": "corridor",
+          "size": { "width": 8, "height": 4, "length": 25 },
+          "position": [0, 0, 0],
+          "walls": "WallAstra_Straight",
+          "floor": "Platform_Metal",
+          "ceiling": "TopAstra_Straight",
+          "lighting": "bright_emergency"
+        },
+        {
+          "id": "bibimbap_saloon",
+          "type": "bar_room",
+          "size": { "width": 15, "height": 4, "length": 12 },
+          "position": [-20, 0, -8],
+          "walls": "WallBand_Straight",
+          "floor": "Platform_DarkPlates",
+          "ceiling": "TopCables_Straight",
+          "lighting": "bright_purple"
+        },
+        {
+          "id": "bridge",
+          "type": "command_center",
+          "size": { "width": 12, "height": 4, "length": 10 },
+          "position": [20, 0, -5],
+          "walls": "WallWindow_Straight",
+          "floor": "Platform_Simple",
+          "ceiling": "TopWindow_Straight",
+          "lighting": "bright_red"
+        },
+        {
+          "id": "storage_bay",
+          "type": "cargo_hold",
+          "size": { "width": 10, "height": 6, "length": 8 },
+          "position": [0, 0, 15],
+          "walls": "ShortWall_DarkMetal2_Straight",
+          "floor": "Platform_Metal2",
+          "ceiling": "TopPlastic_Straight",
+          "lighting": "bright_blue"
+        }
+      ],
+      "connections": [
+        {
+          "from": "main_corridor",
+          "to": "bibimbap_saloon",
+          "doorType": "Door_Simple"
+        },
+        { "from": "main_corridor", "to": "bridge", "doorType": "Door_Metal" },
+        {
+          "from": "main_corridor",
+          "to": "storage_bay",
+          "doorType": "Door_Frame_Square"
+        }
+      ]
+    }
+  },
+  "environment": {
+    "skybox": "/assets/hdri/sky3.png",
+    "lighting": {
+      "type": "bright",
+      "config": {
+        "ambient": {
+          "intensity": 4.0,
+          "color": "#ffffff"
+        },
+        "directional": {
+          "color": "#ffffff",
+          "intensity": 3.0,
+          "position": [10, 15, 10],
+          "castShadow": true
+        },
+        "emergency_lights": {
+          "count": 12,
+          "color": "#ffffff",
+          "intensity": 4.0,
+          "flickerSpeed": 0,
+          "positions": [
+            [0, 3, 0],
+            [10, 3, 0],
+            [-10, 3, 0],
+            [20, 3, -5],
+            [-20, 3, -8],
+            [0, 3, 15],
+            [5, 3, -12],
+            [-5, 3, 8],
+            [0, 3, 6],
+            [0, 3, -6],
+            [15, 3, 0],
+            [-15, 3, 0]
+          ]
+        },
+        "room_lights": {
+          "intensity": 2.5,
+          "color": "#ffffff",
+          "positions": [[-20, 3, -8], [20, 3, -5], [0, 3, 15]]
+        }
+      }
+    },
+    "effects": []
+  },
+  "movement": {
+    "terrainFollowing": true,
+    "boundaryType": "ship_interior",
+    "boundaryConfig": {
+      "corridors": true,
+      "prevent_falls": true,
+      "invisible_walls": true
+    },
+    "spawnPoint": [0, 0, -2],
+    "movementConfig": {
+      "moveSpeed": 5.0,
+      "jumpHeight": 1.5,
+      "gravity": -9.81,
+      "eyeHeight": 1.7
+    }
+  },
+  "systems": [
+    {
+      "type": "PortalSystem",
+      "config": {
+        "portals": [
+          {
+            "id": "escape_portal",
+            "name": "Emergency Transport",
+            "position": [0, 2, 12],
+            "targetLevel": "observatory",
+            "model": "teleport_sphere",
+            "color": "#44aaff",
+            "size": 1.8,
+            "message": "Return to Star Observatory",
+            "activation_phrase": "Request evacuation to safe harbor",
+            "requires_story_completion": false
+          }
+        ]
+      }
+    }
+  ],
+  "physics": {
+    "autoGenerate": true,
+    "gravity": [0, -9.81, 0],
+    "ship_physics": true,
+    "customColliders": [
+      {
+        "id": "bridge_floor",
+        "type": "cuboid",
+        "position": [0, -1.1, 0],
+        "scale": [20, 0.2, 20],
+        "bodyType": "static",
+        "friction": 0.8,
+        "restitution": 0.1
+      }
+    ]
+  },
+  "narrative": {
+    "main_story": "miranda_incident_investigation",
+    "themes": [
+      "temporal_mystery",
+      "cosmic_horror",
+      "lost_recipes",
+      "time_loops"
+    ],
+    "atmosphere": "haunting_spaceship_graveyard",
+    "story_progression": [
+      "explore_ship_sections",
+      "discover_terminal_logs",
+      "investigate_saloon_anomaly",
+      "uncover_temporal_agent_evidence",
+      "piece_together_incident_timeline"
+    ],
+    "victory_condition": "understand_miranda_incident",
+    "easter_eggs": [
+      "whisper_activation_phrase",
+      "find_hidden_pickle_reference",
+      "glimpse_purple_force_entity"
+    ]
+  }
+}

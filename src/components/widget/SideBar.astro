@@ -5,22 +5,22 @@
 // This component now only handles desktop sidebar content
 // Mobile portrait mode uses a clean one-column layout with no sidebar
 
+import type { MarkdownHeading } from 'astro'
+import CuppyWidget from '../bleepy/CuppyWidget.astro'
+import Categories from './Categories.astro'
+import TOC from './TOC.astro'
 // Remove Profile import - we're using Svelte Profile now
 import Tag from './Tags.astro'
-import Categories from './Categories.astro'
-import CuppyWidget from '../bleepy/CuppyWidget.astro'
-import type { MarkdownHeading } from 'astro'
-import TOC from './TOC.astro'
 
 interface Props {
-    class? : string
-    headings? : MarkdownHeading[]
-    postSlug? : string
-    customAvatar? : string
-    customName? : string    // Custom name support
-    customBio? : string     // Custom bio support  
-    pageMascotContext? : string  // Page context for Cuppy
-    hideProfile? : boolean  // Prevent profile duplicates (always true now)
+  class?: string
+  headings?: MarkdownHeading[]
+  postSlug?: string
+  customAvatar?: string
+  customName?: string // Custom name support
+  customBio?: string // Custom bio support
+  pageMascotContext?: string // Page context for Cuppy
+  hideProfile?: boolean // Prevent profile duplicates (always true now)
 }
 
 const className = Astro.props.class
@@ -31,7 +31,6 @@ const customName = Astro.props.customName
 const customBio = Astro.props.customBio
 const pageMascotContext = Astro.props.pageMascotContext
 const hideProfile = Astro.props.hideProfile || false
-
 ---
 
 <!-- =============================================================== -->

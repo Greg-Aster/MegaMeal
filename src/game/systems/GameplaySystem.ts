@@ -1,27 +1,27 @@
 // Game logic system
 
 export class GameplaySystem {
-  private score = 0;
-  private timeElapsed = 0;
-  
+  private score = 0
+  private timeElapsed = 0
+
   public update(deltaTime: number): void {
-    this.timeElapsed += deltaTime;
+    this.timeElapsed += deltaTime
   }
-  
+
   public addScore(points: number): void {
-    this.score += points;
+    this.score += points
   }
-  
+
   public getScore(): number {
-    return this.score;
+    return this.score
   }
-  
+
   public getTimeElapsed(): number {
-    return this.timeElapsed;
+    return this.timeElapsed
   }
-  
+
   public reset(): void {
-    this.score = 0;
-    this.timeElapsed = 0;
+    this.score = 0
+    this.timeElapsed = 0
   }
 }

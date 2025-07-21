@@ -17,7 +17,7 @@ export const LinkPresets: { [key in LinkPreset]: NavBarLink } = {
   },
   [LinkPreset.Community]: {
     name: i18n(I18nKey.store), // Changed to use the new 'store' key
-    url: '/store/',          // Changed URL to point to the new store page
+    url: '/store/', // Changed URL to point to the new store page
   },
   [LinkPreset.Projects]: {
     name: i18n(I18nKey.projects),

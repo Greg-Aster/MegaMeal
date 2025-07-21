@@ -6,7 +6,7 @@ enum I18nKey {
   store = 'store',
   projects = 'projects',
   search = 'search',
-  
+
   configs = 'configs',
   friends = 'friends',
   newPost = 'newPost',

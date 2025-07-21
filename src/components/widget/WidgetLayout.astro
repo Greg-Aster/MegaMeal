@@ -1,7 +1,7 @@
 ---
 import { Icon } from 'astro-icon/components'
-import { i18n } from '../../i18n/translation'
 import I18nKey from '../../i18n/i18nKey'
+import { i18n } from '../../i18n/translation'
 interface Props {
   id: string
   name?: string
@@ -15,7 +15,8 @@ const { id, name, isCollapsed, collapsedHeight, style } = Astro.props
 const className = Astro.props.class
 
 // Check for Android in server-side (note: this won't detect client-side)
-const isAndroid = Astro.request.headers.get('user-agent')?.includes('Android') || false;
+const isAndroid =
+  Astro.request.headers.get('user-agent')?.includes('Android') || false
 ---
 <widget-layout data-id={id} data-is-collapsed={String(isCollapsed)} class={"pb-4 card-base " + className} style={style}>
     <div class="font-bold transition text-lg text-neutral-900 dark:text-neutral-100 relative ml-8 mt-4 mb-2

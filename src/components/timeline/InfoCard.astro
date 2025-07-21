@@ -1,28 +1,38 @@
 ---
 // src/components/timeline/InfoCard.astro
-import type { TimelineFact } from '../../config/timelineFacts'; // Adjust path if needed
+import type { TimelineFact } from '../../config/timelineFacts' // Adjust path if needed
 
 export interface Props {
-  cardId?: string; // Added prop, with a default value
-  initialFact?: TimelineFact;
-  initialIsVisible?: boolean;
+  cardId?: string // Added prop, with a default value
+  initialFact?: TimelineFact
+  initialIsVisible?: boolean
 }
 
 const {
   cardId = 'starmap-info-card', // Default as per instruction
-  initialFact = { headline: "Information", text: "Details will appear here.", type: 'fact' as const },
+  initialFact = {
+    headline: 'Information',
+    text: 'Details will appear here.',
+    type: 'fact' as const,
+  },
   initialIsVisible = false, // Component starts hidden by default
-} = Astro.props;
+} = Astro.props
 
 const wrapperBaseClasses = [
-  "info-card-wrapper", "card-base", "absolute",
-  "bottom-8 right-4 md:bottom-20 md:right-6", "p-3",
-  "backdrop-blur-sm", "shadow-lg", "rounded-[var(--radius-large,12px)]",
-  "w-full max-w-[280px] sm:w-11/12 sm:max-w-xs md:w-auto", "z-[100]",
+  'info-card-wrapper',
+  'card-base',
+  'absolute',
+  'bottom-8 right-4 md:bottom-20 md:right-6',
+  'p-3',
+  'backdrop-blur-sm',
+  'shadow-lg',
+  'rounded-[var(--radius-large,12px)]',
+  'w-full max-w-[280px] sm:w-11/12 sm:max-w-xs md:w-auto',
+  'z-[100]',
   // Transition classes are always present, opacity/transform controlled by script/initial state
-  "transition-opacity duration-300 ease-in-out",
-  "transition-transform duration-300 ease-in-out",
-];
+  'transition-opacity duration-300 ease-in-out',
+  'transition-transform duration-300 ease-in-out',
+]
 ---
 
 <div

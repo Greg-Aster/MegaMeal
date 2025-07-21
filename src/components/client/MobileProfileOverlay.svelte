@@ -1,111 +1,113 @@
 <!-- MobileProfileOverlay.svelte -->
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import Profile from './Profile.svelte';
+import { onMount } from 'svelte'
+import Profile from './Profile.svelte'
 
-  export let postSlug = '';
-  export let customAvatar = '';
-  export let customName = '';
-  export let customBio = '';
-  export let profileConfig: any = {};
-  export let avatarConfig: any = {};
+export const postSlug = ''
+export const customAvatar = ''
+export const customName = ''
+export const customBio = ''
+export const profileConfig: any = {}
+export const avatarConfig: any = {}
 
-  let isVisible = false;
-  let overlayElement: HTMLDivElement;
-  let profileButton: HTMLElement | null = null;
+let isVisible = false
+let overlayElement: HTMLDivElement
+let profileButton: HTMLElement | null = null
 
-  onMount(() => {
-    // Add a small delay to ensure DOM is fully ready
-    const initializeOverlay = () => {
-      profileButton = document.getElementById('sidenav-profile-btn');
-      
-      // Listen for profile toggle events
-      const handleProfileToggle = () => {
-        isVisible = !isVisible;
-        if (isVisible) {
-          // Use requestAnimationFrame to ensure positioning happens after render
-          requestAnimationFrame(() => {
-            positionOverlay();
-          });
-        }
-      };
+onMount(() => {
+  // Add a small delay to ensure DOM is fully ready
+  const initializeOverlay = () => {
+    profileButton = document.getElementById('sidenav-profile-btn')
 
-      document.addEventListener('profile:toggle', handleProfileToggle);
+    // Listen for profile toggle events
+    const handleProfileToggle = () => {
+      isVisible = !isVisible
+      if (isVisible) {
+        // Use requestAnimationFrame to ensure positioning happens after render
+        requestAnimationFrame(() => {
+          positionOverlay()
+        })
+      }
+    }
 
-      return () => {
-        document.removeEventListener('profile:toggle', handleProfileToggle);
-      };
-    };
+    document.addEventListener('profile:toggle', handleProfileToggle)
 
-    // Small delay to ensure DOM is ready
-    const timeoutId = setTimeout(initializeOverlay, 100);
-    
     return () => {
-      clearTimeout(timeoutId);
-    };
-  });
-
-  function positionOverlay() {
-    if (!profileButton || !overlayElement) return;
-    
-    try {
-      const buttonRect = profileButton.getBoundingClientRect();
-      const overlayWidth = overlayElement.offsetWidth;
-      const screenWidth = window.innerWidth;
-      const screenHeight = window.innerHeight;
-      
-      let left = buttonRect.left - overlayWidth - 8;
-      let top = buttonRect.top;
-      
-      // Adjust if overlay goes off screen
-      if (left < 8) {
-        left = buttonRect.right + 8;
-      }
-      
-      if (left + overlayWidth > screenWidth - 8) {
-        left = screenWidth - overlayWidth - 8;
-      }
-      
-      if (top + overlayElement.offsetHeight > screenHeight - 8) {
-        top = screenHeight - overlayElement.offsetHeight - 8;
-      }
-      
-      if (top < 8) {
-        top = 8;
-      }
-      
-      overlayElement.style.left = `${left}px`;
-      overlayElement.style.top = `${top}px`;
-    } catch (error) {
-      console.warn('Error positioning profile overlay:', error);
+      document.removeEventListener('profile:toggle', handleProfileToggle)
     }
   }
 
-  function closeOverlay() {
-    isVisible = false;
-  }
+  // Small delay to ensure DOM is ready
+  const timeoutId = setTimeout(initializeOverlay, 100)
 
-  function handleClickOutside(event: MouseEvent) {
-    const target = event.target as Element;
-    
-    if (isVisible && 
-        !overlayElement?.contains(target) && 
-        !target.closest('#unified-sidenav')) {
-      closeOverlay();
-    }
+  return () => {
+    clearTimeout(timeoutId)
   }
+})
 
-  function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape' && isVisible) {
-      closeOverlay();
-    }
-  }
+function positionOverlay() {
+  if (!profileButton || !overlayElement) return
 
-  function handleResize() {
-    if (isVisible) {
-      positionOverlay();
+  try {
+    const buttonRect = profileButton.getBoundingClientRect()
+    const overlayWidth = overlayElement.offsetWidth
+    const screenWidth = window.innerWidth
+    const screenHeight = window.innerHeight
+
+    let left = buttonRect.left - overlayWidth - 8
+    let top = buttonRect.top
+
+    // Adjust if overlay goes off screen
+    if (left < 8) {
+      left = buttonRect.right + 8
     }
+
+    if (left + overlayWidth > screenWidth - 8) {
+      left = screenWidth - overlayWidth - 8
+    }
+
+    if (top + overlayElement.offsetHeight > screenHeight - 8) {
+      top = screenHeight - overlayElement.offsetHeight - 8
+    }
+
+    if (top < 8) {
+      top = 8
+    }
+
+    overlayElement.style.left = `${left}px`
+    overlayElement.style.top = `${top}px`
+  } catch (error) {
+    console.warn('Error positioning profile overlay:', error)
   }
+}
+
+function closeOverlay() {
+  isVisible = false
+}
+
+function handleClickOutside(event: MouseEvent) {
+  const target = event.target as Element
+
+  if (
+    isVisible &&
+    !overlayElement?.contains(target) &&
+    !target.closest('#unified-sidenav')
+  ) {
+    closeOverlay()
+  }
+}
+
+function handleKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && isVisible) {
+    closeOverlay()
+  }
+}
+
+function handleResize() {
+  if (isVisible) {
+    positionOverlay()
+  }
+}
 </script>
 
 <svelte:window 

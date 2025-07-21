@@ -3,43 +3,43 @@
   Used by the corndog mascot in RestaurantBackroom level
 -->
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { createEventDispatcher } from 'svelte';
-  
-  export let isVisible: boolean = false;
-  export let text: string = '';
-  export let speaker: string = '';
-  export let duration: number = 3000;
-  
-  const dispatch = createEventDispatcher();
-  
-  let dialogueTimer: NodeJS.Timeout;
-  
-  $: if (isVisible && text) {
-    showDialogue();
+import { onMount } from 'svelte'
+import { createEventDispatcher } from 'svelte'
+
+export let isVisible = false
+export const text = ''
+export const speaker = ''
+export const duration = 3000
+
+const dispatch = createEventDispatcher()
+
+let dialogueTimer: NodeJS.Timeout
+
+$: if (isVisible && text) {
+  showDialogue()
+}
+
+function showDialogue() {
+  clearTimeout(dialogueTimer)
+  dialogueTimer = setTimeout(() => {
+    hideDialogue()
+  }, duration)
+}
+
+function hideDialogue() {
+  isVisible = false
+  dispatch('close')
+}
+
+function handleClick() {
+  hideDialogue()
+}
+
+onMount(() => {
+  return () => {
+    clearTimeout(dialogueTimer)
   }
-  
-  function showDialogue() {
-    clearTimeout(dialogueTimer);
-    dialogueTimer = setTimeout(() => {
-      hideDialogue();
-    }, duration);
-  }
-  
-  function hideDialogue() {
-    isVisible = false;
-    dispatch('close');
-  }
-  
-  function handleClick() {
-    hideDialogue();
-  }
-  
-  onMount(() => {
-    return () => {
-      clearTimeout(dialogueTimer);
-    };
-  });
+})
 </script>
 
 {#if isVisible && text}

@@ -1,39 +1,57 @@
 ---
 // src/components/store/ProductCard.astro
 // import ImageWrapper from '../misc/ImageWrapper.astro'; // If you adapt it
-import { Icon } from 'astro-icon/components'; // If you add icons
-import { communityConfig } from '../../config/community.config';
+import { Icon } from 'astro-icon/components' // If you add icons
+import { communityConfig } from '../../config/community.config'
 
 export interface Props {
-  class?: string;
-  product: any;
-  style?: string;
+  class?: string
+  product: any
+  style?: string
 }
 
-const { product, style } = Astro.props;
-const className = Astro.props.class;
-const { name, tagline, description, price, image, sku, rating, additionalImages, specifications, qanda, preWrittenReviews } = product.data; // Added specifications, qanda, preWrittenReviews
-const formActionUrl = communityConfig.contact.formActionUrl;
+const { product, style } = Astro.props
+const className = Astro.props.class
+const {
+  name,
+  tagline,
+  description,
+  price,
+  image,
+  sku,
+  rating,
+  additionalImages,
+  specifications,
+  qanda,
+  preWrittenReviews,
+} = product.data // Added specifications, qanda, preWrittenReviews
+const formActionUrl = communityConfig.contact.formActionUrl
 
-const hasSpecifications = Array.isArray(specifications) && specifications.length > 0;
-const hasQandA = Array.isArray(qanda) && qanda.length > 0;
-const hasPreWrittenReviews = Array.isArray(preWrittenReviews) && preWrittenReviews.length > 0;
+const hasSpecifications =
+  Array.isArray(specifications) && specifications.length > 0
+const hasQandA = Array.isArray(qanda) && qanda.length > 0
+const hasPreWrittenReviews =
+  Array.isArray(preWrittenReviews) && preWrittenReviews.length > 0
 
-const hasImage = image !== undefined && image !== null && image !== '';
-const hasAdditionalImages = additionalImages && additionalImages.length > 0;
-const allImages = hasImage ? [image, ...(hasAdditionalImages ? additionalImages : [])] : (hasAdditionalImages ? additionalImages : []);
+const hasImage = image !== undefined && image !== null && image !== ''
+const hasAdditionalImages = additionalImages && additionalImages.length > 0
+const allImages = hasImage
+  ? [image, ...(hasAdditionalImages ? additionalImages : [])]
+  : hasAdditionalImages
+    ? additionalImages
+    : []
 
 // Star rating calculation
-let calculatedFullStars = 0;
-let calculatedHalfStar = false;
-let calculatedEmptyStars = 5; // Default to 5 empty if no rating or invalid
-let isRated = false;
+let calculatedFullStars = 0
+let calculatedHalfStar = false
+let calculatedEmptyStars = 5 // Default to 5 empty if no rating or invalid
+let isRated = false
 
 if (typeof rating === 'number' && rating >= 0 && rating <= 5) {
-  isRated = true;
-  calculatedFullStars = Math.floor(rating);
-  calculatedHalfStar = rating % 1 >= 0.5;
-  calculatedEmptyStars = 5 - calculatedFullStars - (calculatedHalfStar ? 1 : 0);
+  isRated = true
+  calculatedFullStars = Math.floor(rating)
+  calculatedHalfStar = rating % 1 >= 0.5
+  calculatedEmptyStars = 5 - calculatedFullStars - (calculatedHalfStar ? 1 : 0)
 }
 ---
 

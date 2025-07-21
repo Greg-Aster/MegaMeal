@@ -1,58 +1,58 @@
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
-  import { fade, slide } from 'svelte/transition';
-  import passwordConfig from '../../../config/password.config';
-  
-  // Event dispatcher for communicating with parent components
-  const dispatch = createEventDispatcher();
-  
-  // Form data
-  let username = 'password';
-  let password = 'password';
-  let rememberMe = false;
-  
-  // UI state
-  let isLoading = false;
-  let errorMessage = '';
-  let formShown = false;
-  let isFirstTimeSetup = false;
-  
-  // Additional fields for first-time setup
-  let confirmPassword = '';
-  
-  // Check setup status on mount
-  onMount(() => {
-    // If needsSetup is true, don't immediately show setup form
-    // Wait for user to click "Get Started"
-    isFirstTimeSetup = false;
-  });
-  
-  // Show the login form
-  export function show() {
-    formShown = true;
-  }
-  
-  // Hide the login form
-  export function hide() {
-    formShown = false;
-  }
-  
-  // Toggle the form visibility
-  export function toggle() {
-    formShown = !formShown;
-  }
-  
-  // Start the first-time setup process
-  function startFirstTimeSetup() {
-    isFirstTimeSetup = true;
-  }
-  
-  // Generate config file content
-  function generateConfigFileContent(username, password) {
-    // Simple hashing for basic security (not production-grade)
-    const hashedPassword = btoa(password); // Base64 encoding for example
-    
-    return `// Password configuration file
+import { createEventDispatcher, onMount } from 'svelte'
+import { fade, slide } from 'svelte/transition'
+import passwordConfig from '../../../config/password.config'
+
+// Event dispatcher for communicating with parent components
+const dispatch = createEventDispatcher()
+
+// Form data
+let username = 'password'
+let password = 'password'
+let rememberMe = false
+
+// UI state
+let isLoading = false
+let errorMessage = ''
+let formShown = false
+let isFirstTimeSetup = false
+
+// Additional fields for first-time setup
+let confirmPassword = ''
+
+// Check setup status on mount
+onMount(() => {
+  // If needsSetup is true, don't immediately show setup form
+  // Wait for user to click "Get Started"
+  isFirstTimeSetup = false
+})
+
+// Show the login form
+export function show() {
+  formShown = true
+}
+
+// Hide the login form
+export function hide() {
+  formShown = false
+}
+
+// Toggle the form visibility
+export function toggle() {
+  formShown = !formShown
+}
+
+// Start the first-time setup process
+function startFirstTimeSetup() {
+  isFirstTimeSetup = true
+}
+
+// Generate config file content
+function generateConfigFileContent(username, password) {
+  // Simple hashing for basic security (not production-grade)
+  const hashedPassword = btoa(password) // Base64 encoding for example
+
+  return `// Password configuration file
 // Generated on ${new Date().toISOString()}
 // Replace the existing file in your /config directory
 
@@ -66,108 +66,114 @@ const passwordConfig: PasswordConfig = {
 };
 
 export default passwordConfig;
-`;
+`
+}
+
+// Download the generated config file
+function downloadConfigFile(content) {
+  const blob = new Blob([content], { type: 'text/typescript' })
+  const url = URL.createObjectURL(blob)
+
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'password.config.ts'
+  document.body.appendChild(a)
+  a.click()
+
+  // Cleanup
+  setTimeout(() => {
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }, 0)
+}
+
+// Handle first-time setup submission
+function handleSetupSubmit() {
+  // Validate inputs
+  if (!username || !password) {
+    errorMessage = 'Please enter both username and password'
+    return
   }
-  
-  // Download the generated config file
-  function downloadConfigFile(content) {
-    const blob = new Blob([content], { type: 'text/typescript' });
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'password.config.ts';
-    document.body.appendChild(a);
-    a.click();
-    
-    // Cleanup
+
+  if (password !== confirmPassword) {
+    errorMessage = 'Passwords do not match'
+    return
+  }
+
+  try {
+    // Generate config file content
+    const configContent = generateConfigFileContent(username, password)
+
+    // Prompt user to download the file
+    downloadConfigFile(configContent)
+
+    // Show success message
+    errorMessage = ''
+
+    // Store temporary authentication for this session
+    localStorage.setItem('isAuthenticated', 'true')
+    localStorage.setItem('tempUsername', username)
+
+    // Notify parent of successful setup
+    dispatch('setup', { username })
+
+    // Hide the form
+    formShown = false
+
+    // Show alert with instructions
     setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 0);
+      alert(
+        "Setup complete! Please replace the existing password.config.ts file in your project's /config directory with this new one and redeploy your site.",
+      )
+    }, 500)
+  } catch (error) {
+    console.error('Setup error:', error)
+    errorMessage =
+      'An unexpected error occurred during setup. Please try again.'
   }
-  
-  // Handle first-time setup submission
-  function handleSetupSubmit() {
-    // Validate inputs
-    if (!username || !password) {
-      errorMessage = 'Please enter both username and password';
-      return;
-    }
-    
-    if (password !== confirmPassword) {
-      errorMessage = 'Passwords do not match';
-      return;
-    }
-    
-    try {
-      // Generate config file content
-      const configContent = generateConfigFileContent(username, password);
-      
-      // Prompt user to download the file
-      downloadConfigFile(configContent);
-      
-      // Show success message
-      errorMessage = '';
-      
-      // Store temporary authentication for this session
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('tempUsername', username);
-      
-      // Notify parent of successful setup
-      dispatch('setup', { username });
-      
-      // Hide the form
-      formShown = false;
-      
-      // Show alert with instructions
-      setTimeout(() => {
-        alert('Setup complete! Please replace the existing password.config.ts file in your project\'s /config directory with this new one and redeploy your site.');
-      }, 500);
-    } catch (error) {
-      console.error('Setup error:', error);
-      errorMessage = 'An unexpected error occurred during setup. Please try again.';
-    }
+}
+
+// Handle regular login form submission
+async function handleSubmit() {
+  // Validate inputs
+  if (!username || !password) {
+    errorMessage = 'Please enter both username and password'
+    return
   }
-  
-  // Handle regular login form submission
-  async function handleSubmit() {
-    // Validate inputs
-    if (!username || !password) {
-      errorMessage = 'Please enter both username and password';
-      return;
-    }
-    
-    try {
-      isLoading = true;
-      errorMessage = '';
-      
-      // Simulate network delay for better UX
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      if (!passwordConfig.needsSetup) {
-        // Verify credentials against imported config
-        const hashedPassword = btoa(password);
-        if (username === passwordConfig.username && hashedPassword === passwordConfig.passwordHash) {
-          localStorage.setItem('isAuthenticated', 'true');
-          dispatch('login', { username });
-          formShown = false;
-          window.location.reload();
-        } else {
-          errorMessage = 'Invalid credentials';
-        }
+
+  try {
+    isLoading = true
+    errorMessage = ''
+
+    // Simulate network delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    if (!passwordConfig.needsSetup) {
+      // Verify credentials against imported config
+      const hashedPassword = btoa(password)
+      if (
+        username === passwordConfig.username &&
+        hashedPassword === passwordConfig.passwordHash
+      ) {
+        localStorage.setItem('isAuthenticated', 'true')
+        dispatch('login', { username })
+        formShown = false
+        window.location.reload()
       } else {
-        // This shouldn't happen normally since we don't show the login form
-        // when needsSetup is true, but just in case:
-        errorMessage = 'Please complete first-time setup to create your account.';
+        errorMessage = 'Invalid credentials'
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      errorMessage = 'An unexpected error occurred. Please try again.';
-    } finally {
-      isLoading = false;
+    } else {
+      // This shouldn't happen normally since we don't show the login form
+      // when needsSetup is true, but just in case:
+      errorMessage = 'Please complete first-time setup to create your account.'
     }
+  } catch (error) {
+    console.error('Login error:', error)
+    errorMessage = 'An unexpected error occurred. Please try again.'
+  } finally {
+    isLoading = false
   }
+}
 </script>
 
 {#if formShown}

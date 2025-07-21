@@ -1,32 +1,32 @@
 <script lang="ts">
-    import { fade } from 'svelte/transition';
-    
-    // Props
-    export let message = '';
-    export let type: 'success' | 'error' = 'success';
-    export let show = false;
-    export let duration = 3000; // How long to show the toast (ms)
-    
-    // Auto-close timer
-    let timer: number;
-    
-    // Watch for show changes
-    $: if (show) {
-      // Clear any existing timer
-      if (timer) clearTimeout(timer);
-      
-      // Set timer to auto-hide
-      timer = setTimeout(() => {
-        show = false;
-      }, duration);
-    }
-    
-    // Clean up on component destruction
-    import { onDestroy } from 'svelte';
-    onDestroy(() => {
-      if (timer) clearTimeout(timer);
-    });
-  </script>
+import { fade } from 'svelte/transition'
+
+// Props
+export const message = ''
+export const type: 'success' | 'error' = 'success'
+export let show = false
+export const duration = 3000 // How long to show the toast (ms)
+
+// Auto-close timer
+let timer: number
+
+// Watch for show changes
+$: if (show) {
+  // Clear any existing timer
+  if (timer) clearTimeout(timer)
+
+  // Set timer to auto-hide
+  timer = setTimeout(() => {
+    show = false
+  }, duration)
+}
+
+// Clean up on component destruction
+import { onDestroy } from 'svelte'
+onDestroy(() => {
+  if (timer) clearTimeout(timer)
+})
+</script>
   
   {#if show}
     <div 

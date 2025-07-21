@@ -1,69 +1,69 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import { processFileImport } from '../utils/fileUtils';
-  import type { FileImportResult } from '../utils/fileUtils';
-  
-  // Initialize event dispatcher
-  const dispatch = createEventDispatcher<{
-    notification: { message: string, type: 'success' | 'error' };
-    'import-success': FileImportResult;
-  }>();
-  
-  // Component state
-  let fileToImport: File | null = null;
-  let fileType = '';
-  let importStatus = '';
-  let isImporting = false;
-  
-  // Handle file selection
-  function handleFileSelect(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-    
-    fileToImport = file;
-    fileType = file.name.split('.').pop()?.toLowerCase() || '';
-    
-    importStatus = `Selected file: ${file.name}`;
+import { createEventDispatcher } from 'svelte'
+import { processFileImport } from '../utils/fileUtils'
+import type { FileImportResult } from '../utils/fileUtils'
+
+// Initialize event dispatcher
+const dispatch = createEventDispatcher<{
+  notification: { message: string; type: 'success' | 'error' }
+  'import-success': FileImportResult
+}>()
+
+// Component state
+let fileToImport: File | null = null
+let fileType = ''
+let importStatus = ''
+let isImporting = false
+
+// Handle file selection
+function handleFileSelect(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  fileToImport = file
+  fileType = file.name.split('.').pop()?.toLowerCase() || ''
+
+  importStatus = `Selected file: ${file.name}`
+}
+
+// Process import
+async function handleImport() {
+  if (!fileToImport) {
+    dispatch('notification', {
+      message: 'Please select a file to import',
+      type: 'error',
+    })
+    return
   }
-  
-  // Process import
-  async function handleImport() {
-    if (!fileToImport) {
-      dispatch('notification', { 
-        message: 'Please select a file to import', 
-        type: 'error' 
-      });
-      return;
-    }
-    
-    importStatus = 'Processing...';
-    isImporting = true;
-    
-    try {
-      const importResult = await processFileImport(fileToImport);
-      
-      // Notify parent component of successful import
-      dispatch('import-success', importResult);
-      
-      importStatus = 'Import successful! You can now edit the content before saving.';
-      dispatch('notification', { 
-        message: 'File imported successfully!', 
-        type: 'success' 
-      });
-      
-    } catch (error: any) {
-      console.error('Import error:', error);
-      importStatus = `Error: ${error.message}`;
-      
-      dispatch('notification', { 
-        message: `Failed to import file: ${error.message}`, 
-        type: 'error' 
-      });
-    } finally {
-      isImporting = false;
-    }
+
+  importStatus = 'Processing...'
+  isImporting = true
+
+  try {
+    const importResult = await processFileImport(fileToImport)
+
+    // Notify parent component of successful import
+    dispatch('import-success', importResult)
+
+    importStatus =
+      'Import successful! You can now edit the content before saving.'
+    dispatch('notification', {
+      message: 'File imported successfully!',
+      type: 'success',
+    })
+  } catch (error: any) {
+    console.error('Import error:', error)
+    importStatus = `Error: ${error.message}`
+
+    dispatch('notification', {
+      message: `Failed to import file: ${error.message}`,
+      type: 'error',
+    })
+  } finally {
+    isImporting = false
   }
+}
 </script>
 
 <div class="space-y-6">

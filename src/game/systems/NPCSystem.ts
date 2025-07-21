@@ -1,7 +1,7 @@
-import * as THREE from 'three';
-import { GameObject } from '../../engine/core/GameObject';
-import { InteractionSystem } from '../../engine/systems/InteractionSystem';
-import { EventBus } from '../../engine/core/EventBus';
+import * as THREE from 'three'
+import type { EventBus } from '../../engine/core/EventBus'
+import { GameObject } from '../../engine/core/GameObject'
+import type { InteractionSystem } from '../../engine/systems/InteractionSystem'
 
 /**
  * Manages Non-Player Characters (NPCs) in a level.
@@ -15,16 +15,16 @@ export class NPCSystem extends GameObject {
     private interactionSystem: InteractionSystem,
     private eventBus: EventBus,
     private camera: THREE.Camera,
-    private gameContainer: HTMLElement
+    private gameContainer: HTMLElement,
   ) {
-    super();
+    super()
   }
 
   public async initialize(config: any): Promise<void> {
-    this.validateNotDisposed();
-    console.log('Initializing NPCSystem with config:', config);
+    this.validateNotDisposed()
+    console.log('Initializing NPCSystem with config:', config)
     // Placeholder: Future implementation will create NPCs from config.
-    this.markInitialized();
+    this.markInitialized()
   }
 
   public update(deltaTime: number): void {
@@ -32,7 +32,7 @@ export class NPCSystem extends GameObject {
   }
 
   public dispose(): void {
-    console.log('Disposing NPCSystem');
-    this.markDisposed();
+    console.log('Disposing NPCSystem')
+    this.markDisposed()
   }
 }

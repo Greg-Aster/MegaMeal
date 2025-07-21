@@ -1,51 +1,58 @@
 ---
-import ImageWrapper from '../misc/ImageWrapper.astro'
+import { Image } from 'astro:assets'
 import { Icon } from 'astro-icon/components'
+import {
+  avatarConfig,
+  getAvatarIndexFromSlug,
+} from '../../config/avatar.config'
 import { profileConfig } from '../../config/config'
-import { avatarConfig, getAvatarIndexFromSlug } from '../../config/avatar.config'
 import { url } from '../../utils/url-utils'
-import { Image } from 'astro:assets';
+import ImageWrapper from '../misc/ImageWrapper.astro'
 
 interface Props {
-  slug?: string;           // Post slug to determine avatar
-  customAvatar?: string;   // Custom avatar path from frontmatter
-  customName?: string;     // Custom author name from frontmatter
-  customBio?: string;      // Custom author bio from frontmatter
-  isHomePage?: boolean;    // Flag to determine if we're on the home page
+  slug?: string // Post slug to determine avatar
+  customAvatar?: string // Custom avatar path from frontmatter
+  customName?: string // Custom author name from frontmatter
+  customBio?: string // Custom author bio from frontmatter
+  isHomePage?: boolean // Flag to determine if we're on the home page
 }
 
-const { 
-  slug = '', 
+const {
+  slug = '',
   customAvatar = '',
   customName = '',
   customBio = '',
-  isHomePage = false
-} = Astro.props;
+  isHomePage = false,
+} = Astro.props
 
-const useDefaultAvatars = !customAvatar;
+const useDefaultAvatars = !customAvatar
 
 // Determine which avatar to show
-let avatarToShow = avatarConfig.avatarList[0]; // Default fallback
-let activeAvatarIndex = 0;
+let avatarToShow = avatarConfig.avatarList[0] // Default fallback
+let activeAvatarIndex = 0
 
 if (isHomePage && useDefaultAvatars) {
   // On home page, use the designated home avatar
-  avatarToShow = avatarConfig.homeAvatar;
+  avatarToShow = avatarConfig.homeAvatar
 } else if (useDefaultAvatars) {
   // For posts, use the hash function to select a consistent avatar
-  activeAvatarIndex = getAvatarIndexFromSlug(slug, avatarConfig.avatarList.length);
-  avatarToShow = avatarConfig.avatarList[activeAvatarIndex];
+  activeAvatarIndex = getAvatarIndexFromSlug(
+    slug,
+    avatarConfig.avatarList.length,
+  )
+  avatarToShow = avatarConfig.avatarList[activeAvatarIndex]
 }
 
 // Use custom name/bio or fall back to config defaults
-const displayName = customName || profileConfig.name;
-const displayBio = customBio || profileConfig.bio;
+const displayName = customName || profileConfig.name
+const displayBio = customBio || profileConfig.bio
 
 // Get social links from config
-const config = profileConfig;
+const config = profileConfig
 
 // Determine if we have multiple avatars for animation
-const hasMultipleAvatars = useDefaultAvatars && avatarConfig.avatarList.length > 1 && !isHomePage;
+const hasMultipleAvatars =
+  useDefaultAvatars && avatarConfig.avatarList.length > 1 && !isHomePage
 ---
 <div class="card-base p-3">
 <a

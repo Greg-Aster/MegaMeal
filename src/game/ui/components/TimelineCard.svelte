@@ -63,83 +63,91 @@
 </style>
 
 <script lang="ts">
-  import type { TimelineEvent } from '../../../services/TimelineService.client';
-  import { createEventDispatcher } from 'svelte';
+import { createEventDispatcher } from 'svelte'
+import type { TimelineEvent } from '../../../services/TimelineService.client'
 
-  export let event: TimelineEvent;
-  export let isSelected: boolean = false;
-  export let compact: boolean = false;
-  export let position: 'top' | 'bottom' | 'left' | 'right' = 'bottom';
-  export let isMobile: boolean = false;
-  export let isVisible: boolean = true;
+export let event: TimelineEvent
+export const isSelected = false
+export const compact = false
+export const position: 'top' | 'bottom' | 'left' | 'right' = 'bottom'
+export const isMobile = false
+export const isVisible = true
 
-  const dispatch = createEventDispatcher();
+const dispatch = createEventDispatcher()
 
-  // This helper function is defined but not used in the template below.
-  // The link style is hardcoded in the <a> tag.
-  function getEraBadgeClass(era?: string): string {
-    if (!era) return "bg-[oklch(0.9_0.05_var(--hue))/0.1] dark:bg-[oklch(0.3_0.05_var(--hue))/0.2] text-[oklch(0.4_0.05_var(--hue))] dark:text-[oklch(0.9_0.05_var(--hue))]";
-    switch(era) {
-      case 'pre-spork':
-        return "bg-[oklch(0.8_0.1_var(--hue))/0.1] dark:bg-[oklch(0.8_0.1_var(--hue))/0.2] text-[oklch(0.3_0.1_var(--hue))] dark:text-[oklch(0.8_0.1_var(--hue))]";
-      case 'spork-uprising':
-        return "bg-[oklch(0.7_0.2_var(--hue))/0.1] dark:bg-[oklch(0.7_0.2_var(--hue))/0.2] text-[oklch(0.3_0.2_var(--hue))] dark:text-[oklch(0.7_0.2_var(--hue))]";
-      case 'snuggaloid':
-        return "bg-[oklch(0.6_0.3_var(--hue))/0.1] dark:bg-[oklch(0.6_0.3_var(--hue))/0.2] text-[oklch(0.3_0.3_var(--hue))] dark:text-[oklch(0.6_0.3_var(--hue))]";
-      case 'post-extinction':
-        return "bg-[oklch(0.5_0.1_var(--hue))/0.1] dark:bg-[oklch(0.5_0.1_var(--hue))/0.2] text-[oklch(0.2_0.1_var(--hue))] dark:text-[oklch(0.5_0.1_var(--hue))]";
-      default:
-        return "bg-[oklch(0.9_0.05_var(--hue))/0.1] dark:bg-[oklch(0.3_0.05_var(--hue))/0.2] text-[oklch(0.4_0.05_var(--hue))] dark:text-[oklch(0.9_0.05_var(--hue))]";
-    }
+// This helper function is defined but not used in the template below.
+// The link style is hardcoded in the <a> tag.
+function getEraBadgeClass(era?: string): string {
+  if (!era)
+    return 'bg-[oklch(0.9_0.05_var(--hue))/0.1] dark:bg-[oklch(0.3_0.05_var(--hue))/0.2] text-[oklch(0.4_0.05_var(--hue))] dark:text-[oklch(0.9_0.05_var(--hue))]'
+  switch (era) {
+    case 'pre-spork':
+      return 'bg-[oklch(0.8_0.1_var(--hue))/0.1] dark:bg-[oklch(0.8_0.1_var(--hue))/0.2] text-[oklch(0.3_0.1_var(--hue))] dark:text-[oklch(0.8_0.1_var(--hue))]'
+    case 'spork-uprising':
+      return 'bg-[oklch(0.7_0.2_var(--hue))/0.1] dark:bg-[oklch(0.7_0.2_var(--hue))/0.2] text-[oklch(0.3_0.2_var(--hue))] dark:text-[oklch(0.7_0.2_var(--hue))]'
+    case 'snuggaloid':
+      return 'bg-[oklch(0.6_0.3_var(--hue))/0.1] dark:bg-[oklch(0.6_0.3_var(--hue))/0.2] text-[oklch(0.3_0.3_var(--hue))] dark:text-[oklch(0.6_0.3_var(--hue))]'
+    case 'post-extinction':
+      return 'bg-[oklch(0.5_0.1_var(--hue))/0.1] dark:bg-[oklch(0.5_0.1_var(--hue))/0.2] text-[oklch(0.2_0.1_var(--hue))] dark:text-[oklch(0.5_0.1_var(--hue))]'
+    default:
+      return 'bg-[oklch(0.9_0.05_var(--hue))/0.1] dark:bg-[oklch(0.3_0.05_var(--hue))/0.2] text-[oklch(0.4_0.05_var(--hue))] dark:text-[oklch(0.9_0.05_var(--hue))]'
   }
+}
 
-  const cardId = `timeline-card-${event.slug}-${Math.random().toString(36).substring(2,9)}`;
+const cardId = `timeline-card-${event.slug}-${Math.random().toString(36).substring(2, 9)}`
 
-  let initialX = 0;
-  let initialY = 0;
+let initialX = 0
+let initialY = 0
 
-  if (isMobile) {
-    initialY = 20;
-  } else {
-    if (position === 'top') initialY = 10;
-    else if (position === 'bottom') initialY = -10;
-    else if (position === 'left') initialX = 10;
-    else if (position === 'right') initialX = -10;
+if (isMobile) {
+  initialY = 20
+} else {
+  if (position === 'top') initialY = 10
+  else if (position === 'bottom') initialY = -10
+  else if (position === 'left') initialX = 10
+  else if (position === 'right') initialX = -10
+}
+
+let cardElement: HTMLElement
+
+// Get positioning styles for the card
+function getPositioningStyles() {
+  if (event.screenPosition && !isMobile) {
+    return `left: ${event.screenPosition.x}px; top: ${event.screenPosition.y}px;`
   }
+  return ''
+}
 
-  let cardElement: HTMLElement;
-
-  // Get positioning styles for the card
-  function getPositioningStyles() {
-    if (event.screenPosition && !isMobile) {
-      return `left: ${event.screenPosition.x}px; top: ${event.screenPosition.y}px;`;
-    }
-    return '';
+// Fly-in animation
+function triggerAnimation() {
+  if (cardElement && isVisible) {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (cardElement && cardElement.style) {
+          cardElement.style.opacity = '1'
+          cardElement.style.transform = 'translate(0px, 0px)'
+        }
+      }, 20)
+    })
   }
+}
 
-  // Fly-in animation
-  function triggerAnimation() {
-    if (cardElement && isVisible) {
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          if (cardElement && cardElement.style) {
-            cardElement.style.opacity = '1';
-            cardElement.style.transform = 'translate(0px, 0px)';
-          }
-        }, 20);
-      });
-    }
-  }
+$: if (cardElement && isVisible) {
+  triggerAnimation()
+}
 
-  $: if (cardElement && isVisible) {
-    triggerAnimation();
-  }
-
-  function handleViewEvent(clickEvent: Event) {
-    // This is only called for level transitions now
-    clickEvent.preventDefault();
-    dispatch('levelTransition', { levelType: event.slug });
-  }
+function handleViewEvent(clickEvent: Event) {
+  // This is only called for level transitions now
+  clickEvent.preventDefault()
+  console.log('🎮 TimelineCard: Button clicked for level:', event.levelId)
+  // Dispatch with the correct levelId, but using the 'levelType' key
+  // that the parent component expects from the original implementation.
+  dispatch('levelTransition', { levelType: event.levelId })
+  console.log(
+    '🎮 TimelineCard: Dispatched levelTransition event with levelType:',
+    event.levelId,
+  )
+}
 </script>
 
 {#if isVisible}

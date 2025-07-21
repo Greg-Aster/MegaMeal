@@ -1,18 +1,20 @@
 ---
-import MainGridLayout from '../layouts/MainGridLayout.astro';
-import { Icon } from 'astro-icon/components';
-import FriendManager from '../components/svelte/friends/FriendManager.svelte';
-import { getCollection } from 'astro:content';
+import { getCollection } from 'astro:content'
+import { Icon } from 'astro-icon/components'
+import FriendManager from '../components/svelte/friends/FriendManager.svelte'
+import MainGridLayout from '../layouts/MainGridLayout.astro'
 
 // Get all saved friends from the content collection
-let savedFriends = [];
+let savedFriends = []
 try {
-  savedFriends = await getCollection('friends');
-  console.log(`Loaded ${savedFriends.length} saved friends from content collection`);
+  savedFriends = await getCollection('friends')
+  console.log(
+    `Loaded ${savedFriends.length} saved friends from content collection`,
+  )
 } catch (error) {
-  console.error('Error loading friends from content collection:', error);
+  console.error('Error loading friends from content collection:', error)
   // This might happen if the collection doesn't exist yet
-  savedFriends = [];
+  savedFriends = []
 }
 ---
 

@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { GameObject } from '../../engine/core/GameObject';
+import * as THREE from 'three'
+import { GameObject } from '../../engine/core/GameObject'
 
 /**
  * Manages furniture and large props in a level.
@@ -13,22 +13,22 @@ export class FurnitureSystem extends GameObject {
     private interactionSystem: any,
     private eventBus: any,
     private camera: THREE.Camera,
-    private gameContainer: HTMLElement
+    private gameContainer: HTMLElement,
   ) {
-    super();
+    super()
   }
 
   public async initialize(config: any): Promise<void> {
-    this.validateNotDisposed();
-    console.log('Initializing FurnitureSystem with config:', config);
+    this.validateNotDisposed()
+    console.log('Initializing FurnitureSystem with config:', config)
     // Placeholder: Future implementation will create furniture from config.
-    this.markInitialized();
+    this.markInitialized()
   }
 
   public update(deltaTime: number): void {}
 
   public dispose(): void {
-    console.log('Disposing FurnitureSystem');
-    this.markDisposed();
+    console.log('Disposing FurnitureSystem')
+    this.markDisposed()
   }
 }

@@ -1,5 +1,5 @@
 <script lang="ts">
-  export let message: string = 'Loading...';
+export const message = 'Loading...'
 </script>
 
 <div class="loading-screen">

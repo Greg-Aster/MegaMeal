@@ -1,10 +1,10 @@
 ---
 interface Props {
   // backgroundImageUrl?: string; // Prop removed, will be hardcoded
-  mascotContext?: string;
+  mascotContext?: string
 }
 // const { backgroundImageUrl = '/src/content/mascot/kitchen.png' } = Astro.props; // Prop removed
-const { mascotContext } = Astro.props;
+const { mascotContext } = Astro.props
 ---
 
 <div id="bleepy-post-widget" class="widget-container rounded-lg p-4 flex flex-row gap-4 border border-black/10 dark:border-white/20 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm" data-page-context={mascotContext || ''}>

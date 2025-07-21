@@ -1,18 +1,18 @@
 ---
-import { Icon } from 'astro-icon/components';
+import { Icon } from 'astro-icon/components'
 
 interface Props {
-  currentPage: number;    // from page.currentPage
-  totalPages: number;     // from page.lastPage
-  pageUrlPrev?: string;   // from page.url.prev, can be undefined or null
-  pageUrlNext?: string;   // from page.url.next, can be undefined or null
-  storeBaseUrl: string;   // e.g., "/store", for numbered links
-  class?: string;
-  style?: string;
+  currentPage: number // from page.currentPage
+  totalPages: number // from page.lastPage
+  pageUrlPrev?: string // from page.url.prev, can be undefined or null
+  pageUrlNext?: string // from page.url.next, can be undefined or null
+  storeBaseUrl: string // e.g., "/store", for numbered links
+  class?: string
+  style?: string
 }
 
-const { style } = Astro.props; // currentPage, totalPages, pageUrlPrev, pageUrlNext, storeBaseUrl removed
-const className = Astro.props.class;
+const { style } = Astro.props // currentPage, totalPages, pageUrlPrev, pageUrlNext, storeBaseUrl removed
+const className = Astro.props.class
 
 // --- Pagination Logic (Temporarily Disabled) ---
 // const HIDDEN = -1;

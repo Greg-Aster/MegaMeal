@@ -1,0 +1,35 @@
+{
+  "id": "jerrys_room",
+  "name": "Jerry's Room",
+  "description": "A strange, dark room with a mysterious screen.",
+  "terrain": {
+    "type": "custom_room",
+    "generator": "JerrysRoomEnvironmentSystem",
+    "parameters": {
+      "roomType": "dark_room",
+      "hasScreen": true
+    }
+  },
+  "lighting": {
+    "style": "custom",
+    "ambientIntensity": 0.1,
+    "ambientColor": "#202020"
+  },
+  "movement": {
+    "terrainFollowing": false,
+    "boundaryType": "box",
+    "boundaryConfig": { "width": 10, "height": 5, "depth": 10 },
+    "spawnPoint": [0, 1.6, 2],
+    "movementConfig": {
+      "moveSpeed": 5.0,
+      "jumpHeight": 2.0,
+      "gravity": -9.81,
+      "eyeHeight": 1.6
+    }
+  },
+  "systems": [],
+  "physics": {
+    "autoGenerate": false,
+    "gravity": [0, -9.81, 0]
+  }
+}

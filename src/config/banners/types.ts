@@ -2,23 +2,23 @@
  * ===================================================================
  * BANNER TYPES CONFIGURATION - SHARED TYPE DEFINITIONS
  * ===================================================================
- * 
+ *
  * This file contains all shared type definitions used across the banner system.
  * It centralizes type safety for all banner components and ensures consistency
  * across different banner implementations.
- * 
+ *
  * TYPES DEFINED:
  * - BannerType: Union type of all available banner types
  * - Banner data interfaces for each banner type
  * - Mixed content types for video and image support in standard banners
  * - Helper interfaces for banner determination and configuration
  * - Link preview and icon definitions
- * 
+ *
  * USAGE:
  * - Import specific types as needed: import type { BannerType, VideoBannerData } from './types'
  * - Use type guards from banner.config.ts for safe type checking
  * - Reference these types when creating new banner configurations
- * 
+ *
  * MAINTENANCE NOTES:
  * - When adding new banner types, add them to the BannerType union
  * - Create corresponding data interface for new banner types
@@ -37,7 +37,13 @@ import type { ImageMetadata } from 'astro'
  * Available banner types for the site
  * Add new banner types to this union when implementing new banner features
  */
-export type BannerType = 'standard' | 'video' | 'image' | 'timeline' | 'assistant' | 'none';
+export type BannerType =
+  | 'standard'
+  | 'video'
+  | 'image'
+  | 'timeline'
+  | 'assistant'
+  | 'none'
 
 // =====================================================================
 // MIXED CONTENT TYPE DEFINITIONS FOR STANDARD BANNERS
@@ -48,11 +54,11 @@ export type BannerType = 'standard' | 'video' | 'image' | 'timeline' | 'assistan
  * Used in standard banners that support both videos and images
  */
 export interface VideoBannerItem {
-  type: 'video';
-  src: string;                    // Path to video file (e.g., '/videos/banner1.webm')
-  fallbackImage: ImageMetadata;   // Fallback image for unsupported browsers
-  alt: string;                    // Alt text for accessibility
-  preload?: 'none' | 'metadata' | 'auto'; // Video preload behavior
+  type: 'video'
+  src: string // Path to video file (e.g., '/videos/banner1.webm')
+  fallbackImage: ImageMetadata // Fallback image for unsupported browsers
+  alt: string // Alt text for accessibility
+  preload?: 'none' | 'metadata' | 'auto' // Video preload behavior
 }
 
 /**
@@ -60,28 +66,28 @@ export interface VideoBannerItem {
  * Used in standard banners that support both videos and images
  */
 export interface ImageBannerItem {
-  type: 'image';
-  src: ImageMetadata;             // Astro image metadata
-  alt: string;                    // Alt text for accessibility
+  type: 'image'
+  src: ImageMetadata // Astro image metadata
+  alt: string // Alt text for accessibility
 }
 
 /**
  * Union type for mixed banner content
  * Allows standard banners to contain both videos and images
  */
-export type BannerItem = VideoBannerItem | ImageBannerItem;
+export type BannerItem = VideoBannerItem | ImageBannerItem
 
 /**
  * Video-specific configuration for banner playback
  * Controls how videos behave in banner cycling
  */
 export interface VideoBannerConfig {
-  autoplay: boolean;              // Auto-play videos
-  muted: boolean;                 // Mute videos (required for autoplay)
-  loop: boolean;                  // Loop individual videos
-  playsInline: boolean;           // Play inline on mobile
-  controls: boolean;              // Show video controls
-  preload: 'none' | 'metadata' | 'auto'; // Default preload behavior
+  autoplay: boolean // Auto-play videos
+  muted: boolean // Mute videos (required for autoplay)
+  loop: boolean // Loop individual videos
+  playsInline: boolean // Play inline on mobile
+  controls: boolean // Show video controls
+  preload: 'none' | 'metadata' | 'auto' // Default preload behavior
 }
 
 // =====================================================================
@@ -93,18 +99,14 @@ export interface VideoBannerConfig {
  * Uses the bannerList array and animation settings from standard banner config
  * Now supports mixed video and image content through BannerItem[]
  */
-export interface StandardBannerData {
-  // Standard banner uses the bannerList array, no additional data needed
-  // Animation settings are controlled through the main bannerConfig.animation object
-  // Mixed content support is handled through BannerItem[] in the configuration
-}
+export type StandardBannerData = {}
 
 /**
  * Video banner configuration
  * For embedding YouTube videos as banners
  */
 export interface VideoBannerData {
-  videoId: string; // YouTube video ID (the part after 'v=' in YouTube URLs)
+  videoId: string // YouTube video ID (the part after 'v=' in YouTube URLs)
 }
 
 /**
@@ -112,7 +114,7 @@ export interface VideoBannerData {
  * For static single images as banners
  */
 export interface ImageBannerData {
-  imageUrl: string; // Direct URL to the image file
+  imageUrl: string // Direct URL to the image file
 }
 
 /**
@@ -120,13 +122,13 @@ export interface ImageBannerData {
  * For interactive timeline displays
  */
 export interface TimelineBannerData {
-  category: string;      // Timeline category (required)
-  title?: string;        // Optional display title
-  startYear?: number;    // Optional start year for timeline
-  endYear?: number;      // Optional end year for timeline  
-  background?: string;   // Optional background image URL
-  compact?: boolean;     // Optional compact display mode
-  height?: string;       // Optional custom height (CSS value)
+  category: string // Timeline category (required)
+  title?: string // Optional display title
+  startYear?: number // Optional start year for timeline
+  endYear?: number // Optional end year for timeline
+  background?: string // Optional background image URL
+  compact?: boolean // Optional compact display mode
+  height?: string // Optional custom height (CSS value)
 }
 
 /**
@@ -134,22 +136,26 @@ export interface TimelineBannerData {
  * For AI assistant (Bleepy) interactive banners
  */
 export interface AssistantBannerData {
-  imageUrl?: string; // Optional background image for assistant banner
+  imageUrl?: string // Optional background image for assistant banner
 }
 
 /**
  * None banner configuration
  * Used when no banner should be displayed
  */
-export interface NoneBannerData {
-  // No additional data needed for none banner - used when no banner should be displayed
-}
+export type NoneBannerData = {}
 
 /**
  * Union type for all banner data types
  * Add new banner data interfaces to this union when creating new banner types
  */
-export type BannerData = StandardBannerData | VideoBannerData | ImageBannerData | TimelineBannerData | AssistantBannerData | NoneBannerData;
+export type BannerData =
+  | StandardBannerData
+  | VideoBannerData
+  | ImageBannerData
+  | TimelineBannerData
+  | AssistantBannerData
+  | NoneBannerData
 
 // =====================================================================
 // TYPE GUARD FUNCTIONS FOR MIXED CONTENT
@@ -160,7 +166,7 @@ export type BannerData = StandardBannerData | VideoBannerData | ImageBannerData 
  * Ensures type safety when working with mixed content
  */
 export function isVideoBannerItem(item: BannerItem): item is VideoBannerItem {
-  return item.type === 'video';
+  return item.type === 'video'
 }
 
 /**
@@ -168,7 +174,7 @@ export function isVideoBannerItem(item: BannerItem): item is VideoBannerItem {
  * Ensures type safety when working with mixed content
  */
 export function isImageBannerItem(item: BannerItem): item is ImageBannerItem {
-  return item.type === 'image';
+  return item.type === 'image'
 }
 
 // =====================================================================
@@ -180,9 +186,9 @@ export function isImageBannerItem(item: BannerItem): item is ImageBannerItem {
  * Used to show rich previews when hovering over clickable banners
  */
 export interface LinkPreviewInfo {
-  title: string;
-  description: string;
-  icon: string; // Font Awesome icon name (without fa6-solid: prefix)
+  title: string
+  description: string
+  icon: string // Font Awesome icon name (without fa6-solid: prefix)
 }
 
 /**
@@ -190,14 +196,14 @@ export interface LinkPreviewInfo {
  * Contains flags and current banner type information for layout decisions
  */
 export interface BannerDeterminationResult {
-  hasTimelineBanner: boolean;
-  hasVideoBanner: boolean;
-  hasImageBanner: boolean;
-  hasAssistantBanner: boolean;
-  hasStandardBanner: boolean;
-  hasPostBanner: boolean;
-  isStandardPage: boolean;
-  currentBannerType: BannerType;
+  hasTimelineBanner: boolean
+  hasVideoBanner: boolean
+  hasImageBanner: boolean
+  hasAssistantBanner: boolean
+  hasStandardBanner: boolean
+  hasPostBanner: boolean
+  isStandardPage: boolean
+  currentBannerType: BannerType
 }
 
 /**
@@ -205,12 +211,12 @@ export interface BannerDeterminationResult {
  * Extracted banner-related data from post frontmatter
  */
 export interface PostBannerData {
-  bannerLink: string;
-  customAvatar: string;
-  customName: string;
-  customBio: string;
-  slug: string;
-  wantsNoDefaultBanner: boolean;
+  bannerLink: string
+  customAvatar: string
+  customName: string
+  customBio: string
+  slug: string
+  wantsNoDefaultBanner: boolean
 }
 
 /**
@@ -218,15 +224,15 @@ export interface PostBannerData {
  * Controls timing and behavior of banner cycling
  */
 export interface BannerAnimationConfig {
-  enabled: boolean;
-  interval: number;            // Milliseconds between transitions
-  transitionDuration: number;  // Milliseconds for fade transition
-  direction: 'forward' | 'reverse' | 'alternate';
+  enabled: boolean
+  interval: number // Milliseconds between transitions
+  transitionDuration: number // Milliseconds for fade transition
+  direction: 'forward' | 'reverse' | 'alternate'
   // Added from standard.ts animationConfig
-  pauseOnHover?: boolean;
-  pauseOnMobileTouch?: boolean;
-  resumeAfterNavigation?: boolean;
-  smoothTransitions?: boolean;
+  pauseOnHover?: boolean
+  pauseOnMobileTouch?: boolean
+  resumeAfterNavigation?: boolean
+  smoothTransitions?: boolean
 }
 
 /**
@@ -235,38 +241,38 @@ export interface BannerAnimationConfig {
  */
 export interface BannerLayoutConfig {
   height: {
-    desktop: string;          // CSS value (e.g., '50vh')
-    mobile: string;           // CSS value (e.g., '30vh')
-  };
+    desktop: string // CSS value (e.g., '50vh')
+    mobile: string // CSS value (e.g., '30vh')
+  }
   overlap: {
-    desktop: string;          // CSS value (e.g., '3.5rem')
-    mobile: string;           // CSS value (e.g., '2rem')
-  };
-  maxWidth: number;           // Maximum width in pixels
-  noneBannerPlaceholderHeight?: string; // Placeholder height for 'none' banner
+    desktop: string // CSS value (e.g., '3.5rem')
+    mobile: string // CSS value (e.g., '2rem')
+  }
+  maxWidth: number // Maximum width in pixels
+  noneBannerPlaceholderHeight?: string // Placeholder height for 'none' banner
   mainContentOffset: {
-    desktop: string;          // Space between banner and main content on desktop
-    mobile: string;           // Space between banner and main content on mobile
-  };
+    desktop: string // Space between banner and main content on desktop
+    mobile: string // Space between banner and main content on mobile
+  }
   // Page overlap settings for different pages
   pageOverlaps: {
     home: {
-      desktop: string;
-      mobile: string;
-    };
+      desktop: string
+      mobile: string
+    }
     post: {
-      desktop: string;
-      mobile: string;
-    };
+      desktop: string
+      mobile: string
+    }
     archive: {
-      desktop: string;
-      mobile: string;
-    };
+      desktop: string
+      mobile: string
+    }
     about: {
-      desktop: string;
-      mobile: string;
-    };
-  };
+      desktop: string
+      mobile: string
+    }
+  }
 }
 
 /**
@@ -274,11 +280,11 @@ export interface BannerLayoutConfig {
  * Controls appearance and visual effects
  */
 export interface BannerVisualConfig {
-  objectFit: 'cover' | 'contain' | 'fill';
-  objectPosition: string;     // CSS position value
-  applyGradientOverlay: boolean;
-  gradientOverlay: string;    // CSS gradient value
-  borderRadius: string;       // CSS border-radius value
+  objectFit: 'cover' | 'contain' | 'fill'
+  objectPosition: string // CSS position value
+  applyGradientOverlay: boolean
+  gradientOverlay: string // CSS gradient value
+  borderRadius: string // CSS border-radius value
 }
 
 /**
@@ -286,9 +292,9 @@ export interface BannerVisualConfig {
  * Provides graceful degradation
  */
 export interface BannerFallbackConfig {
-  enabled: boolean;
-  type: 'color' | 'gradient';
-  value: string;              // CSS color or gradient
+  enabled: boolean
+  type: 'color' | 'gradient'
+  value: string // CSS color or gradient
 }
 
 /**
@@ -297,17 +303,17 @@ export interface BannerFallbackConfig {
  */
 export interface BannerNavbarConfig {
   height: {
-    desktop: string;        // CSS value (e.g., '4.5rem')
-    mobile: string;         // CSS value (e.g., '3.5rem')
-  };
+    desktop: string // CSS value (e.g., '4.5rem')
+    mobile: string // CSS value (e.g., '3.5rem')
+  }
   spacing: {
-    standard: string;         // For standard animated banner
-    timeline: string;         // For timeline banner
-    video: string;            // For video banner
-    image: string;            // For image banner
-    assistant: string;        // For assistant banner
-    none: string;             // For none banner
-  };
+    standard: string // For standard animated banner
+    timeline: string // For timeline banner
+    video: string // For video banner
+    image: string // For image banner
+    assistant: string // For assistant banner
+    none: string // For none banner
+  }
 }
 
 /**
@@ -316,13 +322,13 @@ export interface BannerNavbarConfig {
  */
 export interface BannerPanelConfig {
   top: {
-    video: string;          // CSS value for video banner type
-    image: string;          // CSS value for image banner type
-    timeline: string;       // CSS value for timeline banner type
-    standard: string;       // CSS value for standard banner type
-    assistant: string;      // CSS value for assistant banner type
-    none: string;           // CSS value for none banner type
-  };
+    video: string // CSS value for video banner type
+    image: string // CSS value for image banner type
+    timeline: string // CSS value for timeline banner type
+    standard: string // CSS value for standard banner type
+    assistant: string // CSS value for assistant banner type
+    none: string // CSS value for none banner type
+  }
 }
 
 /**
@@ -330,9 +336,9 @@ export interface BannerPanelConfig {
  * Controls background parallax scrolling effects
  */
 export interface BannerParallaxConfig {
-  enabled: boolean;
-  scrollFactor: number;     // How much the parallax moves (e.g., -0.05)
-  easingFactor: number;     // Smooth motion factor (e.g., 0.1)
+  enabled: boolean
+  scrollFactor: number // How much the parallax moves (e.g., -0.05)
+  easingFactor: number // Smooth motion factor (e.g., 0.1)
 }
 
 /**
@@ -341,13 +347,13 @@ export interface BannerParallaxConfig {
  * and consumed by bannerAnimation.ts for rendering.
  */
 export interface BannerItemPreviewDetails {
-  hasValidLink: boolean;
-  originalHref: string;       // The actual URL for navigation if a link is valid
-  urlForDisplay: string;      // Formatted URL or pathname for display in the card
-  previewTitle: string;
-  previewDescription: string;
-  previewIconSVG: string;     // The actual SVG string for the icon
-  isVideoButton: boolean;     // True if the banner item is a video
+  hasValidLink: boolean
+  originalHref: string // The actual URL for navigation if a link is valid
+  urlForDisplay: string // Formatted URL or pathname for display in the card
+  previewTitle: string
+  previewDescription: string
+  previewIconSVG: string // The actual SVG string for the icon
+  isVideoButton: boolean // True if the banner item is a video
 }
 
 /**
@@ -355,35 +361,35 @@ export interface BannerItemPreviewDetails {
  * Centralizes all banner sizing and aspect ratio settings
  */
 export interface BannerDimensionsConfig {
-  aspectRatio: string;                    // Default aspect ratio (e.g., "56.25%" for 16:9)
-  maxWidth: string;                       // Maximum banner width (e.g., "90vw")
-  padding: string;                        // Responsive padding (e.g., "2.5vw")
-  containerSpacing: string;               // Space around banner containers
-  borderRadius: string;                   // Border radius for banner corners
+  aspectRatio: string // Default aspect ratio (e.g., "56.25%" for 16:9)
+  maxWidth: string // Maximum banner width (e.g., "90vw")
+  padding: string // Responsive padding (e.g., "2.5vw")
+  containerSpacing: string // Space around banner containers
+  borderRadius: string // Border radius for banner corners
 
   // Alternative aspect ratios for different use cases
   aspectRatios: {
-    standard: string;                     // 16:9 for standard banners
-    video: string;                        // 16:9 for videos
-    image: string;                        // 16:9 for images
-    timeline: string;                     // 16:9 for timeline
-    assistant: string;                    // 16:9 for assistant
-    ultrawide: string;                    // 21:9 ultrawide option
-    square: string;                       // 1:1 square option
-    portrait: string;                     // 3:4 portrait option
-  };
+    standard: string // 16:9 for standard banners
+    video: string // 16:9 for videos
+    image: string // 16:9 for images
+    timeline: string // 16:9 for timeline
+    assistant: string // 16:9 for assistant
+    ultrawide: string // 21:9 ultrawide option
+    square: string // 1:1 square option
+    portrait: string // 3:4 portrait option
+  }
 
   // Responsive overrides
   responsive: {
     mobile: {
-      maxWidth: string;                   // Mobile max width
-      padding: string;                    // Mobile padding
-      aspectRatio?: string;               // Optional mobile aspect ratio override
-    };
+      maxWidth: string // Mobile max width
+      padding: string // Mobile padding
+      aspectRatio?: string // Optional mobile aspect ratio override
+    }
     desktop: {
-      maxWidth?: string;                  // Desktop max width override
-    };
-  };
+      maxWidth?: string // Desktop max width override
+    }
+  }
 }
 
 /**
@@ -391,12 +397,12 @@ export interface BannerDimensionsConfig {
  * Now includes the unified dimensions system
  */
 export interface BannerVisualConfig {
-  objectFit: 'cover' | 'contain' | 'fill';
-  objectPosition: string;
-  applyGradientOverlay: boolean;
-  gradientOverlay: string;
-  borderRadius: string;
-  
+  objectFit: 'cover' | 'contain' | 'fill'
+  objectPosition: string
+  applyGradientOverlay: boolean
+  gradientOverlay: string
+  borderRadius: string
+
   // ⭐ NEW: Unified dimensions configuration
-  dimensions: BannerDimensionsConfig;
+  dimensions: BannerDimensionsConfig
 }

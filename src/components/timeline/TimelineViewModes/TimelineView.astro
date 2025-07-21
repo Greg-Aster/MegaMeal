@@ -1,28 +1,28 @@
 ---
+import { defaultTimelineViewConfig } from '../../../config/timelineconfig'
+import type { TimelineEvent } from '../../../services/TimelineService.client'
+import type { EraConfigMap } from '../../../services/TimelineService.client'
 // src/components/timeline/TimelineView.astro
-import StarNode from '../StarNode.astro';
-import TimelineCard from '../TimelineCard.astro';
-import type { TimelineEvent } from '../../../services/TimelineService.client';
-import type { EraConfigMap } from '../../../services/TimelineService.client';
-import { defaultTimelineViewConfig } from '../../../config/timelineconfig';
+import StarNode from '../StarNode.astro'
+import TimelineCard from '../TimelineCard.astro'
 
 export interface Props {
-  id?: string;
-  events: TimelineEvent[];
-  background: string;
-  compact?: boolean;
-  initialScale?: number;
-  initialOffsetX?: number;
-  initialOffsetY?: number;
-  useEraColors?: boolean;
-  startYear: number;
-  endYear: number;
-  eraConfig: EraConfigMap;
-  selectedEventSlug?: string | null;
+  id?: string
+  events: TimelineEvent[]
+  background: string
+  compact?: boolean
+  initialScale?: number
+  initialOffsetX?: number
+  initialOffsetY?: number
+  useEraColors?: boolean
+  startYear: number
+  endYear: number
+  eraConfig: EraConfigMap
+  selectedEventSlug?: string | null
 }
 
 const {
-  id = "timeline-view",
+  id = 'timeline-view',
   events,
   background,
   compact = false,
@@ -34,40 +34,41 @@ const {
   endYear,
   eraConfig,
   selectedEventSlug = null,
-} = Astro.props;
+} = Astro.props
 
 // Generate event positions for server-side rendering
-const timespan = Math.max(1, endYear - startYear);
-const padding = defaultTimelineViewConfig.padding;
+const timespan = Math.max(1, endYear - startYear)
+const padding = defaultTimelineViewConfig.padding
 
 function getPositionPercentage(year: number, customPadding?: number): number {
-  if (timespan === 0) return 50;
-  const paddingToUse = customPadding !== undefined ? customPadding : padding;
-  const clampedYear = Math.max(startYear, Math.min(endYear, year));
-  const basePercentage = ((clampedYear - startYear) / timespan) * 100;
-  return paddingToUse + (basePercentage * (100 - (2 * paddingToUse)) / 100);
+  if (timespan === 0) return 50
+  const paddingToUse = customPadding !== undefined ? customPadding : padding
+  const clampedYear = Math.max(startYear, Math.min(endYear, year))
+  const basePercentage = ((clampedYear - startYear) / timespan) * 100
+  return paddingToUse + (basePercentage * (100 - 2 * paddingToUse)) / 100
 }
 
 const eventPositions = events.map((event, index) => {
-  const eventEraConfig = event.era && eraConfig[event.era] ? eraConfig[event.era] : null;
-  const customPadding = eventEraConfig?.customPadding;
-  const posPercentage = getPositionPercentage(event.year, customPadding);
-  const seed = (event.slug.charCodeAt(0) + index) * 11 + event.year % 100;
-  const randomFactor = ((seed * 9301 + 49297) % 233280) / 233280;
-  const offsetPosition = (randomFactor * 2 - 1) * 100;
-  const clampedOffset = Math.max(-100, Math.min(100, offsetPosition));
-  const floatClass = `floating-animation-${(seed % 5) + 1}`;
+  const eventEraConfig =
+    event.era && eraConfig[event.era] ? eraConfig[event.era] : null
+  const customPadding = eventEraConfig?.customPadding
+  const posPercentage = getPositionPercentage(event.year, customPadding)
+  const seed = (event.slug.charCodeAt(0) + index) * 11 + (event.year % 100)
+  const randomFactor = ((seed * 9301 + 49297) % 233280) / 233280
+  const offsetPosition = (randomFactor * 2 - 1) * 100
+  const clampedOffset = Math.max(-100, Math.min(100, offsetPosition))
+  const floatClass = `floating-animation-${(seed % 5) + 1}`
   return {
     event,
     timelinePosition: posPercentage,
     offsetPosition: clampedOffset,
     floatClass,
     shouldFloat: true,
-  };
-});
+  }
+})
 
-const containerId = `${id}-container`;
-const fadeOverlayId = `${id}-fade-overlay`;
+const containerId = `${id}-container`
+const fadeOverlayId = `${id}-fade-overlay`
 ---
 
 <div class="card-base relative overflow-hidden h-full" data-start-year={startYear} data-end-year={endYear}>

@@ -1,28 +1,40 @@
 ---
+import ThreltGame from '../threlte/Game.svelte'
 // /src/pages/game.astro
-// Main game page using the new Star Observatory game framework
-import GameLayout from '../layouts/GameLayout.astro';
-import Game from '../game/Game.svelte';
-import { getTimelineEvents } from '../services/TimelineService';
+// Main game page using the new Threlte-powered Star Observatory game framework
+import GameLayout from '../layouts/GameLayout.astro'
+import { getTimelineEvents } from '../services/TimelineService'
 
 // Get real timeline events for the game (SAME PARAMS as TimelineBanner)
 const timelineEvents = await getTimelineEvents({
-  includeBanners: true
-});
+  includeBanners: true,
+})
 
-console.log(`Game.astro: Loaded ${timelineEvents.length} timeline events`);
+console.log(`Game.astro: Loaded ${timelineEvents.length} timeline events`)
 
-// Prepare events for starmap (EXACT SAME as StarMapView.astro)
-const starmapEventsJson = JSON.stringify(timelineEvents.map(e => ({
-  slug: e.slug,
-  title: e.title,
-  year: e.year,
-  description: e.description || "No description available.",
-  era: e.era,
-  isKeyEvent: e.isKeyEvent || false,
-})));
+// Prepare events for starmap with enhanced Threlte-compatible format
+const starmapEventsJson = JSON.stringify(
+  timelineEvents.map(e => ({
+    slug: e.slug,
+    title: e.title,
+    year: e.year,
+    description: e.description || 'No description available.',
+    era: e.era,
+    isKeyEvent: e.isKeyEvent || false,
+    isLevel: e.isLevel || false,
+    levelId: e.levelId || null,
+    tags: e.tags || [],
+    category: e.category || 'general',
+    timelineYear: e.year,
+    timelineEra: e.era,
+    timelineLocation: e.location || 'Unknown',
+    uniqueId: e.slug,
+  })),
+)
 
-console.log(`Game.astro: Serialized ${JSON.parse(starmapEventsJson).length} events for client`);
+console.log(
+  `Game.astro: Serialized ${JSON.parse(starmapEventsJson).length} events for client`,
+)
 ---
 
 <GameLayout 
@@ -30,7 +42,7 @@ console.log(`Game.astro: Serialized ${JSON.parse(starmapEventsJson).length} even
   description="Explore the cosmic timeline in the Star Observatory. Navigate through space and time to uncover the secrets of the MegaMeal universe."
 >
   <!-- Star Observatory Game -->
-  <Game client:only="svelte" timelineEvents={starmapEventsJson} />
+  <ThreltGame client:only="svelte" timelineEvents={starmapEventsJson} />
 </GameLayout>
 
 <style>

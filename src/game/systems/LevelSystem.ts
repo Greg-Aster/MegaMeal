@@ -1,169 +1,173 @@
 // Enhanced Level loading and management system - Data-Driven Architecture
-import type { MovementConfig } from '../../engine/components/MovementTypes';
+import type { MovementConfig } from '../../engine/components/MovementTypes'
 
 export interface TerrainConfig {
-  type: 'procedural_island' | 'scifi_room' | 'heightmap' | 'flat';
-  generator: string; // Component class name
-  parameters: Record<string, any>; // Generator-specific config
+  type: 'procedural_island' | 'scifi_room' | 'heightmap' | 'flat'
+  generator: string // Component class name
+  parameters: Record<string, any> // Generator-specific config
 }
 
 export interface EnvironmentConfig {
-  skybox?: string;
+  skybox?: string
   lighting: {
-    type: 'atmospheric' | 'dramatic' | 'bright' | 'emergency' | 'hdri_only';
-    config: Record<string, any>;
-  };
+    type: 'atmospheric' | 'dramatic' | 'bright' | 'emergency' | 'hdri_only'
+    config: Record<string, any>
+  }
   effects?: Array<{
-    type: 'fireflies' | 'particles' | 'fog' | 'weather';
-    config: Record<string, any>;
-  }>;
-  fog?: { color: string; density: number }; // Legacy support
+    type: 'fireflies' | 'particles' | 'fog' | 'weather'
+    config: Record<string, any>
+  }>
+  fog?: { color: string; density: number } // Legacy support
 }
 
 export interface MovementSystemConfig {
-  terrainFollowing: boolean;
-  boundaryType: 'circular' | 'rectangular' | 'none';
-  boundaryConfig?: Record<string, any>;
-  spawnPoint: [number, number, number];
-  movementConfig: Partial<MovementConfig>;
+  terrainFollowing: boolean
+  boundaryType: 'circular' | 'rectangular' | 'none'
+  boundaryConfig?: Record<string, any>
+  spawnPoint: [number, number, number]
+  movementConfig: Partial<MovementConfig>
 }
 
 export interface SystemConfig {
-  type: string; // Component class name
-  config: Record<string, any>; // System-specific configuration
+  type: string // Component class name
+  config: Record<string, any> // System-specific configuration
 }
 
 export interface AssetConfig {
-  models?: Array<{ id: string; path: string; position: [number, number, number] }>;
-  textures?: Array<{ id: string; path: string }>;
-  audio?: Array<{ id: string; path: string }>;
+  models?: Array<{
+    id: string
+    path: string
+    position: [number, number, number]
+  }>
+  textures?: Array<{ id: string; path: string }>
+  audio?: Array<{ id: string; path: string }>
 }
 
 export interface PhysicsConfig {
-  autoGenerate: boolean;
-  gravity: [number, number, number];
-  customColliders?: Array<any>; // TODO: Define PhysicsColliderConfig
+  autoGenerate: boolean
+  gravity: [number, number, number]
+  customColliders?: Array<any> // TODO: Define PhysicsColliderConfig
 }
 
 export interface LevelConfig {
   // Core Identity
-  id: string;
-  name: string;
-  description?: string;
-  
+  id: string
+  name: string
+  description?: string
+
   // Environment Configuration
-  terrain: TerrainConfig;
-  environment: EnvironmentConfig;
+  terrain: TerrainConfig
+  environment: EnvironmentConfig
   water?: {
-    oceanConfig?: any;
+    oceanConfig?: any
     dynamics?: {
-      enableRising: boolean;
-      initialLevel: number;
-      targetLevel: number;
-      riseRate: number;
-    };
-  };
-  
+      enableRising: boolean
+      initialLevel: number
+      targetLevel: number
+      riseRate: number
+    }
+  }
+
   // Movement Configuration
-  movement: MovementSystemConfig;
-  
+  movement: MovementSystemConfig
+
   // Interactive Systems
-  systems: SystemConfig[];
-  
+  systems: SystemConfig[]
+
   // Asset References
-  assets?: AssetConfig;
-  
+  assets?: AssetConfig
+
   // Physics Configuration
-  physics: PhysicsConfig;
-  
+  physics: PhysicsConfig
+
   // Legacy support
-  entities?: any[];
+  entities?: any[]
 }
 
 export class LevelSystem {
-  private currentLevel: LevelConfig | null = null;
-  private initializationPromise: Promise<void>;
-  
+  private currentLevel: LevelConfig | null = null
+  private initializationPromise: Promise<void>
+
   constructor() {
-    this.initializationPromise = this.initializeDefaultComponents();
+    this.initializationPromise = this.initializeDefaultComponents()
   }
-  
+
   /**
    * Initialize the system - components are now auto-discovered
    */
   private async initializeDefaultComponents(): Promise<void> {
     // All components are automatically discovered from /src/game/systems/ directory
     // No manual registration needed - convention over configuration
-    console.log('📦 Component discovery now handled by convention - all components in /src/game/systems/');
+    console.log(
+      '📦 Component discovery now handled by convention - all components in /src/game/systems/',
+    )
   }
-  
+
   /**
    * Wait for system initialization to complete
    */
   public async waitForInitialization(): Promise<void> {
-    await this.initializationPromise;
+    await this.initializationPromise
   }
-  
+
   /**
    * Load level from configuration
    */
   public async loadLevel(config: LevelConfig): Promise<void> {
-    console.log(`🎮 Loading data-driven level: ${config.name}`);
-    
+    console.log(`🎮 Loading data-driven level: ${config.name}`)
+
     // Wait for component registration to complete
-    await this.initializationPromise;
-    
+    await this.initializationPromise
+
     // Validate configuration
     if (!this.validateConfig(config)) {
-      throw new Error(`Invalid level configuration: ${config.id}`);
+      throw new Error(`Invalid level configuration: ${config.id}`)
     }
-    
-    this.currentLevel = config;
-    console.log(`✅ Level configuration loaded: ${config.name}`);
+
+    this.currentLevel = config
+    console.log(`✅ Level configuration loaded: ${config.name}`)
   }
-  
+
   /**
    * Validate level configuration - simplified for modernized system
    */
   private validateConfig(config: LevelConfig): boolean {
     // Basic validation
     if (!config.id || !config.name) {
-      console.error('❌ Level config missing id or name');
-      return false;
+      console.error('❌ Level config missing id or name')
+      return false
     }
-    
+
     if (!config.terrain || !config.terrain.type) {
-      console.error('❌ Level config missing terrain configuration');
-      return false;
+      console.error('❌ Level config missing terrain configuration')
+      return false
     }
-    
+
     if (!config.movement || !config.movement.spawnPoint) {
-      console.error('❌ Level config missing movement configuration');
-      return false;
+      console.error('❌ Level config missing movement configuration')
+      return false
     }
-    
+
     // Components are now auto-discovered, no need to check registration
-    
-    return true;
+
+    return true
   }
-  
+
   /**
    * Get current level configuration
    */
   public getCurrentLevel(): LevelConfig | null {
-    return this.currentLevel;
+    return this.currentLevel
   }
-  
-  
+
   /**
    * Dispose of the level system
    */
   public dispose(): void {
-    this.currentLevel = null;
-    console.log('🧹 LevelSystem disposed');
+    this.currentLevel = null
+    console.log('🧹 LevelSystem disposed')
   }
 
   // All component factory methods removed - components now use standardized interface
   // and are automatically discovered from /src/game/systems/ directory
-
 }
