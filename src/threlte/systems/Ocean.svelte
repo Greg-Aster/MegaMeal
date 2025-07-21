@@ -10,6 +10,7 @@
 import { T, useTask } from '@threlte/core'
 import { onMount, onDestroy } from 'svelte'
 import * as THREE from 'three'
+import { OptimizationManager, OptimizationLevel } from '../../engine/optimization/OptimizationManager'
 
 // --- PROPS (from level.json - PHASE 2: Full data-driven configuration) ---
 export let size = { width: 2000, height: 2000 }
@@ -33,21 +34,122 @@ export let dynamics: {
   riseRate: number
 } | undefined = undefined
 
-// Mobile detection for optimization
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-  navigator.userAgent
-)
+// Device-aware optimization using OptimizationManager
+let deviceOptimizedSettings = {
+  size: size,
+  segments: segments,
+  textureSize: 1024,
+  enableReflections: enableReflection,
+  enableRefractions: enableRefraction,
+  ambientIntensity: 0.4,
+  directionalIntensity: 0.5,
+  waveLayers: 4, // Number of wave calculation layers
+  enableComplexShaders: true
+}
 
-// Apply mobile optimizations with LOD system
-$: optimizedSize = isMobile 
-  ? { width: Math.min(size.width, 2000), height: Math.min(size.height, 2000) }
-  : size
-
-$: optimizedSegments = isMobile 
-  ? { width: Math.min(segments.width, 32), height: Math.min(segments.height, 32) }
-  : enableLOD 
-    ? segments 
-    : { width: Math.min(segments.width, 64), height: Math.min(segments.height, 64) }
+// Initialize optimization settings
+if (typeof window !== 'undefined') {
+  try {
+    const optimizationManager = OptimizationManager.getInstance()
+    const qualitySettings = optimizationManager.getQualitySettings()
+    const deviceCapabilities = optimizationManager.getDeviceCapabilities()
+    const optimizationLevel = optimizationManager.getOptimizationLevel()
+    
+    // Apply quality-based ocean settings
+    switch (optimizationLevel) {
+      case OptimizationLevel.ULTRA_LOW:
+        deviceOptimizedSettings = {
+          size: { width: Math.min(size.width, 1000), height: Math.min(size.height, 1000) },
+          segments: { width: 8, height: 8 }, // Very low geometry complexity
+          textureSize: 256,
+          enableReflections: false,
+          enableRefractions: false,
+          ambientIntensity: 0.6,
+          directionalIntensity: 0.4,
+          waveLayers: 2, // Minimal wave layers
+          enableComplexShaders: false
+        }
+        break
+      case OptimizationLevel.LOW:
+        deviceOptimizedSettings = {
+          size: { width: Math.min(size.width, 1500), height: Math.min(size.height, 1500) },
+          segments: { width: 16, height: 16 }, // Low geometry complexity
+          textureSize: 256,
+          enableReflections: qualitySettings.enableReflections,
+          enableRefractions: qualitySettings.enableRefractions,
+          ambientIntensity: 0.5,
+          directionalIntensity: 0.6,
+          waveLayers: 2, // Reduced wave layers
+          enableComplexShaders: false
+        }
+        break
+      case OptimizationLevel.MEDIUM:
+        deviceOptimizedSettings = {
+          size: { width: Math.min(size.width, 2000), height: Math.min(size.height, 2000) },
+          segments: { width: 32, height: 32 }, // Medium geometry complexity
+          textureSize: 512,
+          enableReflections: qualitySettings.enableReflections,
+          enableRefractions: qualitySettings.enableRefractions,
+          ambientIntensity: 0.4,
+          directionalIntensity: 0.5,
+          waveLayers: 3, // Moderate wave layers
+          enableComplexShaders: true
+        }
+        break
+      case OptimizationLevel.HIGH:
+        deviceOptimizedSettings = {
+          size: size,
+          segments: { width: 48, height: 48 }, // Higher geometry complexity
+          textureSize: 1024,
+          enableReflections: qualitySettings.enableReflections,
+          enableRefractions: qualitySettings.enableRefractions,
+          ambientIntensity: 0.4,
+          directionalIntensity: 0.5,
+          waveLayers: 4, // Full wave layers
+          enableComplexShaders: true
+        }
+        break
+      case OptimizationLevel.ULTRA:
+        deviceOptimizedSettings = {
+          size: size,
+          segments: segments, // Full geometry complexity
+          textureSize: 2048,
+          enableReflections: qualitySettings.enableReflections,
+          enableRefractions: qualitySettings.enableRefractions,
+          ambientIntensity: 0.4,
+          directionalIntensity: 0.5,
+          waveLayers: 4, // All wave layers
+          enableComplexShaders: true
+        }
+        break
+    }
+    
+    console.log(`🌊 Ocean: Using optimization level ${optimizationLevel}:`, {
+      segments: deviceOptimizedSettings.segments,
+      textureSize: deviceOptimizedSettings.textureSize,
+      reflections: deviceOptimizedSettings.enableReflections,
+      refractions: deviceOptimizedSettings.enableRefractions,
+      waveLayers: deviceOptimizedSettings.waveLayers
+    })
+  } catch (error) {
+    console.warn('⚠️ Ocean: OptimizationManager not available, using mobile fallback:', error)
+    // Fallback to simple mobile detection if OptimizationManager fails
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    if (isMobile) {
+      deviceOptimizedSettings = {
+        size: { width: Math.min(size.width, 1500), height: Math.min(size.height, 1500) },
+        segments: { width: 16, height: 16 },
+        textureSize: 256,
+        enableReflections: false,
+        enableRefractions: false,
+        ambientIntensity: 0.5,
+        directionalIntensity: 0.6,
+        waveLayers: 2,
+        enableComplexShaders: false
+      }
+    }
+  }
+}
 
 // Ocean data
 let oceanGeometry: THREE.PlaneGeometry
@@ -61,59 +163,92 @@ let originalVertices: Float32Array
 // Reactive state for the water level
 let waterLevel = dynamics?.initialLevel ?? 0
 
-// AUTHENTIC vertex shader for wave animation (from OceanSystem.ts)
-const vertexShader = `
-  uniform float uTime;
-  uniform float uAnimationSpeed;
-  
-  varying vec2 vUv;
-  varying float vWaveHeight;
-  varying vec3 vNormal;
-  varying vec3 vWorldPosition;
-  
-  void main() {
-    vUv = uv;
-    
-    vec3 pos = position;
-    
-    // AUTHENTIC multi-layered wave system matching original OceanSystem.ts
-    float waveDisplacement = 0.0;
-    
-    // Large ocean swells (primary geometric displacement)
-    waveDisplacement += sin(pos.x * 0.001 + pos.y * 0.0005 + uTime * 0.1) * 0.15;
-    waveDisplacement += cos(pos.x * 0.0008 - pos.y * 0.001 + uTime * 0.06) * 0.08;
-    
-    // Medium waves for realistic detail
-    waveDisplacement += sin(pos.x * 0.004 + pos.y * 0.003 + uTime * 0.2) * 0.1;
-    waveDisplacement += cos(pos.x * 0.005 - pos.y * 0.004 + uTime * 0.15) * 0.05;
-    
-    // Small ripples (authentic high-frequency patterns)
-    waveDisplacement += sin(pos.x * 0.02 + pos.y * 0.015 + uTime * 0.4) * 0.02;
-    waveDisplacement += cos(pos.x * 0.025 - pos.y * 0.02 + uTime * 0.3) * 0.015;
-    
-    // Fine surface detail (authentic micro-displacement)
-    waveDisplacement += sin(pos.x * 0.05 + pos.y * 0.04 + uTime * 0.8) * 0.008;
-    waveDisplacement += cos(pos.x * 0.06 - pos.y * 0.05 + uTime * 0.6) * 0.006;
-    
-    // Apply wave displacement to Z position
-    pos.z = waveDisplacement;
-    vWaveHeight = waveDisplacement;
-    
-    // Calculate normals for lighting (approximate using wave derivatives)
-    float epsilon = 0.1;
-    float dWaveDx = (sin((pos.x + epsilon) * 0.001 + pos.y * 0.0005 + uTime * 0.1) * 0.15 - waveDisplacement) / epsilon;
-    float dWaveDy = (sin(pos.x * 0.001 + (pos.y + epsilon) * 0.0005 + uTime * 0.1) * 0.15 - waveDisplacement) / epsilon;
-    
-    vec3 tangentX = vec3(1.0, 0.0, dWaveDx);
-    vec3 tangentY = vec3(0.0, 1.0, dWaveDy);
-    vec3 calculatedNormal = normalize(cross(tangentX, tangentY));
-    
-    vNormal = normalMatrix * calculatedNormal;
-    vWorldPosition = (modelMatrix * vec4(pos, 1.0)).xyz;
-    
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+// Device-aware vertex shader with LOD-based wave complexity
+function createVertexShader(waveLayers: number, enableComplexShaders: boolean): string {
+  if (!enableComplexShaders || waveLayers <= 2) {
+    // Simplified shader for low-end devices
+    return `
+      uniform float uTime;
+      uniform float uAnimationSpeed;
+      
+      varying vec2 vUv;
+      varying float vWaveHeight;
+      varying vec3 vNormal;
+      varying vec3 vWorldPosition;
+      
+      void main() {
+        vUv = uv;
+        vec3 pos = position;
+        
+        // Simplified wave system for performance
+        float waveDisplacement = 0.0;
+        waveDisplacement += sin(pos.x * 0.001 + pos.y * 0.0005 + uTime * 0.1) * 0.1;
+        waveDisplacement += cos(pos.x * 0.004 + pos.y * 0.003 + uTime * 0.15) * 0.05;
+        
+        pos.z = waveDisplacement;
+        vWaveHeight = waveDisplacement;
+        
+        // Simplified normal calculation
+        vNormal = normal;
+        vWorldPosition = (modelMatrix * vec4(pos, 1.0)).xyz;
+        
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+      }
+    `
   }
-`
+  
+  // Full complexity shader for higher-end devices
+  return `
+    uniform float uTime;
+    uniform float uAnimationSpeed;
+    
+    varying vec2 vUv;
+    varying float vWaveHeight;
+    varying vec3 vNormal;
+    varying vec3 vWorldPosition;
+    
+    void main() {
+      vUv = uv;
+      vec3 pos = position;
+      
+      // Multi-layered wave system (${waveLayers} layers)
+      float waveDisplacement = 0.0;
+      
+      // Large ocean swells (always included)
+      waveDisplacement += sin(pos.x * 0.001 + pos.y * 0.0005 + uTime * 0.1) * 0.15;
+      waveDisplacement += cos(pos.x * 0.0008 - pos.y * 0.001 + uTime * 0.06) * 0.08;
+      
+      // Medium waves (included for waveLayers >= 3)
+      ${waveLayers >= 3 ? `
+      waveDisplacement += sin(pos.x * 0.004 + pos.y * 0.003 + uTime * 0.2) * 0.1;
+      waveDisplacement += cos(pos.x * 0.005 - pos.y * 0.004 + uTime * 0.15) * 0.05;
+      ` : ''}
+      
+      // Small ripples (included for waveLayers >= 4)
+      ${waveLayers >= 4 ? `
+      waveDisplacement += sin(pos.x * 0.02 + pos.y * 0.015 + uTime * 0.4) * 0.02;
+      waveDisplacement += cos(pos.x * 0.025 - pos.y * 0.02 + uTime * 0.3) * 0.015;
+      ` : ''}
+      
+      pos.z = waveDisplacement;
+      vWaveHeight = waveDisplacement;
+      
+      // Calculate normals for lighting
+      float epsilon = 0.1;
+      float dWaveDx = (sin((pos.x + epsilon) * 0.001 + pos.y * 0.0005 + uTime * 0.1) * 0.15 - waveDisplacement) / epsilon;
+      float dWaveDy = (sin(pos.x * 0.001 + (pos.y + epsilon) * 0.0005 + uTime * 0.1) * 0.15 - waveDisplacement) / epsilon;
+      
+      vec3 tangentX = vec3(1.0, 0.0, dWaveDx);
+      vec3 tangentY = vec3(0.0, 1.0, dWaveDy);
+      vec3 calculatedNormal = normalize(cross(tangentX, tangentY));
+      
+      vNormal = normalMatrix * calculatedNormal;
+      vWorldPosition = (modelMatrix * vec4(pos, 1.0)).xyz;
+      
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+    }
+  `
+}
 
 // AUTHENTIC fragment shader for realistic water appearance (from OceanSystem.ts)
 const fragmentShader = `
@@ -187,9 +322,9 @@ $: uniforms = {
   uOpacity: { value: opacity },
   uTexture: { value: null as THREE.CanvasTexture | null },
   uAmbientColor: { value: new THREE.Color(0x404060) },
-  uAmbientIntensity: { value: isMobile ? 0.5 : 0.4 },
+  uAmbientIntensity: { value: deviceOptimizedSettings.ambientIntensity },
   uDirectionalLightColor: { value: new THREE.Color(0x8bb3ff) },
-  uDirectionalLightIntensity: { value: isMobile ? 0.6 : 0.5 },
+  uDirectionalLightIntensity: { value: deviceOptimizedSettings.directionalIntensity },
   uDirectionalLightDirection: { value: new THREE.Vector3(100, 200, 50).normalize() }
 }
 
@@ -203,12 +338,12 @@ onDestroy(() => {
 })
 
 function createOcean() {
-  // Create geometry
+  // Create geometry with device-optimized settings
   oceanGeometry = new THREE.PlaneGeometry(
-    size.width,
-    size.height,
-    segments.width,
-    segments.height
+    deviceOptimizedSettings.size.width,
+    deviceOptimizedSettings.size.height,
+    deviceOptimizedSettings.segments.width,
+    deviceOptimizedSettings.segments.height
   )
 
   // Store original vertices for reference
@@ -217,10 +352,10 @@ function createOcean() {
   // Generate and assign the procedural texture
   uniforms.uTexture.value = createWaterTexture()
 
-  // Create shader material
+  // Create shader material with device-optimized shaders
   oceanMaterial = new THREE.ShaderMaterial({
     uniforms: uniforms,
-    vertexShader: vertexShader,
+    vertexShader: createVertexShader(deviceOptimizedSettings.waveLayers, deviceOptimizedSettings.enableComplexShaders),
     fragmentShader: fragmentShader,
     transparent: true,
     side: THREE.DoubleSide,
@@ -232,7 +367,7 @@ function createOcean() {
 
 // Procedural texture creation (migrated from OceanSystem.ts)
 function createWaterTexture(): THREE.CanvasTexture {
-  const size = isMobile ? 512 : 1024
+  const size = deviceOptimizedSettings.textureSize
   const canvas = document.createElement('canvas')
   canvas.width = size
   canvas.height = size

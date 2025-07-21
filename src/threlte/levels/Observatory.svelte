@@ -7,7 +7,6 @@ import { T, useTask } from '@threlte/core'
 import { Text } from '@threlte/extras'
 import { RigidBody, Collider } from '@threlte/rapier'
 import { onMount, createEventDispatcher } from 'svelte'
-import * as THREE from 'three'
 
 // Import the new Threlte systems
 import FireflySystem from '../systems/FireflySystem.svelte'
@@ -16,8 +15,9 @@ import StarMap from '../systems/StarMap.svelte'
 import Skybox from '../systems/Skybox.svelte'
 import StaticEnvironment from '../systems/StaticEnvironment.svelte'
 
-// Import the level configuration JSON
+// Import the level configuration JSON and optimization
 import config from '../../game/levels/observatory.json'
+import { OptimizationManager } from '../../engine/optimization/OptimizationManager'
 
 const dispatch = createEventDispatcher()
 
@@ -28,23 +28,71 @@ export let timelineEvents: any[] = []
 export let onLevelReady: (() => void) | undefined = undefined
 
 // Observatory configuration
-let observatoryModel: THREE.Group
-let isLoaded = false
+// Removed unused variables
 
-// Removed unused interactive elements
+// Device-aware optimization using OptimizationManager
+let deviceOptimizedSettings = {
+  maxLights: 20,
+  directionalLightIntensity: { main: 0.5, fill: 0.25 },
+  ambientLightIntensity: 1.0
+}
 
-// Environment loading state
-let environmentReady = false
-
-// Mobile detection for optimization
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-  navigator.userAgent
-)
+// Initialize optimization settings
+if (typeof window !== 'undefined') {
+  try {
+    const optimizationManager = OptimizationManager.getInstance()
+    const qualitySettings = optimizationManager.getQualitySettings()
+    const deviceCapabilities = optimizationManager.getDeviceCapabilities()
+    const optimizationLevel = optimizationManager.getOptimizationLevel()
+    
+    deviceOptimizedSettings = {
+      maxLights: qualitySettings.maxFireflyLights,
+      directionalLightIntensity: {
+        main: deviceCapabilities?.isMobile ? 0.6 : 0.5,
+        fill: deviceCapabilities?.isMobile ? 0.3 : 0.25
+      },
+      ambientLightIntensity: deviceCapabilities?.isMobile ? 2.0 : 1.0
+    }
+    
+    console.log(`🔭 Observatory: Using optimization level ${optimizationLevel} with ${deviceOptimizedSettings.maxLights} max firefly lights`)
+  } catch (error) {
+    console.warn('⚠️ Observatory: OptimizationManager not available, using defaults:', error)
+    // Keep default values if OptimizationManager fails
+  }
+}
 
 // Terrain height function for dynamic systems
 function getHeightAt(x: number, z: number): number {
-  // Static approximation - real terrain heights come from GLTF model
-  return -5
+  // Calculate terrain height using the same algorithm as the original Three.js system
+  const distanceFromCenter = Math.sqrt(x * x + z * z)
+  
+  // Terrain parameters from observatory.json and ObservatoryEnvironmentSystem.ts
+  const terrainParams = {
+    hillHeight: 15,
+    hillRadius: 100,
+    islandRadius: 220,
+    baseGroundLevel: -5,
+  }
+  
+  let height = 0
+  
+  // Central hill
+  if (distanceFromCenter < terrainParams.hillRadius) {
+    const heightMultiplier = Math.cos(
+      (distanceFromCenter / terrainParams.hillRadius) * Math.PI * 0.5,
+    )
+    height = terrainParams.baseGroundLevel + terrainParams.hillHeight * heightMultiplier * heightMultiplier
+  } else {
+    height = terrainParams.baseGroundLevel
+  }
+  
+  // Void drop-off
+  if (distanceFromCenter >= terrainParams.islandRadius) {
+    const voidDistance = distanceFromCenter - terrainParams.islandRadius
+    height = terrainParams.baseGroundLevel - Math.pow(voidDistance * 0.1, 2)
+  }
+  
+  return height
 }
 
 onMount(() => {
@@ -52,8 +100,7 @@ onMount(() => {
 })
 
 // Handle environment loading success
-function handleEnvironmentLoaded(event: CustomEvent) {
-  environmentReady = true
+function handleEnvironmentLoaded() {
   console.log('✅ Observatory environment loaded')
   
   if (onLevelReady) {
@@ -93,10 +140,10 @@ function handleEnvironmentError(event: CustomEvent) {
   
   <!-- Observatory-Specific Lighting (migrated from ObservatoryEnvironmentSystem.ts) -->
   <T.Group name="observatory-lighting">
-    <!-- Main directional light (matching original configuration) -->
+    <!-- Main directional light (device-optimized) -->
     <T.DirectionalLight 
       position={[100, 200, 50]} 
-      intensity={isMobile ? 0.6 : 0.5}
+      intensity={deviceOptimizedSettings.directionalLightIntensity.main}
       color="#8bb3ff"
       castShadow={true}
       shadow.mapSize.width={2048}
@@ -109,16 +156,16 @@ function handleEnvironmentError(event: CustomEvent) {
       shadow.camera.bottom={-300}
     />
     
-    <!-- Fill light for balanced illumination -->
+    <!-- Fill light for balanced illumination (device-optimized) -->
     <T.DirectionalLight 
       position={[-50, 100, -30]} 
-      intensity={isMobile ? 0.3 : 0.25}
+      intensity={deviceOptimizedSettings.directionalLightIntensity.fill}
       color="#6a7db3"
     />
     
-    <!-- Ambient light (matching original configuration) -->
+    <!-- Ambient light (device-optimized) -->
     <T.AmbientLight 
-      intensity={isMobile ? 2.0: 1.0} 
+      intensity={deviceOptimizedSettings.ambientLightIntensity} 
       color="#404060" 
     />
   </T.Group>
@@ -135,24 +182,25 @@ function handleEnvironmentError(event: CustomEvent) {
     dynamics={config.water.dynamics}
   />
   
-  <!-- Firefly System with instanced rendering and camera-aware culling -->
+  <!-- Enhanced Firefly System with OptimizationManager device-aware settings -->
   <FireflySystem 
     count={80}
-    maxLights={isMobile ? 0 : 8}
+    maxLights={deviceOptimizedSettings.maxLights}
     colors={[0x87ceeb, 0x98fb98, 0xffffe0, 0xdda0dd, 0xf0e68c, 0xffa07a, 0x20b2aa, 0x9370db]}
-    emissiveIntensity={15.0}
-    lightIntensity={15.0}
-    lightRange={80}
+    emissiveIntensity={25.0}
+    lightIntensity={25.0}
+    lightRange={120}
     cycleDuration={12.0}
-    fadeSpeed={0.3}
-    heightRange={{ min: 0.5, max: 2.5 }}
+    fadeSpeed={2.0}
+    heightRange={{ min: 2.0, max: 8.0 }}
     radius={180}
     size={0.015}
+    globalIntensityMultiplier={1.0}
     movement={{
       speed: 0.2,
       wanderSpeed: 0.004,
-      wanderRadius: 4,
-      floatAmplitude: { x: 1.5, y: 0.5, z: 1.5 },
+      wanderRadius: 10,
+      floatAmplitude: { x: 1.5, y: 0.5, z: .5 },
       lerpFactor: 1.0,
     }}
     {getHeightAt}
