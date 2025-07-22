@@ -61,6 +61,23 @@ const dispatch = createEventDispatcher()
 
 // Props
 export let timelineEvents = []
+
+// Parse timeline events if they come as JSON string from Astro
+$: parsedTimelineEvents = (() => {
+  if (typeof timelineEvents === 'string') {
+    try {
+      const parsed = JSON.parse(timelineEvents)
+      console.log(`🎮 Game.svelte: Parsed ${parsed.length} timeline events from JSON string`)
+      return parsed
+    } catch (error) {
+      console.error('Failed to parse timeline events:', error)
+      return []
+    }
+  }
+  const events = Array.isArray(timelineEvents) ? timelineEvents : []
+  console.log(`🎮 Game.svelte: Using ${events.length} timeline events directly`)
+  return events
+})()
 // Game state - fully migrated to reactive Threlte stores
 
 // UI state (local)
@@ -353,7 +370,7 @@ onDestroy(() => {
         
         <!-- Modern MEGAMEAL Architecture - Single Level -->
         <HybridObservatory 
-          {timelineEvents}
+          timelineEvents={parsedTimelineEvents}
           onLevelReady={handleLevelReady}
           on:starSelected={(e) => dispatch('starSelected', e.detail)}
           on:telescopeInteraction={(e) => dispatch('telescopeInteraction', e.detail)}
