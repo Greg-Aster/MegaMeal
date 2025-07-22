@@ -37,12 +37,8 @@ import LOD from './systems/LOD.svelte'
 // Import stores for reactive configuration
 import { postProcessingStore } from './stores/postProcessingStore'
 
-// Import level components
-import Observatory from './levels/Observatory.svelte'
-import Miranda from './levels/Miranda.svelte'
-import Restaurant from './levels/Restaurant.svelte'
-import InfiniteLibrary from './levels/InfiniteLibrary.svelte'
-import JerrysRoom from './levels/JerrysRoom.svelte'
+// Import level components - Modern Architecture Only
+import HybridObservatory from './levels/HybridObservatory.svelte'
 
 // Import UI components
 import PerformancePanel from './ui/PerformancePanel.svelte'
@@ -64,8 +60,7 @@ import {
 const dispatch = createEventDispatcher()
 
 // Props
-export const timelineEvents = '[]'
-
+export let timelineEvents = []
 // Game state - fully migrated to reactive Threlte stores
 
 // UI state (local)
@@ -74,8 +69,8 @@ let isInitialized = false
 let showDebugPanel = false
 let showPerformancePanel = false
 
-// Level loading state
-let levelReady = false
+// Level loading state - start with true to avoid loading loop
+let levelReady = true
 
 // Reactive store subscriptions (these are reactive by default)
 $: currentLevel = $currentLevelStore
@@ -85,6 +80,11 @@ $: isMobile = $isMobileStore
 $: isLoading = $isLoadingStore
 $: error = $errorStore
 $: dialogue = $dialogueStore
+
+// Debug: Log level changes
+$: if (currentLevel) {
+  console.log('🎮 Current level:', currentLevel)
+}
 
 // Backwards compatibility getters
 $: dialogueVisible = dialogue.visible
@@ -146,6 +146,11 @@ async function initializeThrelte() {
 
     // Load saved game state
     loadGameState()
+    
+    // Set default level to observatory if none is set
+    if (!$currentLevelStore || $currentLevelStore === '') {
+      gameActions.transitionToLevel('observatory')
+    }
     
     // Set up Threlte-based state management
     setupStateUpdates()
@@ -332,7 +337,7 @@ onDestroy(() => {
         -->
         {#if levelReady}
           <Player
-            position={[0, 5, 10]}
+            position={[0, 15, 10]}
             speed={5}
             jumpForce={8}
             on:lock={() => console.log('🔒 Pointer locked')}
@@ -346,41 +351,13 @@ onDestroy(() => {
           files="environment.hdr"
         />
         
-        <!-- Level Components -->
-        {#if currentLevel === 'observatory'}
-          <Observatory 
-            onLevelReady={handleLevelReady}
-            on:starSelected={(e) => dispatch('starSelected', e.detail)}
-            on:telescopeInteraction={(e) => dispatch('telescopeInteraction', e.detail)}
-          />
-        {:else if currentLevel === 'miranda'}
-          <Miranda 
-            on:debrisAnalyzed={(e) => dispatch('debrisAnalyzed', e.detail)}
-            on:terminalAccessed={(e) => dispatch('terminalAccessed', e.detail)}
-            on:analyzerActivated={(e) => dispatch('analyzerActivated', e.detail)}
-          />
-        {:else if currentLevel === 'restaurant'}
-          <Restaurant 
-            on:equipmentInteracted={(e) => dispatch('equipmentInteracted', e.detail)}
-            on:secretDiscovered={(e) => dispatch('secretDiscovered', e.detail)}
-          />
-        {:else if currentLevel === 'infinite_library'}
-          <InfiniteLibrary 
-            on:bookshelfExamined={(e) => dispatch('bookshelfExamined', e.detail)}
-            on:knowledgeAccessed={(e) => dispatch('knowledgeAccessed', e.detail)}
-            on:bookCaptured={(e) => dispatch('bookCaptured', e.detail)}
-            on:portalAccessed={(e) => dispatch('portalAccessed', e.detail)}
-            on:librarianContacted={(e) => dispatch('librarianContacted', e.detail)}
-          />
-        {:else if currentLevel === 'jerrys_room'}
-          <JerrysRoom 
-            on:screenInteracted={(e) => dispatch('screenInteracted', e.detail)}
-            on:computerAccessed={(e) => dispatch('computerAccessed', e.detail)}
-            on:chairExamined={(e) => dispatch('chairExamined', e.detail)}
-            on:deskSearched={(e) => dispatch('deskSearched', e.detail)}
-            on:doorExamined={(e) => dispatch('doorExamined', e.detail)}
-          />
-        {/if}
+        <!-- Modern MEGAMEAL Architecture - Single Level -->
+        <HybridObservatory 
+          {timelineEvents}
+          onLevelReady={handleLevelReady}
+          on:starSelected={(e) => dispatch('starSelected', e.detail)}
+          on:telescopeInteraction={(e) => dispatch('telescopeInteraction', e.detail)}
+        />
         
         <!-- Optimization System -->
         <Optimization />

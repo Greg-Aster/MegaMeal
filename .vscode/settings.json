@@ -20,5 +20,6 @@
   },
   "frontMatter.dashboard.openOnStart": false,
   "geminicodeassist.chat.automaticScrolling": false,
-  "geminicodeassist.updateChannel": "Default"
+  "geminicodeassist.updateChannel": "Default",
+  "geminicodeassist.enableTelemetry": false
 }

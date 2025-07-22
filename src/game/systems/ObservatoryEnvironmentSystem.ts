@@ -173,8 +173,8 @@ export class ObservatoryEnvironmentSystem extends BaseLevelGenerator {
   private calculateSpawnPoint(): void {
     // Calculate spawn point on the terrain
     const spawnX = 0
-    const spawnZ = 50
-    const spawnY = this.getHeightAt(spawnX, spawnZ) + 1.6 // Add player height
+    const spawnZ = 60
+    const spawnY = this.getHeightAt(spawnX, spawnZ) + 20.6 // Add player height
 
     this.calculatedSpawnPoint = new this.dependencies.THREE.Vector3(
       spawnX,

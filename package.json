@@ -42,6 +42,7 @@
     "@threlte/theatre": "^3.0.4",
     "astro": "5.1.6",
     "astro-compress": "^2.3.6",
+    "bitecs": "^0.3.40",
     "astro-icon": "^1.1.5",
     "astro-seo": "^0.8.4",
     "hastscript": "^9.0.0",

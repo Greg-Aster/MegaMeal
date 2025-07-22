@@ -39,11 +39,11 @@ export interface StarData {
 }
 
 // Core game state stores
-export const currentLevelStore: Writable<string> = writable('observatory')
+export const currentLevelStore: Writable<string> = writable('hybrid-observatory')
 export const selectedStarStore: Writable<StarData | null> = writable(null)
 export const playerStateStore: Writable<PlayerState> = writable({
-  position: [0, 5, 10],
-  rotation: [0, 0, 0],
+  position: [50, 20, 10], // Temporarily set Y to 30 to spawn above ground
+  rotation: [0, 0, 0], // Keep rotation as is
   health: 100,
   energy: 100,
   inventory: []
@@ -53,7 +53,7 @@ export const gameSessionStore: Writable<GameSession> = writable({
   totalPlayTime: 0,
   timeExplored: 0,
   interactionsCount: 0,
-  levelsVisited: ['observatory']
+  levelsVisited: ['hybrid-observatory']
 })
 
 // UI state stores

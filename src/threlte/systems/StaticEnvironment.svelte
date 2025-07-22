@@ -63,6 +63,15 @@
             child.receiveShadow = true
             child.castShadow = true
             
+            // Enable fog on all materials
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach((mat: any) => { mat.fog = true })
+              } else {
+                child.material.fog = true
+              }
+            }
+            
             // Stop animations for static environment
             if (child.animations) {
               child.animations = []

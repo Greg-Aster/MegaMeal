@@ -86,6 +86,9 @@ importers:
       astro-seo:
         specifier: ^0.8.4
         version: 0.8.4(typescript@5.7.3)
+      bitecs:
+        specifier: ^0.3.40
+        version: 0.3.40
       hastscript:
         specifier: ^9.0.0
         version: 9.0.0
@@ -2172,6 +2175,9 @@ packages:
   binary-extensions@2.3.0:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
     engines: {node: '>=8'}
+
+  bitecs@0.3.40:
+    resolution: {integrity: sha512-wAylY4pNfX8IeIH5phtwt1lUNtHKrkoSNrArI7Ris2Y4nEQWFIVvXdgAuqprEg9bq8Wolmlj0gVfeG6MFmtI2Q==}
 
   boolbase@1.0.0:
     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
@@ -7961,6 +7967,8 @@ snapshots:
       require-from-string: 2.0.2
 
   binary-extensions@2.3.0: {}
+
+  bitecs@0.3.40: {}
 
   boolbase@1.0.0: {}
 
