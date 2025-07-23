@@ -79,6 +79,7 @@
   const dragThreshold = 5 // pixels
   const tapTimeThreshold = 500 // milliseconds
   const touchSensitivity = 0.0012 // Mobile sensitivity
+  let lookTouchIdentifier: number | null = null;
 
   // Handle keyboard input (matching original UniversalInputManager)
   function handleKeydown(event: KeyboardEvent) {
@@ -130,96 +131,79 @@
 
   // Touch event handlers (ported from UniversalInputManager)
   function handleTouchStart(event: TouchEvent) {
-    if (event.touches.length === 1) {
-      const touch = event.touches[0]
-      
-      // Check if touch is on mobile controls area (bottom 200px)
-      const touchY = touch.clientY
-      const isOnMobileControls = touchY > window.innerHeight - 200
-      
+    // Loop through all new touches that just started
+    for (const touch of Array.from(event.changedTouches)) {
+      // Ignore any touch that starts in the mobile controls area
+      const isOnMobileControls = touch.clientY > window.innerHeight - 200;
       if (isOnMobileControls) {
-        return
+        continue; // Skip to the next touch
       }
-      
-      isDragging = false
-      touchStartTime = Date.now()
-      touchStartPos.x = touch.clientX
-      touchStartPos.y = touch.clientY
-      
+
+      // If no finger is currently controlling the look, assign this new one
+      if (lookTouchIdentifier === null) {
+        lookTouchIdentifier = touch.identifier;
+        lastMouseX = touch.clientX;
+        lastMouseY = touch.clientY;
+        touchStartPos.x = touch.clientX;
+        touchStartPos.y = touch.clientY;
+        touchStartTime = Date.now();
+      }
     }
   }
 
   function handleTouchMove(event: TouchEvent) {
-    if (event.touches.length === 1 && camera) {
-      const touch = event.touches[0]
-      
-      // Check if touch is on mobile controls area
-      const touchY = touch.clientY
-      const isOnMobileControls = touchY > window.innerHeight - 200
-      
-      if (isOnMobileControls) return
-      
-      const distanceMoved = Math.sqrt(
-        Math.pow(touch.clientX - touchStartPos.x, 2) +
-        Math.pow(touch.clientY - touchStartPos.y, 2)
-      )
-      
-      if (distanceMoved > dragThreshold) {
-        isDragging = true
-        
-        // Calculate deltas with mobile sensitivity (inverted for intuitive controls)
-        const rawDeltaX = touch.clientX - touchStartPos.x
-        const rawDeltaY = touch.clientY - touchStartPos.y
-        const deltaX = -rawDeltaX * touchSensitivity
-        const deltaY = -rawDeltaY * touchSensitivity
-        
-        // Apply horizontal rotation to physics body
-        bodyRotationY -= deltaX
-        
-        // Apply vertical rotation to camera only  
-        cameraRotationX -= deltaY
-        
-        // Limit vertical camera rotation
-        cameraRotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraRotationX))
-        
-        // Update RigidBody rotation (Y-axis only)
-        if (rigidBody) {
-          const bodyQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), bodyRotationY)
-          rigidBody.setRotation({ x: bodyQuaternion.x, y: bodyQuaternion.y, z: bodyQuaternion.z, w: bodyQuaternion.w }, true)
-        }
-        
-        // Update camera rotation directly (pitch only)
-        camera.rotation.x = cameraRotationX
-        
-        // Update touch start position for next delta
-        touchStartPos.x = touch.clientX
-        touchStartPos.y = touch.clientY
-      }
-    }
+    // If no finger is assigned to look, do nothing
+    if (lookTouchIdentifier === null || !rigidBody || !camera) return;
+
+    // Find the finger that is moving and matches our look finger
+    const lookTouch = Array.from(event.changedTouches).find(
+      (t) => t.identifier === lookTouchIdentifier
+    );
+
+    // If our look finger isn't in the list of moved fingers, do nothing
+    if (!lookTouch) return;
+
+    const deltaX = lookTouch.clientX - lastMouseX;
+    const deltaY = lookTouch.clientY - lastMouseY;
+
+    // Apply rotation using mobile sensitivity
+    bodyRotationY -= deltaX * touchSensitivity;
+    cameraRotationX -= deltaY * touchSensitivity;
+    cameraRotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraRotationX));
+
+    // Update RigidBody rotation (Y-axis only)
+    const bodyQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), bodyRotationY)
+    rigidBody.setRotation({ x: bodyQuaternion.x, y: bodyQuaternion.y, z: bodyQuaternion.z, w: bodyQuaternion.w }, true)
+    
+    // Update camera rotation directly (pitch only)
+    camera.rotation.x = cameraRotationX
+
+    // Update last positions for the next movement calculation
+    lastMouseX = lookTouch.clientX;
+    lastMouseY = lookTouch.clientY;
   }
 
   function handleTouchEnd(event: TouchEvent) {
-    if (event.changedTouches.length === 1) {
-      const touch = event.changedTouches[0]
-      
-      // Check if touch is on mobile controls area
-      const touchY = touch.clientY
-      const isOnMobileControls = touchY > window.innerHeight - 200
-      
-      if (isOnMobileControls) return
-      
+    // Check if the finger that was lifted is the one we were using to look
+    const touchEnded = Array.from(event.changedTouches).find(
+      (t) => t.identifier === lookTouchIdentifier
+    );
+
+    if (touchEnded) {
+      // Check if this was a tap (short touch without movement)
       const distanceMoved = Math.sqrt(
-        Math.pow(touch.clientX - touchStartPos.x, 2) +
-        Math.pow(touch.clientY - touchStartPos.y, 2)
-      )
-      const duration = Date.now() - touchStartTime
+        Math.pow(touchEnded.clientX - touchStartPos.x, 2) +
+        Math.pow(touchEnded.clientY - touchStartPos.y, 2)
+      );
+      const duration = Date.now() - touchStartTime;
       
       // Handle tap (short touch without movement) - for object interaction
       if (duration < tapTimeThreshold && distanceMoved < dragThreshold) {
-        dispatch('interaction', { x: touch.clientX, y: touch.clientY, type: 'tap' })
+        dispatch('interaction', { x: touchEnded.clientX, y: touchEnded.clientY, type: 'tap' });
       }
       
-      isDragging = false
+      // Release the look control so another finger can take over
+      lookTouchIdentifier = null;
     }
   }
 
