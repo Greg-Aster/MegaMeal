@@ -2,7 +2,7 @@
 <script lang="ts">
 import { createEventDispatcher, onMount } from 'svelte'
 
-export const visible = false
+export let visible = false
 
 onMount(() => {
   console.log('📱 MobileControls mounted, visible:', visible)
@@ -105,9 +105,8 @@ function handleActionPress(action: string) {
       <button 
         class="action-btn jump-btn"
         on:touchstart={() => handleActionPress('jump')}
-        on:touchend={() => handleActionPress('jump')}
       >
-        ↑
+        JUMP
       </button>
       <button 
         class="action-btn interact-btn"
@@ -215,7 +214,8 @@ function handleActionPress(action: string) {
   .jump-btn {
     border-color: rgba(255, 255, 0, 0.6);
     background: rgba(255, 255, 0, 0.2);
-    font-size: 24px;
+    font-size: 12px;
+    font-weight: bold;
   }
   
   .jump-btn:active {

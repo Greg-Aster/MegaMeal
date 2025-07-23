@@ -41,6 +41,9 @@
   export let timelineEventsJson: string = '[]' // JSON string of timeline events for star system
   export let onLevelReady: (() => void) | undefined = undefined
   export let position: [number, number, number] = [0, 15, 10] // Default position
+  
+  // Player spawn point for this level
+  export let playerSpawnPoint: [number, number, number] = [0, 15, -50] // On the central hill above ground
 
   // Component references for external control
   let hybridFireflyComponent: HybridFireflyComponent
@@ -133,9 +136,20 @@
 
   function handleEnvironmentLoaded() {
     console.log('✅ Hybrid Observatory environment loaded')
-    if (onLevelReady) {
-      onLevelReady()
-    }
+    
+    // Wait a moment for physics to settle, then notify ready
+    setTimeout(() => {
+      console.log('🎯 Ground should be ready, dispatching level ready')
+      if (onLevelReady) {
+        onLevelReady()
+      }
+      
+      // Also dispatch spawn point to parent
+      dispatch('playerSpawnReady', {
+        spawnPoint: playerSpawnPoint,
+        levelName: 'Observatory'
+      })
+    }, 1500) // Give physics time to load
   }
 
   function handleEnvironmentError(event: CustomEvent) {

@@ -39,7 +39,7 @@
   // Player state
   let rigidBody: RigidBodyApi
   let camera: THREE.PerspectiveCamera
-  let fov = 75
+  let fov = 60
   let near = 0.1
   let far = 2000
 
@@ -253,20 +253,36 @@
 
   // No special click handler needed - using mousedown/mouseup instead
 
+  // Mobile movement state
+  let mobileMovement = { x: 0, z: 0 }
+  let mobileJumpPressed = false
+  
+  // Functions to be called by Game.svelte when mobile events occur
+  export function handleMobileMovement(movement: { x: number, z: number }) {
+    mobileMovement = movement
+  }
+  
+  export function handleMobileAction(action: string) {
+    if (action === 'jump') {
+      mobileJumpPressed = true
+    }
+  }
+
   // Movement calculation (matching original UniversalInputManager logic)
   function updateMovementFromKeys(): { x: number, z: number } {
     let x = 0, z = 0
 
-    // WASD movement (matching original)
-    if (keyStates['KeyW'] || keyStates['ArrowUp']) z -= 1
-    if (keyStates['KeyS'] || keyStates['ArrowDown']) z += 1
-    if (keyStates['KeyA'] || keyStates['ArrowLeft']) x -= 1
-    if (keyStates['KeyD'] || keyStates['ArrowRight']) x += 1
-
-    // Debug logging (can be removed once working)
-    // if (x !== 0 || z !== 0) {
-    //   console.log('🎮 Movement detected:', { x, z })
-    // }
+    // Desktop: WASD movement (matching original)
+    if (!isMobile) {
+      if (keyStates['KeyW'] || keyStates['ArrowUp']) z -= 1
+      if (keyStates['KeyS'] || keyStates['ArrowDown']) z += 1
+      if (keyStates['KeyA'] || keyStates['ArrowLeft']) x -= 1
+      if (keyStates['KeyD'] || keyStates['ArrowRight']) x += 1
+    } else {
+      // Mobile: Use joystick input
+      x = mobileMovement.x
+      z = mobileMovement.z
+    }
 
     // Normalize diagonal movement (matching original)
     if (x !== 0 && z !== 0) {
@@ -348,54 +364,43 @@
       lastGroundTime = currentTime // Update when we touch ground
     }
     
-    // Handle jumping - only jump if recently grounded AND space was just pressed (prevents flying)
+    // Handle jumping - desktop (spacebar) or mobile (jump button)
     const canJump = isGrounded || (currentTime - lastGroundTime < coyoteTime)
-    if (jumpKeyPressed && canJump) {
+    const wantsToJump = jumpKeyPressed || mobileJumpPressed
+    
+    if (wantsToJump && canJump) {
       velocity.y = jumpForce
       isGrounded = false // Immediately set as not grounded when jumping
-      jumpKeyPressed = false // Reset jump key flag - prevents held key from repeating jump
+      jumpKeyPressed = false // Reset jump flags
+      mobileJumpPressed = false
     } else if (!canJump) {
-      jumpKeyPressed = false // Reset jump key if we can't jump (prevents queued jumps)
+      jumpKeyPressed = false // Reset jump keys if we can't jump (prevents queued jumps)
+      mobileJumpPressed = false
     }
 
     // Apply the new velocity to the physics body
     rigidBody.setLinvel(velocity, true)
   })
 
-  // Ground detection for spawn positioning  
-  function findGroundHeightAt(x: number, z: number): number {
-    // Use the provided position Y value directly instead of adding offset
-    return position[1] // Trust the spawn position provided
+  // Simple spawn function for Game.svelte to use
+  export function spawnAt(x: number, y: number, z: number) {
+    if (!rigidBody) {
+      console.warn('⚠️ Cannot spawn player - rigid body not ready')
+      return
+    }
+    
+    console.log(`🚀 Spawning player at: [${x}, ${y}, ${z}]`)
+    rigidBody.setTranslation({ x, y, z }, true)
+    rigidBody.setLinvel({ x: 0, y: 0, z: 0 }, true) // Stop any movement
+    
+    // Update position prop for consistency
+    position = [x, y, z]
   }
 
-  // Player initialization with automatic ground detection
+  // Player initialization - waits for level to provide spawn point
   onMount(() => {
-    console.log('🎮 Player ready')
-    
-    // Set initial position with automatic ground detection (preserves level flexibility)
-    setTimeout(() => {
-      if (rigidBody) {
-        // Use original spawn X,Z coordinates from level config (maintains flexibility)
-        const spawnX = position[0] || 0
-        const spawnZ = position[2] || 0
-        
-        // Find safe spawn height automatically at these coordinates
-        const safeY = findGroundHeightAt(spawnX, spawnZ)
-        
-        // Safety check - use provided position values
-        const finalPosition = {
-          x: spawnX,
-          y: safeY,
-          z: spawnZ
-        }
-        
-        console.log(`🚀 Player spawned at: [${finalPosition.x}, ${finalPosition.y}, ${finalPosition.z}]`)
-        rigidBody.setTranslation(finalPosition, true)
-        
-        // Update position prop for consistency
-        position = [finalPosition.x, finalPosition.y, finalPosition.z]
-      }
-    }, 500)
+    console.log('🎮 Player ready - waiting for level to provide spawn point')
+    // Player will be spawned by Game.svelte when level provides spawn coordinates
   })
 </script>
 
