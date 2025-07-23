@@ -44,7 +44,7 @@
   export let interactionSystem: any = null // Centralized interaction system from Game
   
   // Player spawn point for this level
-  export let playerSpawnPoint: [number, number, number] = [0, 15, -50] // On the central hill above ground
+  export let playerSpawnPoint: [number, number, number] = [0, 35, -50] // On the central hill above ground
 
   // Component references for external control
   let hybridFireflyComponent: HybridFireflyComponent
