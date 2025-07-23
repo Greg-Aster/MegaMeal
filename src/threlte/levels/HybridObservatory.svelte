@@ -281,7 +281,7 @@
       coreOpacity={1.0}
       movement={{
         speed: 0.05,
-        wanderSpeed: 0.004,
+        wanderSpeed: 0.002,
         wanderRadius: 4,
         floatAmplitude: { x: 1.5, y: 0.5, z: 1.5 },
         lerpFactor: 1.0

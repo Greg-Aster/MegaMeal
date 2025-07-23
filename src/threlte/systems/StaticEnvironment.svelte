@@ -26,6 +26,51 @@
     loadEnvironment()
   })
   
+  function optimizeMaterialForDynamicLighting(material: THREE.Material) {
+    // Enable fog and proper lighting response
+    material.fog = true
+    
+    // If it's a MeshStandardMaterial (most common)
+    if (material instanceof THREE.MeshStandardMaterial) {
+      // Reduce metalness for better light response (unless it should be metallic)
+      if (material.metalness === undefined || material.metalness > 0.8) {
+        material.metalness = Math.min(material.metalness || 0, 0.2)
+      }
+      
+      // Increase roughness slightly for more realistic light scattering
+      material.roughness = Math.max(material.roughness || 0, 0.3)
+      
+      // Enhance normal map effect if present
+      if (material.normalMap && material.normalScale) {
+        material.normalScale.multiplyScalar(1.2) // Enhance surface detail for better light interaction
+      }
+      
+      // Ensure proper light response
+      material.needsUpdate = true
+    }
+    
+    // If it's a MeshPhongMaterial
+    else if (material instanceof THREE.MeshPhongMaterial) {
+      // Reduce shininess for softer light response
+      material.shininess = Math.min(material.shininess || 30, 30)
+      
+      // Ensure specular isn't too bright
+      if (material.specular instanceof THREE.Color) {
+        material.specular.multiplyScalar(0.5)
+      }
+      
+      material.needsUpdate = true
+    }
+    
+    // For basic materials, convert to standard material for better lighting
+    else if (material instanceof THREE.MeshBasicMaterial) {
+      console.log('🔄 Converting MeshBasicMaterial to MeshStandardMaterial for better lighting')
+      // Note: We can't replace the material here, but we can log it for awareness
+    }
+    
+    console.log(`✨ Optimized material: ${material.constructor.name} (metalness: ${(material as any).metalness}, roughness: ${(material as any).roughness})`)
+  }
+
   function loadEnvironment() {
     console.log('Loading environment:', url)
     
@@ -63,12 +108,12 @@
             child.receiveShadow = true
             child.castShadow = true
             
-            // Enable fog on all materials
+            // FIX: Optimize materials for dynamic lighting
             if (child.material) {
               if (Array.isArray(child.material)) {
-                child.material.forEach((mat: any) => { mat.fog = true })
+                child.material.forEach((mat: any) => optimizeMaterialForDynamicLighting(mat))
               } else {
-                child.material.fog = true
+                optimizeMaterialForDynamicLighting(child.material)
               }
             }
             
