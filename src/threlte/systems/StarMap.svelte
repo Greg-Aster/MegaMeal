@@ -42,7 +42,7 @@
   export let timelineEvents: any[] = []
   export let starCount = 41
   export let heightRange = { min: 50, max: 200 }
-  export let radius = 400
+  export let radius = 995  // Use original skybox distance
 
   // --- CONFIG ---
   const starColors = ['#ffffff', '#ffddaa', '#aaddff', '#ffaadd', '#aaffaa', '#ffaaff', '#aaffff']
@@ -53,6 +53,7 @@
   // --- STATE ---
   let stars: StarData[] = []
   let starSprites: THREE.Sprite[] = []
+  let constellationLines: THREE.LineSegments[] = []
   let starGroup: THREE.Group
   let hoveredStarIndex: number | null = null
   
@@ -121,12 +122,14 @@
   function setupStarSprites() {
     console.log(`🌟 StarMap: Creating authentic star sprites for ${stars.length} stars`)
     
-    // Clear existing sprites
+    // Clear existing sprites and constellation lines
     starSprites.forEach(sprite => starGroup.remove(sprite))
+    constellationLines.forEach(line => starGroup.remove(line))
     starSprites = []
+    constellationLines = []
 
     stars.forEach((star, i) => {
-      // Create authentic star sprite with custom texture
+      // Create authentic star sprite with enhanced texture
       const sprite = createStarSprite(star, i)
       starSprites.push(sprite)
       starGroup.add(sprite)
@@ -143,12 +146,18 @@
       }
     })
     
-    console.log(`✅ StarMap: Created ${starSprites.length} authentic star sprites`)
+    // Create constellation lines like original system
+    createConstellationLines()
+    
+    console.log(`✅ StarMap: Created ${starSprites.length} authentic star sprites with constellation lines`)
   }
 
   function createStarSprite(star: StarData, index: number): THREE.Sprite {
-    // Create authentic star texture like original system
-    const texture = createStarTexture(star)
+    // Use original enhanced star texture generation
+    const starType = getStarType(star.uniqueId, star.isKeyEvent)
+    const canvas = createEnhancedStarTexture(star.color, starType, star.isKeyEvent)
+    const texture = new THREE.CanvasTexture(canvas)
+    texture.needsUpdate = true
     
     const material = new THREE.SpriteMaterial({
       map: texture,
@@ -160,7 +169,7 @@
 
     const sprite = new THREE.Sprite(material)
     sprite.position.set(...star.position)
-    sprite.scale.setScalar(star.size * 32) // Scale for skybox distance
+    sprite.scale.setScalar(star.size * 20) // Scale for skybox distance 995
     
     // Store star data for interaction
     ;(sprite as any).starData = star
@@ -169,75 +178,68 @@
     return sprite
   }
 
-  function createStarTexture(star: StarData): THREE.Texture {
-    const size = 128
-    const canvas = document.createElement('canvas')
-    canvas.width = canvas.height = size
-    const ctx = canvas.getContext('2d')!
+  // Create constellation lines like original system
+  function createConstellationLines() {
+    const eraGroups = groupStarsByEra()
     
-    const center = size / 2
-    const baseRadius = star.isKeyEvent ? size * 0.15 : size * 0.1
-    
-    // Clear canvas
-    ctx.clearRect(0, 0, size, size)
-    
-    // Create multiple glow layers like original system
-    const glowLayers = [
-      { radius: baseRadius * 6, opacity: 0.05, blur: 20 },
-      { radius: baseRadius * 4, opacity: 0.1, blur: 12 },  
-      { radius: baseRadius * 2.5, opacity: 0.2, blur: 6 },
-      { radius: baseRadius * 1.5, opacity: 0.4, blur: 2 }
-    ]
-
-    glowLayers.forEach(layer => {
-      ctx.save()
-      if (layer.blur > 0) {
-        ctx.filter = `blur(${layer.blur}px)`
+    Object.entries(eraGroups).forEach(([era, eraStars]) => {
+      if (eraStars.length < 2) return
+      
+      const config = constellationConfig[era]
+      if (!config) return
+      
+      const pattern = constellationPatterns[config.pattern]
+      const connections = connectionPatterns[config.pattern]
+      
+      if (!connections || !pattern) return
+      
+      // Create line geometry for this era's constellation
+      const points: THREE.Vector3[] = []
+      const colors: number[] = []
+      const eraColor = new THREE.Color(eraColorMap[era] || '#ffffff')
+      
+      connections.forEach(([startIdx, endIdx]) => {
+        if (startIdx < eraStars.length && endIdx < eraStars.length) {
+          const startStar = eraStars[startIdx]
+          const endStar = eraStars[endIdx]
+          
+          points.push(new THREE.Vector3(...startStar.position))
+          points.push(new THREE.Vector3(...endStar.position))
+          
+          // Add colors for each vertex
+          colors.push(eraColor.r, eraColor.g, eraColor.b)
+          colors.push(eraColor.r, eraColor.g, eraColor.b)
+        }
+      })
+      
+      if (points.length > 0) {
+        const geometry = new THREE.BufferGeometry().setFromPoints(points)
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+        
+        const material = new THREE.LineBasicMaterial({
+          vertexColors: true,
+          transparent: true,
+          opacity: 0.3,
+          blending: THREE.AdditiveBlending
+        })
+        
+        const lines = new THREE.LineSegments(geometry, material)
+        constellationLines.push(lines)
+        starGroup.add(lines)
       }
-
-      const gradient = ctx.createRadialGradient(center, center, 0, center, center, layer.radius)
-      const alpha = Math.floor(layer.opacity * 255).toString(16).padStart(2, '0')
-      gradient.addColorStop(0, star.color + alpha)
-      gradient.addColorStop(0.5, star.color + Math.floor(layer.opacity * 128).toString(16).padStart(2, '0'))
-      gradient.addColorStop(1, star.color + '00')
-
-      ctx.fillStyle = gradient
-      ctx.beginPath()
-      ctx.arc(center, center, layer.radius, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.restore()
     })
-
-    // Create 4-pointed star rays (classic starnode appearance)
-    ctx.save()
-    ctx.strokeStyle = star.color + 'DD'
-    ctx.lineWidth = 2
-    ctx.lineCap = 'round'
+  }
+  
+  function groupStarsByEra(): { [era: string]: StarData[] } {
+    const groups: { [era: string]: StarData[] } = {}
     
-    const rayLength = baseRadius * 3
-    // Horizontal ray
-    ctx.beginPath()
-    ctx.moveTo(center - rayLength, center)
-    ctx.lineTo(center + rayLength, center)
-    ctx.stroke()
+    stars.forEach(star => {
+      const era = star.era || 'unknown'
+      if (!groups[era]) groups[era] = []
+      groups[era].push(star)
+    })
     
-    // Vertical ray  
-    ctx.beginPath()
-    ctx.moveTo(center, center - rayLength)
-    ctx.lineTo(center, center + rayLength)
-    ctx.stroke()
-    
-    // Bright core
-    ctx.fillStyle = star.color
-    ctx.beginPath()
-    ctx.arc(center, center, baseRadius, 0, Math.PI * 2)
-    ctx.fill()
-    
-    ctx.restore()
-
-    const texture = new THREE.CanvasTexture(canvas)
-    texture.needsUpdate = true
-    return texture
+    return groups
   }
   
   // --- ANIMATION ---
@@ -276,6 +278,15 @@
       sprite.scale.setScalar(scale)
       if (sprite.material) {
         ;(sprite.material as THREE.SpriteMaterial).opacity = Math.min(1, opacity)
+      }
+    })
+    
+    // Animate constellation lines opacity
+    constellationLines.forEach(line => {
+      if (line.material) {
+        const baseMaterial = line.material as THREE.LineBasicMaterial
+        const time = performance.now() * 0.0005
+        baseMaterial.opacity = 0.2 + Math.sin(time) * 0.1
       }
     })
   })
@@ -494,78 +505,12 @@
     )
   }
 
-  // --- CONSTELLATION-BASED STAR POSITIONING (Modernized from original) ---
-  
-  // Constellation configurations from original system
-  const CONSTELLATION_CONFIG = {
-    'ancient-epoch': { centerAzimuth: 0, centerElevation: 45, spread: 40, pattern: 'ancient_wisdom' },
-    'awakening-era': { centerAzimuth: 60, centerElevation: 50, spread: 35, pattern: 'rising_dawn' },
-    'golden-age': { centerAzimuth: 120, centerElevation: 55, spread: 45, pattern: 'crown' },
-    'conflict-epoch': { centerAzimuth: 180, centerElevation: 40, spread: 40, pattern: 'crossed_swords' },
-    'singularity-conflict': { centerAzimuth: 240, centerElevation: 45, spread: 35, pattern: 'supernova' },
-    'transcendent-age': { centerAzimuth: 300, centerElevation: 60, spread: 40, pattern: 'ascension' },
-    'final-epoch': { centerAzimuth: 340, centerElevation: 65, spread: 30, pattern: 'omega' },
-    'unknown': { centerAzimuth: 30, centerElevation: 35, spread: 25, pattern: 'scattered' }
-  }
-
-  // Constellation patterns for star arrangement within each era
-  const CONSTELLATION_PATTERNS = {
-    ancient_wisdom: [
-      { azOffset: 0, elOffset: 0 }, { azOffset: -15, elOffset: 10 }, { azOffset: 15, elOffset: 8 },
-      { azOffset: -8, elOffset: -12 }, { azOffset: 12, elOffset: -10 }, { azOffset: 0, elOffset: 18 },
-      { azOffset: -25, elOffset: 5 }, { azOffset: 25, elOffset: 3 }
-    ],
-    rising_dawn: [
-      { azOffset: -20, elOffset: -15 }, { azOffset: -10, elOffset: -5 }, { azOffset: 0, elOffset: 5 },
-      { azOffset: 10, elOffset: 15 }, { azOffset: 20, elOffset: 25 }
-    ],
-    crown: [
-      { azOffset: 0, elOffset: 12 }, { azOffset: -15, elOffset: 8 }, { azOffset: 15, elOffset: 8 },
-      { azOffset: -25, elOffset: 0 }, { azOffset: 25, elOffset: 0 }, { azOffset: -10, elOffset: -8 },
-      { azOffset: 10, elOffset: -8 }
-    ],
-    crossed_swords: [
-      { azOffset: -20, elOffset: 15 }, { azOffset: -10, elOffset: 8 }, { azOffset: 0, elOffset: 0 },
-      { azOffset: 10, elOffset: -8 }, { azOffset: 20, elOffset: -15 }, { azOffset: -15, elOffset: -10 },
-      { azOffset: 15, elOffset: 10 }
-    ],
-    supernova: [
-      { azOffset: 0, elOffset: 0 }, { azOffset: -18, elOffset: 0 }, { azOffset: 18, elOffset: 0 },
-      { azOffset: 0, elOffset: 18 }, { azOffset: 0, elOffset: -18 }, { azOffset: -12, elOffset: 12 },
-      { azOffset: 12, elOffset: 12 }, { azOffset: -12, elOffset: -12 }, { azOffset: 12, elOffset: -12 }
-    ],
-    ascension: [
-      { azOffset: 0, elOffset: 20 }, { azOffset: -8, elOffset: 10 }, { azOffset: 8, elOffset: 10 },
-      { azOffset: -15, elOffset: 0 }, { azOffset: 15, elOffset: 0 }, { azOffset: -20, elOffset: -10 },
-      { azOffset: 20, elOffset: -10 }
-    ],
-    omega: [
-      { azOffset: -15, elOffset: 10 }, { azOffset: -20, elOffset: 0 }, { azOffset: -15, elOffset: -10 },
-      { azOffset: 0, elOffset: -15 }, { azOffset: 15, elOffset: -10 }, { azOffset: 20, elOffset: 0 },
-      { azOffset: 15, elOffset: 10 }
-    ],
-    scattered: [
-      { azOffset: -10, elOffset: 5 }, { azOffset: 12, elOffset: -8 }, { azOffset: -18, elOffset: 15 },
-      { azOffset: 8, elOffset: 20 }, { azOffset: -5, elOffset: -12 }
-    ]
-  }
-
-  // Era-based colors from original system
-  const ERA_COLORS = {
-    'ancient-epoch': '#3b82f6',
-    'awakening-era': '#8b5cf6', 
-    'golden-age': '#6366f1',
-    'conflict-epoch': '#ec4899',
-    'singularity-conflict': '#ef4444',
-    'transcendent-age': '#14b8a6',
-    'final-epoch': '#22c55e',
-    'unknown': '#6366f1'
-  }
+  // --- CONSTELLATION-BASED STAR POSITIONING (Using imported configuration) ---
 
   function createStarFromTimelineEvent(event: any, index: number): StarData {
     const era = event.era || 'unknown'
-    const config = CONSTELLATION_CONFIG[era as keyof typeof CONSTELLATION_CONFIG] || CONSTELLATION_CONFIG.unknown
-    const pattern = CONSTELLATION_PATTERNS[config.pattern as keyof typeof CONSTELLATION_PATTERNS] || CONSTELLATION_PATTERNS.scattered
+    const config = constellationConfig[era] || constellationConfig.unknown
+    const pattern = constellationPatterns[config.pattern] || constellationPatterns.scattered
     
     // Group events by era for constellation positioning
     const eraEvents = timelineEvents.filter(e => (e.era || 'unknown') === era)
@@ -579,19 +524,19 @@
       config.centerElevation + patternPosition.elOffset + (Math.random() - 0.5) * 8
     ))
     
-    // Convert to 3D coordinates (radius 995 - close to skybox like original)
+    // Convert to 3D coordinates using original system's radius 995
     const azimuthRad = (azimuthDeg * Math.PI) / 180
     const elevationRad = (elevationDeg * Math.PI) / 180
     const polarAngleRad = Math.PI / 2 - elevationRad
-    const sphereRadius = 995
+    const sphereRadius = 995  // Original system distance
     
     const x = sphereRadius * Math.sin(polarAngleRad) * Math.cos(azimuthRad)
     const y = sphereRadius * Math.cos(polarAngleRad)
     const z = sphereRadius * Math.sin(polarAngleRad) * Math.sin(azimuthRad)
     
-    // Use era-specific colors and sizing like original
-    const eraColor = ERA_COLORS[era as keyof typeof ERA_COLORS] || ERA_COLORS.unknown
-    const starSize = event.isKeyEvent ? 1.5 : 0.8 + Math.random() * 0.4
+    // Use original era colors and sizing with size factor
+    const eraColor = getStarColor(event.uniqueId || event.slug, era, true)
+    const starSize = getSizeFactor(event.isKeyEvent || false)
     
     return {
       uniqueId: event.uniqueId || event.slug || `timeline_star_${index}`,
@@ -634,7 +579,7 @@
       intensity: 0.1 + Math.random() * 0.3,
       title: `Star ${index + 1}`, description: 'A distant star',
       timelineYear: 2000 + Math.floor(Math.random() * 1000), timelineEra: 'Unknown Era', timelineLocation: 'Deep Space',
-      isKeyEvent: false, isLevel: false, levelId: null, tags: ['procedural'], category: 'background', slug: `star-${index}`,
+      isKeyEvent: false, isLevel: false, levelId: undefined, tags: ['procedural'], category: 'background', slug: `star-${index}`,
       clickable: true, hoverable: true, unlocked: true,
       animationOffset: Math.random() * Math.PI * 2, twinkleSpeed: 0.5 + Math.random() * 1.5,
       screenPosition: { cardClass: 'bottom' }

@@ -36,6 +36,16 @@ export interface StarData {
   category: string
   unlocked: boolean
   screenPosition?: any
+  // Visual properties for star rendering
+  position: [number, number, number]
+  color: string
+  size: number
+  intensity: number
+  animationOffset: number
+  twinkleSpeed: number
+  era?: string
+  clickable: boolean
+  hoverable: boolean
 }
 
 // Core game state stores
