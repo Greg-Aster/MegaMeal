@@ -48,6 +48,10 @@
   let starGroup: THREE.Group
   let hoveredStarIndex: number | null = null
   
+  // Mouse tracking for accurate raycasting
+  let lastMouseX = 0
+  let lastMouseY = 0
+  
   // Export the component reference for StarNavigationSystem
   export { starGroup as starMapRef }
 
@@ -69,24 +73,37 @@
     console.log('✨ Optimized StarMap: Initializing with Instancing...')
     generateStars()
     
-    // Add click interaction that works even with pointer lock
+    // Add mouse tracking and click interaction
+    const handleMouseMove = (event: MouseEvent) => {
+      lastMouseX = event.clientX
+      lastMouseY = event.clientY
+      
+      // Check for hover effect
+      checkStarHover(event)
+    }
+    
     const handleCanvasClick = (event: MouseEvent) => {
       // Only handle clicks if we're not dragging (for FPS camera)
       if (event.button === 0) { // Left click only
         console.log('🖱️ StarMap: Canvas click detected')
+        // Update mouse position before raycasting
+        lastMouseX = event.clientX
+        lastMouseY = event.clientY
         // Small delay to ensure camera movement is done
         setTimeout(() => selectStarInCrosshair(), 50)
       }
     }
     
-    // Get canvas and add click listener
+    // Get canvas and add mouse listeners
     const canvas = document.querySelector('canvas')
     if (canvas) {
+      canvas.addEventListener('mousemove', handleMouseMove)
       canvas.addEventListener('click', handleCanvasClick)
     }
     
     return () => {
       if (canvas) {
+        canvas.removeEventListener('mousemove', handleMouseMove)
         canvas.removeEventListener('click', handleCanvasClick)
       }
     }
@@ -174,7 +191,7 @@
 
     const sprite = new THREE.Sprite(material)
     sprite.position.set(...star.position)
-    sprite.scale.setScalar(star.size * 20) // Scale for skybox distance 1000
+    sprite.scale.setScalar(star.size * 30) // Natural size for distance 1000 with good clickability
     
     // Store star data for interaction
     ;(sprite as any).starData = star
@@ -277,7 +294,7 @@
       const twinkle3 = Math.sin(twinkleTime * 0.3 + 2) * 0.05
       const twinkle = 0.85 + twinkle1 + twinkle2 + twinkle3
 
-      let scale = star.size * 32 * twinkle
+      let scale = star.size * 128 * twinkle
       let opacity = star.intensity * twinkle
 
       // Selection and hover effects
@@ -287,13 +304,9 @@
       if (isSelected) {
         scale *= 1.8
         opacity *= 2.0
-        // Debug: Log selected star visual update
-        if (index < 3) {
-          console.log(`🔥 Star ${index} selected visual update:`, {
-            title: star.title,
-            scale: scale.toFixed(1),
-            opacity: opacity.toFixed(2)
-          })
+        // Debug selected star visual (reduced logging)
+        if (index === 0) {
+          console.log(`🔥 Selected star visual update: ${star.title.substring(0, 30)}...`)
         }
       } else if (isHovered) {
         scale *= 1.4
@@ -370,6 +383,33 @@
     }
   }
 
+  function checkStarHover(event: MouseEvent) {
+    if (!$camera || starSprites.length === 0) return
+    
+    const canvas = event.target as HTMLCanvasElement
+    const rect = canvas.getBoundingClientRect()
+    const mouse = new THREE.Vector2()
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+    
+    const raycaster = new THREE.Raycaster()
+    raycaster.setFromCamera(mouse, $camera)
+    raycaster.params.Sprite = { threshold: 1000 }
+    
+    const intersects = raycaster.intersectObjects(starSprites)
+    if (intersects.length > 0) {
+      const sprite = intersects[0].object as THREE.Sprite
+      const starIndex = (sprite as any).starIndex
+      if (hoveredStarIndex !== starIndex) {
+        hoveredStarIndex = starIndex
+        // Reduced hover logging
+        console.log('✨ Hover:', stars[starIndex]?.title?.substring(0, 20) + '...')
+      }
+    } else {
+      hoveredStarIndex = null
+    }
+  }
+
   function getIntersectedStar(event: any): { sprite: THREE.Sprite, star: StarData, index: number } | null {
     if (!$camera || starSprites.length === 0) return null
 
@@ -412,21 +452,30 @@
     }
   }
 
-  // Select star based on camera crosshair (center of screen)
+  // Select star based on mouse position
   function selectStarInCrosshair() {
     if (!$camera || starSprites.length === 0) {
       console.log('❌ No camera or no star sprites:', { camera: !!$camera, sprites: starSprites.length })
       return
     }
     
-    console.log('🎯 StarMap: Checking for star in crosshair...', { sprites: starSprites.length })
+    // Reduced logging for click detection
     
-    // Cast ray from camera center (0, 0 in normalized coordinates)
+    // Get mouse position from last known position
+    const canvas = document.querySelector('canvas')
+    if (!canvas) return
+    
+    const rect = canvas.getBoundingClientRect()
+    const mouse = new THREE.Vector2()
+    mouse.x = ((lastMouseX - rect.left) / rect.width) * 2 - 1
+    mouse.y = -((lastMouseY - rect.top) / rect.height) * 2 + 1
+    
+    // Cast ray from mouse position
     const raycaster = new THREE.Raycaster()
-    raycaster.setFromCamera(new THREE.Vector2(0, 0), $camera)
+    raycaster.setFromCamera(mouse, $camera)
     
-    // Increase threshold for sprites (they're small)
-    raycaster.params.Sprite = { threshold: 50 }
+    // MASSIVE threshold needed for sprites at distance 1000
+    raycaster.params.Sprite = { threshold: 1000 }
     
     console.log('🔍 Raycaster origin:', raycaster.ray.origin)
     console.log('🔍 Raycaster direction:', raycaster.ray.direction)
@@ -662,7 +711,7 @@
     const eraColor = getStarColor(event.uniqueId || event.slug, era, true)
     const starSize = getSizeFactor(event.isKeyEvent || false)
     
-    return {
+    const starData = {
       uniqueId: event.uniqueId || event.slug || `timeline_star_${index}`,
       position: [x, y, z],
       color: eraColor,
@@ -689,6 +738,16 @@
       // Include all original event data for timeline cards
       ...event
     }
+    
+    // Debug duplicate events (only first 3 for brevity)
+    if (index < 3) {
+      console.log(`🔍 Star ${index} data mapping:`, {
+        uniqueId: starData.uniqueId,
+        title: starData.title?.substring(0, 30) + '...'
+      })
+    }
+    
+    return starData
   }
 </script>
 
