@@ -8,7 +8,7 @@
   4. Performance optimization (ECS handles 1000+ fireflies easily)
 -->
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
+  import { createEventDispatcher, onMount } from 'svelte'
   import { T } from '@threlte/core'
   
   // Import the level system (now fixed!)
@@ -26,17 +26,32 @@
   import StaticEnvironment from '../systems/StaticEnvironment.svelte'
   import StarMap from '../systems/StarMap.svelte'
   
+  // Import new star navigation components
+  import StarNavigationSystem from '../components/StarNavigationSystem.svelte'
+  
   // Import level configuration
   import config from '../../game/levels/observatory.json'
+  
+  // Import timeline data service
+  import { timelineDataService } from '../services/TimelineDataService'
+  import type { StarEventData } from '../services/TimelineDataService'
 
   const dispatch = createEventDispatcher()
 
   // Props
   export let timelineEvents: any[] = []
+  export let timelineEventsJson: string = '[]' // JSON string of timeline events for star system
   export let onLevelReady: (() => void) | undefined = undefined
 
   // Component references for external control
   let hybridFireflyComponent: HybridFireflyComponent
+  let starMapComponent: StarMap
+  let starNavigationSystem: StarNavigationSystem
+  
+  // Timeline data state
+  let realTimelineEvents: StarEventData[] = []
+  let isLoadingTimeline = true
+  let timelineLoadError: string | null = null
 
   // Terrain height function for fireflies
   function getHeightAt(x: number, z: number): number {
@@ -68,6 +83,58 @@
     return height
   }
 
+  // Load timeline data on mount
+  onMount(() => {
+    loadTimelineData()
+  })
+
+  function loadTimelineData() {
+    try {
+      isLoadingTimeline = true
+      timelineLoadError = null
+      
+      console.log('📊 HybridObservatory: Processing timeline events from props...')
+      
+      // Try to parse JSON timeline events first
+      if (timelineEventsJson && timelineEventsJson !== '[]') {
+        try {
+          const parsedEvents = JSON.parse(timelineEventsJson)
+          console.log(`📊 Parsed ${parsedEvents.length} timeline events from JSON prop`)
+          
+          // Transform to StarEventData format using TimelineDataService
+          realTimelineEvents = parsedEvents.map((event: any, index: number) => 
+            timelineDataService.transformEventToStarData(event, index)
+          )
+          
+          console.log(`✅ Processed ${realTimelineEvents.length} star events from JSON`)
+        } catch (parseError) {
+          console.warn('⚠️ Failed to parse timelineEventsJson, falling back to timelineEvents prop:', parseError)
+          throw parseError
+        }
+      }
+      // Fallback to direct timelineEvents prop
+      else if (timelineEvents.length > 0) {
+        console.log(`📊 Using ${timelineEvents.length} timeline events from direct prop`)
+        realTimelineEvents = timelineEvents.map((event: any, index: number) => 
+          timelineDataService.transformEventToStarData(event, index)
+        )
+        console.log(`✅ Processed ${realTimelineEvents.length} star events from prop`)
+      }
+      // No data available
+      else {
+        console.warn('⚠️ No timeline events provided via props')
+        realTimelineEvents = []
+      }
+      
+    } catch (error) {
+      console.error('❌ Failed to process timeline data:', error)
+      timelineLoadError = error instanceof Error ? error.message : 'Unknown error'
+      realTimelineEvents = []
+    } finally {
+      isLoadingTimeline = false
+    }
+  }
+
   function handleEnvironmentLoaded() {
     console.log('✅ Hybrid Observatory environment loaded')
     if (onLevelReady) {
@@ -92,6 +159,28 @@
       hybridFireflyComponent.triggerDiscovery()
       console.log('🔍 Triggered discovery - watch the fireflies dance!')
     }
+  }
+
+  // Handle star interactions
+  function handleStarSelected(event: CustomEvent) {
+    const { star, eventData, screenPosition, worldPosition } = event.detail
+    console.log('🌟 HybridObservatory: Star selected:', star?.title)
+    
+    // You can add level-specific star selection logic here
+    dispatch('starSelected', event.detail)
+  }
+
+  function handleStarDeselected(event: CustomEvent) {
+    console.log('🌟 HybridObservatory: Star deselected')
+    dispatch('starDeselected', event.detail)
+  }
+
+  function handleLevelTransition(event: CustomEvent) {
+    const { levelType, fromStar } = event.detail
+    console.log('🎮 HybridObservatory: Level transition requested:', levelType)
+    
+    // Forward the level transition to parent game manager
+    dispatch('levelTransition', event.detail)
   }
 </script>
 
@@ -203,14 +292,54 @@
       colors={[0x87ceeb, 0x98fb98, 0xffffe0, 0xdda0dd, 0xf0e68c, 0xffa07a, 0x20b2aa, 0x9370db]}
     />
     
-    <!-- Star Map (existing component) -->
-    <StarMap 
-      {timelineEvents}
-      starCount={200}
-      heightRange={{ min: 50, max: 200 }}
-      radius={400}
-      on:starSelected={(e) => dispatch('starSelected', e.detail)}
-    />
+    <!-- 
+      LOADING STATE for timeline data
+    -->
+    {#if isLoadingTimeline}
+      <T.Group position={[0, 5, 0]} name="loading-indicator">
+        <T.Mesh>
+          <T.SphereGeometry args={[2]} />
+          <T.MeshBasicMaterial color="#00ff88" transparent opacity={0.6} />
+        </T.Mesh>
+      </T.Group>
+    {:else if timelineLoadError}
+      <T.Group position={[0, 5, 0]} name="error-indicator">
+        <T.Mesh>
+          <T.SphereGeometry args={[2]} />
+          <T.MeshBasicMaterial color="#ff0044" transparent opacity={0.6} />
+        </T.Mesh>
+      </T.Group>
+    {:else}
+      <!-- Star Map with enhanced navigation using REAL timeline data -->
+      <StarMap 
+        bind:this={starMapComponent}
+        timelineEvents={realTimelineEvents}
+        starCount={realTimelineEvents.length + 50}
+        heightRange={{ min: 50, max: 200 }}
+        radius={400}
+        on:starSelected={handleStarSelected}
+      />
+    {/if}
+    
+    <!-- 
+      STAR NAVIGATION SYSTEM (New ECS component)
+      This bridges StarMap interactions with timeline card display and level transitions.
+      It provides the missing functionality from the old StarNavigationSystemModern.ts.
+    -->
+    {#if starMapComponent && !isLoadingTimeline}
+      <StarNavigationSystem 
+        bind:this={starNavigationSystem}
+        timelineEvents={realTimelineEvents}
+        starMapComponent={starMapComponent}
+        on:starSelected={handleStarSelected}
+        on:starDeselected={handleStarDeselected}
+        on:levelTransition={handleLevelTransition}
+        on:starInteraction={(e) => console.log('🎯 Star interaction:', e.detail)}
+        on:transitionStarted={(e) => console.log('🎮 Transition started:', e.detail)}
+        on:transitionCompleted={(e) => console.log('✅ Transition completed:', e.detail)}
+        on:transitionFailed={(e) => console.log('❌ Transition failed:', e.detail)}
+      />
+    {/if}
     
     <!-- 
       DEBUGGING CONTROLS (remove in production)
@@ -219,6 +348,13 @@
     <T.Group position={[0, 10, 0]} name="debug-controls">
       <!-- You could add invisible trigger zones here that call triggerWonder() etc. -->
     </T.Group>
+    
+    <!-- Debug timeline information (dev only) -->
+    {#if import.meta.env.DEV && !isLoadingTimeline}
+      <T.Group position={[10, 2, 0]} name="debug-timeline-info">
+        <!-- This would be invisible but logged to console -->
+      </T.Group>
+    {/if}
     
   </T.Group>
 
@@ -268,6 +404,12 @@
   - Fireflies automatically reflect in ocean
   - Lighting updates propagate to all systems
   - Player interactions affect entire ecosystem
+
+  ⭐ STAR NAVIGATION SYSTEM:
+  - Click stars to display timeline cards
+  - Timeline cards positioned at star screen coordinates
+  - Level navigation from timeline cards works seamlessly
+  - ECS-based reusable components following game design patterns
 
   This is how AAA games are built - and now your web game has the same architecture!
 -->

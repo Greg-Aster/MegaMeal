@@ -371,6 +371,7 @@ onDestroy(() => {
         <!-- Modern MEGAMEAL Architecture - Single Level -->
         <HybridObservatory 
           timelineEvents={parsedTimelineEvents}
+          timelineEventsJson={typeof timelineEvents === 'string' ? timelineEvents : JSON.stringify(parsedTimelineEvents)}
           onLevelReady={handleLevelReady}
           on:starSelected={(e) => dispatch('starSelected', e.detail)}
           on:telescopeInteraction={(e) => dispatch('telescopeInteraction', e.detail)}
