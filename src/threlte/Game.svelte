@@ -103,6 +103,18 @@ $: if (currentLevel) {
   console.log('🎮 Current level:', currentLevel)
 }
 
+// Debug: Log star selection changes
+$: if (selectedStar) {
+  console.log('⭐ Game.svelte: selectedStar changed:', {
+    title: selectedStar.title,
+    uniqueId: selectedStar.uniqueId,
+    hasTimelineYear: !!selectedStar.timelineYear,
+    hasTimelineEra: !!selectedStar.timelineEra
+  })
+} else {
+  console.log('❌ Game.svelte: selectedStar cleared')
+}
+
 // Backwards compatibility getters
 $: dialogueVisible = dialogue.visible
 $: dialogueText = dialogue.text
@@ -144,6 +156,19 @@ $: selectedEvent = selectedStar
       screenPosition: selectedStar.screenPosition,
     }
   : null
+
+// Debug selected event
+$: if (selectedEvent) {
+  console.log('🎯 Game.svelte: selectedEvent created:', {
+    title: selectedEvent.title,
+    hasId: !!selectedEvent.id,
+    hasSlug: !!selectedEvent.slug,
+    hasYear: !!selectedEvent.year,
+    hasEra: !!selectedEvent.era
+  })
+} else if (selectedStar) {
+  console.log('❌ Game.svelte: selectedStar exists but selectedEvent is null:', selectedStar)
+}
 
 /**
  * Initialize Threlte-based game

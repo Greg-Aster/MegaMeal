@@ -32,9 +32,7 @@
   // Import level configuration
   import config from '../../game/levels/observatory.json'
   
-  // Import timeline data service
-  import { timelineDataService } from '../services/TimelineDataService'
-  import type { StarEventData } from '../services/TimelineDataService'
+  // Timeline events are passed directly to StarMap for correct positioning
 
   const dispatch = createEventDispatcher()
 
@@ -42,6 +40,7 @@
   export let timelineEvents: any[] = []
   export let timelineEventsJson: string = '[]' // JSON string of timeline events for star system
   export let onLevelReady: (() => void) | undefined = undefined
+  export let position: [number, number, number] = [0, 15, 10] // Default position
 
   // Component references for external control
   let hybridFireflyComponent: HybridFireflyComponent
@@ -49,7 +48,7 @@
   let starNavigationSystem: StarNavigationSystem
   
   // Timeline data state
-  let realTimelineEvents: StarEventData[] = []
+  let realTimelineEvents: any[] = []
   let isLoadingTimeline = true
   let timelineLoadError: string | null = null
 
@@ -101,10 +100,8 @@
           const parsedEvents = JSON.parse(timelineEventsJson)
           console.log(`📊 Parsed ${parsedEvents.length} timeline events from JSON prop`)
           
-          // Transform to StarEventData format using TimelineDataService
-          realTimelineEvents = parsedEvents.map((event: any, index: number) => 
-            timelineDataService.transformEventToStarData(event, index)
-          )
+          // Pass events directly to StarMap - let it handle positioning correctly
+          realTimelineEvents = parsedEvents
           
           console.log(`✅ Processed ${realTimelineEvents.length} star events from JSON`)
         } catch (parseError) {
@@ -115,9 +112,8 @@
       // Fallback to direct timelineEvents prop
       else if (timelineEvents.length > 0) {
         console.log(`📊 Using ${timelineEvents.length} timeline events from direct prop`)
-        realTimelineEvents = timelineEvents.map((event: any, index: number) => 
-          timelineDataService.transformEventToStarData(event, index)
-        )
+        // Pass events directly to StarMap - let it handle positioning correctly
+        realTimelineEvents = timelineEvents
         console.log(`✅ Processed ${realTimelineEvents.length} star events from prop`)
       }
       // No data available
@@ -237,6 +233,7 @@
           castShadow: false
         }
       ]}
+      
     />
     
     <!-- 
@@ -314,9 +311,6 @@
       <StarMap 
         bind:this={starMapComponent}
         timelineEvents={realTimelineEvents}
-        starCount={realTimelineEvents.length + 50}
-        heightRange={{ min: 50, max: 200 }}
-        radius={400}
         on:starSelected={handleStarSelected}
       />
     {/if}
@@ -331,6 +325,7 @@
         bind:this={starNavigationSystem}
         timelineEvents={realTimelineEvents}
         starMapComponent={starMapComponent}
+
         on:starSelected={handleStarSelected}
         on:starDeselected={handleStarDeselected}
         on:levelTransition={handleLevelTransition}

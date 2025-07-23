@@ -40,15 +40,6 @@
 
   // --- PROPS ---
   export let timelineEvents: any[] = []
-  export let starCount = 41
-  export let heightRange = { min: 50, max: 200 }
-  export let radius = 995  // Use original skybox distance
-
-  // --- CONFIG ---
-  const starColors = ['#ffffff', '#ffddaa', '#aaddff', '#ffaadd', '#aaffaa', '#ffaaff', '#aaffff']
-  const starSizes = [0.3, 0.5, 0.8, 1.0, 1.2]
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-  $: optimizedStarCount = isMobile ? Math.min(starCount, 100) : starCount
 
   // --- STATE ---
   let stars: StarData[] = []
@@ -77,6 +68,28 @@
   onMount(() => {
     console.log('✨ Optimized StarMap: Initializing with Instancing...')
     generateStars()
+    
+    // Add click interaction that works even with pointer lock
+    const handleCanvasClick = (event: MouseEvent) => {
+      // Only handle clicks if we're not dragging (for FPS camera)
+      if (event.button === 0) { // Left click only
+        console.log('🖱️ StarMap: Canvas click detected')
+        // Small delay to ensure camera movement is done
+        setTimeout(() => selectStarInCrosshair(), 50)
+      }
+    }
+    
+    // Get canvas and add click listener
+    const canvas = document.querySelector('canvas')
+    if (canvas) {
+      canvas.addEventListener('click', handleCanvasClick)
+    }
+    
+    return () => {
+      if (canvas) {
+        canvas.removeEventListener('click', handleCanvasClick)
+      }
+    }
   })
 
   // This reactive block creates star sprites whenever the star data changes.
@@ -103,20 +116,12 @@
       }
     })
     
-    const remainingStars = optimizedStarCount - newStars.length
-    console.log(`🌟 Adding ${remainingStars} procedural stars to reach total of ${optimizedStarCount}`)
-    
-    for (let i = 0; i < remainingStars; i++) {
-      newStars.push(createProceduralStar(newStars.length + i))
-    }
-    
     stars = newStars
-    console.log(`✅ StarMap: Generated ${stars.length} total stars (${timelineEvents.length} from timeline + ${remainingStars} procedural)`)
+    console.log(`✅ StarMap: Generated ${stars.length} constellation-based stars from timeline events`)
     
     // Log star distribution for debugging
     const keyEventStars = stars.filter(s => s.isKeyEvent).length
-    const timelineStars = stars.filter(s => s.uniqueId.includes('timeline')).length
-    console.log(`📊 Star distribution: ${keyEventStars} key events, ${timelineStars} timeline events, ${stars.length - timelineStars} procedural`)
+    console.log(`📊 Star distribution: ${keyEventStars} key events, ${stars.length - keyEventStars} timeline events`)
   }
 
   function setupStarSprites() {
@@ -169,11 +174,23 @@
 
     const sprite = new THREE.Sprite(material)
     sprite.position.set(...star.position)
-    sprite.scale.setScalar(star.size * 20) // Scale for skybox distance 995
+    sprite.scale.setScalar(star.size * 20) // Scale for skybox distance 1000
     
     // Store star data for interaction
     ;(sprite as any).starData = star
     ;(sprite as any).starIndex = index
+    
+    // Debug: Verify actual sprite position after creation
+    if (index < 3) {
+      const actualDistance = sprite.position.length()
+      console.log(`🔍 Sprite ${index} after creation:`, {
+        title: star.title,
+        starPosition: star.position,
+        spritePosition: [sprite.position.x.toFixed(1), sprite.position.y.toFixed(1), sprite.position.z.toFixed(1)],
+        actualDistance: actualDistance.toFixed(1),
+        scale: sprite.scale.x.toFixed(1)
+      })
+    }
 
     return sprite
   }
@@ -270,6 +287,14 @@
       if (isSelected) {
         scale *= 1.8
         opacity *= 2.0
+        // Debug: Log selected star visual update
+        if (index < 3) {
+          console.log(`🔥 Star ${index} selected visual update:`, {
+            title: star.title,
+            scale: scale.toFixed(1),
+            opacity: opacity.toFixed(2)
+          })
+        }
       } else if (isHovered) {
         scale *= 1.4
         opacity *= 1.5
@@ -294,8 +319,12 @@
   // --- INTERACTION ---
 
   function handleStarClick(event: any) {
+    console.log('🖱️ StarMap: Click event received', event)
     const intersected = getIntersectedStar(event)
-    if (!intersected) return
+    if (!intersected) {
+      console.log('❌ StarMap: No star intersected')
+      return
+    }
 
     const { sprite, star, index } = intersected
     console.log('⭐ StarMap: Star clicked:', star.title)
@@ -380,6 +409,85 @@
     return {
       x: (vector.x * widthHalf) + widthHalf,
       y: -(vector.y * heightHalf) + heightHalf
+    }
+  }
+
+  // Select star based on camera crosshair (center of screen)
+  function selectStarInCrosshair() {
+    if (!$camera || starSprites.length === 0) {
+      console.log('❌ No camera or no star sprites:', { camera: !!$camera, sprites: starSprites.length })
+      return
+    }
+    
+    console.log('🎯 StarMap: Checking for star in crosshair...', { sprites: starSprites.length })
+    
+    // Cast ray from camera center (0, 0 in normalized coordinates)
+    const raycaster = new THREE.Raycaster()
+    raycaster.setFromCamera(new THREE.Vector2(0, 0), $camera)
+    
+    // Increase threshold for sprites (they're small)
+    raycaster.params.Sprite = { threshold: 50 }
+    
+    console.log('🔍 Raycaster origin:', raycaster.ray.origin)
+    console.log('🔍 Raycaster direction:', raycaster.ray.direction)
+    
+    const intersects = raycaster.intersectObjects(starSprites)
+    console.log('🔍 Intersects found:', intersects.length)
+    
+    // Debug: Show some star positions for comparison
+    if (starSprites.length > 0) {
+      console.log('🌟 First 3 star positions:')
+      for (let i = 0; i < Math.min(3, starSprites.length); i++) {
+        const sprite = starSprites[i]
+        const starData = (sprite as any).starData
+        const distance = sprite.position.length()
+        console.log(`  Star ${i}: ${starData?.title} at`, sprite.position, `distance: ${distance.toFixed(1)}`)
+      }
+    }
+    
+    if (intersects.length > 0) {
+      const sprite = intersects[0].object as THREE.Sprite
+      const starData = (sprite as any).starData
+      const starIndex = (sprite as any).starIndex
+      
+      console.log('⭐ StarMap: Star selected via crosshair:', starData.title)
+      console.log('🔍 Star data being selected:', {
+        uniqueId: starData.uniqueId,
+        title: starData.title,
+        currentSelectedStar: selectedStar?.uniqueId
+      })
+      
+      // Trigger the same selection logic as click
+      gameActions.selectStar(starData)
+      gameActions.recordInteraction('star_select', starData.uniqueId)
+      
+      // Calculate positions for timeline card
+      const worldPosition = new THREE.Vector3().copy(sprite.position)
+      const screenPosition = getScreenPosition(worldPosition)
+      
+      // Dispatch events
+      dispatch('starSelected', {
+        star: starData,
+        eventData: starData,
+        screenPosition: screenPosition,
+        worldPosition: worldPosition,
+        index: starIndex,
+        timestamp: Date.now()
+      })
+      
+      // Emit global event for StarNavigationSystem
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('starmap.star.selected', {
+          detail: {
+            eventData: starData,
+            screenPosition: screenPosition,
+            worldPosition: worldPosition,
+            index: starIndex
+          }
+        }))
+      }
+    } else {
+      console.log('❌ StarMap: No star in crosshair')
     }
   }
 
@@ -518,21 +626,37 @@
     const patternIndex = indexInEra % pattern.length
     const patternPosition = pattern[patternIndex]
     
-    // Calculate position using spherical coordinates (like original system)
-    const azimuthDeg = config.centerAzimuth + patternPosition.azOffset + (Math.random() - 0.5) * 10
+    // Calculate position using spherical coordinates (no random offset for precise skybox positioning)
+    const azimuthDeg = config.centerAzimuth + patternPosition.azOffset
     const elevationDeg = Math.max(25, Math.min(75, 
-      config.centerElevation + patternPosition.elOffset + (Math.random() - 0.5) * 8
+      config.centerElevation + patternPosition.elOffset
     ))
     
-    // Convert to 3D coordinates using original system's radius 995
+    // Convert to 3D coordinates using skybox radius
     const azimuthRad = (azimuthDeg * Math.PI) / 180
     const elevationRad = (elevationDeg * Math.PI) / 180
     const polarAngleRad = Math.PI / 2 - elevationRad
-    const sphereRadius = 995  // Original system distance
+    const sphereRadius = 1000  // Match skybox distance exactly
     
     const x = sphereRadius * Math.sin(polarAngleRad) * Math.cos(azimuthRad)
     const y = sphereRadius * Math.cos(polarAngleRad)
     const z = sphereRadius * Math.sin(polarAngleRad) * Math.sin(azimuthRad)
+    
+    // Debug: Check if the calculated distance is correct
+    const calculatedDistance = Math.sqrt(x*x + y*y + z*z)
+    if (index < 3) {
+      console.log(`🔍 Star ${index} positioning debug:`, {
+        sphereRadius,
+        azimuthDeg,
+        elevationDeg,
+        azimuthRad: azimuthRad.toFixed(3),
+        elevationRad: elevationRad.toFixed(3),
+        polarAngleRad: polarAngleRad.toFixed(3),
+        calculatedPosition: [x.toFixed(1), y.toFixed(1), z.toFixed(1)],
+        calculatedDistance: calculatedDistance.toFixed(1),
+        expectedDistance: sphereRadius
+      })
+    }
     
     // Use original era colors and sizing with size factor
     const eraColor = getStarColor(event.uniqueId || event.slug, era, true)
@@ -543,7 +667,7 @@
       position: [x, y, z],
       color: eraColor,
       size: starSize,
-      intensity: event.isKeyEvent ? 1.2 : 0.6 + Math.random() * 0.4,
+      intensity: event.isKeyEvent ? 1.2 : 0.8,
       title: event.title || `Star ${index + 1}`,
       description: event.description || 'A distant star',
       timelineYear: event.year,
@@ -558,31 +682,12 @@
       clickable: true,
       hoverable: true,
       unlocked: true,
-      animationOffset: Math.random() * Math.PI * 2,
-      twinkleSpeed: 0.5 + Math.random() * 1.5,
+      animationOffset: 0,
+      twinkleSpeed: 1.0,
       screenPosition: { cardClass: 'bottom' },
       era: era,
       // Include all original event data for timeline cards
       ...event
-    }
-  }
-  function createProceduralStar(index: number): StarData {
-    const angle = Math.random() * Math.PI * 2
-    const radiusPos = Math.random() * radius
-    const x = Math.cos(angle) * radiusPos
-    const z = Math.sin(angle) * radiusPos
-    const y = heightRange.min + Math.random() * (heightRange.max - heightRange.min)
-    return {
-      uniqueId: `procedural_star_${index}`, position: [x, y, z],
-      color: starColors[Math.floor(Math.random() * starColors.length)],
-      size: starSizes[Math.floor(Math.random() * starSizes.length)],
-      intensity: 0.1 + Math.random() * 0.3,
-      title: `Star ${index + 1}`, description: 'A distant star',
-      timelineYear: 2000 + Math.floor(Math.random() * 1000), timelineEra: 'Unknown Era', timelineLocation: 'Deep Space',
-      isKeyEvent: false, isLevel: false, levelId: undefined, tags: ['procedural'], category: 'background', slug: `star-${index}`,
-      clickable: true, hoverable: true, unlocked: true,
-      animationOffset: Math.random() * Math.PI * 2, twinkleSpeed: 0.5 + Math.random() * 1.5,
-      screenPosition: { cardClass: 'bottom' }
     }
   }
 </script>
@@ -594,7 +699,7 @@
     on:pointermove={handleStarHover}
     visible={false}
   >
-    <T.SphereGeometry args={[500]} />
+    <T.SphereGeometry args={[1100]} />
     <T.MeshBasicMaterial transparent opacity={0} />
   </T.Mesh>
 </T.Group>

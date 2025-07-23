@@ -391,7 +391,7 @@
         
         // Safety check - ensure no NaN values
         const finalPosition = {
-          x: isNaN(spawnX) ? 55 : spawnX,
+          x: isNaN(spawnX) ? 25 : spawnX,
           y: isNaN(safeY) ? 15 : safeY, // Safe fallback height
           z: isNaN(spawnZ) ? 0 : spawnZ
         }

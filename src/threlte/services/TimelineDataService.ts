@@ -176,13 +176,14 @@ export class TimelineDataService {
     
     if (!config) {
       console.warn(`No constellation config for era: ${era}`)
-      // Fallback to scattered positioning
+      // Fallback to scattered positioning at skybox radius
       const angle = Math.random() * Math.PI * 2
-      const radius = 300 + Math.random() * 100
+      const elevation = (Math.random() - 0.5) * 0.8 // -0.4 to 0.4 radians
+      const radius = 1000 // Match skybox radius
       return [
-        Math.cos(angle) * radius,
-        50 + Math.random() * 100,
-        Math.sin(angle) * radius
+        Math.cos(elevation) * Math.cos(angle) * radius,
+        Math.sin(elevation) * radius,
+        Math.cos(elevation) * Math.sin(angle) * radius
       ]
     }
 
@@ -190,8 +191,8 @@ export class TimelineDataService {
     const azimuthDeg = config.center[0] + (Math.random() - 0.5) * config.spread
     const elevationDeg = config.center[1] + (Math.random() - 0.5) * config.spread * 0.5
     
-    // Convert to 3D coordinates
-    const radius = 400 // Base radius for star field
+    // Convert to 3D coordinates - Match skybox radius exactly
+    const radius = 1000 // Base radius for star field (matches skybox)
     const azimuthRad = (azimuthDeg * Math.PI) / 180
     const elevationRad = (elevationDeg * Math.PI) / 180
     
