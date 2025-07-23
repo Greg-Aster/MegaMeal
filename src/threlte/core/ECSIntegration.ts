@@ -173,7 +173,9 @@ export class ECSWorldManager {
       return world
     }))
 
-    // Light cycling system
+    // Light cycling system - DISABLED for component-level random cycling
+    // The HybridFireflyComponent now handles all light selection and cycling
+    /*
     this.addSystem(defineSystem((world) => {
       const entities = lightCyclingQuery(world)
       const deltaTime = 0.016 // Assume 60fps
@@ -198,6 +200,7 @@ export class ECSWorldManager {
       
       return world
     }))
+    */
 
     // Terrain following system - keeps entities above ground
     this.addSystem(defineSystem((world) => {
@@ -340,10 +343,11 @@ export class ECSWorldManager {
     FloatingBehavior.phase[eid] = Math.random() * Math.PI * 2
     FloatingBehavior.wanderRadius[eid] = config.wanderRadius
     
-    // Configure light cycling with passed parameters
-    LightCycling.isActive[eid] = Math.random() < 0.3 ? 1 : 0
-    LightCycling.fadeProgress[eid] = Math.random()
-    LightCycling.cycleTime[eid] = Math.random() * config.cycleDuration
+    // Configure light cycling with passed parameters - set to always active
+    // since component-level cycling now handles selection
+    LightCycling.isActive[eid] = 1 // Always active
+    LightCycling.fadeProgress[eid] = 1.0 // Always full brightness
+    LightCycling.cycleTime[eid] = 0
     LightCycling.maxCycleTime[eid] = config.cycleDuration
     
     // Configure rendering with passed parameters

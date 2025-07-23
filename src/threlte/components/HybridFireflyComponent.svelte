@@ -89,11 +89,11 @@
   `
 
   // Props with perfect legacy visual parameters
-  export let count = 80
-  export let maxLights = 20
+  export let count = 200
+  export let maxLights = 80
   export let colors = [0x87ceeb, 0x98fb98, 0xffffe0, 0xdda0dd, 0xf0e68c, 0xffa07a, 0x20b2aa, 0x9370db]
   export let emissiveIntensity = 15.0 // Kept for logic, but not directly used by new material
-  export let lightIntensity = 200.0
+  export let lightIntensity = 40.0
   export let lightRange = 300
   export let cycleDuration = 12.0
   export let fadeSpeed = 2.0
@@ -154,67 +154,89 @@
   let lightingUpdateCounter = 0
   let lightCycleTime = 0
   const lightCycleDuration = 20000 // 20 seconds for a full cycle (much slower)
+  
+  // Smooth transition system
+  let targetLightIntensities = new Map<number, number>() // Target intensities for smooth fading
+  let currentLightIntensities = new Map<number, number>() // Current intensities for interpolation
 
   /**
-   * Distributed firefly lighting - cycles through different fireflies over time
-   * All fireflies glow, but only some cast light at any given moment
+   * Random firefly selection with smooth fade targets
+   * Creates natural, unpredictable lighting patterns
    */
-  function selectCyclingLights(allLights: any[], camera: THREE.Camera, maxLights: number, cycleTime: number) {
-    if (allLights.length === 0) return []
-    if (maxLights === 0) return [] // Handle ULTRA_LOW optimization level
+  function updateLightTargets(allLights: any[], camera: THREE.Camera, maxLights: number, time: number) {
+    if (allLights.length === 0) return
+    if (maxLights === 0) return // Handle ULTRA_LOW optimization level
     
-    const totalLights = allLights.length
     const cameraPosition = camera?.position || new THREE.Vector3(0, 0, 0)
     
-    // Create waves of light activation across the scene
-    const numWaves = Math.ceil(maxLights / 3) // Groups of 3 lights per wave
-    const waveInterval = lightCycleDuration / numWaves // How long each wave lasts
-    const currentWave = Math.floor(cycleTime / waveInterval) % numWaves
+    // Use time-based seed for pseudo-random but smooth changes
+    const timeSeed = Math.floor(time / 2000) // Change selection every 2 seconds
     
-    // Calculate which fireflies should be active this cycle
-    const activeLightIndices = new Set<number>()
+    // Create a shuffled list of all firefly indices using seeded random
+    const allIndices = Array.from({ length: allLights.length }, (_, i) => i)
     
-    // Add lights in waves for magical distributed effect
-    for (let wave = 0; wave < numWaves; wave++) {
-      const wavePhase = (cycleTime - wave * waveInterval) / waveInterval
-      const waveFade = Math.sin(wavePhase * Math.PI) // Sine wave for smooth fade in/out
+    // Simple seeded shuffle - creates different patterns over time
+    for (let i = allIndices.length - 1; i > 0; i--) {
+      // Use time-based pseudo-random for consistent but changing patterns
+      const seedValue = (timeSeed * 9301 + i * 49297) % 233280
+      const j = Math.floor((seedValue / 233280) * (i + 1))
+      ;[allIndices[i], allIndices[j]] = [allIndices[j], allIndices[i]]
+    }
+    
+    // Take the first maxLights from the shuffled array
+    const selectedIndices = new Set(allIndices.slice(0, maxLights))
+    
+    // Update target intensities for all fireflies
+    for (let index = 0; index < allLights.length; index++) {
+      const light = allLights[index]
+      if (!light) continue
       
-      if (waveFade > 0.1) { // Only include waves that are bright enough
-        // Each wave activates different fireflies
-        const lightsPerWave = Math.floor(maxLights / numWaves)
-        const startIndex = (wave * lightsPerWave) % totalLights
+      if (selectedIndices.has(index)) {
+        // This firefly should be lit - calculate target intensity
+        const lightPos = new THREE.Vector3(light.position.x, light.position.y, light.position.z)
+        const distance = cameraPosition.distanceTo(lightPos)
         
-        for (let i = 0; i < lightsPerWave; i++) {
-          const lightIndex = (startIndex + i) % totalLights
-          activeLightIndices.add(lightIndex)
-        }
+        // Distance-based intensity (closer = brighter)
+        const distanceFactor = Math.max(0.4, 1.0 - (distance / 500))
+        
+        // Individual firefly randomness for more natural variation
+        const fireflyVariation = 0.7 + 0.3 * Math.sin((time * 0.001) + (index * 0.5))
+        
+        targetLightIntensities.set(index, light.intensity * distanceFactor * fireflyVariation)
+      } else {
+        // This firefly should fade out
+        targetLightIntensities.set(index, 0)
+      }
+    }
+  }
+  
+  /**
+   * Get current smoothly interpolated lights
+   */
+  function getCurrentLights(allLights: any[], delta: number): any[] {
+    const smoothedLights: any[] = []
+    
+    for (let index = 0; index < allLights.length; index++) {
+      const light = allLights[index]
+      if (!light) continue
+      
+      const targetIntensity = targetLightIntensities.get(index) || 0
+      const currentIntensity = currentLightIntensities.get(index) || 0
+      
+      // Smooth interpolation using fadeSpeed prop
+      const newIntensity = THREE.MathUtils.lerp(currentIntensity, targetIntensity, delta * fadeSpeed)
+      currentLightIntensities.set(index, newIntensity)
+      
+      // Only include lights with meaningful intensity
+      if (newIntensity > 0.01) {
+        smoothedLights.push({
+          ...light,
+          intensity: newIntensity
+        })
       }
     }
     
-    // Build the active lights array with distance-based intensity
-    const selectedLights = Array.from(activeLightIndices).map(index => {
-      const light = allLights[index]
-      if (!light) return null
-      
-      // Calculate distance to camera for intensity scaling
-      const lightPos = new THREE.Vector3(light.position.x, light.position.y, light.position.z)
-      const distance = cameraPosition.distanceTo(lightPos)
-      
-      // Closer lights are brighter, but all lights in the cycle are visible
-      const distanceFactor = Math.max(0.3, 1.0 - (distance / 400)) // Minimum 30% intensity
-      
-      // Wave-based cycling intensity
-      const lightWave = Math.floor(index / Math.floor(maxLights / numWaves))
-      const wavePhase = (cycleTime - lightWave * waveInterval) / waveInterval
-      const waveFade = Math.max(0, Math.sin(wavePhase * Math.PI))
-      
-      return {
-        ...light,
-        intensity: light.intensity * distanceFactor * waveFade
-      }
-    }).filter(light => light !== null && light.intensity > 0.01)
-    
-    return selectedLights
+    return smoothedLights
   }
 
   /**
@@ -366,8 +388,8 @@
         // Update color buffer based on light state from ECS (PROPER ECS APPROACH)
         const baseIntensity = LightEmitter.intensity[eid] // Use ECS data as base
         const fadeProgress = LightCycling.fadeProgress[eid] // Apply cycling effect
-        // Fix intensity normalization - use proper range for visibility
-        const normalizedIntensity = Math.min(baseIntensity / 200.0, 1.0) // Better normalization for 200 intensity
+        // Dynamic intensity normalization based on current lightIntensity prop
+        const normalizedIntensity = Math.min(baseIntensity / lightIntensity, 1.0) // Scales with current prop
         let finalIntensity = normalizedIntensity * fadeProgress
         
         // All firefly sprites are always visible - no culling of visual elements
@@ -421,15 +443,18 @@
         lightCycleTime = 0 // Reset cycle
       }
       
-      // Update light selection using cycling system every few frames
-      if (lightingUpdateCounter % 20 === 0) { // Update every 20 frames (~0.33 seconds)
-        activeLights = selectCyclingLights(allLights, $camera, optimizedMaxLights, lightCycleTime)
+      // Update light targets less frequently for smooth transitions
+      if (lightingUpdateCounter % 800 === 0) { // Update targets every ~13 seconds
+        updateLightTargets(allLights, $camera, optimizedMaxLights, lightCycleTime)
         
         // Debug info with optimization level
-        if (lightingUpdateCounter % 180 === 0) { // Every 3 seconds
-          console.log(`🌟 Cycling lights: ${activeLights.length}/${allLights.length} fireflies active (max: ${optimizedMaxLights})`)
+        if (lightingUpdateCounter % 900 === 0) { // Every 15 seconds
+          console.log(`🌟 Smooth lights: ${activeLights.length}/${allLights.length} fireflies active (max: ${optimizedMaxLights})`)
         }
       }
+      
+      // Update actual light intensities every frame for smooth fading
+      activeLights = getCurrentLights(allLights, delta)
       
       // Send to lighting system less frequently for ocean reflections
       if (lightingManager && activeLights.length > 0 && lightingUpdateCounter % 15 === 0) {
@@ -453,6 +478,34 @@
     material.uniforms.uGlowOuterRadius.value = glowOuterRadius
     material.uniforms.uCoreRadius.value = coreRadius
     material.uniforms.uCoreOpacity.value = coreOpacity
+  }
+
+  // Reactive handling of prop changes for maintainability
+  $: if (component && ecsWorld) {
+    // When count changes, we need to recreate fireflies
+    if (fireflyEntities.length !== optimizedCount) {
+      console.log(`🔄 Firefly count changed: recreating ${optimizedCount} fireflies`)
+      // Clear existing fade states
+      targetLightIntensities.clear()
+      currentLightIntensities.clear()
+      // The component will recreate fireflies on next update
+    }
+  }
+
+  // Handle optimization level changes reactively
+  $: {
+    try {
+      const optimizationManager = OptimizationManager.getInstance()
+      const qualitySettings = optimizationManager.getQualitySettings()
+      const newMaxLights = qualitySettings.maxFireflyLights * 2
+      
+      if (newMaxLights !== optimizedMaxLights) {
+        optimizedMaxLights = newMaxLights
+        console.log(`🎯 Max lights updated: ${optimizedMaxLights} (level: ${optimizationManager.getOptimizationLevel()})`)
+      }
+    } catch (error) {
+      // Fallback handled above
+    }
   }
 
   // REMOVED: Broken reactive system that violates ECS principles
