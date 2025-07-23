@@ -266,7 +266,7 @@
     <HybridFireflyComponent 
       bind:this={hybridFireflyComponent}
       {getHeightAt}
-      count={160}
+      count={100}
       maxLights={20}
       lightIntensity={50.0}
       lightRange={1000}
@@ -274,13 +274,13 @@
       fadeSpeed={2.0}
       heightRange={{ min: 2.0, max: 10.0 }}
       radius={180}
-      pointSize={800.0}
-      glowInnerRadius={0.02}
+      pointSize={25.0}
+      glowInnerRadius={0.1}
       glowOuterRadius={0.5}
       coreRadius={0.1}
       coreOpacity={1.0}
       movement={{
-        speed: 0.2,
+        speed: 0.05,
         wanderSpeed: 0.004,
         wanderRadius: 4,
         floatAmplitude: { x: 1.5, y: 0.5, z: 1.5 },

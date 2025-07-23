@@ -134,23 +134,34 @@ export class ECSWorldManager {
   }
 
   private setupCoreSystems(): void {
-    // Movement system - updates positions based on velocity
+    let systemUpdateCounter = 0
+    
+    // Movement system - updates positions based on velocity (reduced frequency)
     this.addSystem(defineSystem((world) => {
+      systemUpdateCounter++
+      
+      // Only update positions every other frame for better performance
+      if (systemUpdateCounter % 2 !== 0) return world
+      
       const entities = floatingEntitiesQuery(world)
+      const deltaTime = 0.032 // Compensate for reduced frequency (2 * 0.016)
       
       for (let i = 0; i < entities.length; i++) {
         const eid = entities[i]
         
-        Position.x[eid] += Velocity.x[eid] * 0.016 // Assume 60fps
-        Position.y[eid] += Velocity.y[eid] * 0.016
-        Position.z[eid] += Velocity.z[eid] * 0.016
+        Position.x[eid] += Velocity.x[eid] * deltaTime
+        Position.y[eid] += Velocity.y[eid] * deltaTime
+        Position.z[eid] += Velocity.z[eid] * deltaTime
       }
       
       return world
     }))
 
-    // Floating behavior system
+    // Floating behavior system (much less frequent updates)
     this.addSystem(defineSystem((world) => {
+      // Only update floating behavior every 4 frames (~15fps)
+      if (systemUpdateCounter % 4 !== 0) return world
+      
       const entities = floatingEntitiesQuery(world)
       const time = performance.now() * 0.001
       
@@ -162,7 +173,7 @@ export class ECSWorldManager {
         const phase = behavior.phase[eid] + time * behavior.frequency[eid]
         Velocity.y[eid] = Math.sin(phase) * behavior.amplitude[eid]
         
-        // Apply wandering
+        // Apply wandering (reduced calculation frequency)
         const wanderX = Math.cos(time * 0.1 + eid) * behavior.wanderRadius[eid] * 0.1
         const wanderZ = Math.sin(time * 0.1 + eid * 1.3) * behavior.wanderRadius[eid] * 0.1
         
@@ -202,9 +213,12 @@ export class ECSWorldManager {
     }))
     */
 
-    // Terrain following system - keeps entities above ground
+    // Terrain following system - keeps entities above ground (less frequent)
     this.addSystem(defineSystem((world) => {
       if (!this.getHeightAt) return world // Skip if no terrain function
+      
+      // Only check terrain every 8 frames (~7.5fps) - terrain doesn't change much
+      if (systemUpdateCounter % 8 !== 0) return world
       
       const entities = terrainFollowingQuery(world)
       
@@ -236,8 +250,11 @@ export class ECSWorldManager {
       return world
     }))
 
-    // Emotional responsiveness system
+    // Emotional responsiveness system (very infrequent updates)
     this.addSystem(defineSystem((world) => {
+      // Only update emotional effects every 30 frames (~2fps) - emotions change slowly
+      if (systemUpdateCounter % 30 !== 0) return world
+      
       const entities = emotionalResponderQuery(world)
       const emotionalState = this.getEmotionalState()
       

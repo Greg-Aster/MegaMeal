@@ -28,68 +28,21 @@
     LightEmitter,
     LightCycling
   } from '../core/ECSIntegration'
+  import StarSprite from './StarSprite.svelte'
 
-  // --- SHADERS FOR GLOW EFFECT ---
-  const vertexShader = `
-    // Uniform for controlling point size dynamically
-    uniform float uPointSize;
-
-    // This attribute is passed from the BufferGeometry
-    attribute vec3 aColor; 
-    
-    // This varying passes the color to the fragment shader
-    varying vec3 vColor;   
-
-    void main() {
-      vColor = aColor;
-      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-      gl_Position = projectionMatrix * mvPosition;
-
-      // Set the size of each point using the new uniform.
-      // The size is attenuated by distance to make far away points smaller.
-      gl_PointSize = uPointSize * (1.0 / -mvPosition.z);
-    }
-  `
-
-  const fragmentShader = `
-    // Uniforms for controlling the glow falloff
-    uniform float uGlowInnerRadius;
-    uniform float uGlowOuterRadius;
-    uniform float uCoreRadius; // NEW: Uniform for the hard inner core
-    uniform float uCoreOpacity; // NEW: Opacity multiplier for the core
-
-    // The color received from the vertex shader
-    varying vec3 vColor;
-
-    void main() {
-      // gl_PointCoord gives the 2D coordinate within the point primitive (0.0 to 1.0).
-      // We calculate the distance from the center (0.5, 0.5).
-      float dist = distance(gl_PointCoord, vec2(0.5));
-
-      // 1. Calculate the soft outer glow
-      float softGlow = 1.0 - smoothstep(uGlowInnerRadius, uGlowOuterRadius, dist);
-
-      // 2. Calculate the hard inner core with defined edge
-      // Use step for sharp edge, but add a tiny smoothstep for anti-aliasing
-      float coreEdge = 1.0 - smoothstep(uCoreRadius - 0.001, uCoreRadius, dist);
-      float hardCore = coreEdge * uCoreOpacity;
-
-      // 3. Combine the two, taking the brightest value for any given pixel.
-      float opacity = max(softGlow, hardCore);
-
-      // Discard pixels with very low opacity to prevent square artifacts
-      if (opacity < 0.01) discard;
-
-      // Brighten the colors significantly to overcome background absorption
-      vec3 brightenedColor = vColor * 3.0; // Make colors 3x brighter
-      
-      // Set the final color, multiplying the brightened color by the calculated opacity.
-      gl_FragColor = vec4(brightenedColor, opacity);
-    }
-  `
+  // Visual firefly data for StarSprite components
+  interface FireflyVisual {
+    id: number
+    position: [number, number, number]
+    color: number
+    size: number
+    intensity: number
+    twinkleSpeed: number
+    animationOffset: number
+  }
 
   // Props with perfect legacy visual parameters
-  export let count = 200
+  export let count = 100
   export let maxLights = 80
   export let colors = [0x87ceeb, 0x98fb98, 0xffffe0, 0xdda0dd, 0xf0e68c, 0xffa07a, 0x20b2aa, 0x9370db]
   export let emissiveIntensity = 15.0 // Kept for logic, but not directly used by new material
@@ -98,13 +51,10 @@
   export let cycleDuration = 12.0
   export let fadeSpeed = 2.0
   export let heightRange = { min: 0.5, max: 2.5 }
-  export let radius = 300
+  export let radius = 30
   export let size = 0.015 // Kept for ECS logic
-  export let pointSize = 300.0 // Controls the visual size of the firefly glow
-  export let glowInnerRadius = 0.05 // Controls the solid core of the glow
-  export let glowOuterRadius = 0.05 // Controls the outer edge of the glow
-  export let coreRadius = 0.1 // NEW: Controls the size of the hard point in the center
-  export let coreOpacity = 1.0 // NEW: Controls the opacity of the core (0.0 to 1.0)
+  export let pointSize = 25.0 // Controls the visual size of the firefly glow
+  // Removed unused shader-related props - now handled by StarSprite component
   export let movement = {
     speed: 0.2,
     wanderSpeed: 0.004,
@@ -142,11 +92,9 @@
 
   // ECS entities (modern architecture)
   let fireflyEntities: number[] = []
-
-  // --- UPDATED: Rendering components for Points ---
-  let points: THREE.Points
-  let geometry: THREE.BufferGeometry
-  let material: THREE.ShaderMaterial
+  
+  // Visual firefly data for StarSprite rendering
+  let visualFireflies: FireflyVisual[] = []
 
   // Performance objects
   const tempColor = new THREE.Color()
@@ -154,59 +102,40 @@
   let lightingUpdateCounter = 0
   let lightCycleTime = 0
   const lightCycleDuration = 20000 // 20 seconds for a full cycle (much slower)
+  let initialLightsSet = false // Track if we've set initial lights yet
   
   // Smooth transition system
   let targetLightIntensities = new Map<number, number>() // Target intensities for smooth fading
   let currentLightIntensities = new Map<number, number>() // Current intensities for interpolation
 
   /**
-   * Random firefly selection with smooth fade targets
-   * Creates natural, unpredictable lighting patterns
+   * Ultra-optimized firefly selection - minimal calculations
    */
-  function updateLightTargets(allLights: any[], camera: THREE.Camera, maxLights: number, time: number) {
-    if (allLights.length === 0) return
-    if (maxLights === 0) return // Handle ULTRA_LOW optimization level
+  function updateLightTargets(allLights: any[], maxLights: number, time: number) {
+    if (allLights.length === 0 || maxLights === 0) return
     
-    const cameraPosition = camera?.position || new THREE.Vector3(0, 0, 0)
+    // Even less frequent changes - every 10 seconds
+    const timeSeed = Math.floor(time / 10000)
+    const step = Math.max(1, Math.floor(allLights.length / maxLights))
+    const offset = timeSeed % step
     
-    // Use time-based seed for pseudo-random but smooth changes
-    const timeSeed = Math.floor(time / 2000) // Change selection every 2 seconds
-    
-    // Create a shuffled list of all firefly indices using seeded random
-    const allIndices = Array.from({ length: allLights.length }, (_, i) => i)
-    
-    // Simple seeded shuffle - creates different patterns over time
-    for (let i = allIndices.length - 1; i > 0; i--) {
-      // Use time-based pseudo-random for consistent but changing patterns
-      const seedValue = (timeSeed * 9301 + i * 49297) % 233280
-      const j = Math.floor((seedValue / 233280) * (i + 1))
-      ;[allIndices[i], allIndices[j]] = [allIndices[j], allIndices[i]]
+    // Pre-calculate random values to avoid Math.random() in loop
+    const randomValues = new Float32Array(maxLights)
+    for (let j = 0; j < maxLights; j++) {
+      randomValues[j] = 0.7 + Math.random() * 0.6 // Pre-compute random multipliers
     }
     
-    // Take the first maxLights from the shuffled array
-    const selectedIndices = new Set(allIndices.slice(0, maxLights))
+    targetLightIntensities.clear()
     
-    // Update target intensities for all fireflies
-    for (let index = 0; index < allLights.length; index++) {
-      const light = allLights[index]
+    let randomIndex = 0
+    for (let i = offset; i < allLights.length && targetLightIntensities.size < maxLights; i += step) {
+      const light = allLights[i]
       if (!light) continue
       
-      if (selectedIndices.has(index)) {
-        // This firefly should be lit - calculate target intensity
-        const lightPos = new THREE.Vector3(light.position.x, light.position.y, light.position.z)
-        const distance = cameraPosition.distanceTo(lightPos)
-        
-        // Distance-based intensity (closer = brighter)
-        const distanceFactor = Math.max(0.4, 1.0 - (distance / 500))
-        
-        // Individual firefly randomness for more natural variation
-        const fireflyVariation = 0.7 + 0.3 * Math.sin((time * 0.001) + (index * 0.5))
-        
-        targetLightIntensities.set(index, light.intensity * distanceFactor * fireflyVariation)
-      } else {
-        // This firefly should fade out
-        targetLightIntensities.set(index, 0)
-      }
+      // Use pre-computed random value
+      const baseIntensity = light.intensity * randomValues[randomIndex % maxLights]
+      targetLightIntensities.set(i, baseIntensity)
+      randomIndex++
     }
   }
   
@@ -259,16 +188,15 @@
         console.log('✅ HybridFirefly: Terrain following enabled')
       }
       
-      // This now sets up the BufferGeometry and ShaderMaterial
-      this.setupRendering()
-      // This now populates the geometry buffers as well as creating entities
+      // Create ECS entities for logic and visual data for rendering
       this.createECSFireflies()
-      console.log(`✅ HybridFirefly: Created ${optimizedCount} ECS entities with legacy visual parameters`)
+      this.setupVisualFireflies()
+      console.log(`✅ HybridFirefly: Created ${optimizedCount} ECS entities with StarSprite visuals`)
     }
 
     protected onUpdate(deltaTime: number): void {
-      // This now updates the geometry attributes directly
-      this.updatePointsRendering()
+      // Update visual firefly data from ECS
+      this.updateVisualFireflies()
     }
 
     protected onMessage(message: SystemMessage): void {
@@ -276,8 +204,7 @@
     }
 
     protected onDispose(): void {
-      if (geometry) geometry.dispose()
-      if (material) material.dispose()
+      // StarSprite components handle their own disposal
       console.log('✅ HybridFirefly: Disposed properly')
     }
 
@@ -295,12 +222,7 @@
       
       fireflyEntities = []
       
-      // Get a direct reference to the buffer arrays for performance
-      const positionArray = geometry.attributes.position.array as Float32Array
-      const colorArray = geometry.attributes.aColor.array as Float32Array
-
       for (let i = 0; i < optimizedCount; i++) {
-        const i3 = i * 3
         const angle = Math.random() * Math.PI * 2
         const radiusPos = Math.random() * radius
         const x = Math.cos(angle) * radiusPos
@@ -318,10 +240,6 @@
         }
         const position = new THREE.Vector3(x, y, z)
         const color = colors[Math.floor(Math.random() * colors.length)]
-
-        // Set initial data in the geometry buffers
-        position.toArray(positionArray, i3)
-        tempColor.setHex(color).toArray(colorArray, i3)
 
         // Debug: Log the actual values being passed to ECS
         if (i === 0) { // Only log first firefly to avoid spam
@@ -343,74 +261,55 @@
       }
     }
 
-    private setupRendering(): void {
-      geometry = new THREE.BufferGeometry()
-      // Create empty buffers that will be populated and updated
-      const positions = new Float32Array(optimizedCount * 3)
-      const aColors = new Float32Array(optimizedCount * 3)
-      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-      geometry.setAttribute('aColor', new THREE.BufferAttribute(aColors, 3))
-
-      material = new THREE.ShaderMaterial({
-        uniforms: {
-          // Initialize the uniforms with the values from the props
-          uPointSize: { value: pointSize },
-          uGlowInnerRadius: { value: glowInnerRadius },
-          uGlowOuterRadius: { value: glowOuterRadius },
-          uCoreRadius: { value: coreRadius },
-          uCoreOpacity: { value: coreOpacity },
-        },
-        vertexShader: vertexShader,
-        fragmentShader: fragmentShader,
-        transparent: true,
-        // Additive blending for bright firefly effect
-        blending: THREE.AdditiveBlending,
-        // Important: Disable depth writing so particles don't clip through each other
-        depthWrite: false,
-      })
+    public setupVisualFireflies(): void {
+      visualFireflies = fireflyEntities.map((eid, i) => ({
+        id: eid,
+        position: [Position.x[eid], Position.y[eid], Position.z[eid]] as [number, number, number],
+        color: LightEmitter.color[eid],
+        size: pointSize * 0.05, // Convert point size to sprite scale
+        intensity: 1.0,
+        twinkleSpeed: 0.8 + Math.random() * 0.4,
+        animationOffset: Math.random() * Math.PI * 2
+      }))
     }
 
-    private updatePointsRendering(): void {
-      if (!points || !ecsWorld) return
+    private updateVisualFireflies(): void {
+      if (!ecsWorld) return
 
       const world = ecsWorld.getWorld()
       const entities = fireflyQuery(world)
       
-      const posAttr = geometry.attributes.position as THREE.BufferAttribute
-      const colorAttr = geometry.attributes.aColor as THREE.BufferAttribute
+      // Pre-calculate normalization factor
+      const intensityNorm = 1.0 / lightIntensity
 
-      for (let i = 0; i < entities.length && i < optimizedCount; i++) {
+      for (let i = 0; i < entities.length && i < visualFireflies.length; i++) {
         const eid = entities[i]
+        const visual = visualFireflies[i]
         
-        // Update position buffer directly from ECS data
-        posAttr.setXYZ(i, Position.x[eid], Position.y[eid], Position.z[eid])
+        if (!visual) continue
+        
+        // Update position from ECS
+        visual.position[0] = Position.x[eid]
+        visual.position[1] = Position.y[eid]
+        visual.position[2] = Position.z[eid]
 
-        // Update color buffer based on light state from ECS (PROPER ECS APPROACH)
-        const baseIntensity = LightEmitter.intensity[eid] // Use ECS data as base
-        const fadeProgress = LightCycling.fadeProgress[eid] // Apply cycling effect
-        // Dynamic intensity normalization based on current lightIntensity prop
-        const normalizedIntensity = Math.min(baseIntensity / lightIntensity, 1.0) // Scales with current prop
-        let finalIntensity = normalizedIntensity * fadeProgress
+        // Update intensity from ECS with light cycling
+        const baseIntensity = LightEmitter.intensity[eid]
+        const fadeProgress = LightCycling.fadeProgress[eid]
+        visual.intensity = Math.min(baseIntensity * intensityNorm, 1.0) * fadeProgress
         
-        // All firefly sprites are always visible - no culling of visual elements
-        
-        const color = LightEmitter.color[eid]
-        tempColor.setHex(color)
-        tempColor.multiplyScalar(finalIntensity) // Now includes smooth view-based fading
-        colorAttr.setXYZ(i, tempColor.r, tempColor.g, tempColor.b)
+        // Update color from ECS
+        visual.color = LightEmitter.color[eid]
       }
-
-      // Mark buffers as needing an update to be sent to the GPU
-      posAttr.needsUpdate = true
-      colorAttr.needsUpdate = true
+      
+      // Trigger reactivity
+      visualFireflies = visualFireflies
     }
 
     public getActiveLightsFromECS() {
       if (!ecsWorld) return []
       return ecsWorld.getActiveLights();
     }
-
-    // REMOVED: Public method that breaks encapsulation
 
     public handleDiscovery(): void {
       // ... (no changes needed here)
@@ -434,30 +333,45 @@
   const { camera } = useThrelte()
 
   useTask((delta) => {
-    if (component) {
+    if (!component) return
+    
+    lightingUpdateCounter++
+    
+    // Only get lights when we actually need them (much less frequent)
+    if (lightingUpdateCounter % 6 === 0) { // Every 6 frames (~10fps)
       const allLights = component.getActiveLightsFromECS()
       
-      // Update cycle time for distributed lighting
-      lightCycleTime += delta * 1000 // Convert to milliseconds
-      if (lightCycleTime > lightCycleDuration) {
-        lightCycleTime = 0 // Reset cycle
+      // Set initial lights immediately on first run
+      if (!initialLightsSet && allLights.length > 0) {
+        console.log(`🌟 Setting initial lights: ${allLights.length} fireflies available`)
+        updateLightTargets(allLights, optimizedMaxLights, 0)
+        activeLights = getCurrentLights(allLights, delta * 6)
+        initialLightsSet = true
       }
       
-      // Update light targets less frequently for smooth transitions
-      if (lightingUpdateCounter % 800 === 0) { // Update targets every ~13 seconds
-        updateLightTargets(allLights, $camera, optimizedMaxLights, lightCycleTime)
+      // Update cycle time for distributed lighting
+      lightCycleTime += delta * 1000 * 6 // Account for reduced frequency
+      if (lightCycleTime > lightCycleDuration) {
+        lightCycleTime = 0
+      }
+      
+      // Update light targets much less frequently (but not on first run)
+      if (initialLightsSet && lightingUpdateCounter % 3600 === 0) { // Every 60 seconds
+        updateLightTargets(allLights, optimizedMaxLights, lightCycleTime)
         
-        // Debug info with optimization level
-        if (lightingUpdateCounter % 900 === 0) { // Every 15 seconds
-          console.log(`🌟 Smooth lights: ${activeLights.length}/${allLights.length} fireflies active (max: ${optimizedMaxLights})`)
+        // Debug info even less frequently
+        if (lightingUpdateCounter % 7200 === 0) { // Every 2 minutes
+          console.log(`🌟 Lights: ${activeLights.length}/${allLights.length} active (max: ${optimizedMaxLights})`)
         }
       }
       
-      // Update actual light intensities every frame for smooth fading
-      activeLights = getCurrentLights(allLights, delta)
+      // Update actual light intensities less frequently
+      if (lightingUpdateCounter % 18 === 0) { // Every 18 frames (~3fps)
+        activeLights = getCurrentLights(allLights, delta * 6) // Compensate for reduced frequency
+      }
       
-      // Send to lighting system less frequently for ocean reflections
-      if (lightingManager && activeLights.length > 0 && lightingUpdateCounter % 15 === 0) {
+      // Send to lighting system much less frequently
+      if (lightingManager && activeLights.length > 0 && lightingUpdateCounter % 60 === 0) { // Every second
         const pointLights = activeLights.map(light => ({
           position: new THREE.Vector3(light.position.x, light.position.y, light.position.z),
           color: new THREE.Color(light.color),
@@ -467,17 +381,13 @@
         
         lightingManager.updatePointLights?.(pointLights)
       }
-      lightingUpdateCounter++
     }
   })
 
-  // This reactive statement will update the shader uniforms whenever the props change.
-  $: if (material) {
-    material.uniforms.uPointSize.value = pointSize
-    material.uniforms.uGlowInnerRadius.value = glowInnerRadius
-    material.uniforms.uGlowOuterRadius.value = glowOuterRadius
-    material.uniforms.uCoreRadius.value = coreRadius
-    material.uniforms.uCoreOpacity.value = coreOpacity
+  // Update visual fireflies when count changes
+  $: if (component && visualFireflies.length !== optimizedCount) {
+    console.log(`🔄 Firefly count changed: recreating ${optimizedCount} visual fireflies`)
+    component.setupVisualFireflies()
   }
 
   // Reactive handling of prop changes for maintainability
@@ -518,15 +428,19 @@
   export function getActiveLights() { /* ... */ }
 </script>
 
-<!-- UPDATED: Render a Points object instead of an InstancedMesh -->
-{#if geometry && material}
-  <T.Points
-    bind:ref={points}
-    {geometry}
-    {material}
-    frustumCulled={false}
+<!-- Beautiful StarSprite fireflies with star-like appearance -->
+{#each visualFireflies as firefly (firefly.id)}
+  <StarSprite
+    position={firefly.position}
+    color={firefly.color}
+    size={firefly.size}
+    intensity={firefly.intensity}
+    twinkleSpeed={firefly.twinkleSpeed}
+    animationOffset={firefly.animationOffset}
+    enableTwinkle={true}
+    opacity={1.0}
   />
-{/if}
+{/each}
 
 <!-- Actual Three.js lights - smoothly animated intensity -->
 {#if optimizedMaxLights > 0}
