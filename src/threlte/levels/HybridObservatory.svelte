@@ -268,7 +268,7 @@
       {getHeightAt}
       count={100}
       maxLights={20}
-      lightIntensity={50.0}
+      lightIntensity={100.0}
       lightRange={1000}
       cycleDuration={12.0}
       fadeSpeed={2.0}

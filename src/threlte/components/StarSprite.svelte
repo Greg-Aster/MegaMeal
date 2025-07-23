@@ -52,11 +52,14 @@
       alphaTest: 0.001,
       blending: THREE.AdditiveBlending, // This creates the beautiful glow
       depthWrite: false, // Prevents z-fighting
+      depthTest: true,   // Test depth but don't write - allows proper sorting
       opacity: opacity * intensity
     })
 
     if (sprite) {
       sprite.material = material
+      // Ensure fireflies render after ocean surface
+      sprite.renderOrder = 1
     }
   }
 

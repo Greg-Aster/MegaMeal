@@ -396,7 +396,11 @@
         
         // Enable proper lighting integration
         fog: true, // Respond to scene fog
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
+        
+        // FIX: Ensure fireflies render properly over ocean
+        depthWrite: true, // Ocean writes to depth buffer
+        depthTest: true   // Ocean tests against depth buffer
       })
       
       // Ocean setup complete
@@ -584,5 +588,6 @@
     receiveShadow={true}
     castShadow={false}
     name="ocean_surface"
+    renderOrder={0}
   />
 {/if}
