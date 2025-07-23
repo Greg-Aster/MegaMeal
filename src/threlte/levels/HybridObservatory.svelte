@@ -41,6 +41,7 @@
   export let timelineEventsJson: string = '[]' // JSON string of timeline events for star system
   export let onLevelReady: (() => void) | undefined = undefined
   export let position: [number, number, number] = [0, 15, 10] // Default position
+  export let interactionSystem: any = null // Centralized interaction system from Game
   
   // Player spawn point for this level
   export let playerSpawnPoint: [number, number, number] = [0, 15, -50] // On the central hill above ground
@@ -280,6 +281,7 @@
     <HybridFireflyComponent 
       bind:this={hybridFireflyComponent}
       {getHeightAt}
+      {interactionSystem}
       count={100}
       maxLights={20}
       lightIntensity={100.0}
@@ -325,6 +327,7 @@
       <StarMap 
         bind:this={starMapComponent}
         timelineEvents={realTimelineEvents}
+        {interactionSystem}
         on:starSelected={handleStarSelected}
       />
     {/if}

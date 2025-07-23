@@ -29,6 +29,7 @@
     LightCycling
   } from '../core/ECSIntegration'
   import StarSprite from './StarSprite.svelte'
+  import { gameActions } from '../stores/gameStateStore'
 
   // Visual firefly data for StarSprite components
   interface FireflyVisual {
@@ -39,6 +40,13 @@
     intensity: number
     twinkleSpeed: number
     animationOffset: number
+    // Interactive properties
+    name: string
+    species: string
+    age: number
+    personality: string
+    isClickable: boolean
+    isHovered?: boolean
   }
 
   // Props with perfect legacy visual parameters
@@ -64,6 +72,7 @@
   }
   export let getHeightAt: ((x: number, z: number) => number) | undefined = undefined
   export let environmentReady = true // Allow external control of when to create fireflies
+  export let interactionSystem: any = null // Centralized interaction system from Game
 
   // Get level context (modern component architecture)
   const registry = getContext('systemRegistry')
@@ -95,6 +104,7 @@
   
   // Visual firefly data for StarSprite rendering
   let visualFireflies: FireflyVisual[] = []
+  let fireflySprites: THREE.Sprite[] = [] // Track sprites for interaction system
 
   // Performance objects
   const tempColor = new THREE.Color()
@@ -262,15 +272,47 @@
     }
 
     public setupVisualFireflies(): void {
-      visualFireflies = fireflyEntities.map((eid, i) => ({
-        id: eid,
-        position: [Position.x[eid], Position.y[eid], Position.z[eid]] as [number, number, number],
-        color: LightEmitter.color[eid],
-        size: pointSize * 0.05, // Convert point size to sprite scale
-        intensity: 1.0,
-        twinkleSpeed: 0.8 + Math.random() * 0.4,
-        animationOffset: Math.random() * Math.PI * 2
-      }))
+      const fireflySpecies = [
+        'Common Eastern Firefly',
+        'Blue Ghost Firefly',
+        'Photinus Pyralis',
+        'Synchronous Firefly',
+        'Big Dipper Firefly'
+      ]
+      
+      const fireflyPersonalities = [
+        'a gentle wanderer who loves collecting dewdrops',
+        'a curious explorer who chases moonbeams',
+        'a wise storyteller who remembers ancient summers',
+        'a playful dancer who creates light patterns',
+        'a peaceful dreamer who whispers to flowers',
+        'an adventurous spirit who guides lost travelers',
+        'a magical being who paints the night with gold',
+        'a friendly companion who brings joy to darkness'
+      ]
+      
+      visualFireflies = fireflyEntities.map((eid, i) => {
+        const species = fireflySpecies[Math.floor(Math.random() * fireflySpecies.length)]
+        const personality = fireflyPersonalities[Math.floor(Math.random() * fireflyPersonalities.length)]
+        const age = Math.floor(Math.random() * 30) + 10 // 10-40 days
+        
+        return {
+          id: eid,
+          position: [Position.x[eid], Position.y[eid], Position.z[eid]] as [number, number, number],
+          color: LightEmitter.color[eid],
+          size: pointSize * 0.05, // Convert point size to sprite scale
+          intensity: 1.0,
+          twinkleSpeed: 0.8 + Math.random() * 0.4,
+          animationOffset: Math.random() * Math.PI * 2,
+          // Interactive properties
+          name: `${species} ${i + 1}`,
+          species: species,
+          age: age,
+          personality: personality,
+          isClickable: true,
+          isHovered: false
+        }
+      })
     }
 
     private updateVisualFireflies(): void {
@@ -420,6 +462,73 @@
 
   // REMOVED: Broken reactive system that violates ECS principles
 
+  // --- FIREFLY INTERACTION HANDLERS ---
+  
+  function handleFireflyClick(data: any) {
+    const { sprite, index, timestamp, ...firefly } = data
+    console.log('✨ HybridFireflyComponent: Firefly clicked via InteractionSystem:', firefly.name)
+    
+    // Show dialog with firefly-specific content
+    gameActions.showDialogue(
+      `Hello! I'm ${firefly.name}, a ${firefly.species}. ${firefly.personality}. I'm about ${firefly.age} days old and have been dancing in this magical place for quite some time. Would you like to hear more stories of the night?`,
+      firefly.name,
+      8000 // 8 seconds
+    )
+    
+    // Record interaction
+    gameActions.recordInteraction('firefly_click', firefly.id || 'unknown')
+    
+    // Could trigger special ECS effects here
+    if (typeof triggerDiscovery === 'function') {
+      triggerDiscovery()
+    }
+    
+    console.log(`✨ Clicked firefly: ${firefly.name} (${firefly.species}), age ${firefly.age} days`)
+  }
+  
+  function handleFireflyHover(data: any, hovered: boolean) {
+    if (hovered) {
+      console.log(`👆 Hovering over: ${data.name}`)
+      // Find the visual firefly and mark it as hovered
+      const visualFirefly = visualFireflies.find(f => f.id === data.id)
+      if (visualFirefly) {
+        visualFirefly.isHovered = true
+        // Force reactivity update
+        visualFireflies = visualFireflies
+      }
+    } else {
+      console.log(`👋 No longer hovering over: ${data.name}`)
+      // Remove hover state from all fireflies
+      visualFireflies.forEach(f => f.isHovered = false)
+      // Force reactivity update
+      visualFireflies = visualFireflies
+    }
+  }
+  
+  // Function to handle sprite registration
+  function handleSpriteReady(sprite: THREE.Sprite, firefly: FireflyVisual, index: number) {
+    // console.log(`🧚‍♀️ Firefly sprite ready: ${firefly.name} (clickable: ${firefly.isClickable})`)
+    fireflySprites[index] = sprite
+    
+    // Register with interaction system if available
+    if (interactionSystem && firefly.isClickable) {
+      // console.log(`🎯 Registering firefly ${firefly.name} with InteractionSystem`)
+      interactionSystem.registerInteractiveObject({
+        id: `firefly_${firefly.id}`,
+        sprite: sprite,
+        type: 'firefly',
+        data: firefly,
+        index: index,
+        handlers: {
+          onClick: handleFireflyClick,
+          onHover: (data: any, hovered: boolean) => handleFireflyHover(data, hovered)
+        }
+      })
+    } else {
+      console.warn(`⚠️ Failed to register firefly: interactionSystem=${!!interactionSystem}, clickable=${firefly.isClickable}`)
+    }
+  }
+
   // API functions (no changes needed)
   export function triggerDiscovery() { /* ... */ }
   export function setEmotionalState(wonder: number, melancholy: number, hope: number, discovery: number) { /* ... */ }
@@ -428,8 +537,8 @@
   export function getActiveLights() { /* ... */ }
 </script>
 
-<!-- Beautiful StarSprite fireflies with star-like appearance -->
-{#each visualFireflies as firefly (firefly.id)}
+<!-- Beautiful StarSprite fireflies with star-like appearance and centralized interaction -->
+{#each visualFireflies as firefly, index (firefly.id)}
   <StarSprite
     position={firefly.position}
     color={firefly.color}
@@ -439,6 +548,10 @@
     animationOffset={firefly.animationOffset}
     enableTwinkle={true}
     opacity={1.0}
+    isClickable={firefly.isClickable}
+    isHovered={firefly.isHovered || false}
+    fireflyData={firefly}
+    onSpriteReady={(sprite) => handleSpriteReady(sprite, firefly, index)}
   />
 {/each}
 

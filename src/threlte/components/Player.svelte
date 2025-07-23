@@ -355,10 +355,11 @@
     }
     // If no input, velocity.x and velocity.z remain 0 (stopping movement)
 
-    // Ground detection - player is grounded if vertical velocity is very small and they're not falling fast
+    // Ground detection - more forgiving for slopes and hills
     const currentTime = Date.now()
     const wasGrounded = isGrounded
-    isGrounded = Math.abs(linvel.y) < 0.5 && linvel.y > -1.0 // More strict ground detection
+    // Allow jumping on slopes - less strict about vertical velocity
+    isGrounded = Math.abs(linvel.y) < 2.0 && linvel.y > -3.0
     
     if (isGrounded && !wasGrounded) {
       lastGroundTime = currentTime // Update when we touch ground
@@ -368,7 +369,13 @@
     const canJump = isGrounded || (currentTime - lastGroundTime < coyoteTime)
     const wantsToJump = jumpKeyPressed || mobileJumpPressed
     
+    // Debug jumping issues
+    if (wantsToJump && !canJump) {
+      console.log(`❌ Jump blocked - isGrounded: ${isGrounded}, linvel.y: ${linvel.y.toFixed(3)}, timeSinceGround: ${currentTime - lastGroundTime}ms`)
+    }
+    
     if (wantsToJump && canJump) {
+      console.log(`✅ Jump! - isGrounded: ${isGrounded}, linvel.y: ${linvel.y.toFixed(3)}`)
       velocity.y = jumpForce
       isGrounded = false // Immediately set as not grounded when jumping
       jumpKeyPressed = false // Reset jump flags

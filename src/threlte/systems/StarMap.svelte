@@ -40,6 +40,7 @@
 
   // --- PROPS ---
   export let timelineEvents: any[] = []
+  export let interactionSystem: any = null // Centralized interaction system from Game
 
   // --- STATE ---
   let stars: StarData[] = []
@@ -47,10 +48,6 @@
   let constellationLines: THREE.LineSegments[] = []
   let starGroup: THREE.Group
   let hoveredStarIndex: number | null = null
-  
-  // Mouse tracking for accurate raycasting
-  let lastMouseX = 0
-  let lastMouseY = 0
   
   // Smooth transition states for natural glow effects
   let hoverTransitions: Map<number, number> = new Map() // starIndex -> transition value (0-1)
@@ -74,43 +71,8 @@
   // --- LIFECYCLE & DATA GENERATION ---
 
   onMount(() => {
-    console.log('✨ Optimized StarMap: Initializing with Instancing...')
+    console.log('✨ StarMap: Initializing with centralized interaction system')
     generateStars()
-    
-    // Add mouse tracking and click interaction
-    const handleMouseMove = (event: MouseEvent) => {
-      lastMouseX = event.clientX
-      lastMouseY = event.clientY
-      
-      // Check for hover effect
-      checkStarHover(event)
-    }
-    
-    const handleCanvasClick = (event: MouseEvent) => {
-      // Only handle clicks if we're not dragging (for FPS camera)
-      if (event.button === 0) { // Left click only
-        console.log('🖱️ StarMap: Canvas click detected')
-        // Update mouse position before raycasting
-        lastMouseX = event.clientX
-        lastMouseY = event.clientY
-        // Small delay to ensure camera movement is done
-        setTimeout(() => selectStarInCrosshair(), 50)
-      }
-    }
-    
-    // Get canvas and add mouse listeners
-    const canvas = document.querySelector('canvas')
-    if (canvas) {
-      canvas.addEventListener('mousemove', handleMouseMove)
-      canvas.addEventListener('click', handleCanvasClick)
-    }
-    
-    return () => {
-      if (canvas) {
-        canvas.removeEventListener('mousemove', handleMouseMove)
-        canvas.removeEventListener('click', handleCanvasClick)
-      }
-    }
   })
 
   // This reactive block creates star sprites whenever the star data changes.
@@ -175,7 +137,15 @@
     // Create constellation lines like original system
     createConstellationLines()
     
-    console.log(`✅ StarMap: Created ${starSprites.length} authentic star sprites with constellation lines`)
+    // Register sprites with centralized interaction system
+    if (interactionSystem && starSprites.length > 0) {
+      interactionSystem.registerStarSprites(starSprites, stars, {
+        onClick: handleStarClick,
+        onHover: (data: any, hovered: boolean) => handleStarHover(data, hovered)
+      })
+    }
+    
+    console.log(`✅ StarMap: Created ${starSprites.length} authentic star sprites with centralized interaction`)
   }
 
   function createStarSprite(star: StarData, index: number): THREE.Sprite {
@@ -353,18 +323,11 @@
     })
   })
 
-  // --- INTERACTION ---
+  // --- INTERACTION HANDLERS (for centralized interaction system) ---
 
-  function handleStarClick(event: any) {
-    console.log('🖱️ StarMap: Click event received', event)
-    const intersected = getIntersectedStar(event)
-    if (!intersected) {
-      console.log('❌ StarMap: No star intersected')
-      return
-    }
-
-    const { sprite, star, index } = intersected
-    console.log('⭐ StarMap: Star clicked:', star.title)
+  function handleStarClick(data: any) {
+    const { sprite, index, timestamp, ...star } = data
+    console.log('⭐ StarMap: Star clicked via InteractionSystem:', star.title)
     
     // Update stores
     gameActions.selectStar(star)
@@ -372,7 +335,7 @@
     
     // Calculate screen position for timeline cards
     const worldPosition = new THREE.Vector3().copy(sprite.position)
-    const screenPosition = getScreenPosition(worldPosition)
+    const screenPosition = interactionSystem?.getScreenPosition(worldPosition) || { x: 0, y: 0 }
     
     // Dispatch enhanced event with all necessary data
     dispatch('starSelected', {
@@ -381,7 +344,7 @@
       screenPosition: screenPosition,
       worldPosition: worldPosition,
       index: index,
-      timestamp: Date.now()
+      timestamp: timestamp
     })
     
     // Emit global event for StarNavigationSystem
@@ -397,154 +360,15 @@
     }
   }
 
-  function handleStarHover(event: any) {
-    const intersected = getIntersectedStar(event)
-    if (intersected) {
-      hoveredStarIndex = intersected.index
-      gameActions.recordInteraction('star_hover', intersected.star.uniqueId)
+  function handleStarHover(data: any, hovered: boolean) {
+    if (hovered) {
+      hoveredStarIndex = data.index
+      gameActions.recordInteraction('star_hover', data.uniqueId)
     } else {
       hoveredStarIndex = null
     }
   }
 
-  function checkStarHover(event: MouseEvent) {
-    if (!$camera || starSprites.length === 0) return
-    
-    const canvas = event.target as HTMLCanvasElement
-    const rect = canvas.getBoundingClientRect()
-    const mouse = new THREE.Vector2()
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
-    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
-    
-    const raycaster = new THREE.Raycaster()
-    raycaster.setFromCamera(mouse, $camera)
-    raycaster.params.Sprite = { threshold: 1000 }
-    
-    const intersects = raycaster.intersectObjects(starSprites)
-    if (intersects.length > 0) {
-      const sprite = intersects[0].object as THREE.Sprite
-      const starIndex = (sprite as any).starIndex
-      if (hoveredStarIndex !== starIndex) {
-        hoveredStarIndex = starIndex
-        // Reduced hover logging - uncomment for debugging
-        // console.log('✨ Hover:', stars[starIndex]?.title?.substring(0, 20) + '...')
-      }
-    } else {
-      hoveredStarIndex = null
-    }
-  }
-
-  function getIntersectedStar(event: any): { sprite: THREE.Sprite, star: StarData, index: number } | null {
-    if (!$camera || starSprites.length === 0) return null
-
-    const mouse = new THREE.Vector2()
-    const rect = (event.target as HTMLCanvasElement).getBoundingClientRect()
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
-    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
-
-    const raycaster = new THREE.Raycaster()
-    raycaster.setFromCamera(mouse, $camera)
-
-    const intersects = raycaster.intersectObjects(starSprites)
-    if (intersects.length > 0) {
-      const sprite = intersects[0].object as THREE.Sprite
-      const starData = (sprite as any).starData
-      const starIndex = (sprite as any).starIndex
-      return { sprite, star: starData, index: starIndex }
-    }
-
-    return null
-  }
-  
-  function getScreenPosition(worldPosition: THREE.Vector3): { x: number, y: number } {
-    if (!$camera) return { x: 0, y: 0 }
-    
-    const vector = worldPosition.clone()
-    vector.project($camera)
-    
-    // Get canvas dimensions
-    const canvas = document.querySelector('canvas')
-    const width = canvas?.clientWidth || window.innerWidth
-    const height = canvas?.clientHeight || window.innerHeight
-    
-    const widthHalf = width / 2
-    const heightHalf = height / 2
-    
-    return {
-      x: (vector.x * widthHalf) + widthHalf,
-      y: -(vector.y * heightHalf) + heightHalf
-    }
-  }
-
-  // Select star based on mouse position
-  function selectStarInCrosshair() {
-    if (!$camera || starSprites.length === 0) {
-      console.log('❌ No camera or no star sprites:', { camera: !!$camera, sprites: starSprites.length })
-      return
-    }
-    
-    // Get mouse position from last known position
-    const canvas = document.querySelector('canvas')
-    if (!canvas) return
-    
-    const rect = canvas.getBoundingClientRect()
-    const mouse = new THREE.Vector2()
-    mouse.x = ((lastMouseX - rect.left) / rect.width) * 2 - 1
-    mouse.y = -((lastMouseY - rect.top) / rect.height) * 2 + 1
-    
-    // Cast ray from mouse position
-    const raycaster = new THREE.Raycaster()
-    raycaster.setFromCamera(mouse, $camera)
-    
-    // MASSIVE threshold needed for sprites at distance 1000
-    raycaster.params.Sprite = { threshold: 1000 }
-    
-    const intersects = raycaster.intersectObjects(starSprites)
-    
-    if (intersects.length > 0) {
-      const sprite = intersects[0].object as THREE.Sprite
-      const starData = (sprite as any).starData
-      const starIndex = (sprite as any).starIndex
-      
-      // Calculate positions for timeline card
-      const worldPosition = new THREE.Vector3().copy(sprite.position)
-      const screenPosition = getScreenPosition(worldPosition)
-      
-      // Update star data with screen position and select it
-      const starWithPosition = { ...starData, screenPosition }
-      gameActions.selectStar(starWithPosition)
-      gameActions.recordInteraction('star_select', starData.uniqueId)
-      
-      // Dispatch events
-      dispatch('starSelected', {
-        star: starData,
-        eventData: starData,
-        screenPosition: screenPosition,
-        worldPosition: worldPosition,
-        index: starIndex,
-        timestamp: Date.now()
-      })
-      
-      // Emit global event for StarNavigationSystem
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('starmap.star.selected', {
-          detail: {
-            eventData: starData,
-            screenPosition: screenPosition,
-            worldPosition: worldPosition,
-            index: starIndex
-          }
-        }))
-      }
-      
-      return true // Indicate star was found
-    } else {
-      console.log('🔍 No star found - clicking empty space')
-      // Deselect star when clicking empty space
-      gameActions.selectStar(null)
-      return false // Indicate no star was found
-    }
-  }
 
   // --- REACTIVE UPDATES ---
 
@@ -748,13 +572,5 @@
 </script>
 
 <T.Group name="authentic-starnode-system" bind:ref={starGroup}>
-  <!-- Interaction detection sphere -->
-  <T.Mesh
-    on:click={handleStarClick}
-    on:pointermove={handleStarHover}
-    visible={false}
-  >
-    <T.SphereGeometry args={[1100]} />
-    <T.MeshBasicMaterial transparent opacity={0} />
-  </T.Mesh>
+  <!-- Sprites are registered with InteractionSystem automatically -->
 </T.Group>

@@ -1,10 +1,11 @@
 <!--
-  Reusable StarSprite Component
+  Interactive StarSprite Component
   
   This component creates beautiful star-like sprites with:
   - Hard core and glowing border (like StarMap stars)
   - Twinkling animation
   - Emissive material for bright appearance
+  - Click interaction support for fireflies and other interactive elements
   - Perfect for fireflies, particles, or any glowing orbs
 -->
 <script lang="ts">
@@ -23,6 +24,12 @@
   export let isKeyElement: boolean = false // Special rendering for important elements
   export let enableTwinkle: boolean = true
   export let opacity: number = 1.0
+  
+  // Interactive firefly props (optional)
+  export let isClickable: boolean = false
+  export const fireflyData: any = null // For external reference only
+  export let onSpriteReady: ((sprite: THREE.Sprite) => void) | null = null // Callback when sprite is ready
+  export let isHovered: boolean = false // External hover state from InteractionSystem
 
   // Internal state
   let sprite: THREE.Sprite
@@ -34,6 +41,9 @@
   onMount(() => {
     createStarSprite()
   })
+  
+  // --- INTERACTION HANDLERS ---
+  // All interactions now handled by centralized InteractionSystem
 
   function createStarSprite() {
     // Convert numeric color to hex string for starUtils
@@ -69,7 +79,7 @@
   }
 
   // Animation loop for twinkling
-  useTask((delta) => {
+  useTask(() => {
     if (!sprite || !enableTwinkle) return
 
     const time = performance.now() * 0.001
@@ -81,9 +91,13 @@
     const twinkle3 = Math.sin(twinkleTime * 0.3 + 2) * 0.05
     const twinkle = 0.85 + twinkle1 + twinkle2 + twinkle3
 
-    // Apply twinkling to scale and opacity
-    const finalScale = baseScale * size * twinkle
-    const finalOpacity = opacity * intensity * twinkle
+    // Apply hover effects (like StarMap) - use external hover state
+    const hoverScale = isHovered && isClickable ? 1.3 : 1.0
+    const hoverGlow = isHovered && isClickable ? 0.4 : 0.0
+
+    // Apply twinkling to scale and opacity with hover effects
+    const finalScale = baseScale * size * twinkle * hoverScale
+    const finalOpacity = opacity * intensity * twinkle * (1.0 + hoverGlow)
     
     sprite.scale.setScalar(finalScale)
     if (material) {
@@ -102,6 +116,11 @@
   // Update position when prop changes
   $: if (sprite) {
     sprite.position.set(...position)
+  }
+
+  // Call onSpriteReady when sprite becomes available
+  $: if (sprite && onSpriteReady) {
+    onSpriteReady(sprite)
   }
 
   // Cleanup on destroy

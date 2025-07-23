@@ -31,6 +31,7 @@
   // StateManager removed - was conflicting with Player component rotation control
   import Performance from './systems/Performance.svelte'
   import LOD from './systems/LOD.svelte'
+  import InteractionSystem from './systems/InteractionSystem.svelte'
   
   // Post-processing effects temporarily disabled due to library compatibility issues
   
@@ -90,6 +91,7 @@
   let levelReady = true
   let playerSpawnPoint: [number, number, number] = [0, 8, 0] // Default spawn
   let playerComponent: any = null
+  let interactionSystem: any = null // Reference to centralized InteractionSystem
   
   // Reactive store subscriptions (these are reactive by default)
   $: currentLevel = $currentLevelStore
@@ -344,6 +346,12 @@
           on:dialogueHide={() => gameActions.hideDialogue()}
         />
         
+        <!-- Centralized Interaction System for Stars and Fireflies -->
+        <InteractionSystem
+          bind:this={interactionSystem}
+          on:objectClick={(e) => console.log('🎯 Game: Object clicked:', e.detail)}
+        />
+        
         <Time on:timeUpdate={(e) => dispatch('timeUpdate', e.detail)} />
         
         <Performance 
@@ -415,6 +423,7 @@
             timelineEvents={parsedTimelineEvents}
             timelineEventsJson={typeof timelineEvents === 'string' ? timelineEvents : JSON.stringify(parsedTimelineEvents)}
             onLevelReady={handleLevelReady}
+            {interactionSystem}
             on:starSelected={(e) => dispatch('starSelected', e.detail)}
             on:telescopeInteraction={(e) => dispatch('telescopeInteraction', e.detail)}
             on:playerSpawnReady={handlePlayerSpawnReady}

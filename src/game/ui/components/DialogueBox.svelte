@@ -7,9 +7,9 @@ import { onMount } from 'svelte'
 import { createEventDispatcher } from 'svelte'
 
 export let isVisible = false
-export const text = ''
-export const speaker = ''
-export const duration = 3000
+export let text = ''
+export let speaker = ''
+export let duration = 3000
 
 const dispatch = createEventDispatcher()
 
