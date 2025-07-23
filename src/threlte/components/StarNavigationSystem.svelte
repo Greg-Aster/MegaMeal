@@ -60,7 +60,9 @@
   function handleExternalStarSelection(event: any) {
     const { eventData, screenPosition } = event.detail
     if (eventData && isSystemActive) {
-      gameActions.selectStar(eventData)
+      // Include screen position in the star data
+      const starWithPosition = { ...eventData, screenPosition }
+      gameActions.selectStar(starWithPosition)
       console.log('🌟 External star selection processed:', eventData.title)
     }
   }

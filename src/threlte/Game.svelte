@@ -157,17 +157,9 @@ $: selectedEvent = selectedStar
     }
   : null
 
-// Debug selected event
+// Minimal debug for selected events
 $: if (selectedEvent) {
-  console.log('🎯 Game.svelte: selectedEvent created:', {
-    title: selectedEvent.title,
-    hasId: !!selectedEvent.id,
-    hasSlug: !!selectedEvent.slug,
-    hasYear: !!selectedEvent.year,
-    hasEra: !!selectedEvent.era
-  })
-} else if (selectedStar) {
-  console.log('❌ Game.svelte: selectedStar exists but selectedEvent is null:', selectedStar)
+  console.log('🎯 Timeline card:', selectedEvent.title?.substring(0, 30) + '...')
 }
 
 /**
@@ -379,7 +371,7 @@ onDestroy(() => {
         -->
         {#if levelReady}
           <Player
-            position={[0, 15, 10]}
+            position={[0, 6, -50]}
             speed={5}
             jumpForce={8}
             on:lock={() => console.log('🔒 Pointer locked')}
@@ -458,13 +450,15 @@ onDestroy(() => {
 
     <!-- Star Information Card -->
     {#if selectedEvent}
-      <div style="pointer-events: auto;">
+      <div style="pointer-events: auto; position: relative; z-index: 1000;">
         <TimelineCard 
           event={selectedEvent}
           isSelected={true}
+          isVisible={true}
           position={getPositionFromCardClass(selectedEvent.screenPosition?.cardClass) || 'bottom'}
           {isMobile}
           on:levelTransition={handleLevelTransition}
+          on:close={() => gameActions.selectStar(null)}
         />
       </div>
     {/if}

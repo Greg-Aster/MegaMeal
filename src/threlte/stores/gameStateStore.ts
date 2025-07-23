@@ -52,7 +52,7 @@ export interface StarData {
 export const currentLevelStore: Writable<string> = writable('hybrid-observatory')
 export const selectedStarStore: Writable<StarData | null> = writable(null)
 export const playerStateStore: Writable<PlayerState> = writable({
-  position: [50, 20, 10], // Temporarily set Y to 30 to spawn above ground
+  position: [0, 12, 10], // Spawn at center with reasonable height
   rotation: [0, 0, 0], // Keep rotation as is
   health: 100,
   energy: 100,
@@ -105,7 +105,7 @@ export const gameActions = {
   },
 
   // Star selection
-  selectStar: (star: StarData) => {
+  selectStar: (star: StarData | null) => {
     selectedStarStore.set(star)
   },
 
@@ -188,7 +188,8 @@ export const loadGameState = () => {
       const state = JSON.parse(saved)
       
       if (state.currentLevel) currentLevelStore.set(state.currentLevel)
-      if (state.selectedStar) selectedStarStore.set(state.selectedStar)
+      // Don't restore selectedStar - always start with none selected
+      // if (state.selectedStar) selectedStarStore.set(state.selectedStar)
       if (state.playerState) playerStateStore.set(state.playerState)
       if (state.gameSession) gameSessionStore.set(state.gameSession)
       

@@ -63,17 +63,19 @@
 </style>
 
 <script lang="ts">
-import { createEventDispatcher } from 'svelte'
+import { createEventDispatcher, onMount } from 'svelte'
 import type { TimelineEvent } from '../../../services/TimelineService.client'
 
 export let event: TimelineEvent
-export const isSelected = false
-export const compact = false
-export const position: 'top' | 'bottom' | 'left' | 'right' = 'bottom'
-export const isMobile = false
-export const isVisible = true
+export let isSelected = false
+export let compact = false
+export let position: 'top' | 'bottom' | 'left' | 'right' = 'bottom'
+export let isMobile = false
+export let isVisible = true
 
 const dispatch = createEventDispatcher()
+
+// Component mounted successfully
 
 // This helper function is defined but not used in the template below.
 // The link style is hardcoded in the <a> tag.
@@ -96,26 +98,19 @@ function getEraBadgeClass(era?: string): string {
 
 const cardId = `timeline-card-${event.slug}-${Math.random().toString(36).substring(2, 9)}`
 
-let initialX = 0
-let initialY = 0
-
-if (isMobile) {
-  initialY = 20
-} else {
-  if (position === 'top') initialY = 10
-  else if (position === 'bottom') initialY = -10
-  else if (position === 'left') initialX = 10
-  else if (position === 'right') initialX = -10
-}
+// Animation handled by CSS and triggerAnimation function
 
 let cardElement: HTMLElement
 
 // Get positioning styles for the card
 function getPositioningStyles() {
   if (event.screenPosition && !isMobile) {
-    return `left: ${event.screenPosition.x}px; top: ${event.screenPosition.y}px;`
+    // Position card near the star but slightly offset to avoid covering it
+    const x = Math.max(10, Math.min(window.innerWidth - 220, event.screenPosition.x + 20))
+    const y = Math.max(10, Math.min(window.innerHeight - 150, event.screenPosition.y - 50))
+    return `left: ${x}px; top: ${y}px;`
   }
-  return ''
+  return 'bottom: 20px; left: 20px;' // Fallback position
 }
 
 // Fly-in animation
@@ -169,7 +164,7 @@ function handleViewEvent(clickEvent: Event) {
     class:timeline-card-bottom={!isMobile && position === 'bottom'}
     class:timeline-card-left={!isMobile && position === 'left'}
     class:timeline-card-right={!isMobile && position === 'right'}
-    style="opacity: 0; transform: translate({initialX}px, {initialY}px); {getPositioningStyles()}"
+    style="opacity: 1; transform: translate(0px, 0px); position: fixed; {getPositioningStyles()}"
   >
     <div class="font-bold text-75 text-sm mb-1 card-title">
       {event.title}

@@ -52,6 +52,10 @@
   let lastMouseX = 0
   let lastMouseY = 0
   
+  // Smooth transition states for natural glow effects
+  let hoverTransitions: Map<number, number> = new Map() // starIndex -> transition value (0-1)
+  let selectionTransitions: Map<string, number> = new Map() // uniqueId -> transition value (0-1)
+  
   // Export the component reference for StarNavigationSystem
   export { starGroup as starMapRef }
 
@@ -197,16 +201,10 @@
     ;(sprite as any).starData = star
     ;(sprite as any).starIndex = index
     
-    // Debug: Verify actual sprite position after creation
-    if (index < 3) {
+    // Sprite verification (minimal logging)
+    if (index === 0) {
       const actualDistance = sprite.position.length()
-      console.log(`🔍 Sprite ${index} after creation:`, {
-        title: star.title,
-        starPosition: star.position,
-        spritePosition: [sprite.position.x.toFixed(1), sprite.position.y.toFixed(1), sprite.position.z.toFixed(1)],
-        actualDistance: actualDistance.toFixed(1),
-        scale: sprite.scale.x.toFixed(1)
-      })
+      console.log(`🔍 Sprite created: ${star.title.substring(0, 20)}... distance ${actualDistance.toFixed(1)}`)
     }
 
     return sprite
@@ -282,6 +280,17 @@
     if (starSprites.length === 0) return
 
     const time = performance.now() * 0.001
+    
+    // Periodically clean up transition maps to prevent memory leaks
+    if (Math.floor(time) % 10 === 0) { // Every 10 seconds
+      // Remove zero transitions
+      for (const [key, value] of hoverTransitions.entries()) {
+        if (value <= 0) hoverTransitions.delete(key)
+      }
+      for (const [key, value] of selectionTransitions.entries()) {
+        if (value <= 0) selectionTransitions.delete(key)
+      }
+    }
 
     starSprites.forEach((sprite, index) => {
       const star = stars[index]
@@ -294,23 +303,38 @@
       const twinkle3 = Math.sin(twinkleTime * 0.3 + 2) * 0.05
       const twinkle = 0.85 + twinkle1 + twinkle2 + twinkle3
 
-      let scale = star.size * 128 * twinkle
+      let scale = star.size * 50 * twinkle
       let opacity = star.intensity * twinkle
 
-      // Selection and hover effects
+      // Smooth transition effects for natural glow
       const isSelected = selectedStar && selectedStar.uniqueId === star.uniqueId
       const isHovered = index === hoveredStarIndex
-
+      
+      // Update hover transition (smooth fade in/out)
+      const currentHoverTransition = hoverTransitions.get(index) || 0
+      if (isHovered) {
+        hoverTransitions.set(index, Math.min(1, currentHoverTransition + delta * 3)) // 3 = transition speed
+      } else {
+        hoverTransitions.set(index, Math.max(0, currentHoverTransition - delta * 3))
+      }
+      const hoverAmount = hoverTransitions.get(index) || 0
+      
+      // Update selection transition (smooth fade in/out)
+      const currentSelectionTransition = selectionTransitions.get(star.uniqueId) || 0
       if (isSelected) {
-        scale *= 1.8
-        opacity *= 2.0
-        // Debug selected star visual (reduced logging)
-        if (index === 0) {
-          console.log(`🔥 Selected star visual update: ${star.title.substring(0, 30)}...`)
-        }
-      } else if (isHovered) {
-        scale *= 1.4
-        opacity *= 1.5
+        selectionTransitions.set(star.uniqueId, Math.min(1, currentSelectionTransition + delta * 2)) // 2 = slower for selection
+      } else {
+        selectionTransitions.set(star.uniqueId, Math.max(0, currentSelectionTransition - delta * 2))
+      }
+      const selectionAmount = selectionTransitions.get(star.uniqueId) || 0
+
+      // Apply smooth effects based on transition amounts
+      scale *= 1 + (selectionAmount * 0.8) + (hoverAmount * 0.4) // Gradual scale increase
+      opacity *= 1 + (selectionAmount * 1.0) + (hoverAmount * 0.5) // Gradual opacity increase
+      
+      // Debug only when transition starts
+      if (isSelected && selectionAmount < 0.1 && index === 0) {
+        console.log(`🔥 Selected star transition started: ${star.title.substring(0, 30)}...`)
       }
 
       sprite.scale.setScalar(scale)
@@ -402,8 +426,8 @@
       const starIndex = (sprite as any).starIndex
       if (hoveredStarIndex !== starIndex) {
         hoveredStarIndex = starIndex
-        // Reduced hover logging
-        console.log('✨ Hover:', stars[starIndex]?.title?.substring(0, 20) + '...')
+        // Reduced hover logging - uncomment for debugging
+        // console.log('✨ Hover:', stars[starIndex]?.title?.substring(0, 20) + '...')
       }
     } else {
       hoveredStarIndex = null
@@ -459,8 +483,6 @@
       return
     }
     
-    // Reduced logging for click detection
-    
     // Get mouse position from last known position
     const canvas = document.querySelector('canvas')
     if (!canvas) return
@@ -477,42 +499,21 @@
     // MASSIVE threshold needed for sprites at distance 1000
     raycaster.params.Sprite = { threshold: 1000 }
     
-    console.log('🔍 Raycaster origin:', raycaster.ray.origin)
-    console.log('🔍 Raycaster direction:', raycaster.ray.direction)
-    
     const intersects = raycaster.intersectObjects(starSprites)
-    console.log('🔍 Intersects found:', intersects.length)
-    
-    // Debug: Show some star positions for comparison
-    if (starSprites.length > 0) {
-      console.log('🌟 First 3 star positions:')
-      for (let i = 0; i < Math.min(3, starSprites.length); i++) {
-        const sprite = starSprites[i]
-        const starData = (sprite as any).starData
-        const distance = sprite.position.length()
-        console.log(`  Star ${i}: ${starData?.title} at`, sprite.position, `distance: ${distance.toFixed(1)}`)
-      }
-    }
     
     if (intersects.length > 0) {
       const sprite = intersects[0].object as THREE.Sprite
       const starData = (sprite as any).starData
       const starIndex = (sprite as any).starIndex
       
-      console.log('⭐ StarMap: Star selected via crosshair:', starData.title)
-      console.log('🔍 Star data being selected:', {
-        uniqueId: starData.uniqueId,
-        title: starData.title,
-        currentSelectedStar: selectedStar?.uniqueId
-      })
-      
-      // Trigger the same selection logic as click
-      gameActions.selectStar(starData)
-      gameActions.recordInteraction('star_select', starData.uniqueId)
-      
       // Calculate positions for timeline card
       const worldPosition = new THREE.Vector3().copy(sprite.position)
       const screenPosition = getScreenPosition(worldPosition)
+      
+      // Update star data with screen position and select it
+      const starWithPosition = { ...starData, screenPosition }
+      gameActions.selectStar(starWithPosition)
+      gameActions.recordInteraction('star_select', starData.uniqueId)
       
       // Dispatch events
       dispatch('starSelected', {
@@ -535,8 +536,13 @@
           }
         }))
       }
+      
+      return true // Indicate star was found
     } else {
-      console.log('❌ StarMap: No star in crosshair')
+      console.log('🔍 No star found - clicking empty space')
+      // Deselect star when clicking empty space
+      gameActions.selectStar(null)
+      return false // Indicate no star was found
     }
   }
 
@@ -691,20 +697,10 @@
     const y = sphereRadius * Math.cos(polarAngleRad)
     const z = sphereRadius * Math.sin(polarAngleRad) * Math.sin(azimuthRad)
     
-    // Debug: Check if the calculated distance is correct
+    // Positioning verification (minimal logging)
     const calculatedDistance = Math.sqrt(x*x + y*y + z*z)
-    if (index < 3) {
-      console.log(`🔍 Star ${index} positioning debug:`, {
-        sphereRadius,
-        azimuthDeg,
-        elevationDeg,
-        azimuthRad: azimuthRad.toFixed(3),
-        elevationRad: elevationRad.toFixed(3),
-        polarAngleRad: polarAngleRad.toFixed(3),
-        calculatedPosition: [x.toFixed(1), y.toFixed(1), z.toFixed(1)],
-        calculatedDistance: calculatedDistance.toFixed(1),
-        expectedDistance: sphereRadius
-      })
+    if (index === 0) {
+      console.log(`🔍 Star positioning verified: distance ${calculatedDistance.toFixed(1)} (expected ${sphereRadius})`)
     }
     
     // Use original era colors and sizing with size factor

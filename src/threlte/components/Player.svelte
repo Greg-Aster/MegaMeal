@@ -364,15 +364,8 @@
 
   // Ground detection for spawn positioning  
   function findGroundHeightAt(x: number, z: number): number {
-    const fallbackHeight = Math.max(position[1] + 5, 10) // Ensure minimum safe height
-    
-    if (!rapier.world || !rigidBody) {
-      return fallbackHeight
-    }
-    
-    // For now, disable complex raycast and use safe fallback
-    // The raycast is causing NaN issues that break the player spawning
-    return fallbackHeight
+    // Use the provided position Y value directly instead of adding offset
+    return position[1] // Trust the spawn position provided
   }
 
   // Player initialization with automatic ground detection
@@ -389,11 +382,11 @@
         // Find safe spawn height automatically at these coordinates
         const safeY = findGroundHeightAt(spawnX, spawnZ)
         
-        // Safety check - ensure no NaN values
+        // Safety check - use provided position values
         const finalPosition = {
-          x: isNaN(spawnX) ? 25 : spawnX,
-          y: isNaN(safeY) ? 15 : safeY, // Safe fallback height
-          z: isNaN(spawnZ) ? 0 : spawnZ
+          x: spawnX,
+          y: safeY,
+          z: spawnZ
         }
         
         console.log(`🚀 Player spawned at: [${finalPosition.x}, ${finalPosition.y}, ${finalPosition.z}]`)
