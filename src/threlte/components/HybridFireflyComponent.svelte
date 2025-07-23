@@ -129,13 +129,13 @@
     try {
       const optimizationManager = OptimizationManager.getInstance()
       const qualitySettings = optimizationManager.getQualitySettings()
-      optimizedMaxLights = qualitySettings.maxFireflyLights
+      optimizedMaxLights = qualitySettings.maxFireflyLights * 2 // Double the available lights
       optimizedCount = optimizedMaxLights === 0 ? Math.min(count, 30) : count
-      console.log(`🎯 Firefly Optimization: ${optimizedCount} fireflies, ${optimizedMaxLights} max lights (original: ${maxLights})`)
+      console.log(`🎯 Firefly Optimization: ${optimizedCount} fireflies, ${optimizedMaxLights} max lights (level: ${optimizationManager.getOptimizationLevel()})`)
     } catch (error) {
       console.warn('⚠️ Using fallback optimization')
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-      optimizedMaxLights = isMobile ? 0 : maxLights
+      optimizedMaxLights = isMobile ? 0 : maxLights * 2 // Double fallback lights too
       optimizedCount = isMobile ? Math.min(count, 30) : count
     }
   }
@@ -152,58 +152,67 @@
   const tempColor = new THREE.Color()
   let activeLights: any[] = []
   let lightingUpdateCounter = 0
+  let lightCycleTime = 0
+  const lightCycleDuration = 20000 // 20 seconds for a full cycle (much slower)
 
   /**
-   * Generous view-based culling - prioritizes visible lights but keeps landscape lit
+   * Distributed firefly lighting - cycles through different fireflies over time
+   * All fireflies glow, but only some cast light at any given moment
    */
-  function cullLightsForCamera(allLights: any[], camera: THREE.Camera, maxLights: number) {
+  function selectCyclingLights(allLights: any[], camera: THREE.Camera, maxLights: number, cycleTime: number) {
     if (allLights.length === 0) return []
+    if (maxLights === 0) return [] // Handle ULTRA_LOW optimization level
     
-    const cameraPosition = camera.position
-    const cameraDirection = new THREE.Vector3()
-    camera.getWorldDirection(cameraDirection)
+    const totalLights = allLights.length
+    const cameraPosition = camera?.position || new THREE.Vector3(0, 0, 0)
     
-    // Much more generous limits for a brighter landscape
-    const maxDistance = 300 // Increased from 200
-    const behindTolerance = 0.3 // Allow more lights behind camera
-    const fovMultiplier = 2.0 // Much wider than actual FOV
+    // Create waves of light activation across the scene
+    const numWaves = Math.ceil(maxLights / 3) // Groups of 3 lights per wave
+    const waveInterval = lightCycleDuration / numWaves // How long each wave lasts
+    const currentWave = Math.floor(cycleTime / waveInterval) % numWaves
     
-    const lightsWithPriority = allLights.map(light => {
+    // Calculate which fireflies should be active this cycle
+    const activeLightIndices = new Set<number>()
+    
+    // Add lights in waves for magical distributed effect
+    for (let wave = 0; wave < numWaves; wave++) {
+      const wavePhase = (cycleTime - wave * waveInterval) / waveInterval
+      const waveFade = Math.sin(wavePhase * Math.PI) // Sine wave for smooth fade in/out
+      
+      if (waveFade > 0.1) { // Only include waves that are bright enough
+        // Each wave activates different fireflies
+        const lightsPerWave = Math.floor(maxLights / numWaves)
+        const startIndex = (wave * lightsPerWave) % totalLights
+        
+        for (let i = 0; i < lightsPerWave; i++) {
+          const lightIndex = (startIndex + i) % totalLights
+          activeLightIndices.add(lightIndex)
+        }
+      }
+    }
+    
+    // Build the active lights array with distance-based intensity
+    const selectedLights = Array.from(activeLightIndices).map(index => {
+      const light = allLights[index]
+      if (!light) return null
+      
+      // Calculate distance to camera for intensity scaling
       const lightPos = new THREE.Vector3(light.position.x, light.position.y, light.position.z)
       const distance = cameraPosition.distanceTo(lightPos)
       
-      // Vector from camera to light
-      const toLight = lightPos.clone().sub(cameraPosition).normalize()
-      const dotProduct = cameraDirection.dot(toLight)
+      // Closer lights are brighter, but all lights in the cycle are visible
+      const distanceFactor = Math.max(0.3, 1.0 - (distance / 400)) // Minimum 30% intensity
       
-      // Generous view classification
-      const isInFront = dotProduct > -behindTolerance
-      const isClose = distance < 100
-      const isVisible = distance < maxDistance && isInFront
+      // Wave-based cycling intensity
+      const lightWave = Math.floor(index / Math.floor(maxLights / numWaves))
+      const wavePhase = (cycleTime - lightWave * waveInterval) / waveInterval
+      const waveFade = Math.max(0, Math.sin(wavePhase * Math.PI))
       
-      // Priority calculation favoring visible lights but not excluding others
-      let priority = light.intensity / Math.max(distance * 0.02, 1)
-      if (dotProduct > 0.2) priority *= 3 // Front of camera bonus
-      if (dotProduct > -0.2) priority *= 2 // Side/peripheral bonus  
-      if (isClose) priority *= 2 // Close lights always important
-      
-      return { ...light, priority, distance, dotProduct, isVisible }
-    })
-    
-    // Sort by priority (best lights first)
-    lightsWithPriority.sort((a, b) => b.priority - a.priority)
-    
-    // Be much more generous - take up to 40 lights if available and performance allows
-    const generousLimit = Math.min(maxLights * 2.5, 40, allLights.length)
-    const selectedLights = lightsWithPriority.slice(0, generousLimit)
-    
-    // Debug info every 2 seconds
-    if (lightingUpdateCounter % 120 === 0) {
-      const inFront = selectedLights.filter(l => l.dotProduct > 0.2).length
-      const sides = selectedLights.filter(l => l.dotProduct > -0.2 && l.dotProduct <= 0.2).length
-      const behind = selectedLights.length - inFront - sides
-      console.log(`🌟 Generous culling: ${selectedLights.length}/${allLights.length} lights (${inFront} front, ${sides} side, ${behind} behind)`)
-    }
+      return {
+        ...light,
+        intensity: light.intensity * distanceFactor * waveFade
+      }
+    }).filter(light => light !== null && light.intensity > 0.01)
     
     return selectedLights
   }
@@ -357,13 +366,15 @@
         // Update color buffer based on light state from ECS (PROPER ECS APPROACH)
         const baseIntensity = LightEmitter.intensity[eid] // Use ECS data as base
         const fadeProgress = LightCycling.fadeProgress[eid] // Apply cycling effect
-        // Fix normalization: use appropriate range for current intensity values (10.0)
-        const normalizedIntensity = Math.min(baseIntensity / 20.0, 1.0) // Proper normalization for 10.0 intensity
-        const finalIntensity = normalizedIntensity * fadeProgress
+        // Fix intensity normalization - use proper range for visibility
+        const normalizedIntensity = Math.min(baseIntensity / 200.0, 1.0) // Better normalization for 200 intensity
+        let finalIntensity = normalizedIntensity * fadeProgress
+        
+        // All firefly sprites are always visible - no culling of visual elements
         
         const color = LightEmitter.color[eid]
         tempColor.setHex(color)
-        tempColor.multiplyScalar(finalIntensity) // Now controlled by prop → ECS → visual
+        tempColor.multiplyScalar(finalIntensity) // Now includes smooth view-based fading
         colorAttr.setXYZ(i, tempColor.r, tempColor.g, tempColor.b)
       }
 
@@ -404,25 +415,24 @@
     if (component) {
       const allLights = component.getActiveLightsFromECS()
       
-      // Apply camera-based culling if available, otherwise be generous with lights
-      if ($camera) {
-        activeLights = cullLightsForCamera(allLights, $camera, optimizedMaxLights)
-      } else {
-        // Generous fallback: show most lights if no camera
-        const generousLimit = Math.max(optimizedMaxLights, Math.min(allLights.length, 25))
-        activeLights = allLights
-          .sort((a, b) => b.intensity - a.intensity)
-          .slice(0, generousLimit)
+      // Update cycle time for distributed lighting
+      lightCycleTime += delta * 1000 // Convert to milliseconds
+      if (lightCycleTime > lightCycleDuration) {
+        lightCycleTime = 0 // Reset cycle
+      }
+      
+      // Update light selection using cycling system every few frames
+      if (lightingUpdateCounter % 20 === 0) { // Update every 20 frames (~0.33 seconds)
+        activeLights = selectCyclingLights(allLights, $camera, optimizedMaxLights, lightCycleTime)
         
-        // Warn about missing camera (throttled)
-        if (lightingUpdateCounter % 300 === 0) { // Every 5 seconds
-          console.warn(`📷 Firefly lights: No camera available, showing ${activeLights.length}/${allLights.length} lights`)
+        // Debug info with optimization level
+        if (lightingUpdateCounter % 180 === 0) { // Every 3 seconds
+          console.log(`🌟 Cycling lights: ${activeLights.length}/${allLights.length} fireflies active (max: ${optimizedMaxLights})`)
         }
       }
       
-      // CRITICAL: Send firefly lights to the lighting system for ocean reflections
-      if (lightingManager && activeLights.length > 0) {
-        // Convert ECS lights to the format expected by lightingManager
+      // Send to lighting system less frequently for ocean reflections
+      if (lightingManager && activeLights.length > 0 && lightingUpdateCounter % 15 === 0) {
         const pointLights = activeLights.map(light => ({
           position: new THREE.Vector3(light.position.x, light.position.y, light.position.z),
           color: new THREE.Color(light.color),
@@ -430,12 +440,9 @@
           range: lightRange
         }))
         
-        // Update the lighting manager with firefly lights (throttled)
-        if (lightingUpdateCounter % 5 === 0) { // Only update every 5 frames
-          lightingManager.updatePointLights(pointLights)
-        }
-        lightingUpdateCounter++
+        lightingManager.updatePointLights?.(pointLights)
       }
+      lightingUpdateCounter++
     }
   })
 
@@ -468,14 +475,14 @@
   />
 {/if}
 
-<!-- Actual Three.js lights from ECS (no changes needed here) -->
+<!-- Actual Three.js lights - smoothly animated intensity -->
 {#if optimizedMaxLights > 0}
   {#each activeLights as light, index (light.position.x + light.position.y + light.position.z)}
     <T.PointLight
       position={[light.position.x, light.position.y, light.position.z]}
       intensity={light.intensity}
       color={light.color}
-      distance={0}
+      distance={lightRange}
       decay={2}
       castShadow={false}
     />
