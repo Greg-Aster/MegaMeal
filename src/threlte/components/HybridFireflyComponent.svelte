@@ -12,7 +12,7 @@
 -->
 <script lang="ts">
   import { onMount, getContext } from 'svelte'
-  import { T, useTask } from '@threlte/core'
+  import { T, useTask, useThrelte } from '@threlte/core'
   import * as THREE from 'three'
   import { OptimizationManager } from '../optimization/OptimizationManager'
   import {
@@ -131,7 +131,7 @@
       const qualitySettings = optimizationManager.getQualitySettings()
       optimizedMaxLights = qualitySettings.maxFireflyLights
       optimizedCount = optimizedMaxLights === 0 ? Math.min(count, 30) : count
-      console.log(`🎯 Firefly Optimization: ${optimizedCount} fireflies, ${optimizedMaxLights} max lights`)
+      console.log(`🎯 Firefly Optimization: ${optimizedCount} fireflies, ${optimizedMaxLights} max lights (original: ${maxLights})`)
     } catch (error) {
       console.warn('⚠️ Using fallback optimization')
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
@@ -152,6 +152,61 @@
   const tempColor = new THREE.Color()
   let activeLights: any[] = []
   let lightingUpdateCounter = 0
+
+  /**
+   * Generous view-based culling - prioritizes visible lights but keeps landscape lit
+   */
+  function cullLightsForCamera(allLights: any[], camera: THREE.Camera, maxLights: number) {
+    if (allLights.length === 0) return []
+    
+    const cameraPosition = camera.position
+    const cameraDirection = new THREE.Vector3()
+    camera.getWorldDirection(cameraDirection)
+    
+    // Much more generous limits for a brighter landscape
+    const maxDistance = 300 // Increased from 200
+    const behindTolerance = 0.3 // Allow more lights behind camera
+    const fovMultiplier = 2.0 // Much wider than actual FOV
+    
+    const lightsWithPriority = allLights.map(light => {
+      const lightPos = new THREE.Vector3(light.position.x, light.position.y, light.position.z)
+      const distance = cameraPosition.distanceTo(lightPos)
+      
+      // Vector from camera to light
+      const toLight = lightPos.clone().sub(cameraPosition).normalize()
+      const dotProduct = cameraDirection.dot(toLight)
+      
+      // Generous view classification
+      const isInFront = dotProduct > -behindTolerance
+      const isClose = distance < 100
+      const isVisible = distance < maxDistance && isInFront
+      
+      // Priority calculation favoring visible lights but not excluding others
+      let priority = light.intensity / Math.max(distance * 0.02, 1)
+      if (dotProduct > 0.2) priority *= 3 // Front of camera bonus
+      if (dotProduct > -0.2) priority *= 2 // Side/peripheral bonus  
+      if (isClose) priority *= 2 // Close lights always important
+      
+      return { ...light, priority, distance, dotProduct, isVisible }
+    })
+    
+    // Sort by priority (best lights first)
+    lightsWithPriority.sort((a, b) => b.priority - a.priority)
+    
+    // Be much more generous - take up to 40 lights if available and performance allows
+    const generousLimit = Math.min(maxLights * 2.5, 40, allLights.length)
+    const selectedLights = lightsWithPriority.slice(0, generousLimit)
+    
+    // Debug info every 2 seconds
+    if (lightingUpdateCounter % 120 === 0) {
+      const inFront = selectedLights.filter(l => l.dotProduct > 0.2).length
+      const sides = selectedLights.filter(l => l.dotProduct > -0.2 && l.dotProduct <= 0.2).length
+      const behind = selectedLights.length - inFront - sides
+      console.log(`🌟 Generous culling: ${selectedLights.length}/${allLights.length} lights (${inFront} front, ${sides} side, ${behind} behind)`)
+    }
+    
+    return selectedLights
+  }
 
   /**
    * Modern Component Class following documented architecture
@@ -342,9 +397,28 @@
     }
   })
 
-  useTask(() => {
+  // Get camera from Threlte context
+  const { camera } = useThrelte()
+
+  useTask((delta) => {
     if (component) {
-      activeLights = component.getActiveLightsFromECS()
+      const allLights = component.getActiveLightsFromECS()
+      
+      // Apply camera-based culling if available, otherwise be generous with lights
+      if ($camera) {
+        activeLights = cullLightsForCamera(allLights, $camera, optimizedMaxLights)
+      } else {
+        // Generous fallback: show most lights if no camera
+        const generousLimit = Math.max(optimizedMaxLights, Math.min(allLights.length, 25))
+        activeLights = allLights
+          .sort((a, b) => b.intensity - a.intensity)
+          .slice(0, generousLimit)
+        
+        // Warn about missing camera (throttled)
+        if (lightingUpdateCounter % 300 === 0) { // Every 5 seconds
+          console.warn(`📷 Firefly lights: No camera available, showing ${activeLights.length}/${allLights.length} lights`)
+        }
+      }
       
       // CRITICAL: Send firefly lights to the lighting system for ocean reflections
       if (lightingManager && activeLights.length > 0) {
