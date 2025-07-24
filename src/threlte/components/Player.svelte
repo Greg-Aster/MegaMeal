@@ -320,8 +320,8 @@
 
     // Apply movement if there's input
     if (movement.z !== 0 || movement.x !== 0) {
-      // Debug mobile vs desktop movement values
-      if (isMobile) {
+      // Debug mobile vs desktop movement values (throttled logging)
+      if (isMobile && Math.random() < 0.01) { // Only log 1% of the time to reduce console spam
         console.log(`📱 Mobile movement: x=${movement.x.toFixed(3)}, z=${movement.z.toFixed(3)}`)
       }
       

@@ -17,7 +17,17 @@
 
   // Touch tracking
   let activeTouchId: number | null = null
-
+  
+  // Input smoothing and throttling for real device stability
+  let lastUpdateTime = 0
+  const updateThrottle = 16 // ~60fps max update rate
+  let smoothedMovement = { x: 0, z: 0 }
+  const smoothingFactor = 0.3 // Higher = more responsive, Lower = smoother
+  
+  // Touch jitter filtering
+  let lastRawMovement = { x: 0, z: 0 }
+  const jitterThreshold = 0.02 // Ignore movements smaller than this
+  
   function handleJoystickStart(event: TouchEvent) {
     event.preventDefault()
     event.stopPropagation()
@@ -77,6 +87,10 @@
         joystickKnob.style.transform = 'translate(-50%, -50%)'
       }
 
+      // Reset smoothing state for clean start on next touch
+      smoothedMovement = { x: 0, z: 0 }
+      lastRawMovement = { x: 0, z: 0 }
+
       // Update store - stop movement
       mobileInputStore.update(state => ({
         ...state,
@@ -88,6 +102,11 @@
 
   function updateJoystick(touch: Touch) {
     if (!joystickKnob) return
+
+    // Throttle updates for device stability
+    const now = performance.now()
+    if (now - lastUpdateTime < updateThrottle) return
+    lastUpdateTime = now
 
     const deltaX = touch.clientX - joystickCenter.x
     const deltaY = touch.clientY - joystickCenter.y
@@ -103,17 +122,39 @@
     // Update knob position
     joystickKnob.style.transform = `translate(calc(-50% + ${knobX}px), calc(-50% + ${knobY}px))`
 
-    // Calculate normalized movement vector (-1 to 1)
-    const deadzone = 5 // Larger deadzone for stability
-    const movement = {
+    // Calculate raw normalized movement vector (-1 to 1)
+    const deadzone = 8 // Larger deadzone for device stability
+    const rawMovement = {
       x: clampedDistance > deadzone ? knobX / joystickRadius : 0,
       z: clampedDistance > deadzone ? knobY / joystickRadius : 0
     }
 
-    // Update reactive store
+    // Apply jitter filtering - ignore tiny movements
+    const deltaFromLast = Math.sqrt(
+      Math.pow(rawMovement.x - lastRawMovement.x, 2) + 
+      Math.pow(rawMovement.z - lastRawMovement.z, 2)
+    )
+    
+    if (deltaFromLast < jitterThreshold && clampedDistance > deadzone) {
+      return // Ignore jitter, keep previous movement
+    }
+    
+    lastRawMovement = rawMovement
+
+    // Apply exponential smoothing for stability
+    smoothedMovement.x = smoothedMovement.x * (1 - smoothingFactor) + rawMovement.x * smoothingFactor
+    smoothedMovement.z = smoothedMovement.z * (1 - smoothingFactor) + rawMovement.z * smoothingFactor
+
+    // Additional deadzone on smoothed values
+    const finalMovement = {
+      x: Math.abs(smoothedMovement.x) < 0.05 ? 0 : smoothedMovement.x,
+      z: Math.abs(smoothedMovement.z) < 0.05 ? 0 : smoothedMovement.z
+    }
+
+    // Update reactive store with smoothed movement
     mobileInputStore.update(state => ({
       ...state,
-      movement
+      movement: finalMovement
     }))
   }
 
