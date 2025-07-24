@@ -268,12 +268,13 @@
       z = mobileMovement.z
     }
 
-    // Normalize diagonal movement (matching original)
-    if (x !== 0 && z !== 0) {
+    // Normalize diagonal movement (matching original) - only for WASD binary input
+    if (!isMobile && x !== 0 && z !== 0) {
       const length = Math.sqrt(x * x + z * z)
       x /= length
       z /= length
     }
+    // Mobile joystick input is already normalized, don't normalize again
 
     return { x, z }
   }
