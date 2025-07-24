@@ -18,15 +18,16 @@
   // Touch tracking
   let activeTouchId: number | null = null
   
-  // Input smoothing and throttling for real device stability
-  let lastUpdateTime = 0
-  const updateThrottle = 16 // ~60fps max update rate
-  let smoothedMovement = { x: 0, z: 0 }
-  const smoothingFactor = 0.3 // Higher = more responsive, Lower = smoother
+  // Delta-based movement (like smooth look-around system)
+  let lastTouchX = 0
+  let lastTouchY = 0
+  let accumulatedMovement = { x: 0, z: 0 }
+  const movementSensitivity = 0.008 // Similar to touchSensitivity in Player
+  const movementDecay = 0.85 // How quickly movement decays when touch stops
   
-  // Touch jitter filtering
-  let lastRawMovement = { x: 0, z: 0 }
-  const jitterThreshold = 0.02 // Ignore movements smaller than this
+  // Update throttling
+  let lastUpdateTime = 0
+  const updateThrottle = 16 // ~60fps
   
   function handleJoystickStart(event: TouchEvent) {
     event.preventDefault()
@@ -38,11 +39,13 @@
     activeTouchId = touch.identifier
     isDragging = true
 
+    // Initialize delta tracking (like look-around system)
+    lastTouchX = touch.clientX
+    lastTouchY = touch.clientY
+    
     const rect = joystickContainer.getBoundingClientRect()
     joystickCenter.x = rect.left + rect.width / 2
     joystickCenter.y = rect.top + rect.height / 2
-
-    updateJoystick(touch)
     
     // Update store
     mobileInputStore.update(state => ({
@@ -57,13 +60,41 @@
     event.preventDefault()
     event.stopPropagation()
 
+    // Throttle updates like look-around system
+    const now = performance.now()
+    if (now - lastUpdateTime < updateThrottle) return
+    lastUpdateTime = now
+
     // Find the specific touch we're tracking
     const touch = Array.from(event.changedTouches).find(
       t => t.identifier === activeTouchId
     )
     
     if (touch) {
-      updateJoystick(touch)
+      // Delta-based movement (like smooth look-around)
+      const deltaX = touch.clientX - lastTouchX
+      const deltaY = touch.clientY - lastTouchY
+      
+      // Apply delta to accumulated movement (like look-around applies to rotation)
+      accumulatedMovement.x += deltaX * movementSensitivity
+      accumulatedMovement.z += deltaY * movementSensitivity
+      
+      // Clamp accumulated movement to reasonable bounds
+      accumulatedMovement.x = Math.max(-1, Math.min(1, accumulatedMovement.x))
+      accumulatedMovement.z = Math.max(-1, Math.min(1, accumulatedMovement.z))
+      
+      // Update visual joystick knob position
+      updateJoystickVisuals()
+      
+      // Update store with accumulated movement
+      mobileInputStore.update(state => ({
+        ...state,
+        movement: { ...accumulatedMovement }
+      }))
+      
+      // Update last position for next delta calculation
+      lastTouchX = touch.clientX
+      lastTouchY = touch.clientY
     }
   }
 
@@ -82,80 +113,55 @@
       isDragging = false
       activeTouchId = null
 
+      // Movement will decay naturally through continuous update loop
       // Reset joystick visually
       if (joystickKnob) {
         joystickKnob.style.transform = 'translate(-50%, -50%)'
       }
 
-      // Reset smoothing state for clean start on next touch
-      smoothedMovement = { x: 0, z: 0 }
-      lastRawMovement = { x: 0, z: 0 }
-
-      // Update store - stop movement
+      // Update store - joystick no longer active
       mobileInputStore.update(state => ({
         ...state,
-        movement: { x: 0, z: 0 },
         isJoystickActive: false
       }))
     }
   }
 
-  function updateJoystick(touch: Touch) {
+  // Update visual joystick knob position based on accumulated movement
+  function updateJoystickVisuals() {
     if (!joystickKnob) return
-
-    // Throttle updates for device stability
-    const now = performance.now()
-    if (now - lastUpdateTime < updateThrottle) return
-    lastUpdateTime = now
-
-    const deltaX = touch.clientX - joystickCenter.x
-    const deltaY = touch.clientY - joystickCenter.y
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
-
-    // Clamp to joystick radius
-    const clampedDistance = Math.min(distance, joystickRadius)
-    const angle = Math.atan2(deltaY, deltaX)
-
-    const knobX = Math.cos(angle) * clampedDistance
-    const knobY = Math.sin(angle) * clampedDistance
-
+    
+    // Convert normalized movement (-1 to 1) to knob position
+    const knobX = accumulatedMovement.x * joystickRadius
+    const knobY = accumulatedMovement.z * joystickRadius
+    
     // Update knob position
     joystickKnob.style.transform = `translate(calc(-50% + ${knobX}px), calc(-50% + ${knobY}px))`
-
-    // Calculate raw normalized movement vector (-1 to 1)
-    const deadzone = 8 // Larger deadzone for device stability
-    const rawMovement = {
-      x: clampedDistance > deadzone ? knobX / joystickRadius : 0,
-      z: clampedDistance > deadzone ? knobY / joystickRadius : 0
+  }
+  
+  // Continuous update loop for movement decay (like look-around maintains state)
+  function continuousUpdate() {
+    if (!isDragging) {
+      // Apply decay when not actively dragging (natural movement fade)
+      accumulatedMovement.x *= movementDecay
+      accumulatedMovement.z *= movementDecay
+      
+      // Stop very small movements to prevent endless micro-movements
+      if (Math.abs(accumulatedMovement.x) < 0.01) accumulatedMovement.x = 0
+      if (Math.abs(accumulatedMovement.z) < 0.01) accumulatedMovement.z = 0
+      
+      // Update store with decayed movement
+      mobileInputStore.update(state => ({
+        ...state,
+        movement: { ...accumulatedMovement }
+      }))
+      
+      // Update visual knob position
+      updateJoystickVisuals()
     }
-
-    // Apply jitter filtering - ignore tiny movements
-    const deltaFromLast = Math.sqrt(
-      Math.pow(rawMovement.x - lastRawMovement.x, 2) + 
-      Math.pow(rawMovement.z - lastRawMovement.z, 2)
-    )
     
-    if (deltaFromLast < jitterThreshold && clampedDistance > deadzone) {
-      return // Ignore jitter, keep previous movement
-    }
-    
-    lastRawMovement = rawMovement
-
-    // Apply exponential smoothing for stability
-    smoothedMovement.x = smoothedMovement.x * (1 - smoothingFactor) + rawMovement.x * smoothingFactor
-    smoothedMovement.z = smoothedMovement.z * (1 - smoothingFactor) + rawMovement.z * smoothingFactor
-
-    // Additional deadzone on smoothed values
-    const finalMovement = {
-      x: Math.abs(smoothedMovement.x) < 0.05 ? 0 : smoothedMovement.x,
-      z: Math.abs(smoothedMovement.z) < 0.05 ? 0 : smoothedMovement.z
-    }
-
-    // Update reactive store with smoothed movement
-    mobileInputStore.update(state => ({
-      ...state,
-      movement: finalMovement
-    }))
+    // Continue the update loop
+    requestAnimationFrame(continuousUpdate)
   }
 
   function handleActionPress(action: string, event: TouchEvent) {
@@ -191,6 +197,9 @@
   onMount(() => {
     // Add global touch prevention for mobile control area
     document.addEventListener('touchstart', handleGlobalTouchStart, { passive: false })
+    
+    // Start continuous update loop (like look-around maintains state)
+    continuousUpdate()
     
     return () => {
       document.removeEventListener('touchstart', handleGlobalTouchStart)
