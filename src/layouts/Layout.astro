@@ -228,20 +228,26 @@ function loadHue() {
 function initCustomScrollbar() {
     const bodyElement = document.querySelector('body');
     if (!bodyElement) return;
-    OverlayScrollbars(
-        {
-            target: bodyElement,
-            cancel: {
-                nativeScrollbarsOverlaid: true,
-            }
-        }, {
-        scrollbars: {
-            theme: 'scrollbar-base scrollbar-auto py-1',
-            autoHide: 'move',
-            autoHideDelay: 500,
-            autoHideSuspend: false,
-        },
-    });
+    
+    // 🚀 MOBILE FIX: Don't apply OverlayScrollbars to body on mobile devices
+    // OverlayScrollbars sets overflow: hidden on body which prevents touch scrolling
+    const isMobile = window.innerWidth <= 768;
+    if (!isMobile) {
+        OverlayScrollbars(
+            {
+                target: bodyElement,
+                cancel: {
+                    nativeScrollbarsOverlaid: true,
+                }
+            }, {
+            scrollbars: {
+                theme: 'scrollbar-base scrollbar-auto py-1',
+                autoHide: 'move',
+                autoHideDelay: 500,
+                autoHideSuspend: false,
+            },
+        });
+    }
     const preElements = document.querySelectorAll('pre');
     preElements.forEach((ele) => {
         OverlayScrollbars(ele, {
