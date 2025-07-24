@@ -83,7 +83,7 @@
     </button>
   {/if}
   
-  <style>
+<!--   <style>
     .fullscreen-button {
       position: fixed;
       top: 15px;
@@ -117,4 +117,4 @@
       width: 100%;
       height: 100%;
     }
-  </style>
+  </style> -->
