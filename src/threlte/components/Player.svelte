@@ -237,17 +237,19 @@
 
   // No special click handler needed - using mousedown/mouseup instead
 
-  // Mobile movement state
+  // Import Threlte-native mobile controls store
+  import { mobileInputStore } from '../stores/mobileInputStore'
+  
+  // Mobile movement state (now reactive from store)
   let mobileMovement = { x: 0, z: 0 }
   let mobileJumpPressed = false
   
-  // Functions to be called by Game.svelte when mobile events occur
-  export function handleMobileMovement(movement: { x: number, z: number }) {
-    mobileMovement = movement
-  }
-  
-  export function handleMobileAction(action: string) {
-    if (action === 'jump') {
+  // Subscribe to reactive mobile input store
+  $: if ($mobileInputStore) {
+    mobileMovement = $mobileInputStore.movement
+    
+    // Handle actions
+    if ($mobileInputStore.actionPressed === 'jump') {
       mobileJumpPressed = true
     }
   }

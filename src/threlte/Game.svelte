@@ -11,7 +11,7 @@
   // Import existing UI components (preserve them during migration)
   import DebugPanel from '../game/ui/DebugPanel.svelte'
   import GameUI from '../game/ui/GameUI.svelte'
-  import MobileControls from '../game/ui/MobileControls.svelte'
+  import ThrelteMobileControls from './controls/ThrelteMobileControls.svelte'
   import DialogueBox from '../game/ui/components/DialogueBox.svelte'
   import ErrorScreen from '../game/ui/components/ErrorScreen.svelte'
   import LoadingScreen from '../game/ui/components/LoadingScreen.svelte'
@@ -253,25 +253,7 @@
     console.log('🎮 Threlte store: Returned to observatory')
   }
   
-  /**
-   * Handle mobile movement - Forward to Player component
-   */
-  function handleMobileMovement(event: CustomEvent) {
-    console.log('📱 Mobile movement:', event.detail)
-    if (playerComponent && playerComponent.handleMobileMovement) {
-      playerComponent.handleMobileMovement(event.detail)
-    }
-  }
-  
-  /**
-   * Handle mobile actions - Forward to Player component
-   */
-  function handleMobileAction(event: CustomEvent) {
-    console.log('📱 Mobile action:', event.detail)
-    if (playerComponent && playerComponent.handleMobileAction) {
-      playerComponent.handleMobileAction(event.detail)
-    }
-  }
+  // Mobile controls now handled through reactive stores - no event forwarding needed
   
   /**
    * Reset view - Handled by Player component
@@ -501,13 +483,9 @@
         </div>
       {/if}
       
-      <!-- Mobile Controls -->
-      {#if isMobile}
-        <MobileControls 
-          visible={isInitialized && !isLoading && !error}
-          on:movement={handleMobileMovement}
-          on:action={handleMobileAction}
-        />
+      <!-- Threlte-Native Mobile Controls -->
+      {#if isMobile && isInitialized && !isLoading && !error}
+        <ThrelteMobileControls />
       {/if}
       
       <!-- Dialogue Box -->
