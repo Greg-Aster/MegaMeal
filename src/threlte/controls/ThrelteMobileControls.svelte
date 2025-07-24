@@ -184,13 +184,18 @@
 
   // Global touch handlers to prevent conflicts
   function handleGlobalTouchStart(event: TouchEvent) {
-    // Only handle touches in mobile control areas
+    // Only prevent touches that are actually on game control elements
     const touch = event.touches[0]
-    const isInControlArea = touch.clientY > window.innerHeight - 200
+    const target = document.elementFromPoint(touch.clientX, touch.clientY) as HTMLElement
     
-    if (!isInControlArea) return
+    // Check if the touch is on a game control element
+    const isOnGameControl = target?.closest('.mobile-control') || 
+                           target?.closest('.joystick') || 
+                           target?.closest('[data-game-control]')
     
-    // Let our specific handlers deal with it
+    if (!isOnGameControl) return
+    
+    // Only prevent default for actual game controls
     event.preventDefault()
   }
 
