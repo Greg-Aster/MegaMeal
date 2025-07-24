@@ -263,7 +263,7 @@
       if (keyStates['KeyA'] || keyStates['ArrowLeft']) x -= 1
       if (keyStates['KeyD'] || keyStates['ArrowRight']) x += 1
     } else {
-      // Mobile: Use joystick input
+      // Mobile: Use joystick input (input throttling handled in MobileControls)
       x = mobileMovement.x
       z = mobileMovement.z
     }
@@ -317,6 +317,11 @@
 
     // Apply movement if there's input
     if (movement.z !== 0 || movement.x !== 0) {
+      // Debug mobile vs desktop movement values
+      if (isMobile) {
+        console.log(`📱 Mobile movement: x=${movement.x.toFixed(3)}, z=${movement.z.toFixed(3)}`)
+      }
+      
       const moveSpeed = keyStates['ShiftLeft'] || keyStates['ShiftRight'] ? speed * 2 : speed
       
       // Get RigidBody's current rotation to transform local movement to world space

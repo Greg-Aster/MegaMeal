@@ -23,6 +23,11 @@ const joystickRadius = 50
 // Movement state
 let movementVector = { x: 0, z: 0 }
 
+// Input throttling to prevent physics shake from high-frequency touch events
+let lastDispatchTime = 0
+const DISPATCH_THROTTLE_MS = 33 // ~30fps max dispatch rate (vs touch events at 60-120fps)
+let pendingMovement = { x: 0, z: 0 }
+
 function handleJoystickStart(event: TouchEvent) {
   event.preventDefault()
   isDragging = true
@@ -72,11 +77,22 @@ function updateJoystick(touch: Touch) {
   joystickKnob.style.transform = `translate(calc(-50% + ${knobX}px), calc(-50% + ${knobY}px))`
 
   // Calculate movement vector (-1 to 1) - reduced dead zone for better responsiveness
-  movementVector.x = clampedDistance > 2 ? knobX / joystickRadius : 0
-  movementVector.z = clampedDistance > 2 ? knobY / joystickRadius : 0
+  const newMovement = {
+    x: clampedDistance > 2 ? knobX / joystickRadius : 0,
+    z: clampedDistance > 2 ? knobY / joystickRadius : 0
+  }
 
-  console.log('📱 MobileControls: Joystick movement:', movementVector)
-  dispatch('movement', movementVector)
+  // Store the latest movement
+  pendingMovement = newMovement
+  
+  // Throttle dispatches to prevent physics shake from high-frequency touch events
+  const now = Date.now()
+  if (now - lastDispatchTime >= DISPATCH_THROTTLE_MS) {
+    movementVector = pendingMovement
+    console.log('📱 MobileControls: Joystick movement (throttled):', movementVector)
+    dispatch('movement', movementVector)
+    lastDispatchTime = now
+  }
 }
 
 // Action buttons
