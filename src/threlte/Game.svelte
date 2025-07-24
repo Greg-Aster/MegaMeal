@@ -17,6 +17,9 @@
   import LoadingScreen from '../game/ui/components/LoadingScreen.svelte'
   import TimelineCard from '../game/ui/components/TimelineCard.svelte'
   
+  // Import MobileEnhancements component
+  import MobileEnhancements from './ui/MobileEnhancements.svelte'
+  
   // Import Threlte systems
   import Player from './components/Player.svelte'
   import Renderer from './systems/Renderer.svelte'
@@ -517,6 +520,9 @@
           on:close={() => dialogueVisible = false}
         />
       </div>
+
+      <!-- Mobile Enhancements (Pull-to-refresh prevention and fullscreen button) -->
+      <MobileEnhancements />
     {/if}
   </div>
   
