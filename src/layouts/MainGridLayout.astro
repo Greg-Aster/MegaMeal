@@ -562,6 +562,22 @@ if (post && post.data) {
   'navbar-spacing': navbarSpacing,
   'mobile-navbar-spacing': bannerConfig.navbar.mobilePortraitSpacing,
 }}>
+  /* ⭐ CRITICAL: Explicit mobile touch scrolling enablement */
+  html, body {
+    touch-action: pan-y pan-x !important;
+    overscroll-behavior: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  /* ⭐ CRITICAL: Ensure main content areas allow scrolling on mobile */
+  @media (max-width: 767px) {
+    body, html, #main, #main-content-wrapper, #main-grid, #main-panel-wrapper {
+      touch-action: pan-y pan-x !important;
+      overscroll-behavior: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+    }
+  }
+  
   /* ⭐ ESSENTIAL: Main grid margin */
   #main-grid {
     margin-top: var(--main-content-offset);

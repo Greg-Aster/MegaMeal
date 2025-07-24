@@ -67,9 +67,16 @@
     .banner-link {
         @apply interactive-area;
         z-index: var(--banner-z-link);
-        /* ENHANCED: Better event handling */
-        touch-action: manipulation;
+        /* ENHANCED: Better event handling - only apply to actual banner links */
         user-select: none;
+    }
+    
+    /* Only apply touch-action manipulation to actual banner containers to prevent global scrolling issues */
+    .banner-container-timeline .banner-link,
+    .banner-container-image .banner-link,
+    .banner-container-video .banner-link,
+    .banner-container-standard .banner-link {
+        touch-action: manipulation;
     }
 
     /* ===================================================================

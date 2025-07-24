@@ -117,15 +117,15 @@
             50% { opacity: 1; transform: scale(1.05); }
         }
         
-        /* 🎯 Timeline mobile wrapper - active state */
-        .timeline-mobile-active {
+        /* 🎯 Timeline mobile wrapper - active state - only in timeline banner context */
+        .has-timeline-banner .timeline-mobile-active {
             pointer-events: auto; /* Enable all interactions when active */
             position: relative;
             width: 100%;
             height: 100%;
         }
         
-        .timeline-mobile-active::before {
+        .has-timeline-banner .timeline-mobile-active::before {
             content: '';
             position: absolute;
             top: -2px;
@@ -144,21 +144,21 @@
             to { box-shadow: 0 0 20px var(--primary), 0 0 30px var(--primary); }
         }
         
-        .timeline-mobile-active .timeline-mobile-indicator {
+        .has-timeline-banner .timeline-mobile-active .timeline-mobile-indicator {
             display: none; /* Hide tap hint when active */
         }
     }
     
     /* 🎯 Desktop behavior - always active, no mobile interaction wrapper */
     @media (min-width: 768px) {
-        .timeline-mobile-inactive,
-        .timeline-mobile-active {
+        .has-timeline-banner .timeline-mobile-inactive,
+        .has-timeline-banner .timeline-mobile-active {
             pointer-events: auto; /* Always interactive on desktop */
             width: 100%;
             height: 100%;
         }
         
-        .timeline-mobile-indicator {
+        .has-timeline-banner .timeline-mobile-indicator {
             display: none !important; /* Never show mobile hint on desktop */
         }
     }
@@ -483,7 +483,8 @@
     }
     
     .hue-slider {
-        writing-mode: bt-lr; 
+        writing-mode: vertical-lr;
+        direction: rtl;
         -webkit-appearance: slider-vertical;
     }
     
