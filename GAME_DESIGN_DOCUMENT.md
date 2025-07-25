@@ -1,7 +1,7 @@
 # MEGAMEAL Game Design Document
 ## Threlte-Based 3D Web Game
 
-**Version:** 2.0 (Post-Threlte Migration)  
+**Version:** 2.1 (Modern Architecture + Underwater Effects)  
 **Date:** July 2025  
 **Engine:** Threlte + Svelte 5 + Rapier Physics  
 
@@ -30,6 +30,8 @@ MEGAMEAL is a first-person 3D exploration game built using modern web technologi
 - **First-Person Movement**: WASD + mouse look controls with physics-based movement
 - **Multiple Levels**: Observatory, Miranda Spaceship, Restaurant, Infinite Library, Jerry's Room
 - **Timeline Integration**: Interactive star map and timeline system
+- **Underwater Effects**: Immersive underwater environment with dynamic fog and collision detection
+- **Modern Architecture**: Component-based system with no legacy JSON dependencies
 - **Cross-Platform**: Desktop and mobile support with adaptive controls
 - **Performance Optimized**: LOD system, automatic quality adjustment, mobile optimization
 
@@ -121,10 +123,15 @@ velocity.z = localMovement.z
 
 ### Available Levels
 
-#### 1. Observatory (`src/threlte/levels/Observatory.svelte`)
-- **Purpose**: Main hub with interactive star map
-- **Features**: Telescope interaction, star selection, timeline navigation
-- **Key Objects**: Star field, telescope, navigation controls
+#### 1. Observatory (`src/threlte/levels/HybridObservatory.svelte`)
+- **Purpose**: Main hub with interactive star map and underwater exploration
+- **Features**: Telescope interaction, star selection, timeline navigation, dynamic ocean system
+- **Key Objects**: Star field, telescope, rising ocean with underwater effects
+- **Ocean System**: 
+  - Water level rises from -6 to 8 units over time
+  - Underwater collision detection with murky visibility effects
+  - Configurable fog density per level (current: 0.62 for very murky water)
+  - Screen overlay with dark vignette effect when underwater
 
 #### 2. Miranda Spaceship (`src/threlte/levels/Miranda.svelte`)
 - **Purpose**: Futuristic spaceship environment
@@ -158,6 +165,68 @@ const levelMap = {
 function handleLevelTransition(event) {
   const levelId = levelMap[event.detail.levelType] || event.detail.levelType
   gameActions.transitionToLevel(levelId)
+}
+```
+
+---
+
+## Underwater Effects System
+
+### Modern Component-Based Ocean
+The Observatory level features a fully reactive ocean system built with modern component architecture:
+
+```svelte
+<OceanComponent 
+  size={levelConfig.water.oceanSize}
+  enableRising={levelConfig.water.enableRising}
+  initialLevel={levelConfig.water.initialLevel}
+  targetLevel={levelConfig.water.targetLevel}
+  riseRate={levelConfig.water.riseRate}
+  underwaterFogDensity={levelConfig.water.underwaterFogDensity}
+  underwaterFogColor={levelConfig.water.underwaterFogColor}
+  surfaceFogDensity={levelConfig.water.surfaceFogDensity}
+/>
+```
+
+### Dynamic Water Level System
+```typescript
+// Water rises reactively from initialLevel to targetLevel
+if (enableRising) {
+  if (waterLevel < targetLevel) {
+    waterLevel = Math.min(waterLevel + riseRate * deltaTime, targetLevel)
+  }
+}
+```
+
+### Collision Detection
+```typescript
+// Optimized collision detection (runs every 10 frames for performance)
+useTask(() => {
+  collisionCheckCounter++
+  if (collisionCheckCounter < 10) return
+  
+  // Check if player is below water surface
+  const isInWaterBounds = (
+    playerPos.y < waterLevel && // Actually underwater
+    Math.abs(playerPos.x - position[0]) < waterCollisionSize[0] / 2 &&
+    Math.abs(playerPos.z - position[2]) < waterCollisionSize[2] / 2
+  )
+})
+```
+
+### Visual Effects
+- **Screen Overlay**: Dark vignette with radial gradient for murky atmosphere
+- **Dynamic Fog**: Fog density and color change when underwater
+- **Reactive Intensity**: Effects scale with water depth
+
+### Level Configuration
+```typescript
+const levelConfig = {
+  water: {
+    underwaterFogDensity: 0.62,    // Very murky (higher = less visibility)
+    underwaterFogColor: 0x081520,  // Dark blue-gray underwater fog
+    surfaceFogDensity: 0.003       // Normal surface fog
+  }
 }
 ```
 
@@ -345,18 +414,26 @@ const deltaY = -rawDeltaY * touchSensitivity
 ```
 src/threlte/
 ├── components/
-│   └── Player.svelte              # First-person controller
+│   ├── Player.svelte              # First-person controller
+│   ├── OceanComponent.svelte      # Modern ocean system with underwater effects
+│   ├── LightingComponent.svelte   # Dynamic lighting system
+│   └── HybridFireflyComponent.svelte # ECS-based particle system
+├── effects/
+│   ├── UnderwaterOverlay.svelte   # Screen overlay for underwater tint
+│   ├── UnderwaterEffect.svelte    # Particle-based underwater effects
+│   └── UnderwaterCollider.svelte  # Water collision detection (legacy)
+├── stores/
+│   ├── gameStateStore.ts         # Reactive game state
+│   ├── underwaterStore.ts        # Underwater effects state management
+│   └── mobileInputStore.ts       # Mobile controls state
 ├── systems/
 │   ├── SimplePostProcessing.svelte # Native lighting effects
 │   ├── Physics.svelte             # Physics world setup
 │   ├── EventBus.svelte           # Event coordination
 │   ├── Performance.svelte        # Performance monitoring
 │   └── StateManager.svelte       # Legacy state bridge
-├── stores/
-│   ├── gameStateStore.ts         # Reactive game state
-│   └── postProcessingStore.ts    # Rendering configuration
 ├── levels/
-│   ├── Observatory.svelte        # Star map hub
+│   ├── HybridObservatory.svelte  # Star map hub with ocean system
 │   ├── Miranda.svelte            # Spaceship level
 │   ├── Restaurant.svelte         # Kitchen environment
 │   ├── InfiniteLibrary.svelte    # Library level
@@ -387,6 +464,20 @@ src/game/                         # Legacy Three.js components (preserved)
 3. **Jump Flying Exploit**: Added `jumpKeyPressed` flag to prevent infinite jumping with held Spacebar
 
 4. **Post-Processing Freeze**: Removed Three.js EffectComposer dependencies and implemented native Threlte lighting
+
+5. **Mobile Scrolling Issues**: Fixed overflow hidden conflicts between OverlayScrollbars and PostOverlay components
+
+6. **Collision System Conflicts**: Resolved @threlte/rapier vs @dimforge/rapier3d-compat conflicts with optimized manual collision detection
+
+### Modern Architecture Improvements
+
+1. **JSON Config Elimination**: Removed legacy JSON configuration files in favor of direct TypeScript props
+
+2. **Component-Based Ocean System**: Migrated from imperative ocean systems to reactive OceanComponent
+
+3. **Reactive State Management**: Implemented underwater effects with Svelte stores for automatic reactivity
+
+4. **Performance Optimized Collision**: Reduced collision detection from 60fps to 6fps (10x performance improvement)
 
 ### Performance Characteristics
 - **Load Time**: ~2-3 seconds (significantly improved from original)

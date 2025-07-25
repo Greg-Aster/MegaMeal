@@ -12,8 +12,9 @@
   - Clean, maintainable, DRY codebase following modern practices
 -->
 <script lang="ts">
-  import { onMount, getContext, onDestroy } from 'svelte'
+  import { onMount, getContext, onDestroy, createEventDispatcher } from 'svelte'
   import { T, useTask } from '@threlte/core'
+  import { Collider, RigidBody, useRapier } from '@threlte/rapier'
   import * as THREE from 'three'
   import { OptimizationManager, OptimizationLevel } from '../optimization/OptimizationManager'
   import { 
@@ -24,6 +25,8 @@
     type SystemMessage,
     type LightingData 
   } from '../core/LevelSystem'
+  import { underwaterActions } from '../stores/underwaterStore'
+  import UnderwaterEffect from '../effects/UnderwaterEffect.svelte'
 
   // --- PROPS (Enhanced with legacy features) ---
   export let size = { width: 2000, height: 2000 }
@@ -33,13 +36,18 @@
   export let enableAnimation = true
   export let animationSpeed = 0.1 // Legacy uses much slower speeds for realism
   
-  // --- LEGACY WATER LEVEL RISE SYSTEM ---
-  export let dynamics: {
-    enableRising: boolean
-    initialLevel: number
-    targetLevel: number
-    riseRate: number
-  } | undefined = undefined
+  // --- WATER LEVEL RISE SYSTEM (Modern Props) ---
+  export let enableRising: boolean = false
+  export let initialLevel: number = 0
+  export let targetLevel: number = 0
+  export let riseRate: number = 0.01
+  
+  // --- UNDERWATER EFFECTS INTEGRATION ---
+  export let enableUnderwaterEffects: boolean = true
+  export let waterCollisionSize: [number, number, number] = [10000, 20, 10000]
+  export let underwaterFogDensity: number = 0.08 // How thick the underwater fog is (higher = less visibility)
+  export let underwaterFogColor: number = 0x0a1922 // Dark blue-gray fog color
+  export let surfaceFogDensity: number = 0.003 // Normal surface fog density
   
   // --- LEGACY VISUAL ENHANCEMENT PROPS ---
   export let metalness = 0.02 // Very low metalness for water (from legacy)
@@ -52,13 +60,89 @@
   // --- CONTEXT & MANAGERS ---
   const registry = getContext('systemRegistry')
   const lightingManager = getContext('lightingManager')
+  const rapier = useRapier()
   
   // --- STATE ---
   let oceanMesh: THREE.Mesh
   let oceanMaterial: THREE.Material // Can be ShaderMaterial or MeshStandardMaterial
   let oceanGeometry: THREE.PlaneGeometry
   let animationTime = 0
-  let waterLevel = dynamics?.initialLevel ?? position[1] // Initialize water level
+  let waterLevel = initialLevel // Initialize water level
+  
+  // --- UNDERWATER DETECTION STATE ---
+  let waterColliderRef: any
+  let playerInWater = false
+  const dispatch = createEventDispatcher()
+  
+  // --- UNDERWATER COLLISION HANDLERS ---
+  function handleIntersectionEnter(event: any) {
+    console.log('🌊 Ocean: ===== COLLISION DETECTED =====')
+    console.log('🌊 Ocean: RAW intersection enter event:', event)
+    console.log('🌊 Ocean: Event detail:', event?.detail)
+    console.log('🌊 Ocean: Event target:', event?.detail?.target)
+    console.log('🌊 Ocean: Event other:', event?.detail?.other)
+    
+    // Try both target and other from the event
+    const target = event?.detail?.target || event?.detail?.other
+    
+    console.log('🌊 Ocean: Using collision target:', target)
+    console.log('🌊 Ocean: Target type:', typeof target)
+    console.log('🌊 Ocean: Target properties:', target ? Object.keys(target) : 'No target')
+    
+    // Check if the colliding object is the player
+    if (isPlayer(target)) {
+      console.log('🌊 Ocean: ✅ PLAYER ENTERED WATER VOLUME!')
+      
+      playerInWater = true
+      
+      // Calculate depth based on player position vs water level
+      const playerY = getPlayerYPosition(target)
+      const depth = Math.max(0, waterLevel - playerY)
+      
+      underwaterActions.enterWater(depth)
+      dispatch('waterEnter', { depth })
+    } else {
+      console.log('🌊 Ocean: ❌ Not identified as player')
+    }
+  }
+
+  function handleIntersectionExit(event: any) {
+    const { target } = event.detail
+    
+    console.log('🏖️ Ocean: Intersection exit detected:', target)
+    
+    if (isPlayer(target) && playerInWater) {
+      console.log('🏖️ Ocean: Player exited water volume')
+      
+      playerInWater = false
+      underwaterActions.exitWater()
+      dispatch('waterExit')
+    }
+  }
+
+  function isPlayer(collider: any): boolean {
+    // Check if the collider belongs to the player
+    console.log('🔍 Ocean: Checking collider:', collider)
+    
+    // Try multiple ways to identify the player
+    const userData = collider?.userData || collider?.parent?.userData || collider?.rigidBody?.userData
+    const isPlayerByUserData = userData?.isPlayer === true || userData?.type === 'player'
+    
+    // Also check if it's a capsule collider (typical for player)
+    const isPlayerByCapsule = collider?.shape === 'capsule' || collider?.args?.length === 2
+    
+    console.log('🔍 Ocean: Player detection:', { userData, isPlayerByUserData, isPlayerByCapsule })
+    
+    return isPlayerByUserData || isPlayerByCapsule
+  }
+
+  function getPlayerYPosition(collider: any): number {
+    // Get the Y position of the player's collider
+    const position = collider?.position || collider?.parent?.position || collider?.rigidBody?.translation()
+    const y = position?.y || position?.[1] || 0
+    console.log('🔍 Ocean: Player Y position:', y)
+    return y
+  }
 
   // --- INTELLIGENT OPTIMIZATION SETTINGS (from legacy) ---
   let deviceOptimizedSettings = {
@@ -336,11 +420,11 @@
       animationTime += deltaTime * animationSpeed
       
       // Handle rising water
-      if (dynamics?.enableRising) {
-        if (waterLevel < dynamics.targetLevel) {
-          waterLevel = Math.min(waterLevel + dynamics.riseRate * deltaTime, dynamics.targetLevel)
-        } else if (waterLevel > dynamics.targetLevel) {
-          waterLevel = Math.max(waterLevel - dynamics.riseRate * deltaTime, dynamics.targetLevel)
+      if (enableRising) {
+        if (waterLevel < targetLevel) {
+          waterLevel = Math.min(waterLevel + riseRate * deltaTime, targetLevel)
+        } else if (waterLevel > targetLevel) {
+          waterLevel = Math.max(waterLevel - riseRate * deltaTime, targetLevel)
         }
       }
       
@@ -551,7 +635,63 @@
 
   // --- COMPONENT INITIALIZATION ---
   let component: OceanComponent
+  // --- OPTIMIZED COLLISION DETECTION ---
+  let lastPlayerInWater = false
+  let collisionCheckCounter = 0
+  
+  // Only check collision every 10 frames (6fps instead of 60fps) for performance
+  useTask(() => {
+    collisionCheckCounter++
+    if (collisionCheckCounter < 10) return // Skip 9 out of 10 frames
+    collisionCheckCounter = 0
+
+    if (!rapier?.world) return
+
+    // Find the player rigid body (cached approach)
+    const bodies = rapier.world.bodies
+    let playerBody = null
+    
+    for (let i = 0; i < bodies.len(); i++) {
+      const body = bodies.get(i)
+      if (body && body.userData?.isPlayer) {
+        playerBody = body
+        break
+      }
+    }
+
+    if (playerBody) {
+      const playerPos = playerBody.translation()
+      
+      // Check if player is BELOW the water surface (actually underwater)
+      const isInWaterBounds = (
+        Math.abs(playerPos.x - position[0]) < waterCollisionSize[0] / 2 &&
+        Math.abs(playerPos.z - position[2]) < waterCollisionSize[2] / 2 &&
+        playerPos.y < waterLevel // Player head is below water surface
+      )
+
+      // Trigger events on state change
+      if (isInWaterBounds && !lastPlayerInWater) {
+        const depth = Math.max(0, waterLevel - playerPos.y)
+        console.log('🌊 Ocean: OPTIMIZED collision - Player entered water at Y:', playerPos.y, 'water level:', waterLevel, 'depth:', depth)
+        underwaterActions.enterWater(depth)
+        dispatch('waterEnter', { depth })
+        lastPlayerInWater = true
+      } else if (!isInWaterBounds && lastPlayerInWater) {
+        console.log('🏖️ Ocean: OPTIMIZED collision - Player exited water at Y:', playerPos.y, 'water level:', waterLevel)
+        underwaterActions.exitWater()
+        dispatch('waterExit')
+        lastPlayerInWater = false
+      }
+    }
+  })
+
   onMount(async () => {
+    console.log('🌊 Ocean: Mounting with water level:', waterLevel, 'rising enabled:', enableRising)
+    console.log('🌊 Ocean: Collision box size:', waterCollisionSize)
+    console.log('🌊 Ocean: Ocean position:', position)
+    console.log('🌊 Ocean: Underwater effects enabled:', enableUnderwaterEffects)
+    console.log('🌊 Ocean: Using MANUAL collision detection')
+    
     if (registry) {
       component = new OceanComponent()
       registry.registerComponent(component)
@@ -560,6 +700,11 @@
         await component.initialize(levelContext)
       }
     }
+    
+    // Add a debug timer to show current water level every few seconds
+    setInterval(() => {
+      console.log('🌊 Ocean: Current water level:', waterLevel, 'target:', targetLevel)
+    }, 5000)
   })
 
   onDestroy(() => {
@@ -590,4 +735,27 @@
     name="ocean_surface"
     renderOrder={0}
   />
+{/if}
+
+<!-- Integrated Underwater Effects System -->
+{#if enableUnderwaterEffects}
+  <T.Group position={[position[0], waterLevel + 10, position[2]]}>
+    <!-- Water collision detection using same pattern as working ground system -->
+    <RigidBody type="fixed">
+      <Collider
+        shape="cuboid"
+        args={[waterCollisionSize[0] / 2, waterCollisionSize[1] / 2, waterCollisionSize[2] / 2]}
+        sensor={true}
+        on:intersectionenter={handleIntersectionEnter}
+        on:intersectionexit={handleIntersectionExit}
+        on:create={(e) => console.log('🌊 Ocean: Collision sensor created at Y:', waterLevel + 10, 'Box size:', waterCollisionSize)}
+      />
+    </RigidBody>
+    
+    <!-- Underwater particle effects (bubbles and mist) - also follow water level -->
+    <UnderwaterEffect 
+      position={[0, 0, 0]}
+      size={waterCollisionSize}
+    />
+  </T.Group>
 {/if}

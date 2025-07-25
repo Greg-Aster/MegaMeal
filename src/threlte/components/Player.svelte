@@ -426,6 +426,7 @@
   gravityScale={1}
   linearDamping={isMobile ? 0.1 : 0.0}
   angularDamping={isMobile ? 0.2 : 0.0}
+  userData={{ isPlayer: true, type: 'player' }}
 >
   <!-- The player's physical shape - capsule collider for smooth movement -->
   <Collider 

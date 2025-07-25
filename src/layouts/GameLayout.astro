@@ -1,19 +1,19 @@
 ---
-import { siteConfig } from '../config/config'
 // /src/layouts/GameLayout.astro - Minimal layout just for the game
-import Layout from './Layout.astro'
+import Layout from './Layout.astro';
+import { siteConfig } from '../config/config';
 
 interface Props {
-  title?: string
-  description?: string
-  lang?: string
+  title?: string;
+  description?: string;
+  lang?: string;
 }
 
-const {
-  title = 'MegaMeal: The Game',
-  description = 'Navigate through cosmic time in your beat-up spaceship, discovering the lost stories of the MegaMeal universe.',
-  lang = 'en',
-} = Astro.props
+const { 
+  title = "MegaMeal: The Game",
+  description = "Navigate through cosmic time in your beat-up spaceship, discovering the lost stories of the MegaMeal universe.",
+  lang = "en"
+} = Astro.props;
 ---
 
 <Layout 
@@ -21,6 +21,7 @@ const {
   description={description}
   lang={lang}
   setOGTypeArticle={false}
+  
 >
   <!-- Full viewport game container -->
   <div id="game-viewport" class="fixed inset-0 bg-black dark:bg-gray-900 overflow-hidden">
@@ -54,9 +55,9 @@ const {
   }
   
   /* Remove any potential scrollbars */
-  body {
+  /* body {
     overflow: hidden;
-  }
+  } */
   
   /* Ensure game content fills the space */
   #game-content {

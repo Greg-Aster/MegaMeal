@@ -18,6 +18,10 @@
   import OceanComponent from '../components/OceanComponent.svelte'
   import LightingComponent from '../components/LightingComponent.svelte'
   
+  // Import underwater effect components (overlay only - effects integrated into OceanComponent)
+  import UnderwaterOverlay from '../effects/UnderwaterOverlay.svelte'
+  import { underwaterStateStore } from '../stores/underwaterStore'
+  
   // Import the NEW hybrid firefly component
   import HybridFireflyComponent from '../components/HybridFireflyComponent.svelte'
   
@@ -29,8 +33,21 @@
   // Import new star navigation components
   import StarNavigationSystem from '../components/StarNavigationSystem.svelte'
   
-  // Import level configuration
-  import config from '../../game/levels/observatory.json'
+  // Level configuration (now using direct props instead of JSON)
+  const levelConfig = {
+    water: {
+      oceanSize: { width: 10000, height: 10000 },
+      enableRising: true,
+      initialLevel: -6,
+      targetLevel: 8,
+      riseRate: .05,
+      enableAnimation: true,
+      // Underwater fog settings - adjustable per level
+      underwaterFogDensity: 0.62, // Very murky water (higher = less visibility)
+      underwaterFogColor: 0x081520, // Darker underwater fog
+      surfaceFogDensity: 0.003 // Normal surface fog
+    }
+  }
   
   // Timeline events are passed directly to StarMap for correct positioning
 
@@ -206,10 +223,10 @@
 -->
 <LevelManager let:registry let:lighting let:ecsWorld>
   
-  <!-- Atmospheric fog for horizon haze -->
+  <!-- Dynamic fog that changes when underwater -->
   <T.FogExp2 
-    color={0x6a7db3}
-    density={0.003}
+    color={$underwaterStateStore.isUnderwater ? levelConfig.water.underwaterFogColor : 0x6a7db3}
+    density={$underwaterStateStore.isUnderwater ? levelConfig.water.underwaterFogDensity : levelConfig.water.surfaceFogDensity}
   />
   
   <T.Group name="hybrid-observatory">
@@ -258,14 +275,26 @@
       data for perfect reflections.
     -->
     <OceanComponent 
-      size={config.water.oceanConfig.size}
+      size={levelConfig.water.oceanSize}
       color={0x006994}
       opacity={0.95}
-      segments={{ width: 32, height: 32 }}
-      enableAnimation={config.water.oceanConfig.enableAnimation}
+      enableAnimation={levelConfig.water.enableAnimation}
       animationSpeed={0.1}
-      dynamics={config.water.dynamics}
+      enableRising={levelConfig.water.enableRising}
+      initialLevel={levelConfig.water.initialLevel}
+      targetLevel={levelConfig.water.targetLevel}
+      riseRate={levelConfig.water.riseRate}
+      enableUnderwaterEffects={true}
+      waterCollisionSize={[levelConfig.water.oceanSize.width, 20, levelConfig.water.oceanSize.height]}
+      underwaterFogDensity={levelConfig.water.underwaterFogDensity}
+      underwaterFogColor={levelConfig.water.underwaterFogColor}  
+      surfaceFogDensity={levelConfig.water.surfaceFogDensity}
+      on:waterEnter={(e) => console.log('🌊 Player entered water at depth:', e.detail.depth)}
+      on:waterExit={() => console.log('🏖️ Player exited water')}
     />
+    
+    <!-- Screen overlay for blue tint effect (other underwater effects now integrated into OceanComponent) -->
+    <UnderwaterOverlay />
     
     <!-- 
       HYBRID FIREFLY COMPONENT (High-level setup + ECS entities)

@@ -86,4 +86,13 @@ const { title = '' } = Astro.props
       document.body.classList.remove('overflow-hidden');
     }
   };
+
+  document.addEventListener('astro:before-swap', () => {
+  // Check if the overlay is currently open
+  if (overlay && !overlay.classList.contains('translate-y-full')) {
+    console.log('Page is navigating, forcing post overlay to close.');
+    window.closePostOverlay();
+  }
+});
+
 </script>
