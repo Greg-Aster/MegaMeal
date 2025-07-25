@@ -1,7 +1,7 @@
 # MEGAMEAL Game Design Document
 ## Threlte-Based 3D Web Game
 
-**Version:** 2.2 (Hybrid ECS Architecture + Nature Pack Integration)
+**Version:** 2.3 (Transparency-Optimized Rendering + Visual Style Integration)  
 **Date:** July 2025  
 **Engine:** Threlte + Svelte 5 + Rapier Physics + BitECS  
 

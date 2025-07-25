@@ -25,6 +25,9 @@
   // Import the NEW hybrid firefly component
   import HybridFireflyComponent from '../components/HybridFireflyComponent.svelte'
   
+  // Import nature pack vegetation system
+  import NaturePackVegetation from '../components/NaturePackVegetation.svelte'
+  
   // Import existing components
   import Skybox from '../systems/Skybox.svelte'
   import StaticEnvironment from '../systems/StaticEnvironment.svelte'
@@ -33,14 +36,21 @@
   // Import new star navigation components
   import StarNavigationSystem from '../components/StarNavigationSystem.svelte'
   
+  // Import existing LOD system
+  import LOD from '../systems/LOD.svelte'
+  
+  // Import style system
+  import GhibliStyleSystem from '../styles/GhibliStyleSystem.svelte'
+  import StyleControls from '../ui/StyleControls.svelte'
+  
   // Level configuration (now using direct props instead of JSON)
   const levelConfig = {
     water: {
       oceanSize: { width: 10000, height: 10000 },
       enableRising: true,
-      initialLevel: -6,
-      targetLevel: 8,
-      riseRate: .05,
+      initialLevel: -7,
+      targetLevel: 0,
+      riseRate: .01,
       enableAnimation: true,
       // Underwater fog settings - adjustable per level
       underwaterFogDensity: 0.62, // Very murky water (higher = less visibility)
@@ -67,6 +77,13 @@
   let hybridFireflyComponent: HybridFireflyComponent
   let starMapComponent: StarMap
   let starNavigationSystem: StarNavigationSystem
+  let naturePackVegetation: NaturePackVegetation
+  let ghibliStyleSystem: GhibliStyleSystem
+  
+  // Style configuration
+  export let stylePreset: 'ghibli' | 'alto' | 'monument' | 'retro' = 'ghibli'
+  export let enableToonShading = true
+  export let enableOutlines = true
   
   // Timeline data state
   let realTimelineEvents: any[] = []
@@ -189,6 +206,28 @@
     }
   }
 
+  // Debug functions for vegetation system
+  function logVegetationStats() {
+    if (naturePackVegetation) {
+      const stats = naturePackVegetation.getStats()
+      console.log('🌱 Vegetation Stats:', stats)
+    }
+  }
+
+  // Style system functions
+  function handleStyleSystemReady(event: CustomEvent) {
+    console.log('🎨 Style system ready:', event.detail)
+    
+    // Apply style to existing vegetation if it's already loaded
+    if (naturePackVegetation && ghibliStyleSystem) {
+      console.log('🎨 Applying style to existing vegetation')
+    }
+  }
+
+  function handleStyleChanged(event: CustomEvent) {
+    console.log('🎨 Style changed to:', event.detail.preset)
+  }
+
   // Handle star interactions
   function handleStarSelected(event: CustomEvent) {
     const { star, eventData, screenPosition, worldPosition } = event.detail
@@ -223,6 +262,42 @@
 -->
 <LevelManager let:registry let:lighting let:ecsWorld>
   
+  <!-- Global Style System for Ghibli/Toon aesthetic -->
+  <GhibliStyleSystem 
+    bind:this={ghibliStyleSystem}
+    {stylePreset}
+    {enableToonShading}
+    {enableOutlines}
+    enableColorGrading={true}
+    enableVignette={true}
+    outlineStrength={2.5}
+    outlineThickness={0.005}
+    
+    enableStyleLighting={false}
+    ambientIntensity={0.2}
+    sunIntensity={0.4}
+    fillIntensity={0.1}
+    toneMappingExposure={1.0}
+    
+    on:styleSystemReady={handleStyleSystemReady}
+    on:styleChanged={handleStyleChanged}
+  />
+  
+  <!-- LOD System for performance optimization -->
+  <LOD 
+    enableLOD={true}
+    maxDistance={200}
+    updateFrequency={0.1}
+    enableCulling={true}
+    on:lodLevelChanged={(e) => console.log('🎯 LOD level changed:', e.detail)}
+    on:performanceUpdate={(e) => {
+      if (e.detail.averageFPS) {
+        // Could adjust quality here based on performance
+        console.log('📊 Performance update:', e.detail.averageFPS, 'fps')
+      }
+    }}
+  />
+  
   <!-- Dynamic fog that changes when underwater -->
   <T.FogExp2 
     color={$underwaterStateStore.isUnderwater ? levelConfig.water.underwaterFogColor : 0x6a7db3}
@@ -249,7 +324,7 @@
     -->
     <LightingComponent 
       ambientColor={0x404060}
-      ambientIntensity={1.0}
+      ambientIntensity={.5}
       directionalLights={[
         {
           position: [100, 200, 50],
@@ -296,6 +371,21 @@
     <!-- Screen overlay for blue tint effect (other underwater effects now integrated into OceanComponent) -->
     <UnderwaterOverlay />
     
+    <!-- 
+      NATURE PACK VEGETATION SYSTEM
+      Populates the island with trees, bushes, grass, and flowers using
+      the nature pack assets and terrain-based distribution
+    -->
+    <NaturePackVegetation 
+      bind:this={naturePackVegetation}
+      {getHeightAt}
+      count={150}
+      radius={160}
+      density={0.9}
+      enableLOD={true}
+      on:vegetationReady={(e) => console.log('🌱 Vegetation ready:', e.detail)}
+    />
+
     <!-- 
       HYBRID FIREFLY COMPONENT (High-level setup + ECS entities)
       
@@ -400,6 +490,15 @@
   </T.Group>
 
 </LevelManager>
+
+<!-- Style Controls UI (development/debug) -->
+{#if import.meta.env.DEV}
+  <StyleControls 
+    visible={true}
+    position="top-right"
+    on:styleChanged={(e) => console.log('🎨 Style changed via UI:', e.detail)}
+  />
+{/if}
 
 <!--
   EXAMPLE: How to create player interactions that affect the emotional system

@@ -8,6 +8,7 @@
   import { onMount, createEventDispatcher } from 'svelte'
   import * as THREE from 'three'
   import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+  import { fixGLTFMaterials, fixMaterialDepthIssues } from '../utils/materialUtils'
   
   const dispatch = createEventDispatcher()
   
