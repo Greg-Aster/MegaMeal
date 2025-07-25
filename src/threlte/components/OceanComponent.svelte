@@ -66,9 +66,6 @@
   let oceanMesh: THREE.Mesh
   let oceanMaterial: THREE.Material // Can be ShaderMaterial or MeshStandardMaterial
   let oceanGeometry: THREE.PlaneGeometry
-  let underwaterMesh: THREE.Mesh
-  let underwaterMaterial: THREE.Material
-  let underwaterGeometry: THREE.PlaneGeometry
   let animationTime = 0
   let waterLevel = initialLevel // Initialize water level
   
@@ -453,8 +450,6 @@
     protected onDispose(): void {
       oceanGeometry?.dispose()
       oceanMaterial?.dispose()
-      underwaterGeometry?.dispose()
-      underwaterMaterial?.dispose()
     }
 
     private createOcean(): void {
@@ -467,10 +462,9 @@
       // ALWAYS use MeshStandardMaterial for proper Threlte lighting integration
       const textureData = this.createLegacyWaveTextures()
       
-      // SOLUTION: Make ocean completely opaque but use shader tricks for firefly visibility
       oceanMaterial = new THREE.MeshStandardMaterial({
         color: color,
-        transparent: false, // Back to opaque to avoid conflicts
+        transparent: false,
         opacity: 1.0,
         roughness: roughness,
         metalness: metalness,
@@ -486,48 +480,14 @@
         
         // Enable proper lighting integration
         fog: true, // Respond to scene fog
-        side: THREE.FrontSide, // Only render top surface
+        side: THREE.DoubleSide,
         
-        // Opaque ocean with proper depth
-        depthWrite: true,  // Write depth normally
-        depthTest: true    // Test depth normally
+        // Ocean is now opaque - standard depth handling
+        depthWrite: true,  // Opaque objects write to depth buffer
+        depthTest: true    // And test against it
       })
-      
-      // Note: Fireflies now use depthTest: false and additive blending for underwater visibility
       
       // Ocean setup complete
-    }
-
-    private createUnderwaterLayer(textureData: any): void {
-      // Create underwater geometry (slightly below surface)
-      underwaterGeometry = new THREE.PlaneGeometry(
-        size.width, size.height,
-        deviceOptimizedSettings.segments.width,
-        deviceOptimizedSettings.segments.height
-      )
-
-      // Create transparent underwater material for firefly visibility
-      underwaterMaterial = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(color).multiplyScalar(0.7), // Darker underwater color
-        transparent: true,
-        opacity: 0.6, // Semi-transparent for firefly visibility
-        roughness: roughness,
-        metalness: metalness,
-        
-        // Same textures but darker
-        map: textureData.colorTexture,
-        normalMap: textureData.normalMap,
-        displacementMap: textureData.displacementMap,
-        displacementScale: 0.3, // Less displacement underwater
-        normalScale: new THREE.Vector2(0.2, 0.2),
-        
-        // Transparent layer settings (like fireflies)
-        side: THREE.BackSide, // Render bottom side
-        depthWrite: false,    // Don't write depth (like fireflies)
-        depthTest: true,      // But test against depth
-        blending: THREE.NormalBlending,
-        fog: true
-      })
     }
 
     private updateOceanLighting(lighting: LightingData): void {
@@ -760,7 +720,7 @@
   }
 </script>
 
-<!-- Ocean surface (opaque) -->
+<!-- Ocean mesh -->
 {#if oceanGeometry && oceanMaterial}
   <T.Mesh 
     bind:ref={oceanMesh}
@@ -776,8 +736,6 @@
     renderOrder={0}
   />
 {/if}
-
-<!-- Underwater layer removed - fireflies now use depthTest: false for visibility -->
 
 <!-- Integrated Underwater Effects System -->
 {#if enableUnderwaterEffects}

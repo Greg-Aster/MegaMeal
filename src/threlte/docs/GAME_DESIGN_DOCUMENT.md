@@ -1,1001 +1,443 @@
-# MEGAMEAL Game Design Document
-## Threlte-Based 3D Web Game
+# MEGAMEAL
+## Technical Architecture Manual v2.0
 
-**Version:** 2.2 (Hybrid ECS Architecture + Nature Pack Integration)
-**Date:** July 2025  
-**Engine:** Threlte + Svelte 5 + Rapier Physics + BitECS  
+**Project:** MEGAMEAL  
+**Platform:** Web (Three.js/Threlte)  
+**Development Status:** Active Development  
+**Document Version:** 2.0  
+**Last Updated:** July 22, 2025
 
 ---
 
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Technical Architecture](#technical-architecture)
-3. [Hybrid ECS Architecture](#hybrid-ecs-architecture)
-4. [Level Management System](#level-management-system)
-5. [Performance Optimization (LOD System)](#performance-optimization-lod-system)
-6. [Nature Pack Vegetation System](#nature-pack-vegetation-system)
-7. [Visual Style System (Ghibli Aesthetics)](#visual-style-system-ghibli-aesthetics)
-8. [Player Control System](#player-control-system)
-9. [Level System](#level-system)
-10. [Physics and Movement](#physics-and-movement)
-11. [State Management](#state-management)
-12. [Rendering Pipeline](#rendering-pipeline)
-13. [Mobile Support](#mobile-support)
-14. [File Structure](#file-structure)
+1. [Architecture Overview](#architecture-overview)
+2. [Component System](#component-system)
+3. [ECS Integration](#ecs-integration)
+4. [Performance Optimization](#performance-optimization)
+5. [Level System](#level-system)
+6. [Component Reference](#component-reference)
+7. [Best Practices](#best-practices)
+8. [Development Standards](#development-standards)
 
 ---
 
-## Overview
+## Architecture Overview
 
-MEGAMEAL is a first-person 3D exploration game built using modern web technologies. The game features multiple interconnected levels including an observatory, spaceship, restaurant, infinite library, and personal room environments. Players explore these spaces through immersive first-person controls with full WASD + mouse look functionality.
+MEGAMEAL is built on a modern Threlte/Three.js architecture with industry-standard best practices:
 
-### Core Features
-- **First-Person Movement**: WASD + mouse look controls with physics-based movement
-- **Multiple Levels**: Observatory, Miranda Spaceship, Restaurant, Infinite Library, Jerry's Room
-- **Timeline Integration**: Interactive star map and timeline system
-- **Underwater Effects**: Immersive underwater environment with dynamic fog and collision detection
-- **Nature Pack Vegetation**: Realistic 3D vegetation with biome-based distribution and LOD optimization
-- **Hybrid ECS Architecture**: High-performance entity component system for dynamic objects
-- **Advanced LOD System**: Automatic level-of-detail management with performance-based adjustment
-- **Modern Architecture**: Component-based system with industry-standard level management
-- **Cross-Platform**: Desktop and mobile support with adaptive controls
+### Technology Stack
+- **Threlte**: Svelte wrapper for Three.js
+- **Three.js**: WebGL 3D engine
+- **bitECS**: High-performance entity-component-system
+- **TypeScript**: Type safety and developer experience
+- **Vite**: Development and build tooling
 
----
-
-## Technical Architecture
-
-### Core Technologies
-- **Threlte**: Declarative 3D framework for Svelte
-- **Svelte 5**: Reactive UI framework with modern stores
-- **Rapier3D**: Physics engine for realistic movement and collisions
-- **Three.js**: Underlying 3D engine (via Threlte)
-- **BitECS**: High-performance Entity Component System for dynamic objects
-- **Astro**: Static site generator with component islands
-
-### Hybrid Architecture Philosophy
-MEGAMEAL uses a unique hybrid approach combining the best of both declarative and imperative paradigms:
-
-**Declarative Components (Threlte/Svelte)** - For high-level scene composition:
-- Level layout and static objects
-- UI components and state management
-- Lighting and environmental effects
-- Asset loading and management
-
-**Imperative ECS (BitECS)** - For performance-critical dynamic systems:
-- Particle systems (fireflies, effects)
-- Animation and movement systems
-- Large-scale object management (vegetation)
-- Performance-sensitive calculations
-
-### Migration from Three.js
-The game was completely migrated from imperative Three.js code to declarative Threlte components:
-
-**Before (Three.js):**
-```javascript
-// Imperative camera setup
-camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 2000)
-camera.position.set(0, 5, 10)
-scene.add(camera)
-```
-
-**After (Threlte):**
-```svelte
-<!-- Declarative camera setup -->
-<T.PerspectiveCamera 
-  bind:ref={camera}
-  position={[0, 1.6, 0]}
-  fov={75} 
-  near={0.1} 
-  far={2000} 
-  makeDefault
-/>
-```
+### Core Principles
+- **Modular Components**: Reusable, composable level building blocks
+- **ECS Performance**: High-performance entity management for dynamic objects
+- **Device Optimization**: Automatic quality scaling across devices
+- **Clean Architecture**: Separation of concerns with clear interfaces
 
 ---
 
-## Hybrid ECS Architecture
+## Component System
 
-### Entity Component System Integration
-MEGAMEAL implements a cutting-edge hybrid ECS architecture using BitECS for performance-critical systems while maintaining Svelte's declarative approach for high-level composition.
+### Base Component Architecture
 
-#### Core ECS Components
-```typescript
-// Transform components
-export const Position = defineComponent({ x: Types.f32, y: Types.f32, z: Types.f32 })
-export const Velocity = defineComponent({ x: Types.f32, y: Types.f32, z: Types.f32 })
-export const Rotation = defineComponent({ x: Types.f32, y: Types.f32, z: Types.f32, w: Types.f32 })
-
-// Rendering components  
-export const RenderableSprite = defineComponent({
-  color: Types.ui32, intensity: Types.f32, size: Types.f32, opacity: Types.f32
-})
-export const LightEmitter = defineComponent({
-  color: Types.ui32, intensity: Types.f32, range: Types.f32, decay: Types.f32
-})
-
-// Game-specific components
-export const FireflyTag = defineComponent()
-export const VegetationTag = defineComponent()
-export const EmotionalResponder = defineComponent({
-  wonderFactor: Types.f32, melancholyFactor: Types.f32, 
-  hopeFactor: Types.f32, discoveryFactor: Types.f32
-})
-```
-
-#### High-Performance Systems
-```typescript
-// Movement system (cache-friendly entity processing)
-const movementSystem = defineSystem((world) => {
-  const entities = floatingEntitiesQuery(world)
-  for (let i = 0; i < entities.length; i++) {
-    const eid = entities[i]
-    Position.x[eid] += Velocity.x[eid] * deltaTime
-    Position.y[eid] += Velocity.y[eid] * deltaTime  
-    Position.z[eid] += Velocity.z[eid] * deltaTime
-  }
-  return world
-})
-```
-
-#### ECS-Svelte Bridge
-The ECSWorldManager provides seamless integration between ECS entities and Svelte components:
+All components extend the BaseLevelComponent class with standardized lifecycle:
 
 ```typescript
-export class ECSWorldManager {
-  private world: any
-  private systems: Array<(world: any, deltaTime: number) => void> = []
-  
-  // Emotional state affects all ECS entities automatically
-  updateEmotionalState(wonder?: number, melancholy?: number, hope?: number, discovery?: number) {
-    // Updates singleton emotional state entity
-    // All EmotionalResponder entities react automatically via system processing
-  }
-  
-  // Bridge ECS lights to Threlte lighting system
-  getActiveLights(): Array<{position: THREE.Vector3, color: THREE.Color, intensity: number}> {
-    // Extracts light data from ECS entities for ocean reflections, etc.
-  }
-}
-```
-
----
-
-## Level Management System
-
-### Industry-Standard Architecture
-MEGAMEAL implements a professional-grade level management system based on Unity/Unreal patterns, adapted for web technologies.
-
-#### Core Level System Components
-```typescript
-// Central registry for all level systems
-export class SystemRegistry {
-  private components = new Map<string, LevelComponent>()
-  private messageQueue: SystemMessage[] = []
-  
-  // Event-driven cross-system communication
-  sendMessage(message: SystemMessage): void {
-    // Priority-based message processing (critical → high → normal → low)
-    // Automatic broadcasting to all registered components
-  }
-}
-
-// Standard component interface
-export interface LevelComponent {
+abstract class BaseLevelComponent {
   readonly id: string
   readonly type: ComponentType
-  initialize(context: LevelContext): Promise<void>
-  update(deltaTime: number): void
-  handleMessage(message: SystemMessage): void
-  dispose(): void
+  
+  protected abstract onInitialize(): Promise<void>
+  protected abstract onUpdate(deltaTime: number): void
+  protected abstract onMessage(message: SystemMessage): void
+  protected abstract onDispose(): void
 }
 ```
 
-#### Level Manager Integration
+### Component Types
+
+#### Core Components
+- **HybridFireflyComponent**: ECS-powered particle system with legacy visual parameters
+- **OceanComponent**: Shader-based water with real-time lighting integration
+- **LightingComponent**: Multi-light environmental lighting system
+- **StaticEnvironment**: GLTF model loading with LOD support
+
+#### System Communication
+```typescript
+enum MessageType {
+  LIGHTING_UPDATE = 'lighting_update',
+  USER_INTERACTION = 'user_interaction',
+  PERFORMANCE_WARNING = 'performance_warning'
+}
+
+interface SystemMessage {
+  type: MessageType
+  source: string
+  data: any
+  timestamp: number
+  priority: 'low' | 'normal' | 'high'
+}
+```
+
+### Level Creation Pattern
 ```svelte
-<!-- Any level can use this for automatic system coordination -->
 <LevelManager let:registry let:lighting let:ecsWorld>
-  <!-- All child components automatically get access to: -->
-  <!-- - SystemRegistry for cross-component communication -->
-  <!-- - LightingManager for unified lighting -->
-  <!-- - ECSWorldManager for high-performance entities -->
-  
-  <OceanComponent />        <!-- Registers as 'ocean' system -->
-  <LightingComponent />     <!-- Registers as 'lighting' system -->
-  <VegetationSystem />      <!-- Registers as 'environment' system -->
+  <LightingComponent {...lightingConfig} />
+  <OceanComponent {...oceanConfig} />
+  <HybridFireflyComponent {...fireflyConfig} />
+  <StaticEnvironment {...environmentConfig} />
 </LevelManager>
 ```
 
-#### Cross-System Communication
+---
+
+## ECS Integration
+
+### ECS World Manager
+The ECSWorldManager provides high-performance entity management:
+
 ```typescript
-// Example: Fireflies automatically update ocean reflections
-firefliesComponent.sendMessage({
-  type: MessageType.LIGHTING_UPDATE,
-  source: 'firefly-system',
-  data: { lights: activeLights },
-  priority: 'normal'
+interface ECSWorldManager {
+  getWorld(): World
+  createFirefly(position: Vector3, color: number, config: FireflyConfig): number
+  getActiveLights(): ActiveLight[]
+  updateEmotionalState(wonder: number, melancholy?: number, hope?: number, discovery?: number): void
+  setGlobalIntensity(intensity: number): void
+}
+```
+
+### Entity Components
+```typescript
+// Position component for 3D coordinates
+const Position = defineComponent({
+  x: Types.f32,
+  y: Types.f32,
+  z: Types.f32
 })
 
-// Ocean component receives message and updates reflections
-oceanComponent.handleMessage(message) {
-  if (message.type === MessageType.LIGHTING_UPDATE) {
-    updateReflections(message.data.lights)
-  }
-}
-```
+// Light emitter for dynamic lighting
+const LightEmitter = defineComponent({
+  color: Types.ui32,
+  intensity: Types.f32,
+  range: Types.f32
+})
 
----
-
-## Performance Optimization (LOD System)
-
-### Advanced Level-of-Detail Management
-MEGAMEAL features a sophisticated LOD system that automatically optimizes rendering based on distance and performance metrics.
-
-#### Automatic LOD Registration
-```typescript
-// Components automatically register with LOD system
-export function registerLODObject(id: string, mesh: THREE.Mesh, customLevels?: LODLevel[]) {
-  const lodObject: LODObject = {
-    id, mesh,
-    levels: customLevels || generateDefaultLODLevels(mesh),
-    currentLevel: 0,
-    originalGeometry: mesh.geometry.clone(),
-    originalMaterial: mesh.material.clone()
-  }
-  
-  lodObjects.set(id, lodObject)
-}
-```
-
-#### Dynamic LOD Levels
-```typescript
-interface LODLevel {
-  distance: number           // Switch distance in world units
-  geometry?: THREE.BufferGeometry  // Simplified geometry (optional)
-  material?: THREE.Material  // Simplified material (optional)
-  visible: boolean          // Visibility flag
-  quality: 'ultra_low' | 'low' | 'medium' | 'high' | 'ultra'
-}
-
-// Example LOD configuration for vegetation:
-const vegetationLODLevels = [
-  { distance: 0,   visible: true,  quality: 'ultra' },  // 0-15m: full detail
-  { distance: 15,  visible: true,  quality: 'high' },   // 15-40m: high detail
-  { distance: 40,  visible: true,  quality: 'medium' }, // 40-80m: medium detail
-  { distance: 80,  visible: true,  quality: 'low' },    // 80-150m: low detail
-  { distance: 150, visible: false, quality: 'ultra_low' } // 150m+: culled
-]
-```
-
-#### Performance-Based Adjustment
-```typescript
-// Automatic quality adjustment based on frame rate
-export function adjustLODForPerformance(targetFPS: number, currentFPS: number) {
-  if (currentFPS < targetFPS * 0.8) {
-    // Performance is poor - more aggressive LOD
-    const newDistances = [5, 15, 30, 60]  // Closer switching distances
-    lodDistancesStore.set(newDistances)
-    lodQualityStore.set('low')
-  } else if (currentFPS > targetFPS * 1.1) {
-    // Performance is good - allow higher quality
-    const newDistances = [15, 35, 70, 120] // Further switching distances
-    lodQualityStore.set('high')
-  }
-}
-```
-
-#### Batched LOD Updates
-```typescript
-// Performance-optimized batched processing
-function batchUpdateLOD() {
-  const batchSize = Math.min(10, lodObjects.size)
-  const objectArray = Array.from(lodObjects.values())
-  
-  // Update subset each frame to spread CPU load
-  for (let i = 0; i < batchSize; i++) {
-    const index = (performance.now() / 100 + i) % objectArray.length
-    const lodObject = objectArray[Math.floor(index)]
-    updateLODLevel(lodObject)
-  }
-}
-```
-
----
-
-## Nature Pack Vegetation System
-
-### Realistic 3D Vegetation Integration
-MEGAMEAL features a comprehensive vegetation system using professional 3D assets with intelligent distribution and performance optimization.
-
-#### Asset Organization
-```typescript
-const VEGETATION_ASSETS = {
-  trees: {
-    birch: ['BirchTree_1.gltf', 'BirchTree_2.gltf', /* 5 variants */],
-    maple: ['MapleTree_1.gltf', 'MapleTree_2.gltf', /* 5 variants */],
-    dead: ['DeadTree_1.gltf', 'DeadTree_2.gltf', /* 10 variants */]
-  },
-  bushes: ['Bush.gltf', 'Bush_Large.gltf', 'Bush_Small.gltf', /* + flowering variants */],
-  grass: ['Grass_Large.gltf', 'Grass_Small.gltf', 'Grass_Large_Extruded.gltf'],
-  flowers: ['Flower_1_Clump.gltf', 'Flower_2_Clump.gltf', /* 7 variants */]
-}
-```
-
-#### Biome-Based Distribution
-```typescript
-function selectVegetationType(distance: number, height: number) {
-  if (distance < 40) {
-    // Inner zone - lush mixed forest (50% trees, 30% bushes, 20% flowers)
-    return Math.random() < 0.5 ? selectTree('living') : 
-           Math.random() < 0.75 ? selectBush() : selectFlower()
-  } else if (distance < 100) {
-    // Middle zone - transitional (30% trees, 40% bushes, 30% grass)
-    return Math.random() < 0.3 ? selectTree('mixed') :
-           Math.random() < 0.7 ? selectBush() : selectGrass()
-  } else {
-    // Outer zone - sparse hardy vegetation (20% dead trees, 80% grass/small bushes)
-    return Math.random() < 0.2 ? selectTree('dead') : 
-           Math.random() < 0.5 ? selectBush('small') : selectGrass()
-  }
-}
-```
-
-#### Terrain-Aware Placement
-```typescript
-// Uses existing terrain height function for realistic placement
-for (let i = 0; i < count; i++) {
-  const angle = Math.random() * Math.PI * 2
-  const distance = Math.sqrt(Math.random()) * radius * density
-  const x = Math.cos(angle) * distance
-  const z = Math.sin(angle) * distance
-  
-  const groundHeight = getHeightAt(x, z)
-  
-  // Skip underwater or overly steep areas
-  if (groundHeight < -3) continue
-  
-  // Place vegetation at ground level
-  vegetationInstances.push({
-    position: [x, groundHeight, z],
-    rotation: [0, Math.random() * Math.PI * 2, 0],
-    scale: [0.7 + Math.random() * 0.6, 0.7 + Math.random() * 0.6, 0.7 + Math.random() * 0.6]
-  })
-}
-```
-
-#### LOD System Integration  
-```typescript
-// Vegetation automatically registers with existing LOD system
-function registerWithLODSystem(mesh: THREE.Mesh, id: string) {
-  const lodEvent = new CustomEvent('threlte:registerLOD', {
-    detail: {
-      id: `vegetation-${id}`,
-      mesh: mesh,
-      levels: [
-        { distance: 0,   visible: true,  quality: 'ultra' },
-        { distance: 15,  visible: true,  quality: 'high' },
-        { distance: 40,  visible: true,  quality: 'medium' },
-        { distance: 80,  visible: true,  quality: 'low' },
-        { distance: 150, visible: false, quality: 'ultra_low' }
-      ]
-    }
-  })
-  window.dispatchEvent(lodEvent)
-}
-```
-
-#### Performance Characteristics
-- **150 vegetation instances** distributed across 160-unit radius
-- **Automatic LOD management** with 5 detail levels
-- **Biome-based distribution** for realistic ecosystem simulation
-- **Fallback geometries** ensure scene always renders
-- **Event-driven registration** with existing performance systems
-
----
-
-## Visual Style System (Ghibli Aesthetics)
-
-### Stylized Visual Pipeline
-MEGAMEAL implements a comprehensive visual style system that transforms the standard WebGL rendering into a Studio Ghibli-inspired aesthetic with multiple style presets.
-
-#### Core Style Components
-```typescript
-// Four distinct visual styles available
-const stylePresets = [
-  { value: 'ghibli', label: 'Studio Ghibli', description: 'Warm, natural colors' },
-  { value: 'alto', label: 'Alto\'s Adventure', description: 'Minimalist gradients' },
-  { value: 'monument', label: 'Monument Valley', description: 'Pastel architecture' },
-  { value: 'retro', label: 'Retro/Synthwave', description: 'Bold 80s colors' }
-]
-```
-
-#### Toon Shading System
-```typescript
-// All materials converted to stylized toon shading
-function createToonMaterial(originalMaterial: THREE.Material): THREE.MeshToonMaterial {
-  return new THREE.MeshToonMaterial({
-    color: findClosestPaletteColor(originalMaterial.color, currentPalette),
-    gradientMap: createToonGradientMap(), // 3-step lighting gradient
-    map: originalMaterial.map,
-    normalMap: originalMaterial.normalMap
-  })
-}
-```
-
-#### Color Palette Harmonization
-```typescript
-// Intelligent color mapping based on object names
-function getColorFromObjectName(objectName: string): THREE.Color {
-  if (name.includes('tree')) return palette.trees
-  if (name.includes('grass')) return palette.grass  
-  if (name.includes('flower')) return palette.flowers
-  if (name.includes('water')) return palette.water
-  return findClosestPaletteColor(originalColor, palette)
-}
-```
-
-#### Post-Processing Effects
-```typescript
-// Enhanced visual effects pipeline
-setupPostProcessing() {
-  composer = new EffectComposer(renderer)
-  composer.addPass(new RenderPass(scene, camera))
-  
-  // Optional outline pass for cartoon-style edges
-  if (enableOutlines) {
-    outlinePass = new OutlinePass(screenSize, scene, camera)
-    outlinePass.edgeStrength = 2.5
-    outlinePass.visibleEdgeColor.set(palette.outline)
-    composer.addPass(outlinePass)
-  }
-}
-```
-
-#### Performance-Optimized Material Caching
-```typescript
-// Efficient material reuse system
-class StyleManager {
-  private materialCache = new Map<string, THREE.Material>()
-  
-  createToonMaterial(config: MaterialConfig): THREE.MeshToonMaterial {
-    const cacheKey = `toon_${baseColor.getHexString()}_${transparent}_${opacity}`
-    
-    if (this.materialCache.has(cacheKey)) {
-      return this.materialCache.get(cacheKey) // Reuse existing material
-    }
-    
-    const material = new THREE.MeshToonMaterial({...config})
-    this.materialCache.set(cacheKey, material) // Cache for future use
-    return material
-  }
-}
-```
-
-#### Stylized Lighting Configuration
-```typescript
-// Enhanced lighting setup for each style preset
-getStylizedLightingConfig() {
-  return {
-    ambient: { color: palette.ambient, intensity: 0.4 },
-    directional: [{
-      position: new THREE.Vector3(50, 100, 50),
-      color: palette.sun,
-      intensity: 0.8,
-      castShadow: true
-    }],
-    fog: { color: palette.fog, near: 50, far: 300 }
-  }
-}
-```
-
-#### Performance Impact Analysis
-
-**✅ Performance Improvements:**
-- **Material Caching**: Reduces memory usage by reusing identical materials
-- **Simplified Shaders**: MeshToonMaterial is more efficient than complex PBR materials  
-- **Optimized Color Processing**: Pre-computed palettes with fast distance calculations
-- **Smart Conversion**: Only processes each material once during initialization
-
-**⚠️ Performance Costs:**
-- **Post-Processing Overhead**: EffectComposer adds ~1-2ms per frame for outlines
-- **Initial Processing**: One-time cost of ~50-100ms during scene initialization
-- **Memory Overhead**: ~5-10MB additional for material cache and gradient textures
-
-**📊 Net Performance Impact: +5-10% improvement**
-The material caching and simplified shaders provide greater benefits than the post-processing costs.
-
-#### Integration with Existing Systems
-```svelte
-<!-- Automatic integration with vegetation and LOD systems -->
-<GhibliStyleSystem 
-  stylePreset="ghibli"
-  enableToonShading={true}
-  enableOutlines={true}
-  on:styleSystemReady={handleStyleSystemReady}
-  on:styleChanged={handleStyleChanged}
-/>
-
-<!-- Debug UI for style testing (development only) -->
-{#if import.meta.env.DEV}
-  <StyleControls 
-    visible={true}
-    position="top-right"
-    on:styleChanged={(e) => console.log('🎨 Style changed:', e.detail)}
-  />
-{/if}
-```
-
-#### Visual Style Features
-- **Toon Shading**: Discrete lighting steps for cartoon-like appearance
-- **Color Harmonization**: All scene colors mapped to cohesive palettes
-- **Enhanced Lighting**: Stylized ambient and directional lighting
-- **Optional Outlines**: Cartoon-style edge detection
-- **Fog Integration**: Palette-based atmospheric effects
-- **Material Preservation**: Original materials stored for potential reversion
-
----
-
-## Player Control System
-
-### Input Handling
-The player control system (`src/threlte/components/Player.svelte`) provides modern first-person controls:
-
-#### Desktop Controls
-- **Movement**: WASD or Arrow Keys
-- **Look**: Click + Drag mouse movement
-- **Jump**: Spacebar (with anti-fly protection)
-- **Sprint**: Hold Shift while moving
-- **Interaction**: Click on objects
-
-#### Mobile Controls
-- **Movement**: Virtual joystick (bottom area of screen)
-- **Look**: Touch and drag (upper area of screen)
-- **Jump**: Tap jump button
-- **Interaction**: Tap on objects
-
-### Anti-Exploit Features
-```typescript
-// Jump key press detection prevents flying
-if (event.code === 'Space' && !keyStates['Space']) {
-  jumpKeyPressed = true
-}
-
-// Ground detection with coyote time
-const canJump = isGrounded || (currentTime - lastGroundTime < coyoteTime)
-if (jumpKeyPressed && canJump) {
-  velocity.y = jumpForce
-  jumpKeyPressed = false // Prevents held key from repeating jump
-}
-```
-
-### Movement Physics
-```typescript
-// Corrected velocity handling (prevents feedback loop)
-velocity.set(0, linvel.y, 0) // Only preserve gravity, not horizontal velocity
-
-// Transform local movement to world space
-const localMovement = new THREE.Vector3(movement.x * moveSpeed, 0, movement.z * moveSpeed)
-localMovement.applyQuaternion(quaternion)
-velocity.x = localMovement.x
-velocity.z = localMovement.z
-```
-
----
-
-## Level System
-
-### Available Levels
-
-#### 1. Observatory (`src/threlte/levels/HybridObservatory.svelte`)
-- **Purpose**: Main hub with interactive star map, underwater exploration, and nature environment
-- **Features**: Telescope interaction, star selection, timeline navigation, dynamic ocean system, vegetation ecosystem
-- **Key Objects**: Star field, telescope, rising ocean with underwater effects, 150+ vegetation instances
-- **Ocean System**: 
-  - Water level rises from -6 to 8 units over time
-  - Underwater collision detection with murky visibility effects
-  - Configurable fog density per level (current: 0.62 for very murky water)
-  - Screen overlay with dark vignette effect when underwater
-- **Vegetation System**:
-  - Biome-based distribution: Inner forest → Mixed vegetation → Sparse outer zone
-  - 150 instances across 160-unit radius with 90% density
-  - Automatic LOD management with 5 detail levels
-  - Integration with existing terrain height function
-  - Professional 3D assets: Trees (Birch, Maple, Dead), Bushes, Grass, Flowers
-
-#### 2. Miranda Spaceship (`src/threlte/levels/Miranda.svelte`)
-- **Purpose**: Futuristic spaceship environment
-- **Features**: Debris analysis, terminal access, ship systems
-- **Key Objects**: Command terminals, analysis equipment, ship corridors
-
-#### 3. Restaurant (`src/threlte/levels/Restaurant.svelte`)
-- **Purpose**: Kitchen/restaurant back-room environment
-- **Features**: Equipment interaction, secret discovery
-- **Key Objects**: Kitchen equipment, storage areas, hidden passages
-
-#### 4. Infinite Library (`src/threlte/levels/InfiniteLibrary.svelte`)
-- **Purpose**: Endless library with knowledge systems
-- **Features**: Bookshelf examination, knowledge access, portal system
-- **Key Objects**: Bookshelves, reading terminals, interdimensional portals
-
-#### 5. Jerry's Room (`src/threlte/levels/JerrysRoom.svelte`)
-- **Purpose**: Personal workspace environment
-- **Features**: Computer access, desk interaction, room exploration
-- **Key Objects**: Multiple screens, desk setup, personal items
-
-### Level Transition System
-```typescript
-// Store-based level transitions
-const levelMap = {
-  'miranda-ship-level': 'miranda',
-  'restaurant-backroom-level': 'restaurant',
-  'infinite-library-level': 'infinite_library',
-}
-
-function handleLevelTransition(event) {
-  const levelId = levelMap[event.detail.levelType] || event.detail.levelType
-  gameActions.transitionToLevel(levelId)
-}
-```
-
----
-
-## Underwater Effects System
-
-### Modern Component-Based Ocean
-The Observatory level features a fully reactive ocean system built with modern component architecture:
-
-```svelte
-<OceanComponent 
-  size={levelConfig.water.oceanSize}
-  enableRising={levelConfig.water.enableRising}
-  initialLevel={levelConfig.water.initialLevel}
-  targetLevel={levelConfig.water.targetLevel}
-  riseRate={levelConfig.water.riseRate}
-  underwaterFogDensity={levelConfig.water.underwaterFogDensity}
-  underwaterFogColor={levelConfig.water.underwaterFogColor}
-  surfaceFogDensity={levelConfig.water.surfaceFogDensity}
-/>
-```
-
-### Dynamic Water Level System
-```typescript
-// Water rises reactively from initialLevel to targetLevel
-if (enableRising) {
-  if (waterLevel < targetLevel) {
-    waterLevel = Math.min(waterLevel + riseRate * deltaTime, targetLevel)
-  }
-}
-```
-
-### Collision Detection
-```typescript
-// Optimized collision detection (runs every 10 frames for performance)
-useTask(() => {
-  collisionCheckCounter++
-  if (collisionCheckCounter < 10) return
-  
-  // Check if player is below water surface
-  const isInWaterBounds = (
-    playerPos.y < waterLevel && // Actually underwater
-    Math.abs(playerPos.x - position[0]) < waterCollisionSize[0] / 2 &&
-    Math.abs(playerPos.z - position[2]) < waterCollisionSize[2] / 2
-  )
+// Light cycling for temporal behavior
+const LightCycling = defineComponent({
+  isActive: Types.ui8,
+  fadeProgress: Types.f32,
+  cycleTime: Types.f32
 })
 ```
 
-### Visual Effects
-- **Screen Overlay**: Dark vignette with radial gradient for murky atmosphere
-- **Dynamic Fog**: Fog density and color change when underwater
-- **Reactive Intensity**: Effects scale with water depth
-
-### Level Configuration
+### Query System
 ```typescript
-const levelConfig = {
-  water: {
-    underwaterFogDensity: 0.62,    // Very murky (higher = less visibility)
-    underwaterFogColor: 0x081520,  // Dark blue-gray underwater fog
-    surfaceFogDensity: 0.003       // Normal surface fog
-  }
+const fireflyQuery = defineQuery([Position, LightEmitter, LightCycling])
+
+// Usage in system update
+const entities = fireflyQuery(world)
+for (let i = 0; i < entities.length; i++) {
+  const eid = entities[i]
+  updateFireflyLogic(eid)
 }
-```
-
----
-
-## Physics and Movement
-
-### Rigid Body Setup
-```svelte
-<RigidBody
-  bind:rigidBody
-  type="dynamic"
-  enabledRotations={[false, true, false]} <!-- Only Y-axis rotation -->
-  gravityScale={1}
->
-  <Collider 
-    shape="capsule" 
-    args={[0.3, 0.8]}
-    friction={0.2}
-    restitution={0}
-  />
-</RigidBody>
-```
-
-### Ground Detection
-```typescript
-// Strict ground detection prevents false positives
-isGrounded = Math.abs(linvel.y) < 0.5 && linvel.y > -1.0
-
-// Coyote time allows jump shortly after leaving ground
-const coyoteTime = 100 // milliseconds
-const canJump = isGrounded || (currentTime - lastGroundTime < coyoteTime)
-```
-
-### Camera-Body Relationship
-The camera is now a child of the RigidBody, ensuring that:
-- Eyes and body rotate together
-- No camera desync issues
-- Proper physics-based movement
-- Realistic first-person perspective
-
----
-
-## State Management
-
-### Reactive Store System
-Replaced the old event-bus system with modern Svelte stores:
-
-```typescript
-// Game state stores (src/threlte/stores/gameStateStore.ts)
-export const currentLevelStore = writable('observatory')
-export const selectedStarStore = writable<StarData | null>(null)
-export const gameStatsStore = writable(defaultGameStats)
-export const isMobileStore = writable(false)
-export const isLoadingStore = writable(false)
-export const errorStore = writable<string | null>(null)
-export const dialogueStore = writable(defaultDialogue)
-
-// Action creators for state updates
-export const gameActions = {
-  transitionToLevel: (levelId: string) => {
-    currentLevelStore.set(levelId)
-    gameSessionStore.update(session => ({
-      ...session,
-      levelsVisited: [...new Set([...session.levelsVisited, levelId])]
-    }))
-  },
-  selectStar: (star: StarData) => selectedStarStore.set(star),
-  setLoading: (loading: boolean) => isLoadingStore.set(loading),
-  // ... more actions
-}
-```
-
-### Reactive Updates
-```svelte
-<!-- Automatic reactivity in components -->
-$: currentLevel = $currentLevelStore
-$: selectedStar = $selectedStarStore
-$: gameStats = $gameStatsStore
-```
-
----
-
-## Rendering Pipeline
-
-### Post-Processing System
-Migrated from Three.js EffectComposer to native Threlte lighting:
-
-```svelte
-<!-- Native Threlte lighting (src/threlte/systems/SimplePostProcessing.svelte) -->
-<T.AmbientLight intensity={0.3} color="#ffffff" />
-<T.DirectionalLight 
-  position={[10, 10, 5]} 
-  intensity={0.8}
-  color="#ffffff"
-  castShadow={true}
-/>
-<T.PointLight 
-  position={[0, 5, 0]} 
-  intensity={0.4}
-  color="#ffa366"
-  distance={20}
-/>
-```
-
-### Visual Debug Elements
-```svelte
-<!-- Glowing wisp for player position debugging -->
-<T.Mesh position={[0, 2, 0]}>
-  <T.SphereGeometry args={[0.3, 16, 16]} />
-  <T.MeshBasicMaterial color="#00ff88" />
-</T.Mesh>
-
-<T.PointLight 
-  position={[0, 2, 0]} 
-  color="#00ff88" 
-  intensity={2} 
-  distance={10}
-/>
 ```
 
 ---
 
 ## Performance Optimization
 
-### LOD (Level of Detail) System
-```svelte
-<LOD 
-  enableLOD={true}
-  maxDistance={100}
-  updateFrequency={0.1}
-  enableCulling={true}
-  on:lodLevelChanged={(e) => dispatch('lodLevelChanged', e.detail)}
-/>
+### OptimizationManager Integration
+
+All components use OptimizationManager for device-aware performance:
+
+```typescript
+interface OptimizationLevel {
+  ULTRA_LOW = 'ultra_low'
+  LOW = 'low'
+  MEDIUM = 'medium'
+  HIGH = 'high'
+  ULTRA = 'ultra'
+}
+
+interface QualitySettings {
+  maxFireflyLights: number
+  oceanSegments: { width: number; height: number }
+  enableReflections: boolean
+  enableRefractions: boolean
+  enableProceduralTextures: boolean
+  enableNormalMaps: boolean
+}
 ```
 
-### Automatic Quality Adjustment
+### Performance Features
+- **Instanced Rendering**: Single draw call for multiple objects
+- **LOD System**: Distance-based quality reduction
+- **Frustum Culling**: Only render visible objects
+- **Automatic Scaling**: Real-time quality adjustment based on frame rate
+- **Memory Management**: Automatic cleanup of unused resources
+
+### Device Optimization Patterns
 ```typescript
-// Performance-based quality adjustment
-on:performanceUpdate={(e) => {
-  if (e.detail.averageFPS) {
-    adjustQualityForPerformance(e.detail.averageFPS, 60)
+// Component initialization with optimization
+if (typeof window !== 'undefined') {
+  try {
+    const optimizationManager = OptimizationManager.getInstance()
+    const qualitySettings = optimizationManager.getQualitySettings()
+    const optimizationLevel = optimizationManager.getOptimizationLevel()
+    
+    // Apply quality-based settings
+    this.maxLights = qualitySettings.maxFireflyLights
+    this.segments = qualitySettings.oceanSegments
+  } catch (error) {
+    // Fallback to conservative settings
+    this.maxLights = 0
+    this.segments = { width: 8, height: 8 }
   }
-}}
-```
-
-### Mobile Optimizations
-```typescript
-// Mobile-specific settings
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-  navigator.userAgent
-)
-
-// Reduced quality for mobile
-$: mobileExposure = isMobile ? toneMappingExposure * 0.9 : toneMappingExposure
+}
 ```
 
 ---
 
-## Mobile Support
+## Level System
 
-### Touch Controls
-```typescript
-// Touch area detection
-const touchY = touch.clientY
-const isOnMobileControls = touchY > window.innerHeight - 200
+### Level Manager
+The LevelManager provides context and lifecycle management:
 
-// Mobile-specific sensitivity
-const touchSensitivity = 0.0012
-const deltaX = -rawDeltaX * touchSensitivity
-const deltaY = -rawDeltaY * touchSensitivity
+```svelte
+<script lang="ts">
+  import LevelManager from '../core/LevelManager.svelte'
+  
+  // Level configuration
+  const levelConfig = {
+    lighting: { ... },
+    ocean: { ... },
+    fireflies: { ... }
+  }
+</script>
+
+<LevelManager let:registry let:lighting let:ecsWorld>
+  <!-- Components automatically receive context -->
+  <OceanComponent {...levelConfig.ocean} />
+  <HybridFireflyComponent {...levelConfig.fireflies} />
+</LevelManager>
 ```
 
-### Responsive UI
-- Virtual joystick for movement
-- Touch and drag for camera look
-- Tap interactions for objects
-- Automatic UI scaling
-- Performance-optimized rendering
+### Context Management
+```typescript
+interface LevelContext {
+  scene: THREE.Scene | null
+  camera: THREE.Camera | null
+  renderer: THREE.WebGLRenderer | null
+  registry: SystemRegistry | null
+  lightingManager: LightingManager | null
+  ecsWorld: ECSWorldManager | null
+}
+```
 
 ---
 
-## File Structure
+## Component Reference
 
+### HybridFireflyComponent
+
+**Single source of truth for firefly systems**
+
+#### Props
+```typescript
+interface FireflyProps {
+  count: number                    // Number of fireflies (default: 80)
+  maxLights: number               // Maximum active lights (default: 20)
+  colors: number[]                // Color palette array
+  emissiveIntensity: number       // Material emissive strength (default: 15.0)
+  lightIntensity: number          // Point light intensity (default: 15.0)
+  lightRange: number              // Light falloff distance (default: 80)
+  cycleDuration: number           // Light cycle time in seconds (default: 12.0)
+  fadeSpeed: number               // Fade transition speed (default: 2.0)
+  heightRange: { min: number; max: number }  // Y position range
+  radius: number                  // Distribution radius (default: 180)
+  size: number                    // Firefly sphere size (default: 0.015)
+  movement: {
+    speed: number                 // Animation speed (default: 0.2)
+    wanderSpeed: number          // Wandering speed (default: 0.004)
+    wanderRadius: number         // Wander distance (default: 4)
+    floatAmplitude: Vector3      // Floating motion range
+    lerpFactor: number           // Position interpolation factor
+  }
+  getHeightAt?: (x: number, z: number) => number  // Terrain height function
+}
+```
+
+#### API Methods
+```typescript
+// External control interface
+export function setIntensity(intensity: number): void
+export function setEmotionalState(wonder: number, melancholy: number, hope: number, discovery: number): void
+export function triggerDiscovery(): void
+export function getStats(): FireflyStats
+export function getActiveLights(): ActiveLight[]
+```
+
+### OceanComponent
+
+**Modular water system with lighting integration**
+
+#### Props
+```typescript
+interface OceanProps {
+  size: { width: number; height: number }  // Water plane dimensions
+  color: number                            // Base water color (default: 0x006994)
+  opacity: number                          // Water transparency (default: 0.95)
+  position: [number, number, number]       // World position
+  segments: { width: number; height: number }  // Geometry resolution
+  enableAnimation: boolean                 // Enable wave animation
+  animationSpeed: number                   // Animation time multiplier (default: 0.1)
+}
+```
+
+#### Shader Integration
+- **Vertex Displacement**: Real-time wave geometry
+- **Fragment Lighting**: Integration with firefly point lights
+- **Normal Mapping**: Surface detail for realistic lighting
+- **Reflection System**: Real-time reflection of environment lights
+
+---
+
+## Best Practices
+
+### File Structure
 ```
 src/threlte/
-├── core/                          # Industry-standard architecture
-│   ├── LevelManager.svelte       # Central level management system
-│   ├── LevelSystem.ts            # Component registry and messaging
-│   └── ECSIntegration.ts         # BitECS integration and entity management
-├── components/
-│   ├── Player.svelte             # First-person controller
-│   ├── OceanComponent.svelte     # Modern ocean system with underwater effects
-│   ├── LightingComponent.svelte  # Dynamic lighting system
-│   ├── HybridFireflyComponent.svelte # ECS-based particle system
-│   ├── NaturePackVegetation.svelte   # Vegetation system with LOD integration
-│   ├── VegetationSystem.svelte   # Advanced ECS vegetation system
-│   └── StarNavigationSystem.svelte   # Star map navigation
-├── styles/                          # Visual style system
-│   ├── GhibliStyleSystem.svelte     # Main toon shading and post-processing
-│   ├── StylePalettes.ts             # Color palettes and utility functions
-│   └── StyleManager.ts              # Global style coordination
-├── effects/
-│   ├── UnderwaterOverlay.svelte  # Screen overlay for underwater tint
-│   ├── UnderwaterEffect.svelte   # Particle-based underwater effects
-│   └── UnderwaterCollider.svelte # Water collision detection (legacy)
-├── stores/
-│   ├── gameStateStore.ts         # Reactive game state
-│   ├── underwaterStore.ts        # Underwater effects state management
-│   └── mobileInputStore.ts       # Mobile controls state
-├── systems/
-│   ├── SimplePostProcessing.svelte # Native lighting effects
-│   ├── Physics.svelte            # Physics world setup
-│   ├── EventBus.svelte           # Event coordination
-│   ├── Performance.svelte        # Performance monitoring
-│   ├── StateManager.svelte       # Legacy state bridge
-│   ├── LOD.svelte                # Advanced Level-of-Detail system
-│   ├── AssetLoader.svelte        # Reactive asset loading system
-│   ├── Skybox.svelte             # HDRI skybox rendering
-│   ├── StaticEnvironment.svelte  # Static 3D environment loading
-│   └── StarMap.svelte            # Interactive star field system
-├── utils/
-│   └── lodUtils.ts               # LOD utility functions
-├── levels/
-│   ├── HybridObservatory.svelte  # Star map hub with ocean and vegetation
-│   ├── Miranda.svelte            # Spaceship level
-│   ├── Restaurant.svelte         # Kitchen environment
-│   ├── InfiniteLibrary.svelte    # Library level
-│   └── JerrysRoom.svelte         # Personal room
-├── ui/
-│   ├── PerformancePanel.svelte   # Debug performance info
-│   └── StyleControls.svelte      # Visual style testing interface
-└── Game.svelte                   # Main game container
+├── components/          # Reusable modular components
+│   ├── HybridFireflyComponent.svelte
+│   ├── OceanComponent.svelte
+│   └── LightingComponent.svelte
+├── core/               # Core systems and utilities
+│   ├── LevelManager.svelte
+│   ├── ECSIntegration.ts
+│   └── LevelSystem.ts
+├── levels/             # Complete level implementations
+│   └── HybridObservatory.svelte
+└── optimization/       # Performance management
+    └── OptimizationManager.ts
 ```
 
-### Legacy Integration
+### Component Development
+1. **Extend BaseLevelComponent**: Always use the standard lifecycle
+2. **Resource Cleanup**: Dispose of Three.js resources in onDispose()
+3. **Performance Aware**: Integrate with OptimizationManager
+4. **Cross-System Communication**: Use SystemMessage for component interaction
+5. **TypeScript First**: Full type safety for all interfaces
+
+### ECS Integration
+```typescript
+// Good: Use ECS for high-frequency updates
+class HybridFireflyComponent extends BaseLevelComponent {
+  protected onUpdate(deltaTime: number): void {
+    // Let ECS handle entity logic
+    this.updateInstancedRendering()  // Only handle rendering
+    this.updateLightingSystem()      // Only handle system integration
+  }
+}
+
+// Bad: Manual entity management in components
+// Don't manually loop through entities in components
 ```
-src/game/                         # Legacy Three.js components (preserved)
-├── ui/                          # Existing UI components
-├── systems/                     # Old imperative systems
-└── levels/                      # Old level definitions
+
+### Performance Patterns
+```typescript
+// Good: Batch operations
+fireflyPositions.forEach((position, index) => {
+  tempMatrix.setPosition(position)
+  instancedMesh.setMatrixAt(index, tempMatrix)
+})
+instancedMesh.instanceMatrix.needsUpdate = true
+
+// Bad: Individual operations
+// Don't update matrices one by one
 ```
 
 ---
 
-## Key Implementation Details
+## Development Standards
 
-### Critical Bug Fixes Applied
+### Code Quality
+- **TypeScript**: Strict mode enabled, no any types
+- **ESLint**: Enforced code standards
+- **Prettier**: Consistent formatting
+- **Component Props**: Full interface definitions
+- **Error Handling**: Graceful fallbacks for all operations
 
-1. **Velocity Feedback Loop**: Fixed movement cancellation by changing `velocity.set(linvel.x, linvel.y, linvel.z)` to `velocity.set(0, linvel.y, 0)`
+### Testing Standards
+```typescript
+// Unit tests for component logic
+describe('HybridFireflyComponent', () => {
+  it('should initialize with correct default parameters', () => {
+    // Test implementation
+  })
+  
+  it('should handle performance optimization correctly', () => {
+    // Test optimization integration
+  })
+})
+```
 
-2. **Camera Desync**: Made camera a child of RigidBody to ensure body and eyes rotate together
+### Memory Management
+```typescript
+// Always implement proper cleanup
+protected onDispose(): void {
+  if (this.geometry) this.geometry.dispose()
+  if (this.material) this.material.dispose()
+  if (this.instancedMesh) this.instancedMesh.dispose()
+  
+  // Clear arrays
+  this.entities = []
+  this.positions = []
+}
+```
 
-3. **Jump Flying Exploit**: Added `jumpKeyPressed` flag to prevent infinite jumping with held Spacebar
+### Performance Monitoring
+```typescript
+// Built-in performance tracking
+let frameCount = 0
+let lastFrameTime = performance.now()
 
-4. **Post-Processing Freeze**: Removed Three.js EffectComposer dependencies and implemented native Threlte lighting
-
-5. **Mobile Scrolling Issues**: Fixed overflow hidden conflicts between OverlayScrollbars and PostOverlay components
-
-6. **Collision System Conflicts**: Resolved @threlte/rapier vs @dimforge/rapier3d-compat conflicts with optimized manual collision detection
-
-### Modern Architecture Improvements
-
-1. **Hybrid ECS Architecture**: Implemented BitECS for performance-critical systems while maintaining Svelte declarative components
-
-2. **Industry-Standard Level Management**: Professional-grade level system based on Unity/Unreal patterns with cross-system messaging
-
-3. **Advanced LOD System**: Sophisticated level-of-detail management with performance-based adjustment and batched updates
-
-4. **Nature Pack Integration**: Professional 3D vegetation assets with biome-based distribution and automatic LOD registration
-
-5. **JSON Config Elimination**: Removed legacy JSON configuration files in favor of direct TypeScript props
-
-6. **Component-Based Ocean System**: Migrated from imperative ocean systems to reactive OceanComponent
-
-7. **Reactive State Management**: Implemented underwater effects with Svelte stores for automatic reactivity
-
-8. **Performance Optimized Collision**: Reduced collision detection from 60fps to 6fps (10x performance improvement)
-
-9. **Visual Style System**: Implemented comprehensive toon shading with Ghibli-inspired aesthetics, 4 style presets, and performance-optimized material caching
-
-### Performance Characteristics
-- **Load Time**: ~2-3 seconds (significantly improved from original)
-- **Frame Rate**: 60 FPS target with automatic quality adjustment
-- **Memory Usage**: Optimized with LOD and culling systems
-- **ECS Performance**: 100+ fireflies + 150+ vegetation instances with minimal CPU impact
-- **LOD Efficiency**: 5-level detail management with batched updates (10 objects per frame)
-- **Vegetation Rendering**: Automatic culling beyond 150m with fallback geometries
-- **Mobile Performance**: Automatically reduced quality for mobile devices
-- **Style System Performance**: +5-10% improvement from material caching and simplified toon shaders
-
-### Future Expansion Points
-- **ECS Entities**: New entity types can be easily added with corresponding components and systems
-- **LOD Integration**: Any 3D object can automatically register with the LOD system via window events
-- **Level Systems**: New level components integrate automatically via LevelManager and SystemRegistry
-- **Additional levels** can be added to `src/threlte/levels/` with full system integration
-- **New vegetation types** can be added to the nature pack system with automatic biome distribution
-- **Store-based state management** allows easy feature additions with reactive updates
-- **Component-based architecture** supports modular development with cross-system communication
+// Monitor frame time and adjust quality
+if (frameTime > 20) { // Reduce quality
+  this.maxLights = Math.floor(this.maxLights * 0.8)
+} else if (frameTime < 12) { // Increase quality
+  this.maxLights = Math.min(this.maxLights * 1.1, this.targetMaxLights)
+}
+```
 
 ---
 
-This document represents the current state of the MEGAMEAL game after implementing a hybrid ECS architecture with professional-grade level management, advanced LOD optimization, and nature pack vegetation integration. The game now features AAA-quality performance optimization while maintaining the flexibility and maintainability of modern web technologies.
+## Technical Specifications
+
+### Performance Targets
+- **Desktop (1080p)**: 60fps with full effects
+- **Mobile (720p)**: 30fps with optimized effects  
+- **Low-end devices**: 20fps with essential effects only
+
+### Browser Support
+- Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
+- WebGL 2.0 required
+- ES2020+ JavaScript features
+
+### Resource Management
+- **Automatic LOD**: Distance-based quality reduction
+- **Memory Pooling**: Reuse objects to minimize garbage collection
+- **Asset Streaming**: Progressive loading of high-quality assets
+- **Texture Compression**: WebP for color, PNG for normal maps
+
+---
+
+*This document serves as the technical reference for MEGAMEAL's component architecture. All implementations follow these standards to ensure consistency, performance, and maintainability.*
+
+**Document Maintained By**: Development Team  
+**Next Review Date**: August 15, 2025  
+**Version Control**: All changes tracked in git with detailed commit messages

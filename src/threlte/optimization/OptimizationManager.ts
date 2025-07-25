@@ -79,7 +79,7 @@ export class OptimizationManager {
     [OptimizationLevel.LOW]: {
       oceanSegments: { width: 12, height: 12 },
       terrainSegments: { width: 16, height: 16 },
-      maxFireflyLights: 4,
+      maxFireflyLights: 6,
       enableDynamicLighting: true,
       maxVegetationInstances: 3,
       enableVegetation: true,
@@ -95,7 +95,7 @@ export class OptimizationManager {
     [OptimizationLevel.MEDIUM]: {
       oceanSegments: { width: 24, height: 24 },
       terrainSegments: { width: 32, height: 32 },
-      maxFireflyLights: 8,
+      maxFireflyLights: 12,
       enableDynamicLighting: true,
       maxVegetationInstances: 10,
       enableVegetation: true,
@@ -111,7 +111,7 @@ export class OptimizationManager {
     [OptimizationLevel.HIGH]: {
       oceanSegments: { width: 32, height: 32 },
       terrainSegments: { width: 48, height: 48 },
-      maxFireflyLights: 15,
+      maxFireflyLights: 25,
       enableDynamicLighting: true,
       maxVegetationInstances: 15,
       enableVegetation: true,
@@ -127,7 +127,7 @@ export class OptimizationManager {
     [OptimizationLevel.ULTRA]: {
       oceanSegments: { width: 64, height: 64 },
       terrainSegments: { width: 96, height: 96 },
-      maxFireflyLights: 25,
+      maxFireflyLights: 50,
       enableDynamicLighting: true,
       maxVegetationInstances: 30,
       enableVegetation: true,
@@ -146,7 +146,7 @@ export class OptimizationManager {
     this.currentQualitySettings = this.qualityProfiles[OptimizationLevel.MEDIUM]
     this.detectDeviceCapabilities()
     this.autoSetOptimizationLevel()
-    console.log('=€ Modern OptimizationManager initialized with level:', this.currentOptimizationLevel)
+    console.log('=ï¿½ Modern OptimizationManager initialized with level:', this.currentOptimizationLevel)
   }
 
   public static getInstance(): OptimizationManager {
@@ -246,7 +246,7 @@ export class OptimizationManager {
       deviceType
     }
 
-    console.log('=ñ Device detection:', {
+    console.log('=ï¿½ Device detection:', {
       deviceType,
       estimatedGPUTier,
       hardwareConcurrency,
@@ -316,7 +316,7 @@ export class OptimizationManager {
     this.currentOptimizationLevel = level
     this.currentQualitySettings = this.qualityProfiles[level]
     
-    console.log(`<› Optimization level set to: ${level}`, {
+    console.log(`<ï¿½ Optimization level set to: ${level}`, {
       qualitySettings: this.currentQualitySettings
     })
 

@@ -49,7 +49,7 @@
       oceanSize: { width: 10000, height: 10000 },
       enableRising: true,
       initialLevel: -7,
-      targetLevel: 0,
+      targetLevel: 8,
       riseRate: .01,
       enableAnimation: true,
       // Underwater fog settings - adjustable per level
@@ -402,7 +402,7 @@
       {getHeightAt}
       {interactionSystem}
       count={100}
-      maxLights={20}
+      maxLights={40}
       lightIntensity={100.0}
       lightRange={1000}
       cycleDuration={12.0}

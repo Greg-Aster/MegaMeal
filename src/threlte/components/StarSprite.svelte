@@ -55,21 +55,21 @@
     texture = new THREE.CanvasTexture(canvas)
     texture.needsUpdate = true
     
-    // Create sprite material with enhanced underwater visibility
+    // Create sprite material with additive blending for glow effect
     material = new THREE.SpriteMaterial({
       map: texture,
       transparent: true,
       alphaTest: 0.001,
-      blending: THREE.AdditiveBlending, // Additive blending pierces through opaque surfaces
+      blending: THREE.AdditiveBlending, // This creates the beautiful glow
       depthWrite: false, // Prevents z-fighting
-      depthTest: false,  // CRITICAL: Don't test depth - allows visibility through opaque ocean
+      depthTest: true,   // Test depth but don't write - allows proper sorting
       opacity: opacity * intensity
     })
 
     if (sprite) {
       sprite.material = material
-      // High render order ensures visibility through all surfaces
-      sprite.renderOrder = 100
+      // Ensure fireflies render after ocean surface
+      sprite.renderOrder = 1
     }
   }
 
