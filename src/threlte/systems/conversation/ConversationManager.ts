@@ -371,7 +371,7 @@ private async callAIService(requestData: any): Promise<AIConversationResponse> {
     const greetings = [
       `*A gentle ${personality.species || 'creature'} glows softly as you approach*`,
       `*${personality.name} notices your presence and ${personality.behavior.greetingStyle === 'shy' ? 'shyly flickers' : 'brightens with curiosity'}*`,
-      `Hello, wanderer! I'm ${personality.name}. ${personality.personality.core.slice(0, 100)}...`
+      `Hello, wanderer! I'm ${personality.name}. ${personality.personality.core}`
     ]
 
     const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)]

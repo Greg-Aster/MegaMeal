@@ -43,6 +43,16 @@ onMount(() => {
 </script>
 
 {#if isVisible && text}
+  <!-- Click-away backdrop -->
+  <div 
+    class="dialogue-backdrop"
+    on:click={handleClick}
+    on:keydown={(e) => e.key === 'Escape' && handleClick()}
+    tabindex="-1"
+    role="button"
+    aria-label="Close dialogue"
+  />
+  
   <div 
     class="dialogue-box"
     on:click={handleClick}
@@ -60,6 +70,17 @@ onMount(() => {
 {/if}
 
 <style>
+  .dialogue-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 999;
+    background: transparent;
+    cursor: pointer;
+  }
+
   .dialogue-box {
     position: fixed;
     bottom: 20px;
