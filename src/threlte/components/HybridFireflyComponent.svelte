@@ -767,7 +767,7 @@
 
 <!-- AI Conversation Dialog (based on CuppyWidget design) -->
 <!-- Debug: Check reactive values -->
-{@debug isConversationDialogOpen, activeConversationFirefly}
+
 
 {#if isConversationDialogOpen && activeConversationFirefly}
   <div class="firefly-conversation-overlay" on:click={closeConversationDialog}>

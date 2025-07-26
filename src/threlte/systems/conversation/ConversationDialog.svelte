@@ -16,17 +16,19 @@
     isConversationActive,
     currentNPCPersonality,
     isProcessingResponse,
-    conversationActions
+    conversationActions,
+    activeConversationSession
   } from './conversationStores'
   import type { NPCEmotion } from './types'
+  import FireflyAvatar from './FireflyAvatar.svelte'
 
   const dispatch = createEventDispatcher()
 
   // Component props
   export let visible: boolean = false
   export let position: 'bottom' | 'centered' | { x: number; y: number } = 'bottom'
-  export let maxWidth: number = 600
-  export let maxHeight: number = 400
+  export let maxWidth: number = 700
+  export let maxHeight: number = 500
 
   // Local state
   let dialogContainer: HTMLElement
@@ -34,7 +36,7 @@
   let messageInput: HTMLInputElement
   let currentMessage = ''
   let isTypingMessage = false
-  let autoCloseTimer: number | null = null
+  let autoCloseTimer: ReturnType<typeof setTimeout> | null = null
 
   // Reactive state
   $: messages = $currentMessages
@@ -43,6 +45,7 @@
   $: uiConfig = $conversationUIConfig
   $: isActive = $isConversationActive
   $: isProcessing = $isProcessingResponse
+  $: session = $activeConversationSession
   
   // Debug logging
   $: console.log('🔍 ConversationDialog - visible:', visible, 'isActive:', isActive, 'shouldShow:', visible && isActive)
@@ -56,8 +59,8 @@
     }, 100)
   }
 
-  // Auto-close timer
-  $: if (visible && uiConfig.autoCloseDelay && uiConfig.autoCloseDelay > 0) {
+  // Auto-close timer - only if not typing
+  $: if (visible && uiConfig.autoCloseDelay && uiConfig.autoCloseDelay > 0 && !isTypingMessage) {
     setupAutoClose()
   }
 
@@ -66,6 +69,29 @@
 
   // Theme-based styles
   $: themeClass = `theme-${uiState.theme}`
+  
+  // Get firefly visual properties from personality or session
+  $: fireflyColor = getFireflyColor(npcPersonality || session?.personality)
+  
+  function getFireflyColor(personality: any): string {
+    // Default firefly colors from HybridFireflyComponent
+    const fireflyColors = ['#87ceeb', '#98fb98', '#ffffe0', '#dda0dd', '#f0e68c', '#ffa07a', '#20b2aa', '#9370db']
+    
+    if (personality?.visual?.primaryColor) {
+      return personality.visual.primaryColor
+    }
+    
+    // Use personality ID to consistently pick same color for same firefly
+    if (personality?.id) {
+      const hash = personality.id.split('').reduce((a, b) => {
+        a = ((a << 5) - a) + b.charCodeAt(0)
+        return a & a
+      }, 0)
+      return fireflyColors[Math.abs(hash) % fireflyColors.length]
+    }
+    
+    return fireflyColors[0] // Default to sky blue
+  }
 
   function calculatePosition(pos: typeof position): string {
     if (pos === 'bottom') {
@@ -122,6 +148,21 @@
     } else if (event.key === 'Escape') {
       handleClose()
     }
+  }
+
+  // Handle input changes to track typing state
+  function handleInputChange(): void {
+    isTypingMessage = currentMessage.length > 0
+    resetAutoClose()
+  }
+
+  // Auto-focus input after NPC response
+  $: if (messages.length > 0 && messageInput && !isProcessing) {
+    setTimeout(() => {
+      if (messageInput && !isProcessing) {
+        messageInput.focus()
+      }
+    }, 100)
   }
 
   function handleClose(): void {
@@ -193,6 +234,16 @@
 </script>
 
 {#if visible && isActive}
+  <!-- Click-away backdrop -->
+  <div 
+    class="dialog-backdrop"
+    on:click={handleClose}
+    on:keydown={(e) => e.key === 'Escape' && handleClose()}
+    tabindex="-1"
+    role="button"
+    aria-label="Close conversation"
+  />
+  
   <div 
     class="conversation-dialog {themeClass}"
     style="{positionStyles} max-width: {maxWidth}px; max-height: {maxHeight}px; z-index: 99999 ;"
@@ -203,15 +254,24 @@
     <!-- Header -->
     <div class="dialog-header">
       <div class="npc-info">
-        {#if uiConfig.showEmotions && uiState.npcEmotion}
+        {#if (npcPersonality || session?.personality)?.species?.toLowerCase().includes('firefly')}
+          <div class="firefly-avatar-container">
+            <FireflyAvatar 
+              color={fireflyColor}
+              size={32}
+              intensity={1.2}
+              animate={true}
+            />
+          </div>
+        {:else if uiConfig.showEmotions && uiState.npcEmotion}
           <span class="emotion-indicator" style="color: {getEmotionColor(uiState.npcEmotion)}">
             {getEmotionEmoji(uiState.npcEmotion)}
           </span>
         {/if}
         <div class="npc-details">
-          <h3 class="npc-name">{npcPersonality?.name || 'Unknown'}</h3>
-          {#if npcPersonality?.species}
-            <p class="npc-species">{npcPersonality.species}</p>
+          <h3 class="npc-name">{npcPersonality?.name || session?.personality?.name || 'Unknown'}</h3>
+          {#if npcPersonality?.species || session?.personality?.species}
+            <p class="npc-species">{npcPersonality?.species || session?.personality?.species}</p>
           {/if}
         </div>
       </div>
@@ -245,9 +305,9 @@
             <div class="message-meta">
               <span class="timestamp">{formatTimestamp(message.timestamp)}</span>
               {#if message.metadata?.emotion && uiConfig.showEmotions}
-                <span class="message-emotion" style="color: {getEmotionColor(message.metadata.emotion)}">
+                <!-- <span class="message-emotion" style="color: {getEmotionColor(message.metadata.emotion)}">
                   {getEmotionEmoji(message.metadata.emotion)}
-                </span>
+                </span> -->
               {/if}
             </div>
           </div>
@@ -275,7 +335,7 @@
           bind:this={messageInput}
           bind:value={currentMessage}
           on:keydown={handleKeyPress}
-          on:input={resetAutoClose}
+          on:input={handleInputChange}
           placeholder="Type your message..."
           disabled={isProcessing}
           class="message-input"
@@ -303,6 +363,17 @@
 {/if}
 
 <style>
+  .dialog-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 99998;
+    background: transparent;
+    cursor: pointer;
+  }
+
   .conversation-dialog {
     position: fixed;
     z-index: 99999;
@@ -368,6 +439,23 @@
     gap: 0.75rem;
   }
 
+  .firefly-avatar-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(5px);
+    animation: fireflyPulse 3s ease-in-out infinite;
+  }
+  
+  @keyframes fireflyPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(135, 206, 235, 0.3); }
+    50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(135, 206, 235, 0.6); }
+  }
+
   .emotion-indicator {
     font-size: 1.5rem;
     filter: drop-shadow(0 0 8px currentColor);
@@ -411,7 +499,7 @@
 
   /* Messages */
   .messages-container {
-    max-height: 300px;
+    max-height: 400px;
     overflow-y: auto;
     padding: 1rem;
     display: flex;
@@ -419,6 +507,8 @@
     gap: 0.75rem;
     scrollbar-width: thin;
     scrollbar-color: var(--primary-color) transparent;
+    flex: 1;
+    min-height: 150px;
   }
 
   .messages-container::-webkit-scrollbar {
@@ -453,11 +543,14 @@
   }
 
   .message-content {
-    max-width: 80%;
+    max-width: 85%;
+    min-width: 200px;
     background: rgba(255, 255, 255, 0.1);
     padding: 0.75rem 1rem;
     border-radius: 12px;
     backdrop-filter: blur(5px);
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 
   .message.user .message-content {
@@ -473,8 +566,14 @@
 
   .message-text {
     font-size: 0.95rem;
-    line-height: 1.4;
+    line-height: 1.5;
     word-wrap: break-word;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    width: 100%;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+    -ms-hyphens: auto;
   }
 
   .message-meta {
@@ -618,7 +717,18 @@
     }
     
     .messages-container {
-      max-height: 200px;
+      max-height: 250px;
+      min-height: 120px;
+    }
+    
+    .message-content {
+      max-width: 90%;
+      min-width: 150px;
+    }
+    
+    .message-text {
+      font-size: 0.9rem;
+      line-height: 1.4;
     }
   }
 </style>
