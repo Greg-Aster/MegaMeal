@@ -76,12 +76,12 @@
   // Props
   export let timelineEvents: any[] = []
   export let timelineEventsJson: string = '[]' // JSON string of timeline events for star system
-  export let onLevelReady: (() => void) | undefined = undefined
+  export let spawnSystem: any = null // ECS Spawn system reference from Game
   export let position: [number, number, number] = [0, 15, 10] // Default position
   export let interactionSystem: any = null // Centralized interaction system from Game
   
   // Player spawn point for this level
-  export let playerSpawnPoint: [number, number, number] = [0, 35, -50] // On the central hill above ground
+  export let playerSpawnPoint: [number, number, number] = [0, 6, -50] // On the central hill above ground
 
   // Component references for external control
   let hybridFireflyComponent: HybridFireflyComponent
@@ -182,19 +182,31 @@
   function handleEnvironmentLoaded() {
     console.log('✅ Hybrid Observatory environment loaded')
     
-    // Wait a moment for physics to settle, then notify ready
-    setTimeout(() => {
-      console.log('🎯 Ground should be ready, dispatching level ready')
-      if (onLevelReady) {
-        onLevelReady()
-      }
-      
-      // Also dispatch spawn point to parent
-      dispatch('playerSpawnReady', {
-        spawnPoint: playerSpawnPoint,
-        levelName: 'Observatory'
+    // Dispatch terrain ready event for ECS spawn system
+    dispatch('terrainReady')
+    console.log('🏔️ Observatory terrain ready - notifying spawn system')
+    
+    // Request player spawn through ECS spawn system
+    if (spawnSystem && spawnSystem.requestSpawn) {
+      const spawnRequested = spawnSystem.requestSpawn({
+        entityType: 'player',
+        position: playerSpawnPoint,
+        component: null, // Will be provided by spawn system
+        priority: 10, // High priority for player
+        metadata: {
+          levelName: 'Observatory',
+          spawnReason: 'level_load'
+        }
       })
-    }, 1500) // Give physics time to load
+      
+      if (spawnRequested) {
+        console.log(`🎯 Observatory: Player spawn requested at [${playerSpawnPoint.join(', ')}]`)
+      } else {
+        console.warn('⚠️ Observatory: Failed to request player spawn')
+      }
+    } else {
+      console.error('❌ Observatory: Spawn system not available')
+    }
   }
 
   function handleEnvironmentError(event: CustomEvent) {
@@ -432,7 +444,7 @@
       }}
       colors={[0x87ceeb, 0x98fb98, 0xffffe0, 0xdda0dd, 0xf0e68c, 0xffa07a, 0x20b2aa, 0x9370db]}
       enableAIConversations={true}
-      conversationChance={0.8}
+      conversationChance={0.2}
     />
     
     <!-- 

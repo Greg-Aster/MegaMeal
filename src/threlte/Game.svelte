@@ -36,6 +36,7 @@
   import Renderer from './systems/Renderer.svelte'
   import SimplePostProcessing from './systems/SimplePostProcessing.svelte'
   import Physics from './systems/Physics.svelte'
+  import SpawnSystem from './systems/SpawnSystem.svelte'
   import Optimization from './systems/Optimization.svelte'
   import Audio from './systems/Audio.svelte'
   import EventBus from './systems/EventBus.svelte'
@@ -101,11 +102,13 @@
   let showDebugPanel = false
   let showPerformancePanel = false
   
-  // Level loading state - start with true to avoid loading loop
-  let levelReady = true
-  let playerSpawnPoint: [number, number, number] = [0, 8, 0] // Default spawn
   let playerComponent: any = null
+  let spawnSystem: any = null
   let interactionSystem: any = null // Reference to centralized InteractionSystem
+  
+  // Spawn system state
+  let physicsReady = false
+  let terrainReady = false
   
   // Reactive store subscriptions (these are reactive by default)
   $: currentLevel = $currentLevelStore
@@ -238,9 +241,6 @@
   
     const levelId = levelMap[levelType as keyof typeof levelMap] || levelType
   
-    // Reset level ready state for new level
-    levelReady = false
-    
     // Update current level using store action (automatically reactive)
     gameActions.transitionToLevel(levelId)
     console.log(`🎮 Threlte store-based level transition: ${levelId}`)
@@ -250,8 +250,6 @@
    * Handle return to observatory - Store-based implementation
    */
   function handleReturnToObservatory() {
-    // Reset level ready state for observatory reload
-    levelReady = false
     gameActions.transitionToLevel('observatory')
     console.log('🎮 Threlte store: Returned to observatory')
   }
@@ -277,33 +275,7 @@
     showPerformancePanel = !showPerformancePanel
   }
   
-  /**
-   * Handle level ready notification
-   */
-  function handleLevelReady() {
-    levelReady = true
-    console.log('🎮 Level is ready - player can spawn safely')
-  }
-  
-  /**
-   * Handle player spawn point from level
-   */
-  function handlePlayerSpawnReady(event: CustomEvent) {
-    const { spawnPoint, levelName } = event.detail
-    console.log(`🚀 ${levelName} provided spawn point: [${spawnPoint.join(', ')}]`)
-    
-    playerSpawnPoint = spawnPoint
-    
-    // Spawn player at the level's designated spawn point
-    if (playerComponent) {
-      setTimeout(() => {
-        if (playerComponent && playerComponent.spawnAt) {
-          playerComponent.spawnAt(spawnPoint[0], spawnPoint[1], spawnPoint[2])
-          console.log(`✅ Player spawned at level spawn point: [${spawnPoint.join(', ')}]`)
-        }
-      }, 100) // Small delay to ensure player component is ready
-    }
-  }
+  // Player spawning is handled by ECS SpawnSystem
   
   // Lifecycle
   onMount(async () => {
@@ -383,37 +355,43 @@
         <!-- Audio System -->
         <Audio enabled={false} />
         
-        <!-- Physics World -->
-        <Physics>
-          <!-- 
-            Player Component Setup - First-Person Controller
-            Only spawn player after level is ready to prevent falling through ground
-          -->
-          {#if levelReady}
-            <Player
-              bind:this={playerComponent}
-              position={playerSpawnPoint}
-              speed={5}
-              jumpForce={8}
+        <!-- ECS Spawn System - Handles all entity spawning -->
+        <SpawnSystem
+          bind:this={spawnSystem}
+          {playerComponent}
+          {physicsReady}
+          {terrainReady}
+          on:entitySpawned={(e) => console.log('🎯 Entity spawned:', e.detail)}
+        />
 
-              on:interaction={(e) => { gameActions.recordInteraction('click', e.detail.type); dispatch('objectClick', e.detail) }}
-            />
-          {/if}
+        <!-- Physics World -->
+        <Physics on:physicsReady={() => physicsReady = true}>
+          <!-- 
+            Player Component - Handles input/movement, spawned by ECS SpawnSystem
+          -->
+          <Player
+            bind:this={playerComponent}
+            position={[0, 0, 0]}
+            speed={5}
+            jumpForce={8}
+
+            on:interaction={(e) => { gameActions.recordInteraction('click', e.detail.type); dispatch('objectClick', e.detail) }}
+          />
           <!-- Environment -->
           <Environment 
             path="/textures/environment/"
             files="environment.hdr"
           />
           
-          <!-- Modern MEGAMEAL Architecture - Single Level -->
+          <!-- Modern MEGAMEAL Architecture - Level provides data only -->
           <HybridObservatory 
             timelineEvents={parsedTimelineEvents}
             timelineEventsJson={typeof timelineEvents === 'string' ? timelineEvents : JSON.stringify(parsedTimelineEvents)}
-            onLevelReady={handleLevelReady}
+            {spawnSystem}
             {interactionSystem}
             on:starSelected={(e) => dispatch('starSelected', e.detail)}
             on:telescopeInteraction={(e) => dispatch('telescopeInteraction', e.detail)}
-            on:playerSpawnReady={handlePlayerSpawnReady}
+            on:terrainReady={() => terrainReady = true}
           />
           
           <!-- Optimization System -->
@@ -429,8 +407,6 @@
     <!-- Loading Screen -->
     {#if isLoading}
       <LoadingScreen message={loadingMessage} />
-    {:else if !levelReady}
-      <LoadingScreen message="Loading Observatory environment..." />
     {/if}
   
     <!-- Error Screen -->

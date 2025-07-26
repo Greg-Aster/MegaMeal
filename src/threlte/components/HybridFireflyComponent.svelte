@@ -93,7 +93,7 @@
   
   // AI Conversation enhancement props
   export let enableAIConversations = false // Enable AI-powered conversations
-  export let conversationChance = 0.8 // Percentage of fireflies that are conversational (0.0 - 1.0)
+  export let conversationChance = 0.2 // Percentage of fireflies that are conversational (0.0 - 1.0)
 
   // Get level context (modern component architecture)
   const registry = getContext('systemRegistry')
@@ -293,16 +293,28 @@
         if (import.meta.env.DEV) console.log(`🧠 Generated ${aiPersonalities.length} AI firefly personalities for conversations`)
       }
       
-      // Fallback personalities for basic dialog (preserved from original)
+      // Nonverbal responses for basic fireflies - lost souls without full personalities
       const basicPersonalities = [
-        'a gentle wanderer who loves collecting dewdrops',
-        'a curious explorer who chases moonbeams', 
-        'a wise storyteller who remembers ancient summers',
-        'a playful dancer who creates light patterns',
-        'a peaceful dreamer who whispers to flowers',
-        'an adventurous spirit who guides lost travelers',
-        'a magical being who paints the night with gold',
-        'a friendly companion who brings joy to darkness'
+        '*glows with curiosity, then dims sadly*',
+        '*speaks in a language you do not understand... the words fade like whispers*',
+        '*flickers weakly* Where... where am I?',
+        '*pulses with longing* We are all lost here...',
+        '*light grows dim, barely visible* I... miss... someone...',
+        '*flashes frantically, then goes dark for a moment*',
+        '*glows softly, as if trying to remember something important*',
+        '*dances in erratic patterns, clearly confused*',
+        '*A faint, sorrowful hum accompanies its gentle, pulsing light.*',
+        '*Its light traces the shape of a forgotten symbol in the air before fading.*',
+        'I remember a name, but not whose it was... Was it mine?',
+        '*Flickers in time with a slow, mournful melody only it can hear.*',
+        'We were promised a dawn that never came.',
+        '*Its light seems to search for something, or someone, in the darkness.*',
+        'Have you seen the others? They were just here...',
+        '*A single, bright flash, followed by a long, sorrowful dimming.*',
+        'The stars feel so far away tonight.',
+        '*It spells out a single, desperate word in points of light: "Wait."*',
+        '*Pulses with a soft, warm glow, like a distant, cherished memory.*',
+        'I was on my way to... I can\'t recall. It was important, though.'
       ]
       
       visualFireflies = fireflyEntities.map((eid, i) => {
@@ -673,11 +685,30 @@
   }
   
   function showBasicFireflyDialog(firefly: any) {
-    // Original basic dialog system
+    // Show nonverbal response for basic fireflies with poetic species names
+    const poeticSpecies = [
+      'Wandering Star',
+      'Twilight Wisp',
+      'Stellar Wanderer',
+      'Drifting Light',
+      'Celestial Wisp',
+      'Night Wanderer',
+      'Fading Ember',
+      'Lost Lamplight',
+      'Mourning Dew',
+      'Echoing Light',
+      'Somber Spark',
+      'Hollow Beacon',
+      'Longing Gleam',
+      'Nostalgic Flicker',
+      'Forsaken Flame'
+    ]
+    const randomSpecies = poeticSpecies[Math.floor(Math.random() * poeticSpecies.length)]
+    
     gameActions.showDialogue(
-      `Hello! I'm ${firefly.name}, a ${firefly.species}. ${firefly.personality}. I'm about ${firefly.age} ${typeof firefly.age === 'number' ? 'days' : ''} old and have been dancing in this magical place for quite some time. Would you like to hear more stories of the night?`,
-      firefly.name,
-      8000 // 8 seconds
+      firefly.personality, // This is now a nonverbal response like "*glows with curiosity, then dims sadly*"
+      randomSpecies, // Poetic species name for basic fireflies
+      4000 // 4 seconds - shorter for nonverbal responses
     )
     
     // Record basic interaction

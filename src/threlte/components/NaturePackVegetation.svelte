@@ -30,7 +30,7 @@
     console.log('🎯 LOD system context not available, will use window events')
   }
 
-  // Vegetation distribution weights (higher = more likely to spawn)
+  // Vegetation distribution weights (higher = more likely to appear)
   export let vegetationWeights = {
     trees: 0.4,      // 40% trees
     bushes: 0.35,    // 35% bushes  

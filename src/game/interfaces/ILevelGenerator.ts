@@ -33,11 +33,6 @@ export interface ILevelGenerator {
    */
   getHeightAt?(x: number, z: number): number | null
 
-  /**
-   * Optional: Get spawn point for player
-   * @returns Spawn point position, or null if not supported
-   */
-  getSpawnPoint?(): THREE.Vector3 | null
 }
 
 /**
@@ -73,11 +68,8 @@ export abstract class BaseLevelGenerator implements ILevelGenerator {
   abstract dispose(): void
 
   // Optional methods with default implementations
-  getHeightAt?(x: number, z: number): number | null {
+  getHeightAt?(_x: number, _z: number): number | null {
     return null
   }
 
-  getSpawnPoint?(): THREE.Vector3 | null {
-    return null
-  }
 }

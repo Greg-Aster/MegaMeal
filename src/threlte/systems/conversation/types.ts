@@ -73,6 +73,7 @@ export interface NPCPersonality {
     memories: string[] // Persistent memories about player/world
     secrets?: string[] // Information they might reveal under conditions
     backstory: string // Rich background story
+    openingStatement?: string // First statement when clicked, replaces generic greeting
   }
   
   // Behavioral patterns

@@ -368,18 +368,25 @@ private async callAIService(requestData: any): Promise<AIConversationResponse> {
     personality: NPCPersonality,
     context: ConversationContext
   ): Promise<ConversationMessage> {
-    const greetings = [
-      `*A gentle ${personality.species || 'creature'} glows softly as you approach*`,
-      `*${personality.name} notices your presence and ${personality.behavior.greetingStyle === 'shy' ? 'shyly flickers' : 'brightens with curiosity'}*`,
-      `Hello, wanderer! I'm ${personality.name}. ${personality.personality.core}`
-    ]
-
-    const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)]
+    // Use character-specific opening statement if available
+    let greeting: string
+    
+    if (personality.knowledge.openingStatement) {
+      greeting = personality.knowledge.openingStatement
+    } else {
+      // Fallback to generic greetings for personalities without opening statements
+      const greetings = [
+        `*A gentle ${personality.species || 'creature'} glows softly as you approach*`,
+        `*${personality.name} notices your presence and ${personality.behavior.greetingStyle === 'shy' ? 'shyly flickers' : 'brightens with curiosity'}*`,
+        `Hello, wanderer! I'm ${personality.name}. ${personality.personality.core}`
+      ]
+      greeting = greetings[Math.floor(Math.random() * greetings.length)]
+    }
 
     return {
       id: this.generateMessageId(),
       role: 'npc',
-      content: randomGreeting,
+      content: greeting,
       timestamp: Date.now(),
       metadata: {
         emotion: personality.behavior.defaultMood,

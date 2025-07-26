@@ -381,7 +381,7 @@
     rigidBody.setLinvel(velocity, true)
   })
 
-  // Simple spawn function for Game.svelte to use
+  // Spawn function for ECS SpawnSystem to use
   export function spawnAt(x: number, y: number, z: number) {
     if (!rigidBody) {
       console.warn('⚠️ Cannot spawn player - rigid body not ready')
@@ -396,10 +396,9 @@
     position = [x, y, z]
   }
 
-  // Player initialization - waits for level to provide spawn point
+  // Player initialization
   onMount(() => {
-    console.log('🎮 Player ready - waiting for level to provide spawn point')
-    // Player will be spawned by Game.svelte when level provides spawn coordinates
+    console.log('🎮 Player component ready - awaiting ECS SpawnSystem')
   })
 </script>
 
