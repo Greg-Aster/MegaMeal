@@ -68,7 +68,7 @@ const conversationUIState = writable<ConversationUIState>({
 // UI Configuration
 const conversationUIConfig = writable<ConversationUIConfig>({
   showTypingIndicator: true,
-  autoCloseDelay: 60000, // 60 seconds
+  autoCloseDelay: 180000, //  3 minutes 
   maxMessagesVisible: 10,
   enableScrollback: true,
   showEmotions: true,
