@@ -16,24 +16,16 @@ A modular AI-powered conversation system for interactive NPCs in the MEGAMEAL ga
 
 ### 1. Using Conversational Fireflies
 
-The system comes with pre-built conversational fireflies. Simply replace your existing `HybridFireflyComponent` with `ConversationalFireflyComponent`:
+The system enhances the existing `HybridFireflyComponent` with AI conversation capabilities. Simply add the conversation props:
 
 ```svelte
-<!-- Before -->
+<!-- Enhanced HybridFireflyComponent with AI conversations -->
 <HybridFireflyComponent 
   count={100}
   {interactionSystem}
   {getHeightAt}
-/>
-
-<!-- After -->
-<ConversationalFireflyComponent 
-  count={100}
-  {interactionSystem}
-  {getHeightAt}
-  enableConversations={true}
+  enableAIConversations={true}
   conversationChance={0.8}
-  personalityVariation={true}
 />
 ```
 

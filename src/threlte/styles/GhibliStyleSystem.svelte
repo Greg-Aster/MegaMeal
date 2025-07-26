@@ -280,8 +280,7 @@
       // Toon-specific properties
       gradientMap: createToonGradientMap(),
       
-      // Preserve important material properties
-      envMap: material.envMap || null,
+      // Preserve supported material properties (envMap not supported in MeshToonMaterial)
       aoMap: material.aoMap || null,
     })
   }

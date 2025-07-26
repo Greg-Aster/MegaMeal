@@ -5,12 +5,13 @@
 <script lang="ts">
 import { World } from '@threlte/rapier'
 
-// Physics configuration (matches existing PhysicsWorld.ts)
+// Physics configuration - updated for @threlte/rapier v3+ API  
+// Based on documentation, gravity expects a Position object with x, y, z properties
 export let gravity = [0, -9.81, 0] as [number, number, number]
-export let debug = false
+// Note: debug prop is not supported in World component - use with individual components instead
 </script>
 
-<World {gravity} {debug}>
+<World gravity={gravity}>
   <!-- Physics content will be rendered inside this World -->
   <slot />
 </World>

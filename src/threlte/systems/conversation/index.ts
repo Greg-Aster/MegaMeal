@@ -56,8 +56,8 @@ export {
 // UI Component
 export { default as ConversationDialog } from './ConversationDialog.svelte'
 
-// Enhanced Firefly Component  
-export { default as ConversationalFireflyComponent } from '../components/ConversationalFireflyComponent.svelte'
+// Note: ConversationalFireflyComponent was merged into HybridFireflyComponent
+// Use HybridFireflyComponent with enableAIConversations={true} instead
 
 // Re-export commonly used types for convenience
 export type {

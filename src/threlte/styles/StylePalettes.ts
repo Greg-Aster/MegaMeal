@@ -252,6 +252,16 @@ export function getMaterialConfig(type: string): MaterialConfig {
 }
 
 /**
+ * Calculate color distance using RGB values
+ */
+function calculateColorDistance(color1: THREE.Color, color2: THREE.Color): number {
+  const deltaR = color1.r - color2.r
+  const deltaG = color1.g - color2.g
+  const deltaB = color1.b - color2.b
+  return Math.sqrt(deltaR * deltaR + deltaG * deltaG + deltaB * deltaB)
+}
+
+/**
  * Find closest palette color to a given color
  */
 export function findClosestPaletteColor(targetColor: THREE.Color | any, palette: ColorPalette): THREE.Color {
@@ -287,7 +297,7 @@ export function findClosestPaletteColor(targetColor: THREE.Color | any, palette:
   paletteColors.forEach(paletteColor => {
     if (paletteColor && paletteColor instanceof THREE.Color) {
       try {
-        const distance = targetColor.distanceTo(paletteColor)
+        const distance = calculateColorDistance(validTargetColor, paletteColor)
         if (distance < minDistance) {
           minDistance = distance
           closestColor = paletteColor
@@ -303,7 +313,7 @@ export function findClosestPaletteColor(targetColor: THREE.Color | any, palette:
     palette.fireflies.forEach(fireflyColor => {
       if (fireflyColor && fireflyColor instanceof THREE.Color) {
         try {
-          const distance = targetColor.distanceTo(fireflyColor)
+          const distance = calculateColorDistance(validTargetColor, fireflyColor)
           if (distance < minDistance) {
             minDistance = distance
             closestColor = fireflyColor
