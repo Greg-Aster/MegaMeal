@@ -111,7 +111,7 @@ export function debugMaterial(material: THREE.Material, name?: string): void {
 export function fixGLTFMaterials(gltf: any): void {
   if (gltf.scene) {
     fixObjectMaterials(gltf.scene)
-    console.log('🔧 Applied global material fixes to GLTF scene')
+    // console.log('🔧 Applied global material fixes to GLTF scene')
   }
   
   // Also fix materials in the materials array if available

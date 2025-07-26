@@ -16,6 +16,17 @@
   import ErrorScreen from '../game/ui/components/ErrorScreen.svelte'
   import LoadingScreen from '../game/ui/components/LoadingScreen.svelte'
   import TimelineCard from '../game/ui/components/TimelineCard.svelte'
+
+  // ==================================================================
+  // === ADD THESE IMPORTS FOR THE CONVERSATION DIALOG ===
+  // ==================================================================
+  import ConversationDialog from './systems/conversation/ConversationDialog.svelte';
+  import { 
+    isConversationActive, 
+    conversationUIState, 
+    conversationActions 
+  } from './systems/conversation/conversationStores';
+  // ==================================================================
   
   // Import MobileEnhancements component
   import MobileEnhancements from './ui/MobileEnhancements.svelte'
@@ -105,21 +116,13 @@
   $: error = $errorStore
   $: dialogue = $dialogueStore
   
-  // Debug: Log level changes
-  $: if (currentLevel) {
+  // Reactive level and star tracking - debug logs removed for performance
+  $: if (import.meta.env.DEV && currentLevel) {
     console.log('🎮 Current level:', currentLevel)
   }
   
-  // Debug: Log star selection changes
-  $: if (selectedStar) {
-    console.log('⭐ Game.svelte: selectedStar changed:', {
-      title: selectedStar.title,
-      uniqueId: selectedStar.uniqueId,
-      hasTimelineYear: !!selectedStar.timelineYear,
-      hasTimelineEra: !!selectedStar.timelineEra
-    })
-  } else {
-    console.log('❌ Game.svelte: selectedStar cleared')
+  $: if (import.meta.env.DEV && selectedStar) {
+    console.log('⭐ Star selected:', selectedStar.title)
   }
   
   // Backwards compatibility getters
@@ -392,8 +395,7 @@
               position={playerSpawnPoint}
               speed={5}
               jumpForce={8}
-              on:lock={() => console.log('🔒 Pointer locked')}
-              on:unlock={() => console.log('🔓 Pointer unlocked')}
+
               on:interaction={(e) => { gameActions.recordInteraction('click', e.detail.type); dispatch('objectClick', e.detail) }}
             />
           {/if}
@@ -501,6 +503,22 @@
 
       <!-- Mobile Enhancements (Pull-to-refresh prevention and fullscreen button) -->
       <MobileEnhancements />
+
+      <!--
+      // ==================================================================
+      // === ADD THE CONVERSATION DIALOG RENDERING BLOCK HERE ===
+      // ==================================================================
+      -->
+      {#if $isConversationActive}
+        <div style="pointer-events: auto;">
+            <ConversationDialog
+                visible={$conversationUIState.isVisible}
+                position={$conversationUIState.position}
+                on:close={() => conversationActions.endConversation()}
+            />
+        </div>
+      {/if}
+
     {/if}
   </div>
   

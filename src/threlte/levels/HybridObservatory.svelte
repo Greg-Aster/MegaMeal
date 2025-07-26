@@ -22,7 +22,7 @@
   import UnderwaterOverlay from '../effects/UnderwaterOverlay.svelte'
   import { underwaterStateStore } from '../stores/underwaterStore'
   
-  // Import the NEW hybrid firefly component
+  // Import the original hybrid firefly component (will be enhanced with AI)
   import HybridFireflyComponent from '../components/HybridFireflyComponent.svelte'
   
   // Import nature pack vegetation system
@@ -32,6 +32,16 @@
   import Skybox from '../systems/Skybox.svelte'
   import StaticEnvironment from '../systems/StaticEnvironment.svelte'
   import StarMap from '../systems/StarMap.svelte'
+  
+  // Import conversation system
+  import ConversationDialog from '../systems/conversation/ConversationDialog.svelte'
+  import { 
+    conversationUIState,
+    isConversationActive,
+    conversationActions 
+  } from '../systems/conversation/conversationStores'
+  
+  // Conversation system integration - debug logs removed for performance
   
   // Import new star navigation components
   import StarNavigationSystem from '../components/StarNavigationSystem.svelte'
@@ -289,11 +299,13 @@
     maxDistance={200}
     updateFrequency={0.1}
     enableCulling={true}
-    on:lodLevelChanged={(e) => console.log('🎯 LOD level changed:', e.detail)}
+    on:lodLevelChanged={(e) => {
+      if (import.meta.env.DEV) console.log('🎯 LOD level changed:', e.detail)
+    }}
     on:performanceUpdate={(e) => {
-      if (e.detail.averageFPS) {
-        // Could adjust quality here based on performance
-        console.log('📊 Performance update:', e.detail.averageFPS, 'fps')
+      // Only log performance issues, not regular updates
+      if (e.detail.averageFPS && e.detail.averageFPS < 30) {
+        console.warn('⚠️ Low FPS:', e.detail.averageFPS, 'fps')
       }
     }}
   />
@@ -387,15 +399,16 @@
     />
 
     <!-- 
-      HYBRID FIREFLY COMPONENT (High-level setup + ECS entities)
+      HYBRID FIREFLY COMPONENT (Enhanced with AI Conversations)
       
-      PERFECT CONFIGURATION from legacy FireflySystem.ts:
-      - Much slower, more realistic movement (speed: 0.2, wanderSpeed: 0.004)
-      - Gentle floating animation (floatAmplitude: {x: 1.5, y: 0.5, z: 1.5})
-      - Longer, stable light cycles (cycleDuration: 12.0, fadeSpeed: 2.0)  
-      - Optimal count and intensity (80 fireflies, emissive: 15.0)
+      Original high-performance firefly system with all integrations intact:
+      - Beautiful visual effects and lighting
+      - Perfect ECS performance optimizations  
+      - Full interaction system integration (hover, click)
+      - SystemRegistry messaging integration
+      - Will be enhanced with AI conversation capabilities
       
-      This recreates the beautiful original experience with ECS performance!
+      PERFECT CONFIGURATION from legacy FireflySystem.ts preserved:
     -->
     <HybridFireflyComponent 
       bind:this={hybridFireflyComponent}
@@ -410,10 +423,6 @@
       heightRange={{ min: 2.0, max: 10.0 }}
       radius={180}
       pointSize={25.0}
-      glowInnerRadius={0.1}
-      glowOuterRadius={0.5}
-      coreRadius={0.1}
-      coreOpacity={1.0}
       movement={{
         speed: 0.05,
         wanderSpeed: 0.002,
@@ -422,6 +431,8 @@
         lerpFactor: 1.0
       }}
       colors={[0x87ceeb, 0x98fb98, 0xffffe0, 0xdda0dd, 0xf0e68c, 0xffa07a, 0x20b2aa, 0x9370db]}
+      enableAIConversations={true}
+      conversationChance={0.8}
     />
     
     <!-- 
@@ -491,14 +502,23 @@
 
 </LevelManager>
 
+<!-- AI Conversation Dialog - rendered outside of 3D scene -->
+{#if $isConversationActive}
+  <ConversationDialog
+    visible={$conversationUIState.isVisible}
+    position={$conversationUIState.position}
+    on:close={() => conversationActions.endConversation()}
+  />
+{/if}
+
 <!-- Style Controls UI (development/debug) -->
-{#if import.meta.env.DEV}
+<!-- {#if import.meta.env.DEV}
   <StyleControls 
     visible={true}
     position="top-right"
     on:styleChanged={(e) => console.log('🎨 Style changed via UI:', e.detail)}
   />
-{/if}
+{/if} -->
 
 <!--
   EXAMPLE: How to create player interactions that affect the emotional system

@@ -30,8 +30,23 @@
   } from '../core/ECSIntegration'
   import StarSprite from './StarSprite.svelte'
   import { gameActions } from '../stores/gameStateStore'
+  
+  // Import our rich AI personality system
+  import { 
+    FIREFLY_PERSONALITIES, 
+    getRandomFireflyPersonality, 
+    generateFireflyPopulation,
+    getObservatoryContext 
+  } from '../systems/conversation/fireflyPersonalities'
+  
+  // Import conversation system
+  import ConversationDialog from '../systems/conversation/ConversationDialog.svelte';
+  import {
+    conversationActions,
+    isConversationActive,
+  } from '../systems/conversation/conversationStores'
 
-  // Visual firefly data for StarSprite components
+  // Enhanced FireflyVisual interface with rich AI personality data
   interface FireflyVisual {
     id: number
     position: [number, number, number]
@@ -40,13 +55,15 @@
     intensity: number
     twinkleSpeed: number
     animationOffset: number
-    // Interactive properties
+    // Enhanced interactive properties with AI personality
     name: string
     species: string
-    age: number
-    personality: string
+    age: number // Keep as number for consistency with ECS system
+    personality: string // Simple personality for basic dialog
+    fullPersonality?: typeof FIREFLY_PERSONALITIES[0] | null // Full AI personality data
     isClickable: boolean
     isHovered?: boolean
+    isConversational: boolean // New: indicates if this firefly supports AI conversations
   }
 
   // Props with perfect legacy visual parameters
@@ -73,6 +90,10 @@
   export let getHeightAt: ((x: number, z: number) => number) | undefined = undefined
   export let environmentReady = true // Allow external control of when to create fireflies
   export let interactionSystem: any = null // Centralized interaction system from Game
+  
+  // AI Conversation enhancement props
+  export let enableAIConversations = false // Enable AI-powered conversations
+  export let conversationChance = 0.8 // Percentage of fireflies that are conversational (0.0 - 1.0)
 
   // Get level context (modern component architecture)
   const registry = getContext('systemRegistry')
@@ -244,22 +265,14 @@
         const maxHeight = groundHeight + heightRange.max
         const y = minHeight + Math.random() * (maxHeight - minHeight)
         
-        // Debug logging for initial spawn positions
-        if (i < 3) { // Only log first 3 fireflies to avoid spam
-          console.log(`🧚 Firefly ${i} spawn: ground=${groundHeight.toFixed(2)}, y=${y.toFixed(2)} at (${x.toFixed(1)}, ${z.toFixed(1)})`)
+        // Spawn position validation in development only
+        if (import.meta.env.DEV && i < 2 && y < groundHeight) {
+          console.warn(`⚠️ Firefly ${i} spawned below ground: y=${y.toFixed(2)}, ground=${groundHeight.toFixed(2)}`)
         }
         const position = new THREE.Vector3(x, y, z)
         const color = colors[Math.floor(Math.random() * colors.length)]
 
-        // Debug: Log the actual values being passed to ECS
-        if (i === 0) { // Only log first firefly to avoid spam
-          console.log('🧚 Creating firefly with props:', {
-            lightIntensity, lightRange, cycleDuration,
-            floatAmplitude: movement.floatAmplitude.y,
-            wanderRadius: movement.wanderRadius,
-            size, emissiveIntensity
-          })
-        }
+        // ECS firefly creation - debug logs removed for performance
         
         const entity = ecsWorld.createFirefly(position, color, {
             lightIntensity, lightRange, cycleDuration,
@@ -272,17 +285,18 @@
     }
 
     public setupVisualFireflies(): void {
-      const fireflySpecies = [
-        'Common Eastern Firefly',
-        'Blue Ghost Firefly',
-        'Photinus Pyralis',
-        'Synchronous Firefly',
-        'Big Dipper Firefly'
-      ]
+      // Generate rich AI personalities if conversations are enabled
+      let aiPersonalities: typeof FIREFLY_PERSONALITIES = []
+      if (enableAIConversations) {
+        const conversationalCount = Math.floor(optimizedCount * conversationChance)
+        aiPersonalities = generateFireflyPopulation(conversationalCount)
+        if (import.meta.env.DEV) console.log(`🧠 Generated ${aiPersonalities.length} AI firefly personalities for conversations`)
+      }
       
-      const fireflyPersonalities = [
+      // Fallback personalities for basic dialog (preserved from original)
+      const basicPersonalities = [
         'a gentle wanderer who loves collecting dewdrops',
-        'a curious explorer who chases moonbeams',
+        'a curious explorer who chases moonbeams', 
         'a wise storyteller who remembers ancient summers',
         'a playful dancer who creates light patterns',
         'a peaceful dreamer who whispers to flowers',
@@ -292,9 +306,16 @@
       ]
       
       visualFireflies = fireflyEntities.map((eid, i) => {
-        const species = fireflySpecies[Math.floor(Math.random() * fireflySpecies.length)]
-        const personality = fireflyPersonalities[Math.floor(Math.random() * fireflyPersonalities.length)]
-        const age = Math.floor(Math.random() * 30) + 10 // 10-40 days
+        // Determine if this firefly gets AI personality or basic personality
+        const hasAIPersonality = enableAIConversations && i < aiPersonalities.length
+        const aiPersonality = hasAIPersonality ? aiPersonalities[i] : null
+        
+        // Use AI personality data if available, otherwise use basic system
+        const species = aiPersonality?.species || 'Common Eastern Firefly'
+        const name = aiPersonality?.name || `${species} ${i + 1}`
+        const age = aiPersonality?.age ? (typeof aiPersonality.age === 'string' ? parseInt(aiPersonality.age.split(' ')[0]) : aiPersonality.age) : Math.floor(Math.random() * 30) + 10
+        const basicPersonality = aiPersonality?.personality.core || 
+          basicPersonalities[Math.floor(Math.random() * basicPersonalities.length)]
         
         return {
           id: eid,
@@ -304,20 +325,24 @@
           intensity: 1.0,
           twinkleSpeed: 0.8 + Math.random() * 0.4,
           animationOffset: Math.random() * Math.PI * 2,
-          // Interactive properties
-          name: `${species} ${i + 1}`,
+          // Enhanced interactive properties
+          name: name,
           species: species,
           age: age,
-          personality: personality,
+          personality: basicPersonality, // For basic dialog compatibility
+          fullPersonality: aiPersonality, // Full AI personality for conversations
           isClickable: true,
-          isHovered: false
+          isHovered: false,
+          isConversational: hasAIPersonality // New flag
         }
       })
+      
+      if (import.meta.env.DEV) console.log(`✨ Created ${visualFireflies.length} fireflies (${aiPersonalities.length} with AI personalities)`)
     }
 
     private updateVisualFireflies(): void {
-      if (!ecsWorld) return
-
+      if (!ecsWorld || typeof ecsWorld.getWorld !== 'function') return
+      
       const world = ecsWorld.getWorld()
       const entities = fireflyQuery(world)
       
@@ -349,8 +374,13 @@
     }
 
     public getActiveLightsFromECS() {
-      if (!ecsWorld) return []
-      return ecsWorld.getActiveLights();
+      if (!ecsWorld || typeof ecsWorld.getActiveLights !== 'function') return []
+      try {
+        return ecsWorld.getActiveLights()
+      } catch (error) {
+        console.warn('Error getting active lights from ECS:', error)
+        return []
+      }
     }
 
     public handleDiscovery(): void {
@@ -361,7 +391,7 @@
   // Create and register the component
   let component: HybridFireflyComponent
   onMount(async () => {
-    if (registry) {
+    if (registry && typeof registry.registerComponent === 'function') {
       component = new HybridFireflyComponent()
       registry.registerComponent(component)
       const levelContext = getContext('levelContext')
@@ -385,7 +415,7 @@
       
       // Set initial lights immediately on first run
       if (!initialLightsSet && allLights.length > 0) {
-        console.log(`🌟 Setting initial lights: ${allLights.length} fireflies available`)
+        if (import.meta.env.DEV) console.log(`🌟 Setting initial lights: ${allLights.length} fireflies available`)
         updateLightTargets(allLights, optimizedMaxLights, 0)
         activeLights = getCurrentLights(allLights, delta * 6)
         initialLightsSet = true
@@ -401,8 +431,8 @@
       if (initialLightsSet && lightingUpdateCounter % 3600 === 0) { // Every 60 seconds
         updateLightTargets(allLights, optimizedMaxLights, lightCycleTime)
         
-        // Debug info even less frequently
-        if (lightingUpdateCounter % 7200 === 0) { // Every 2 minutes
+        // Debug info only in development
+        if (import.meta.env.DEV && lightingUpdateCounter % 7200 === 0) {
           console.log(`🌟 Lights: ${activeLights.length}/${allLights.length} active (max: ${optimizedMaxLights})`)
         }
       }
@@ -421,7 +451,9 @@
           range: lightRange
         }))
         
-        lightingManager.updatePointLights?.(pointLights)
+        if (lightingManager && typeof lightingManager.updatePointLights === 'function') {
+          lightingManager.updatePointLights(pointLights)
+        }
       }
     }
   })
@@ -462,33 +494,198 @@
 
   // REMOVED: Broken reactive system that violates ECS principles
 
+  // --- FIREFLY AI CONVERSATION SYSTEM (based on CuppyWidget) ---
+  
+  // Conversation state (similar to CuppyWidget)
+  let activeConversationFirefly: any = null
+  let conversationHistory: Array<{role: 'user' | 'assistant', content: string}> = []
+  let isConversationDialogOpen = false
+  let conversationInput = ''
+  let isThinking = false
+  
+  function openFireflyConversationDialog(firefly: any) {
+    activeConversationFirefly = firefly
+    conversationHistory = []
+    isConversationDialogOpen = true
+    isThinking = false
+    
+      if (import.meta.env.DEV) {
+        console.log('🔍 Opening conversation for:', firefly.name);
+      }
+    
+    // Add initial greeting from the firefly
+    const personality = firefly.fullPersonality
+    const greeting = `✨ *${personality.visual.description}*\n\nHello! I'm ${personality.name}, a ${personality.species}. I'm feeling quite ${personality.behavior.defaultMood} tonight. What would you like to talk about?`
+    
+    conversationHistory.push({ role: 'assistant', content: greeting })
+    conversationHistory = conversationHistory // Trigger reactivity
+    
+    if (import.meta.env.DEV) console.log('🔍 Conversation history:', conversationHistory.length, 'messages')
+  }
+  
+  function closeConversationDialog() {
+    isConversationDialogOpen = false
+    activeConversationFirefly = null
+    conversationHistory = []
+    conversationInput = ''
+    isThinking = false
+  }
+  
+  async function sendMessageToFirefly() {
+    if (!conversationInput.trim() || !activeConversationFirefly || isThinking) return
+    
+    const userMessage = conversationInput.trim()
+    conversationInput = ''
+    isThinking = true
+    
+    // Add user message to history
+    conversationHistory.push({ role: 'user', content: userMessage })
+    conversationHistory = conversationHistory // Trigger reactivity
+    
+    try {
+      const personality = activeConversationFirefly.fullPersonality
+      
+      // Create firefly-specific persona string (like CuppyWidget)
+      const fireflyPersona = `You are ${personality.name}, a ${personality.species} firefly with the following characteristics:
+        
+        Personality: ${personality.personality.core}
+        Traits: ${personality.personality.traits.join(', ')}
+        Quirks: ${personality.personality.quirks.join(', ')}
+        Interests: ${personality.personality.interests.join(', ')}
+        Goals: ${personality.personality.goals.join(', ')}
+        
+        Background: ${personality.knowledge.backstory}
+        Current mood: ${personality.behavior.defaultMood}
+        Age: ${activeConversationFirefly.age} days old
+        
+        Speech style: ${personality.behavior.conversationStyle}
+        Speech patterns: ${personality.behavior.speechPatterns.join(', ')}
+        
+        You are in a magical observatory at night, surrounded by other fireflies and starlight. Keep responses conversational and in character. Speak as a wise, magical firefly who has lived in this mystical place.`
+      
+      // Create payload (same structure as CuppyWidget)
+      const payload = {
+        message: userMessage,
+        persona: fireflyPersona,
+        history: [...conversationHistory],
+        provider: 'gemini', // Use same provider as CuppyWidget
+        pageContext: 'Observatory level - magical firefly conversation in a mystical starlit environment'
+      }
+      
+      // Use same API as CuppyWidget
+      const response = await fetch('https://my-mascot-worker-service.greggles.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        const fireflyReply = data.reply || "I'm not sure how to respond to that."
+        
+        conversationHistory.push({ role: 'assistant', content: fireflyReply })
+        conversationHistory = conversationHistory // Trigger reactivity
+      } else {
+        console.error('Firefly AI response not ok:', response.status, response.statusText)
+        conversationHistory.push({ 
+          role: 'assistant', 
+          content: 'Sorry, I encountered an error. Please try again.' 
+        })
+        conversationHistory = conversationHistory
+      }
+    } catch (error) {
+      console.error('Firefly AI Error:', error)
+      conversationHistory.push({ 
+        role: 'assistant', 
+        content: 'Could not connect to the AI service.' 
+      })
+      conversationHistory = conversationHistory
+    } finally {
+      isThinking = false
+    }
+  }
+
   // --- FIREFLY INTERACTION HANDLERS ---
   
-  function handleFireflyClick(data: any) {
-    const { sprite, index, timestamp, ...firefly } = data
-    console.log('✨ HybridFireflyComponent: Firefly clicked via InteractionSystem:', firefly.name)
+  async function handleFireflyClick(data: any) {
+  const { sprite, index, timestamp, ...firefly } = data;
+  console.log('✨ Firefly clicked:', firefly.name);
+
+  // Check if this firefly has the full personality data needed for a conversation
+  if (enableAIConversations && firefly.isConversational && firefly.fullPersonality) {
+    // It's a conversational firefly. Use the MODERN system.
+    console.log(`🤖 Starting AI conversation with ${firefly.name} using the modern system.`);
+
+    await conversationActions.startConversation(
+      firefly.fullPersonality.id,
+      firefly.fullPersonality,
+      getObservatoryContext()
+    );
+
+    gameActions.recordInteraction('firefly_ai_conversation', firefly.id || 'unknown');
+
+  } else {
+    // It's a basic firefly. Use the original basic dialog.
+    showBasicFireflyDialog(firefly);
+  }
+
+  // This part can remain for other effects
+  if (typeof triggerDiscovery === 'function') {
+    triggerDiscovery();
+  }
+
     
-    // Show dialog with firefly-specific content
+    if (import.meta.env.DEV) console.log(`✨ Clicked firefly: ${firefly.name}`)
+  }
+  
+  function showRichFireflyDialog(firefly: any) {
+    // Use existing working dialog system with rich AI personality content
+    const personality = firefly.fullPersonality
+    const age = typeof firefly.age === 'number' ? `${firefly.age} days` : firefly.age
+    
+    // Create rich dialog content using the AI personality data
+    let richMessage = `✨ *${personality.visual.description}*\n\n`
+    richMessage += `Hello there! I'm ${personality.name}, a ${personality.species} from the ${personality.knowledge.backstory}. `
+    richMessage += `I'm ${age} old and I'm feeling quite ${personality.behavior.defaultMood} tonight.\n\n`
+    
+    // Add personality-specific content
+    if (personality.personality.quirks && personality.personality.quirks.length > 0) {
+      richMessage += `You might notice that I ${personality.personality.quirks[0]}. `
+    }
+    
+    if (personality.personality.interests && personality.personality.interests.length > 0) {
+      richMessage += `I'm particularly fascinated by ${personality.personality.interests.slice(0, 2).join(' and ')}. `
+    }
+    
+    // Add a memory or topic
+    if (personality.knowledge.memories && personality.knowledge.memories.length > 0) {
+      richMessage += `\n\n💭 "${personality.knowledge.memories[0]}"`
+    }
+    
+    richMessage += `\n\nWould you like to know more about the magical secrets of this observatory?`
+    
+    // Use the working dialog system with rich content
     gameActions.showDialogue(
-      `Hello! I'm ${firefly.name}, a ${firefly.species}. ${firefly.personality}. I'm about ${firefly.age} days old and have been dancing in this magical place for quite some time. Would you like to hear more stories of the night?`,
+      richMessage,
+      `${personality.name} the ${personality.species}`,
+      12000 // 12 seconds for richer content
+    )
+  }
+  
+  function showBasicFireflyDialog(firefly: any) {
+    // Original basic dialog system
+    gameActions.showDialogue(
+      `Hello! I'm ${firefly.name}, a ${firefly.species}. ${firefly.personality}. I'm about ${firefly.age} ${typeof firefly.age === 'number' ? 'days' : ''} old and have been dancing in this magical place for quite some time. Would you like to hear more stories of the night?`,
       firefly.name,
       8000 // 8 seconds
     )
     
-    // Record interaction
+    // Record basic interaction
     gameActions.recordInteraction('firefly_click', firefly.id || 'unknown')
-    
-    // Could trigger special ECS effects here
-    if (typeof triggerDiscovery === 'function') {
-      triggerDiscovery()
-    }
-    
-    console.log(`✨ Clicked firefly: ${firefly.name} (${firefly.species}), age ${firefly.age} days`)
   }
   
   function handleFireflyHover(data: any, hovered: boolean) {
     if (hovered) {
-      console.log(`👆 Hovering over: ${data.name}`)
       // Find the visual firefly and mark it as hovered
       const visualFirefly = visualFireflies.find(f => f.id === data.id)
       if (visualFirefly) {
@@ -497,7 +694,6 @@
         visualFireflies = visualFireflies
       }
     } else {
-      console.log(`👋 No longer hovering over: ${data.name}`)
       // Remove hover state from all fireflies
       visualFireflies.forEach(f => f.isHovered = false)
       // Force reactivity update
@@ -569,6 +765,49 @@
   {/each}
 {/if}
 
-<style>
-/* No styles needed */
-</style>
+<!-- AI Conversation Dialog (based on CuppyWidget design) -->
+<!-- Debug: Check reactive values -->
+{@debug isConversationDialogOpen, activeConversationFirefly}
+
+{#if isConversationDialogOpen && activeConversationFirefly}
+  <div class="firefly-conversation-overlay" on:click={closeConversationDialog}>
+    <div class="firefly-conversation-dialog" on:click|stopPropagation>
+      <!-- Header -->
+      <div class="conversation-header">
+        <div class="firefly-info">
+          <h3>{activeConversationFirefly.fullPersonality.name}</h3>
+          <p>{activeConversationFirefly.fullPersonality.species}</p>
+        </div>
+        <button class="close-btn" on:click={closeConversationDialog}>×</button>
+      </div>
+      
+      <!-- Messages -->
+      <div class="conversation-messages">
+        {#each conversationHistory as message}
+          <div class="message {message.role}">
+            <div class="message-content">{message.content}</div>
+          </div>
+        {/each}
+        {#if isThinking}
+          <div class="message assistant thinking">
+            <div class="message-content">✨ *thinking...*</div>
+          </div>
+        {/if}
+      </div>
+      
+      <!-- Input -->
+      <div class="conversation-input">
+        <input 
+          type="text" 
+          placeholder="Ask {activeConversationFirefly.fullPersonality.name}..." 
+          bind:value={conversationInput}
+          disabled={isThinking}
+          on:keypress={(e) => e.key === 'Enter' && sendMessageToFirefly()}
+        />
+        <button on:click={sendMessageToFirefly} disabled={isThinking || !conversationInput.trim()}>
+          Send
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}

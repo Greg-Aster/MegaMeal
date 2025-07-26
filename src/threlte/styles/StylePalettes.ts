@@ -254,10 +254,24 @@ export function getMaterialConfig(type: string): MaterialConfig {
 /**
  * Find closest palette color to a given color
  */
-export function findClosestPaletteColor(targetColor: THREE.Color, palette: ColorPalette): THREE.Color {
-  // Ensure we have a valid target color
-  if (!targetColor || !(targetColor instanceof THREE.Color)) {
+export function findClosestPaletteColor(targetColor: THREE.Color | any, palette: ColorPalette): THREE.Color {
+  // Ensure we have a valid target color - convert if needed
+  let validTargetColor: THREE.Color
+  
+  if (!targetColor) {
     return palette.earth
+  }
+  
+  if (targetColor instanceof THREE.Color) {
+    validTargetColor = targetColor
+  } else {
+    // Try to convert to THREE.Color
+    try {
+      validTargetColor = new THREE.Color(targetColor)
+    } catch (error) {
+      console.warn('Could not convert target color to THREE.Color:', targetColor, error)
+      return palette.earth
+    }
   }
   
   let closestColor = palette.earth
